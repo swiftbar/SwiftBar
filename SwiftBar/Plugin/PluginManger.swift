@@ -24,7 +24,11 @@ class PluginManager {
     func pluginsDidChange() {
         plugins.forEach{ plugin in
             guard menuBarItems[plugin.id] == nil else {return}
-            menuBarItems[plugin.id] = MenubarItem(title: plugin.name)
+            menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
+        }
+        menuBarItems.keys.forEach{ pluginID in
+            guard !plugins.contains(where: {$0.id == pluginID}) else {return}
+            menuBarItems.removeValue(forKey: pluginID)
         }
         plugins.isEmpty ? barItem.show():barItem.hide()
     }
@@ -35,6 +39,10 @@ class PluginManager {
 
     func addDummyPlugin() {
         plugins.append(ExecutablePlugin(name: "New", file: UUID().uuidString, metadata: PluginMetadata()))
+    }
+
+    func disablePlugin(plugin: Plugin) {
+        plugins.removeAll(where: {$0.id == plugin.id})
     }
     
     /// Scan pluginsFolder for all potential scripts
