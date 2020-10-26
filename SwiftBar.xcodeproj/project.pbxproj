@@ -17,6 +17,7 @@
 		39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */; };
 		39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777B254618F6001D76E5 /* MenuBarItem.swift */; };
 		39AF778025461A89001D76E5 /* PluginFileParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777F25461A89001D76E5 /* PluginFileParser.swift */; };
+		39AF77842547750E001D76E5 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF77832547750E001D76E5 /* App.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutablePlugin.swift; sourceTree = "<group>"; };
 		39AF777B254618F6001D76E5 /* MenuBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarItem.swift; sourceTree = "<group>"; };
 		39AF777F25461A89001D76E5 /* PluginFileParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginFileParser.swift; sourceTree = "<group>"; };
+		39AF77832547750E001D76E5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +67,7 @@
 		3920747C25460FD000213DBE /* SwiftBar */ = {
 			isa = PBXGroup;
 			children = (
+				39AF77832547750E001D76E5 /* App.swift */,
 				39AF777B254618F6001D76E5 /* MenuBarItem.swift */,
 				3988C8932546116200A02B9B /* Plugin */,
 				3920747D25460FD000213DBE /* AppDelegate.swift */,
@@ -172,6 +175,7 @@
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
+				39AF77842547750E001D76E5 /* App.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,
 			);

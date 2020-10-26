@@ -9,16 +9,9 @@ class PluginManager {
         }
     }
     var menuBarItems: [PluginID: MenubarItem] = [:]
-    var pluginsFolder: String = "" {
-        didSet {
-            loadPlugins()
-        }
-    }
 
     init() {
-        if plugins.isEmpty {
-            barItem.show()
-        }
+        loadPlugins()
     }
 
     func pluginsDidChange() {
@@ -33,12 +26,12 @@ class PluginManager {
         plugins.isEmpty ? barItem.show():barItem.hide()
     }
 
-    func addPlugin(from file: String) {
-
+    func addPlugin(from fileURL: URL) {
+        plugins.append(ExecutablePlugin(fileURL: fileURL))
     }
 
     func addDummyPlugin() {
-        plugins.append(ExecutablePlugin(name: "New", file: UUID().uuidString, metadata: PluginMetadata()))
+//        plugins.append(ExecutablePlugin(name: "New", fileURL: <#URL#>, file: UUID().uuidString, metadata: PluginMetadata()))
     }
 
     func disablePlugin(plugin: Plugin) {
@@ -47,14 +40,19 @@ class PluginManager {
     
     /// Scan pluginsFolder for all potential scripts
     func loadPlugins() {
+        guard let pluginDirectoryPath = App.pluginDirectoryPath, let url = URL(string: pluginDirectoryPath) else {return}
         let fileManager = FileManager.default
         var isDir: ObjCBool = false
-        guard fileManager.fileExists(atPath: pluginsFolder, isDirectory: &isDir), isDir.boolValue else {
+        guard fileManager.fileExists(atPath: pluginDirectoryPath, isDirectory: &isDir), isDir.boolValue else {
             plugins.removeAll()
             menuBarItems.removeAll()
             barItem.show()
             return
         }
-        barItem.hide()
+
+        let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil)
+        while let element = enumerator?.nextObject() as? URL {
+            addPlugin(from: element)
+        }
     }
 }

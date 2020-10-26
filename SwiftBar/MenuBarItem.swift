@@ -30,34 +30,51 @@ extension MenubarItem {
     func buildStandardMenu(firstLevel: Bool) {
         let menu = firstLevel ? statusBarMenu:NSMenu(title: "Preferences")
 
-        let refreshAll = NSMenuItem(title: "Refresh All", action: #selector(refreshPlugins), keyEquivalent: "r")
-        let changePluginFolder = NSMenuItem(title: "Change Plugin Folder...", action: nil, keyEquivalent: "")
-        let openPluginFolder = NSMenuItem(title: "Open Plugin Folder...", action: nil, keyEquivalent: "")
-        let getPlugins = NSMenuItem(title: "Get Plugins...", action: nil, keyEquivalent: "")
+        let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshPlugins), keyEquivalent: "r")
+        let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
+        let openPluginFolderItem = NSMenuItem(title: "Open Plugin Folder...", action: #selector(openPluginFolder), keyEquivalent: "")
+        let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
+        let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
 
-        [refreshAll,changePluginFolder,openPluginFolder,getPlugins,quitItem,disablePluginItem].forEach{$0.target = self}
+        [refreshAllItem,changePluginFolderItem,openPluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem].forEach{$0.target = self}
 
-        menu.addItem(refreshAll)
+        menu.addItem(refreshAllItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(changePluginFolder)
-        menu.addItem(openPluginFolder)
-        menu.addItem(getPlugins)
+        menu.addItem(changePluginFolderItem)
+        menu.addItem(openPluginFolderItem)
+        menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(aboutItem)
         menu.addItem(quitItem)
 
         if !firstLevel {
+            // put swiftbar menu as submenu
             let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
             item.submenu = menu
             statusBarMenu.addItem(item)
+
+            // default plugin menu items
             statusBarMenu.addItem(NSMenuItem.separator())
             statusBarMenu.addItem(disablePluginItem)
         }
     }
 
     @objc func refreshPlugins() {
-        PluginManager.shared.addDummyPlugin()
+        App.refreshPlugins()
+    }
+
+    @objc func openPluginFolder() {
+        App.openPluginFolder()
+    }
+
+    @objc func changePluginFolder() {
+        App.changePluginFolder()
+    }
+
+    @objc func getPlugins() {
+        App.getPlugins()
     }
 
     @objc func quit() {
@@ -67,6 +84,12 @@ extension MenubarItem {
     @objc func disablePlugin() {
         guard let plugin = plugin else {return}
         PluginManager.shared.disablePlugin(plugin: plugin)
+    }
+
+    @objc func about() {
+        if let plugin = plugin {
+            print(plugin.description)
+        }
     }
 }
 
