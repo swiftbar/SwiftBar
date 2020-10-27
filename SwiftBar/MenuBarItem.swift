@@ -36,9 +36,10 @@ extension MenubarItem {
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
         let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
+        let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
 
-        [refreshAllItem,changePluginFolderItem,openPluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem].forEach{$0.target = self}
+        [refreshAllItem,changePluginFolderItem,openPluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,runInTerminalItem].forEach{$0.target = self}
 
         menu.addItem(refreshAllItem)
         menu.addItem(NSMenuItem.separator())
@@ -57,6 +58,7 @@ extension MenubarItem {
 
             // default plugin menu items
             statusBarMenu.addItem(NSMenuItem.separator())
+            statusBarMenu.addItem(runInTerminalItem)
             statusBarMenu.addItem(disablePluginItem)
         }
     }
@@ -79,6 +81,10 @@ extension MenubarItem {
 
     @objc func quit() {
         NSApp.terminate(self)
+    }
+
+    @objc func runInTerminal() {
+        plugin?.invoke(params: [])
     }
 
     @objc func disablePlugin() {

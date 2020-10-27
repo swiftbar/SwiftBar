@@ -1,4 +1,5 @@
 import Foundation
+import ShellOut
 
 struct ExecutablePlugin: Plugin {
     var id: PluginID {
@@ -29,6 +30,12 @@ struct ExecutablePlugin: Plugin {
     }
 
     func invoke(params : [String]) {
-        
+        do {
+            let out = try shellOut(to: String(file.dropFirst(7)))
+            print(out)
+        } catch {
+            guard let error = error as? ShellOutError else {return}
+            print(error.message)
+        }
     }
 }

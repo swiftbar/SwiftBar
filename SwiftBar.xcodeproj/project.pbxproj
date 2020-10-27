@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -18,6 +18,7 @@
 		39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777B254618F6001D76E5 /* MenuBarItem.swift */; };
 		39AF778025461A89001D76E5 /* PluginFileParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777F25461A89001D76E5 /* PluginFileParser.swift */; };
 		39AF77842547750E001D76E5 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF77832547750E001D76E5 /* App.swift */; };
+		39AF778925479535001D76E5 /* ShellOut in Frameworks */ = {isa = PBXBuildFile; productRef = 39AF778825479535001D76E5 /* ShellOut */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				39AF778925479535001D76E5 /* ShellOut in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +118,9 @@
 			dependencies = (
 			);
 			name = SwiftBar;
+			packageProductDependencies = (
+				39AF778825479535001D76E5 /* ShellOut */,
+			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
 			productType = "com.apple.product-type.application";
@@ -143,6 +148,9 @@
 				Base,
 			);
 			mainGroup = 3920747125460FD000213DBE;
+			packageReferences = (
+				39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */,
+			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -380,6 +388,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/JohnSundell/ShellOut";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		39AF778825479535001D76E5 /* ShellOut */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */;
+			productName = ShellOut;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3920747225460FD000213DBE /* Project object */;
 }
