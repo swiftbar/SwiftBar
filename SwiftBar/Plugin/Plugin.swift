@@ -15,7 +15,7 @@ protocol Plugin {
     var metadata: PluginMetadata? { get }
     func refresh()
     func terminate()
-    func invoke(params: [String])
+    func invoke(params: [String]) -> String?
 }
 
 extension Plugin {

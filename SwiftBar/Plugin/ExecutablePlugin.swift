@@ -29,13 +29,14 @@ struct ExecutablePlugin: Plugin {
 
     }
 
-    func invoke(params : [String]) {
+    func invoke(params : [String]) -> String? {
         do {
             let out = try shellOut(to: String(file.dropFirst(7)))
-            print(out)
+            return out
         } catch {
-            guard let error = error as? ShellOutError else {return}
+            guard let error = error as? ShellOutError else {return nil}
             print(error.message)
         }
+        return nil
     }
 }

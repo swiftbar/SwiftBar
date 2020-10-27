@@ -12,8 +12,9 @@ class MenubarItem {
         buildStandardMenu(firstLevel: plugin == nil)
     }
 
-    func setupDefaultMenu() {
-
+    func updateMenu(scriptOutput: String) {
+        let title = scriptOutput
+        barItem.button?.title = title
     }
 
     func show() {
@@ -84,7 +85,9 @@ extension MenubarItem {
     }
 
     @objc func runInTerminal() {
-        plugin?.invoke(params: [])
+        if let text = plugin?.invoke(params: []) {
+            updateMenu(scriptOutput: text)
+        }
     }
 
     @objc func disablePlugin() {
