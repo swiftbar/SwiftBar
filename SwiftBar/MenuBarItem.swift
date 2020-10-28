@@ -5,19 +5,51 @@ class MenubarItem {
     var plugin: Plugin?
     let barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let statusBarMenu = NSMenu(title: "SwiftBar Menu")
-    var cancellable: AnyCancellable? = nil
+    let titleCylleInterval: Double = 5
+    var contentUpdateCancellable: AnyCancellable? = nil
+    var titleCycleCancellable: AnyCancellable? = nil
+    var titleLines: [String] = [] {
+        didSet {
+            currentTitleLine = -1
+            guard titleLines.count > 1 else {
+                disableTitleCycle()
+                return
+            }
+            enableTitleCycle()
+        }
+    }
+    
+    var currentTitleLine: Int = -1
+
+    var titleCylleTimerPubliser: Timer.TimerPublisher {
+        return Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
+    }
 
     init(title: String, plugin: Plugin? = nil) {
         barItem.button?.title = title
         barItem.menu = statusBarMenu
         self.plugin = plugin
         updateMenu()
-        cancellable = (plugin as? ExecutablePlugin)?.refreshPublisher
+        contentUpdateCancellable = (plugin as? ExecutablePlugin)?.contentUpdatePublisher
             .sink {[weak self] _ in
                 DispatchQueue.main.async { [weak self] in
+                    self?.disableTitleCycle()
                     self?.updateMenu()
                 }
             }
+    }
+
+    func enableTitleCycle() {
+        titleCycleCancellable = titleCylleTimerPubliser
+            .autoconnect()
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: {[weak self] _ in
+                self?.cycleThroughTitles()
+            })
+    }
+
+    func disableTitleCycle() {
+        titleCycleCancellable?.cancel()
     }
 
     func show() {
@@ -139,6 +171,7 @@ extension MenubarItem {
             return
         }
         let parts = splitScriptOutput(scriptOutput: scriptOutput)
+        titleLines =  parts.header
         updateMenuTitle(titleLines: parts.header)
 
         if !parts.body.isEmpty {
@@ -167,6 +200,14 @@ extension MenubarItem {
         }
     }
 
+    func cycleThroughTitles() {
+        currentTitleLine += 1
+        if currentTitleLine >= self.titleLines.count {
+            currentTitleLine = 0
+        }
+        barItem.button?.title = titleLines[currentTitleLine]
+    }
+
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
         guard params.dropdown else {return nil}
         var title = params.title
@@ -175,8 +216,8 @@ extension MenubarItem {
         }
         return NSMenuItem(title: title,
                           action: params.href != nil ? #selector(performMenuItemHREFAction):
-                          params.bash != nil ? #selector(performMenuItemBashAction):
-                          params.refresh ? #selector(performMenuItemRefreshAction): nil,
+                            params.bash != nil ? #selector(performMenuItemBashAction):
+                            params.refresh ? #selector(performMenuItemRefreshAction): nil,
                           keyEquivalent: "")
     }
 

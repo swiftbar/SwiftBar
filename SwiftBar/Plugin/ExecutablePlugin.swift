@@ -13,12 +13,12 @@ class ExecutablePlugin: Plugin {
     let metadata: PluginMetadata?
     var lastUpdated: Date? = nil
     var lastRefreshSuccesseful:Bool = false
-    var refreshPublisher = PassthroughSubject<Any, Never>()
+    var contentUpdatePublisher = PassthroughSubject<Any, Never>()
 
     var content: String? {
         didSet {
             guard content != oldValue else {return}
-            refreshPublisher.send("")
+            contentUpdatePublisher.send("")
         }
     }
     var error: String?
@@ -29,7 +29,7 @@ class ExecutablePlugin: Plugin {
         return Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
     }
 
-    var cancellable: AnyCancellable? = nil
+    var cancellable: Set<AnyCancellable> = []
 
     init(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
@@ -61,17 +61,17 @@ class ExecutablePlugin: Plugin {
     }
 
     func enableTimer() {
-        cancellable?.cancel()
-        cancellable = updateTimerPublisher
+        disableTimer()
+        updateTimerPublisher
             .autoconnect()
             .receive(on: queue)
             .sink(receiveValue: {[weak self] _ in
                 self?.content = self?.invoke(params: [])
-            })
+            }).store(in: &cancellable)
     }
 
     func disableTimer() {
-        cancellable?.cancel()
+        cancellable.forEach{$0.cancel()}
     }
 
     func refresh() {
