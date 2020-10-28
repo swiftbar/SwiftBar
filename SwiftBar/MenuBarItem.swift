@@ -1,17 +1,25 @@
 import Cocoa
+import Combine
 
 class MenubarItem {
     var plugin: Plugin?
     let barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let statusBarMenu = NSMenu(title: "SwiftBar Menu")
+    var cancellable: AnyCancellable? = nil
 
     init(title: String, plugin: Plugin? = nil) {
         barItem.button?.title = title
         barItem.menu = statusBarMenu
         self.plugin = plugin
-        buildStandardMenu(firstLevel: plugin == nil)
-        runInTerminal()
+        updateMenu()
+        cancellable = (plugin as? ExecutablePlugin)?.refreshPublisher
+            .sink {[weak self] _ in
+                DispatchQueue.main.async { [weak self] in
+                    self?.updateMenu()
+                }
+            }
     }
+
     func show() {
         barItem.isVisible = true
     }
@@ -23,7 +31,8 @@ class MenubarItem {
 
 // Standard status bar menu
 extension MenubarItem {
-    func buildStandardMenu(firstLevel: Bool) {
+    func buildStandardMenu() {
+        let firstLevel = (plugin == nil)
         let menu = firstLevel ? statusBarMenu:NSMenu(title: "Preferences")
 
         let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshPlugins), keyEquivalent: "r")
@@ -82,9 +91,7 @@ extension MenubarItem {
     }
 
     @objc func runInTerminal() {
-        if let text = plugin?.invoke(params: []) {
-            updateMenu(scriptOutput: text)
-        }
+        plugin?.refresh()
     }
 
     @objc func disablePlugin() {
@@ -124,11 +131,11 @@ extension MenubarItem {
         return (header,body)
     }
 
-    func updateMenu(scriptOutput: String) {
+    func updateMenu() {
         statusBarMenu.removeAllItems()
-        guard scriptOutput.count > 0 else {
+        guard let scriptOutput = plugin?.content, scriptOutput.count > 0 else {
             barItem.button?.title = "⚠️"
-            buildStandardMenu(firstLevel: plugin == nil)
+            buildStandardMenu()
             return
         }
         let parts = splitScriptOutput(scriptOutput: scriptOutput)
@@ -141,7 +148,7 @@ extension MenubarItem {
         parts.body.forEach { line in
             addMenuItem(from: line)
         }
-        buildStandardMenu(firstLevel: plugin == nil)
+        buildStandardMenu()
     }
 
     func addMenuItem(from line: String) {

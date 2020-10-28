@@ -13,6 +13,9 @@ protocol Plugin {
     var name: String { get }
     var file: String { get }
     var metadata: PluginMetadata? { get }
+    var updateInterval: Double {get}
+    var content: String? {get set}
+    var error: String? {get set}
     func refresh()
     func terminate()
     func invoke(params: [String]) -> String?

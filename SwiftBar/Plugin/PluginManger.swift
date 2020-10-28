@@ -30,10 +30,6 @@ class PluginManager {
         plugins.append(ExecutablePlugin(fileURL: fileURL))
     }
 
-    func addDummyPlugin() {
-//        plugins.append(ExecutablePlugin(name: "New", fileURL: <#URL#>, file: UUID().uuidString, metadata: PluginMetadata()))
-    }
-
     func disablePlugin(plugin: Plugin) {
         plugins.removeAll(where: {$0.id == plugin.id})
     }
@@ -41,18 +37,20 @@ class PluginManager {
     /// Scan pluginsFolder for all potential scripts
     func loadPlugins() {
         guard let pluginDirectoryPath = App.pluginDirectoryPath, let url = URL(string: pluginDirectoryPath) else {return}
+        plugins.removeAll()
+        menuBarItems.removeAll()
         let fileManager = FileManager.default
         var isDir: ObjCBool = false
         guard fileManager.fileExists(atPath: pluginDirectoryPath, isDirectory: &isDir), isDir.boolValue else {
-            plugins.removeAll()
-            menuBarItems.removeAll()
             barItem.show()
             return
         }
 
         let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil)
         while let element = enumerator?.nextObject() as? URL {
+            guard element.lastPathComponent != ".DS_Store" else {continue}
             addPlugin(from: element)
         }
+        print(plugins)
     }
 }
