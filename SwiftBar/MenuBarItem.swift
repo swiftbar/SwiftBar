@@ -10,13 +10,8 @@ class MenubarItem {
         barItem.menu = statusBarMenu
         self.plugin = plugin
         buildStandardMenu(firstLevel: plugin == nil)
+        runInTerminal()
     }
-
-    func updateMenu(scriptOutput: String) {
-        let title = scriptOutput
-        barItem.button?.title = title
-    }
-
     func show() {
         barItem.isVisible = true
     }
@@ -52,6 +47,8 @@ extension MenubarItem {
         menu.addItem(quitItem)
 
         if !firstLevel {
+            statusBarMenu.addItem(NSMenuItem.separator())
+
             // put swiftbar menu as submenu
             let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
             item.submenu = menu
@@ -108,4 +105,84 @@ extension MenubarItem {
         let item = MenubarItem(title: "SwiftBar")
         return item
     }
+}
+
+//parse script output
+extension MenubarItem {
+    func splitScriptOutput(scriptOutput: String) -> (header: [String], body: [String]){
+        guard let index = scriptOutput.range(of: "---") else {
+            return (scriptOutput.components(separatedBy: CharacterSet.newlines).filter{!$0.isEmpty},[])
+        }
+        let header = String(scriptOutput[...index.lowerBound])
+            .components(separatedBy: CharacterSet.newlines)
+            .dropLast()
+            .filter{!$0.isEmpty}
+        let body = String(scriptOutput[index.upperBound...])
+            .components(separatedBy: CharacterSet.newlines)
+            .dropFirst()
+            .filter{!$0.isEmpty}
+        return (header,body)
+    }
+
+    func updateMenu(scriptOutput: String) {
+        statusBarMenu.removeAllItems()
+        guard scriptOutput.count > 0 else {
+            barItem.button?.title = "⚠️"
+            buildStandardMenu(firstLevel: plugin == nil)
+            return
+        }
+        let parts = splitScriptOutput(scriptOutput: scriptOutput)
+        updateMenuTitle(titleLines: parts.header)
+
+        if !parts.body.isEmpty {
+            statusBarMenu.addItem(NSMenuItem.separator())
+        }
+
+        parts.body.forEach { line in
+            addMenuItem(from: line)
+        }
+        buildStandardMenu(firstLevel: plugin == nil)
+    }
+
+    func addMenuItem(from line: String) {
+        if let item = buildMenuItem(params: MenuLineParameters(line: line)) {
+            item.target = self
+            statusBarMenu.addItem(item)
+        }
+    }
+
+    func updateMenuTitle(titleLines: [String]) {
+        barItem.button?.title = titleLines.first ?? "⚠️"
+        guard titleLines.count > 1 else {return}
+
+        titleLines.forEach{ line in
+            addMenuItem(from: line)
+        }
+    }
+
+    func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
+        guard params.dropdown else {return nil}
+        var title = params.title
+        if params.trim {
+            title = title.trimmingCharacters(in: .whitespaces)
+        }
+        return NSMenuItem(title: title,
+                          action: params.href != nil ? #selector(performMenuItemHREFAction):
+                          params.bash != nil ? #selector(performMenuItemBashAction):
+                          params.refresh ? #selector(performMenuItemRefreshAction): nil,
+                          keyEquivalent: "")
+    }
+
+    @objc func performMenuItemHREFAction() {
+
+    }
+
+    @objc func performMenuItemBashAction() {
+
+    }
+
+    @objc func performMenuItemRefreshAction() {
+
+    }
+
 }
