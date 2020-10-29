@@ -27,7 +27,6 @@ class MenubarItem {
     }
 
     init(title: String, plugin: Plugin? = nil) {
-        barItem.button?.title = title
         barItem.menu = statusBarMenu
         self.plugin = plugin
         updateMenu()
@@ -209,7 +208,7 @@ extension MenubarItem {
     }
 
     func updateMenuTitle(titleLines: [String]) {
-        barItem.button?.title = titleLines.first ?? "⚠️"
+        setMenuTitle(title: titleLines.first ?? "⚠️")
         guard titleLines.count > 1 else {return}
 
         titleLines.forEach{ line in
@@ -217,26 +216,49 @@ extension MenubarItem {
         }
     }
 
+    func setMenuTitle(title: String) {
+        barItem.button?.attributedTitle = NSAttributedString(string: title,
+                                                             attributes: [NSAttributedString.Key.font:                                            NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)])
+    }
+
     func cycleThroughTitles() {
         currentTitleLine += 1
         if currentTitleLine >= self.titleLines.count {
             currentTitleLine = 0
         }
-        barItem.button?.title = titleLines[currentTitleLine]
+        setMenuTitle(title: titleLines[currentTitleLine])
+    }
+
+    func atributedTitle(with params: MenuLineParameters) -> NSAttributedString {
+        let title = params.trim ? params.title.trimmingCharacters(in: .whitespaces):params.title
+        let fontSize = params.size ?? 14
+        let color = params.color ?? NSColor.labelColor
+        let font = NSFont(name: params.font ?? "", size: fontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)
+
+        return NSAttributedString(string: title,
+                                  attributes: [
+                                    NSAttributedString.Key.foregroundColor:color,
+                                    NSAttributedString.Key.font:font
+        ])
     }
 
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
         guard params.dropdown else {return nil}
-        var title = params.title
-        if params.trim {
-            title = title.trimmingCharacters(in: .whitespaces)
-        }
-        let item = NSMenuItem(title: title,
+
+        let item = NSMenuItem(title: params.title,
                             action: params.href != nil ? #selector(performMenuItemHREFAction):
                             params.bash != nil ? #selector(performMenuItemBashAction):
                             params.refresh ? #selector(performMenuItemRefreshAction): nil,
                           keyEquivalent: "")
         item.representedObject = params
+        item.attributedTitle = atributedTitle(with: params)
+
+        if params.alternate {
+            item.isAlternate = true
+        }
+        if let image = params.image {
+            item.image = image
+        }
         return item
     }
 

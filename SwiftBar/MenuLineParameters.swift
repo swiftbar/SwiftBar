@@ -1,16 +1,18 @@
-import Foundation
+import Cocoa
 
 struct MenuLineParameters {
     let title: String
     let href: String?
     let bash: String?
     let refresh: Bool
-    let color: String?
+    let color: NSColor?
     let font: String?
-    let size: Int?
+    let size: CGFloat?
     let dropdown: Bool
     let trim: Bool
     let length: Int?
+    let alternate: Bool
+    let image: NSImage?
 
     init(line: String) {
         guard let index = line.range(of: "|") else {
@@ -24,26 +26,34 @@ struct MenuLineParameters {
             dropdown = true
             trim = false
             length = nil
+            alternate = true
+            image = nil
             return
         }
         title = String(line[...index.lowerBound].dropLast())
         let pairs = String(line[index.upperBound...]).trimmingCharacters(in: .whitespaces).components(separatedBy: .whitespaces)
         var params: [String:String] = [:]
         pairs.forEach{ pair in
-            let set = pair.components(separatedBy: "=")
-            guard set.count == 2 else {return}
-            params[set[0].trimmingCharacters(in: .whitespaces)] = set[1].trimmingCharacters(in: .whitespaces)
+            guard let index = pair.firstIndex(of: "=") else {return}
+            let key = pair[...pair.index(index, offsetBy: -1)].trimmingCharacters(in: .whitespaces)
+            let value = pair[pair.index(index, offsetBy: 1)...].trimmingCharacters(in: .whitespaces)
+            params[key] = value
         }
 
         href = params["href"]
         bash = params["bash"]
         refresh = (params["refresh"] == "true")
-        color = params["href"]
-        font = params["href"]
-        size = nil
-        dropdown = (params["trim"] != "false")
+        color = NSColor.webColor(from: params["color"])
+        font = params["font"]
+        if let sizeStr = params["size"], let pSize = Int(sizeStr) {
+            size = CGFloat(pSize)
+        } else {
+            size = nil
+        }
+        dropdown = (params["dropdown"] != "false")
         trim = (params["trim"] == "true")
         length = nil
+        alternate = (params["alternate"] == "true")
+        image = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
     }
 }
-
