@@ -26,12 +26,13 @@ struct MenuLineParameters {
             length = nil
             return
         }
-        title = String(line[...index.lowerBound])
-        let pairs = String(line[index.upperBound...]).components(separatedBy: .whitespaces)
+        title = String(line[...index.lowerBound].dropLast())
+        let pairs = String(line[index.upperBound...]).trimmingCharacters(in: .whitespaces).components(separatedBy: .whitespaces)
         var params: [String:String] = [:]
-        pairs.map{$0.components(separatedBy: "=")}.forEach { pair in
-            guard params.count == 2 else {return}
-            params[pair[0].trimmingCharacters(in: .whitespaces)] = pair[1].trimmingCharacters(in: .whitespaces)
+        pairs.forEach{ pair in
+            let set = pair.components(separatedBy: "=")
+            guard set.count == 2 else {return}
+            params[set[0].trimmingCharacters(in: .whitespaces)] = set[1].trimmingCharacters(in: .whitespaces)
         }
 
         href = params["href"]
@@ -40,8 +41,8 @@ struct MenuLineParameters {
         color = params["href"]
         font = params["href"]
         size = nil
-        dropdown = (params["refresh"] == "true")
-        trim = (params["refresh"] == "true")
+        dropdown = (params["trim"] != "false")
+        trim = (params["trim"] == "true")
         length = nil
     }
 }

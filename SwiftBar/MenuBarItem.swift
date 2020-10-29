@@ -20,6 +20,7 @@ class MenubarItem {
     }
     
     var currentTitleLine: Int = -1
+    var lastMenuItem: NSMenuItem? = nil
 
     var titleCylleTimerPubliser: Timer.TimerPublisher {
         return Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
@@ -185,9 +186,25 @@ extension MenubarItem {
     }
 
     func addMenuItem(from line: String) {
-        if let item = buildMenuItem(params: MenuLineParameters(line: line)) {
+        if line == "---" {
+            statusBarMenu.addItem(NSMenuItem.separator())
+            return
+        }
+        var workingLine = line
+        var submenu: NSMenu? = nil
+        while workingLine.hasPrefix("--") {
+            workingLine = String(workingLine.dropFirst(2))
+            let item = lastMenuItem ?? statusBarMenu.items.last
+            if item?.submenu == nil {
+                item?.submenu = NSMenu(title: "")
+            }
+            submenu = item?.submenu
+        }
+
+        if let item = buildMenuItem(params: MenuLineParameters(line: workingLine)) {
             item.target = self
-            statusBarMenu.addItem(item)
+            (submenu ?? statusBarMenu)?.addItem(item)
+            lastMenuItem = item
         }
     }
 
@@ -214,23 +231,31 @@ extension MenubarItem {
         if params.trim {
             title = title.trimmingCharacters(in: .whitespaces)
         }
-        return NSMenuItem(title: title,
-                          action: params.href != nil ? #selector(performMenuItemHREFAction):
+        let item = NSMenuItem(title: title,
+                            action: params.href != nil ? #selector(performMenuItemHREFAction):
                             params.bash != nil ? #selector(performMenuItemBashAction):
                             params.refresh ? #selector(performMenuItemRefreshAction): nil,
                           keyEquivalent: "")
+        item.representedObject = params
+        return item
     }
 
-    @objc func performMenuItemHREFAction() {
-
+    @objc func performMenuItemHREFAction(_ sender: NSMenuItem) {
+        guard let params = sender.representedObject as? MenuLineParameters,
+              let href = params.href,
+              let url = URL(string: href)
+        else {
+            return
+        }
+        NSWorkspace.shared.open(url)
     }
 
     @objc func performMenuItemBashAction() {
 
     }
 
-    @objc func performMenuItemRefreshAction() {
-
+    @objc func performMenuItemRefreshAction(_ sender: NSMenuItem) {
+        plugin?.refresh()
     }
 
 }
