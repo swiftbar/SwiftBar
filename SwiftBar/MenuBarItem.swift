@@ -229,11 +229,12 @@ extension MenubarItem {
         setMenuTitle(title: titleLines[currentTitleLine])
     }
 
-    func atributedTitle(with params: MenuLineParameters) -> NSAttributedString {
+    func atributedTitle(with params: MenuLineParameters) -> (title: NSAttributedString, tooltip: String) {
         var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces):params.title
         if params.emojize {
             title = title.emojify()
         }
+        let fullTitle = title
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
@@ -241,11 +242,11 @@ extension MenubarItem {
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)
 
-        return NSAttributedString(string: title,
+        return (NSAttributedString(string: title,
                                   attributes: [
                                     NSAttributedString.Key.foregroundColor:color,
                                     NSAttributedString.Key.font:font
-        ])
+        ]), fullTitle)
     }
 
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
@@ -257,7 +258,12 @@ extension MenubarItem {
                             params.refresh ? #selector(performMenuItemRefreshAction): nil,
                           keyEquivalent: "")
         item.representedObject = params
-        item.attributedTitle = atributedTitle(with: params)
+        let title = atributedTitle(with: params)
+        item.attributedTitle = title.title
+
+        if let length = params.length, length < title.title.string.count {
+            item.toolTip = title.tooltip
+        }
 
         if params.alternate {
             item.isAlternate = true
