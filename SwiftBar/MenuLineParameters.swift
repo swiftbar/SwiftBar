@@ -13,6 +13,7 @@ struct MenuLineParameters {
     let length: Int?
     let alternate: Bool
     let image: NSImage?
+    let emojize: Bool
 
     init(line: String) {
         guard let index = line.range(of: "|") else {
@@ -24,10 +25,11 @@ struct MenuLineParameters {
             font = nil
             size = nil
             dropdown = true
-            trim = false
+            trim = true
             length = nil
             alternate = true
             image = nil
+            emojize = true
             return
         }
         title = String(line[...index.lowerBound].dropLast())
@@ -51,9 +53,10 @@ struct MenuLineParameters {
             size = nil
         }
         dropdown = (params["dropdown"] != "false")
-        trim = (params["trim"] == "true")
+        trim = (params["trim"] != "false")
         length = nil
         alternate = (params["alternate"] == "true")
         image = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
+        emojize = (params["emojize"] != "false")
     }
 }

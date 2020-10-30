@@ -230,7 +230,10 @@ extension MenubarItem {
     }
 
     func atributedTitle(with params: MenuLineParameters) -> NSAttributedString {
-        let title = params.trim ? params.title.trimmingCharacters(in: .whitespaces):params.title
+        var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces):params.title
+        if params.emojize {
+            title = title.emojify()
+        }
         let fontSize = params.size ?? 14
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)
