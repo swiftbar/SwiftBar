@@ -267,6 +267,7 @@ extension MenubarItem {
 
         if params.alternate {
             item.isAlternate = true
+            item.keyEquivalentModifierMask = NSEvent.ModifierFlags.option
         }
         if let image = params.image {
             item.image = image

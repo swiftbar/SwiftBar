@@ -27,7 +27,7 @@ struct MenuLineParameters {
             dropdown = true
             trim = true
             length = nil
-            alternate = true
+            alternate = false
             image = nil
             emojize = true
             return
