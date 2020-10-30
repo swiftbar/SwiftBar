@@ -60,7 +60,13 @@ struct MenuLineParameters {
             length = nil
         }
         alternate = (params["alternate"] == "true")
-        image = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
+        let tmpImage = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
+        if let widthStr = params["width"], let width = Float(widthStr),
+           let heightStr = params["height"], let height = Float(heightStr) {
+            image = tmpImage?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
+        } else {
+            image = tmpImage
+        }
         emojize = (params["emojize"] != "false")
     }
 }
