@@ -85,6 +85,7 @@ class ExecutablePlugin: Plugin {
     }
 
     func invoke(params : [String]) -> String? {
+        lastUpdated = Date()
         do {
             let out = try shellOut(to: String(file.dropFirst(7)))
             self.error = nil

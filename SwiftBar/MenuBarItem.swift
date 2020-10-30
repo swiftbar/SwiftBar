@@ -1,13 +1,15 @@
 import Cocoa
 import Combine
 
-class MenubarItem {
+class MenubarItem: NSObject {
     var plugin: Plugin?
     let barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let statusBarMenu = NSMenu(title: "SwiftBar Menu")
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable? = nil
     var titleCycleCancellable: AnyCancellable? = nil
+    let lastUpdatedMenuItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
+
     var titleLines: [String] = [] {
         didSet {
             currentTitleLine = -1
@@ -27,8 +29,10 @@ class MenubarItem {
     }
 
     init(title: String, plugin: Plugin? = nil) {
+        super.init()
         barItem.menu = statusBarMenu
         self.plugin = plugin
+        statusBarMenu.delegate = self
         updateMenu()
         contentUpdateCancellable = (plugin as? ExecutablePlugin)?.contentUpdatePublisher
             .sink {[weak self] _ in
@@ -58,6 +62,16 @@ class MenubarItem {
 
     func hide() {
         barItem.isVisible = false
+    }
+}
+
+extension MenubarItem: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        guard let lastUpdated = (plugin as? ExecutablePlugin)?.lastUpdated else {return}
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
+        lastUpdatedMenuItem.title = "Updated \(relativeDate)"
     }
 }
 
@@ -97,6 +111,7 @@ extension MenubarItem {
 
             // default plugin menu items
             statusBarMenu.addItem(NSMenuItem.separator())
+            statusBarMenu.addItem(lastUpdatedMenuItem)
             statusBarMenu.addItem(runInTerminalItem)
             statusBarMenu.addItem(disablePluginItem)
         }
