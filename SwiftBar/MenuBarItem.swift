@@ -217,8 +217,7 @@ extension MenubarItem {
     }
 
     func setMenuTitle(title: String) {
-        barItem.button?.attributedTitle = NSAttributedString(string: title,
-                                                             attributes: [NSAttributedString.Key.font:                                            NSFont.monospacedDigitSystemFont(ofSize: NSFont.systemFontSize, weight: .regular)])
+        barItem.button?.attributedTitle = atributedTitle(with: MenuLineParameters(line: title)).title
     }
 
     func cycleThroughTitles() {
