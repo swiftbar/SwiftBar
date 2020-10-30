@@ -234,6 +234,9 @@ extension MenubarItem {
         if params.emojize {
             title = title.emojify()
         }
+        if let length = params.length, length < title.count {
+            title = String(title.prefix(length)).appending("...")
+        }
         let fontSize = params.size ?? 14
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)

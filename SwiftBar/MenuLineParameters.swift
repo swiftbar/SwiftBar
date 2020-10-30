@@ -54,7 +54,11 @@ struct MenuLineParameters {
         }
         dropdown = (params["dropdown"] != "false")
         trim = (params["trim"] != "false")
-        length = nil
+        if let lengthStr = params["length"], let pLength = Int(lengthStr) {
+            length = pLength
+        } else {
+            length = nil
+        }
         alternate = (params["alternate"] == "true")
         image = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
         emojize = (params["emojize"] != "false")
