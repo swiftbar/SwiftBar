@@ -38,8 +38,6 @@ struct MenuLineParameters {
                 params[key] = value
             }
         }
-        print(line)
-        print(params)
         return params
     }
 
