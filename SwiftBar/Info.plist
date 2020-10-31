@@ -39,5 +39,7 @@
 	<true/>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Allow SwiftBar to run plugin in Terminal</string>
 </dict>
 </plist>

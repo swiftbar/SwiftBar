@@ -138,7 +138,21 @@ extension MenubarItem {
     }
 
     @objc func runInTerminal() {
-        plugin?.refresh()
+        guard let scriptPath = plugin?.file.dropFirst(7) else {return}
+        let script = """
+        tell application "Terminal"
+            do script "\(scriptPath)" in front window
+            activate
+        end tell
+        """
+        var error: NSDictionary?
+        if let scriptObject = NSAppleScript(source: script) {
+            if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
+                print(outputString)
+            } else if let error = error {
+                print("error: ", error)
+            }
+        }
     }
 
     @objc func disablePlugin() {

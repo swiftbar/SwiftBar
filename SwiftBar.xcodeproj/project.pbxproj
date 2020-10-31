@@ -18,7 +18,6 @@
 		39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7774254613C9001D76E5 /* PluginManger.swift */; };
 		39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */; };
 		39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777B254618F6001D76E5 /* MenuBarItem.swift */; };
-		39AF778025461A89001D76E5 /* PluginFileParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777F25461A89001D76E5 /* PluginFileParser.swift */; };
 		39AF77842547750E001D76E5 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF77832547750E001D76E5 /* App.swift */; };
 		39AF778925479535001D76E5 /* ShellOut in Frameworks */ = {isa = PBXBuildFile; productRef = 39AF778825479535001D76E5 /* ShellOut */; };
 		39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */; };
@@ -42,7 +41,6 @@
 		39AF7774254613C9001D76E5 /* PluginManger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManger.swift; sourceTree = "<group>"; };
 		39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutablePlugin.swift; sourceTree = "<group>"; };
 		39AF777B254618F6001D76E5 /* MenuBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarItem.swift; sourceTree = "<group>"; };
-		39AF777F25461A89001D76E5 /* PluginFileParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginFileParser.swift; sourceTree = "<group>"; };
 		39AF77832547750E001D76E5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuLineParameters.swift; sourceTree = "<group>"; };
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
@@ -88,8 +86,8 @@
 				3988C8932546116200A02B9B /* Plugin */,
 				39AF7791254B5824001D76E5 /* Utility */,
 				3920748125460FD300213DBE /* Assets.xcassets */,
-				3920748925460FD300213DBE /* Info.plist */,
 				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
+				3920748925460FD300213DBE /* Info.plist */,
 				3920748325460FD300213DBE /* Preview Content */,
 			);
 			path = SwiftBar;
@@ -109,7 +107,6 @@
 				39AF776E25461277001D76E5 /* Plugin.swift */,
 				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
 				39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */,
-				39AF777F25461A89001D76E5 /* PluginFileParser.swift */,
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
 			);
 			path = Plugin;
@@ -211,7 +208,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				39AF778025461A89001D76E5 /* PluginFileParser.swift in Sources */,
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
