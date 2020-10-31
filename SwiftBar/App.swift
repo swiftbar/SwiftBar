@@ -6,7 +6,7 @@ class App: NSObject {
         get {{UserDefaults.standard.string(forKey: "PluginDirectoryPath")}()}
     }
     public static func refreshPlugins() {
-        PluginManager.shared.loadPlugins()
+        PluginManager.shared.plugins.forEach{$0.refresh()}
     }
 
     public static func openPluginFolder() {
