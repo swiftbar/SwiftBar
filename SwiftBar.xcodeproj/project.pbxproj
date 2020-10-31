@@ -10,9 +10,9 @@
 		3920747E25460FD000213DBE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920747D25460FD000213DBE /* AppDelegate.swift */; };
 		3920748225460FD300213DBE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
-		3920748825460FD300213DBE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3920748625460FD300213DBE /* Main.storyboard */; };
 		398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C3254DA85300DEA027 /* URL+Extension.swift */; };
 		398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */; };
+		398B86CE254DBF2F00DEA027 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86CD254DBF2F00DEA027 /* main.swift */; };
 		39AF776F25461277001D76E5 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF776E25461277001D76E5 /* Plugin.swift */; };
 		39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7771254612BF001D76E5 /* PluginMetadata.swift */; };
 		39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7774254613C9001D76E5 /* PluginManger.swift */; };
@@ -32,11 +32,11 @@
 		3920747D25460FD000213DBE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3920748125460FD300213DBE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3920748425460FD300213DBE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		3920748725460FD300213DBE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3920748925460FD300213DBE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
 		398B86C3254DA85300DEA027 /* URL+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extension.swift"; sourceTree = "<group>"; };
 		398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryObserver.swift; sourceTree = "<group>"; };
+		398B86CD254DBF2F00DEA027 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		39AF776E25461277001D76E5 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		39AF7771254612BF001D76E5 /* PluginMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMetadata.swift; sourceTree = "<group>"; };
 		39AF7774254613C9001D76E5 /* PluginManger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManger.swift; sourceTree = "<group>"; };
@@ -81,14 +81,13 @@
 		3920747C25460FD000213DBE /* SwiftBar */ = {
 			isa = PBXGroup;
 			children = (
-				39AF7791254B5824001D76E5 /* Utility */,
-				39AF77832547750E001D76E5 /* App.swift */,
-				39AF777B254618F6001D76E5 /* MenuBarItem.swift */,
-				39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */,
-				3988C8932546116200A02B9B /* Plugin */,
+				398B86CD254DBF2F00DEA027 /* main.swift */,
 				3920747D25460FD000213DBE /* AppDelegate.swift */,
+				39AF77832547750E001D76E5 /* App.swift */,
+				398B86D4254DC01800DEA027 /* MenuBar */,
+				3988C8932546116200A02B9B /* Plugin */,
+				39AF7791254B5824001D76E5 /* Utility */,
 				3920748125460FD300213DBE /* Assets.xcassets */,
-				3920748625460FD300213DBE /* Main.storyboard */,
 				3920748925460FD300213DBE /* Info.plist */,
 				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
 				3920748325460FD300213DBE /* Preview Content */,
@@ -114,6 +113,15 @@
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
 			);
 			path = Plugin;
+			sourceTree = "<group>";
+		};
+		398B86D4254DC01800DEA027 /* MenuBar */ = {
+			isa = PBXGroup;
+			children = (
+				39AF777B254618F6001D76E5 /* MenuBarItem.swift */,
+				39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */,
+			);
+			path = MenuBar;
 			sourceTree = "<group>";
 		};
 		39AF7791254B5824001D76E5 /* Utility */ = {
@@ -191,7 +199,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3920748825460FD300213DBE /* Main.storyboard in Resources */,
 				3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */,
 				3920748225460FD300213DBE /* Assets.xcassets in Resources */,
 			);
@@ -215,6 +222,7 @@
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
+				398B86CE254DBF2F00DEA027 /* main.swift in Sources */,
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,
@@ -222,17 +230,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		3920748625460FD300213DBE /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				3920748725460FD300213DBE /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		3920748B25460FD300213DBE /* Debug */ = {

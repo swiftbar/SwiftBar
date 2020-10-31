@@ -1,6 +1,5 @@
 import Cocoa
 
-@NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
     let pluginManager = PluginManager.shared
 
