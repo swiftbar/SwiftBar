@@ -15,7 +15,7 @@ class ExecutablePlugin: Plugin {
     var lastRefreshSuccesseful:Bool = false
     var contentUpdatePublisher = PassthroughSubject<Any, Never>()
 
-    var content: String? {
+    var content: String? = "..." {
         didSet {
             guard content != oldValue else {return}
             contentUpdatePublisher.send("")
@@ -76,8 +76,10 @@ class ExecutablePlugin: Plugin {
 
     func refresh() {
         disableTimer()
-        content = invoke(params: [])
-        enableTimer()
+        queue.async { [weak self] in
+            self?.content = self?.invoke(params: [])
+            self?.enableTimer()
+        }
     }
 
     func terminate() {
