@@ -237,7 +237,7 @@ extension MenubarItem {
 
     func cycleThroughTitles() {
         currentTitleLine += 1
-        if currentTitleLine >= self.titleLines.count {
+        if !titleLines.indices.contains(currentTitleLine) {
             currentTitleLine = 0
         }
         setMenuTitle(title: titleLines[currentTitleLine])
