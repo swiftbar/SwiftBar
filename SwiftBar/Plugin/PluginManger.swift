@@ -18,7 +18,11 @@ class PluginManager {
     }
 
     init() {
-        configureDirectoryObserver()
+        if let url = pluginDirectoryURL {
+            directoryObserver = DirectoryObserver(URL: url, block: { [weak self] in
+                self?.directoryChanged()
+            })
+        }
         loadPlugins()
     }
 
@@ -55,10 +59,6 @@ class PluginManager {
     }
 
     func loadPlugins() {
-        if directoryObserver?.url != pluginDirectoryURL {
-            configureDirectoryObserver()
-        }
-        
         let pluginFiles = getPluginList()
         guard !pluginFiles.isEmpty else {
             plugins.removeAll()
@@ -109,14 +109,6 @@ class PluginManager {
             }
         }
         downloadTask.resume()
-    }
-
-    func configureDirectoryObserver() {
-        if let url = pluginDirectoryURL {
-            directoryObserver = DirectoryObserver(url: url, block: { [weak self] in
-                self?.directoryChanged()
-            })
-        }
     }
 
     func directoryChanged() {
