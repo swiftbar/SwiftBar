@@ -11,6 +11,8 @@
 		3920748225460FD300213DBE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
 		3920748825460FD300213DBE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3920748625460FD300213DBE /* Main.storyboard */; };
+		398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C3254DA85300DEA027 /* URL+Extension.swift */; };
+		398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */; };
 		39AF776F25461277001D76E5 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF776E25461277001D76E5 /* Plugin.swift */; };
 		39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7771254612BF001D76E5 /* PluginMetadata.swift */; };
 		39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7774254613C9001D76E5 /* PluginManger.swift */; };
@@ -20,6 +22,9 @@
 		39AF77842547750E001D76E5 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF77832547750E001D76E5 /* App.swift */; };
 		39AF778925479535001D76E5 /* ShellOut in Frameworks */ = {isa = PBXBuildFile; productRef = 39AF778825479535001D76E5 /* ShellOut */; };
 		39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */; };
+		39AF7793254B5834001D76E5 /* NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7792254B5834001D76E5 /* NSColor.swift */; };
+		39AF7796254B6203001D76E5 /* NSImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7795254B6203001D76E5 /* NSImage.swift */; };
+		39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7798254C7796001D76E5 /* String+Emoji.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +35,8 @@
 		3920748725460FD300213DBE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		3920748925460FD300213DBE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
+		398B86C3254DA85300DEA027 /* URL+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "URL+Extension.swift"; sourceTree = "<group>"; };
+		398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryObserver.swift; sourceTree = "<group>"; };
 		39AF776E25461277001D76E5 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		39AF7771254612BF001D76E5 /* PluginMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMetadata.swift; sourceTree = "<group>"; };
 		39AF7774254613C9001D76E5 /* PluginManger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManger.swift; sourceTree = "<group>"; };
@@ -38,6 +45,9 @@
 		39AF777F25461A89001D76E5 /* PluginFileParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginFileParser.swift; sourceTree = "<group>"; };
 		39AF77832547750E001D76E5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuLineParameters.swift; sourceTree = "<group>"; };
+		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
+		39AF7795254B6203001D76E5 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
+		39AF7798254C7796001D76E5 /* String+Emoji.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Emoji.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,6 +81,7 @@
 		3920747C25460FD000213DBE /* SwiftBar */ = {
 			isa = PBXGroup;
 			children = (
+				39AF7791254B5824001D76E5 /* Utility */,
 				39AF77832547750E001D76E5 /* App.swift */,
 				39AF777B254618F6001D76E5 /* MenuBarItem.swift */,
 				39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */,
@@ -105,6 +116,18 @@
 			path = Plugin;
 			sourceTree = "<group>";
 		};
+		39AF7791254B5824001D76E5 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				39AF7792254B5834001D76E5 /* NSColor.swift */,
+				39AF7795254B6203001D76E5 /* NSImage.swift */,
+				39AF7798254C7796001D76E5 /* String+Emoji.swift */,
+				398B86C3254DA85300DEA027 /* URL+Extension.swift */,
+				398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -135,7 +158,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1200;
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1210;
 				TargetAttributes = {
 					3920747925460FD000213DBE = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -184,10 +207,15 @@
 				39AF778025461A89001D76E5 /* PluginFileParser.swift in Sources */,
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
+				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
 				39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				39AF77842547750E001D76E5 /* App.swift in Sources */,
+				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
+				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
+				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
+				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,
 			);
@@ -328,6 +356,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SwiftBar/SwiftBar.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
@@ -352,6 +381,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SwiftBar/SwiftBar.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
