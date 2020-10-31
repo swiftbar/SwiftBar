@@ -34,8 +34,8 @@ extension Plugin {
             version: \(metadata?.version ?? "")
             github: \(metadata?.github ?? "")
             desc: \(metadata?.desc ?? "")
-            previewImageURL: \(metadata?.previewImageURL ?? "")
-            dependencies: \(metadata?.dependencies.joined(separator: ",") ?? "")
+            previewImageURL: \(metadata?.previewImageURL?.absoluteString ?? "")
+            dependencies: \(metadata?.dependencies?.joined(separator: ",") ?? "")
             aboutURL: \(metadata?.aboutURL?.absoluteString ?? "")
         """
     }

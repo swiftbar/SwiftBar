@@ -1,5 +1,6 @@
 import Cocoa
 import Combine
+import SwiftUI
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
@@ -98,7 +99,6 @@ extension MenubarItem {
         menu.addItem(openPluginFolderItem)
         menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(aboutItem)
         menu.addItem(quitItem)
 
         if !firstLevel {
@@ -114,6 +114,9 @@ extension MenubarItem {
             statusBarMenu.addItem(lastUpdatedMenuItem)
             statusBarMenu.addItem(runInTerminalItem)
             statusBarMenu.addItem(disablePluginItem)
+            if plugin?.metadata?.isEmpty == false {
+                statusBarMenu.addItem(aboutItem)
+            }
         }
     }
 
@@ -161,9 +164,13 @@ extension MenubarItem {
     }
 
     @objc func about() {
-        if let plugin = plugin {
-            print(plugin.description)
-        }
+        guard let pluginMetadata = plugin?.metadata else {return}
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
+        popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+        NSApp.activate(ignoringOtherApps: true)
+        popover.contentViewController?.view.window?.becomeKey()
     }
 }
 
