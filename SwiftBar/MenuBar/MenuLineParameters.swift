@@ -2,71 +2,100 @@ import Cocoa
 
 struct MenuLineParameters {
     let title: String
-    let href: String?
-    let bash: String?
-    let refresh: Bool
-    let color: NSColor?
-    let font: String?
-    let size: CGFloat?
-    let dropdown: Bool
-    let trim: Bool
-    let length: Int?
-    let alternate: Bool
-    let image: NSImage?
-    let emojize: Bool
+    let params: [String:String]
 
     init(line: String) {
         guard let index = line.range(of: "|") else {
             title = line
-            href = nil
-            bash = nil
-            refresh = false
-            color = nil
-            font = nil
-            size = nil
-            dropdown = true
-            trim = true
-            length = nil
-            alternate = false
-            image = nil
-            emojize = true
+            params = [:]
             return
         }
         title = String(line[...index.lowerBound].dropLast())
-        let pairs = String(line[index.upperBound...]).trimmingCharacters(in: .whitespaces).components(separatedBy: .whitespaces)
-        var params: [String:String] = [:]
-        pairs.forEach{ pair in
-            guard let index = pair.firstIndex(of: "=") else {return}
-            let key = pair[...pair.index(index, offsetBy: -1)].trimmingCharacters(in: .whitespaces)
-            let value = pair[pair.index(index, offsetBy: 1)...].trimmingCharacters(in: .whitespaces)
-            params[key] = value
-        }
+        params = MenuLineParameters.getParams(from: String(line[index.upperBound...]).trimmingCharacters(in: .whitespaces))
+    }
 
-        href = params["href"]
-        bash = params["bash"]
-        refresh = (params["refresh"] == "true")
-        color = NSColor.webColor(from: params["color"])
-        font = params["font"]
-        if let sizeStr = params["size"], let pSize = Int(sizeStr) {
-            size = CGFloat(pSize)
-        } else {
-            size = nil
+    static func getParams(from line: String) -> [String:String] {
+        let scanner = Scanner(string: line)
+        let keyValueSeparator = CharacterSet(charactersIn: "=")
+        let quoteSeparator = CharacterSet(charactersIn: "\"'")
+
+        var params: [String:String] = [:]
+
+        while !scanner.isAtEnd {
+            var key: String? = ""
+            var value: String? = ""
+            key = scanner.scanUpToCharacters(from: keyValueSeparator)
+            _ = scanner.scanCharacters(from: keyValueSeparator)
+            if scanner.scanCharacters(from: quoteSeparator) != nil {
+                value = scanner.scanUpToCharacters(from: quoteSeparator)
+                _ = scanner.scanCharacters(from: quoteSeparator)
+            } else {
+                value = scanner.scanUpToString(" ")
+            }
+
+            if let key = key?.trimmingCharacters(in: .whitespaces),
+               let value = value?.trimmingCharacters(in: .whitespaces) {
+                params[key] = value
+            }
         }
-        dropdown = (params["dropdown"] != "false")
-        trim = (params["trim"] != "false")
-        if let lengthStr = params["length"], let pLength = Int(lengthStr) {
-            length = pLength
-        } else {
-            length = nil
-        }
-        alternate = (params["alternate"] == "true")
-        let tmpImage = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
+        print(line)
+        print(params)
+        return params
+    }
+
+    var href: String? {
+        params["href"]
+    }
+
+    var bash: String? {
+        params["bash"]
+    }
+
+    var refresh: Bool {
+        params["refresh"] == "true"
+    }
+
+    var color: NSColor? {
+        NSColor.webColor(from: params["color"])
+    }
+
+    var font: String?{
+        params["font"]
+    }
+
+    var size: CGFloat? {
+        guard let sizeStr = params["size"], let pSize = Int(sizeStr) else {return nil}
+        return CGFloat(pSize)
+    }
+
+    var dropdown: Bool {
+        params["dropdown"] != "false"
+    }
+
+    var trim: Bool {
+        params["trim"] != "false"
+    }
+
+    var length: Int? {
+        guard let lengthStr = params["length"], let pLength = Int(lengthStr) else { return nil }
+        return pLength
+    }
+
+    var alternate: Bool {
+        params["alternate"] == "true"
+    }
+
+    var image: NSImage? {
+        let image = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
         if let widthStr = params["width"], let width = Float(widthStr),
            let heightStr = params["height"], let height = Float(heightStr) {
-            image = tmpImage?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
-        } else {
-            image = tmpImage
+            return image?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
         }
-        emojize = (params["emojize"] != "false")
+
+        return image
+    }
+
+    var emojize: Bool{
+        params["emojize"] != "false"
     }
 }
