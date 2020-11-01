@@ -4,13 +4,13 @@ import Combine
 struct AboutPluginView: View {
     let md: PluginMetadata
     var body: some View {
-        ScrollView(showsIndicators: false) {
+        ScrollView(showsIndicators: true) {
         VStack {
             if let name = md.name {
                 VStack {
                     Text(name)
                         .font(.largeTitle)
-                        .lineLimit(0)
+                        .fixedSize()
                     if let version = md.version {
                         Text(version)
                             .font(.footnote)
