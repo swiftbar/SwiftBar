@@ -12,6 +12,7 @@ protocol Plugin {
     var type: PluginType { get }
     var name: String { get }
     var file: String { get }
+    var enabled: Bool {get}
     var metadata: PluginMetadata? { get }
     var updateInterval: Double {get}
     var content: String? {get set}

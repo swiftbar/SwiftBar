@@ -1,8 +1,10 @@
 import Foundation
 import ShellOut
+import Combine
 
 class PluginManager {
     static let shared = PluginManager()
+    let prefs = Preferences.shared
     let barItem = MenubarItem.defaultBarItem()
     var directoryObserver: DirectoryObserver?
 
@@ -11,27 +13,35 @@ class PluginManager {
             pluginsDidChange()
         }
     }
+    var enabledPlugins: [Plugin] {
+        return plugins.filter{$0.enabled}
+    }
     var menuBarItems: [PluginID: MenubarItem] = [:]
     var pluginDirectoryURL: URL? {
-        guard let pluginDirectoryPath = App.pluginDirectoryPath, let url = URL(string: pluginDirectoryPath) else {return nil}
+        guard let pluginDirectoryPath = prefs.pluginDirectoryPath, let url = URL(string: pluginDirectoryPath) else {return nil}
         return url
     }
+
+    var cancellable: AnyCancellable? = nil
 
     init() {
         configureDirectoryObserver()
         loadPlugins()
+        cancellable = prefs.$disabledPlugins.sink(receiveValue: { [weak self] _ in
+            self?.pluginsDidChange()
+        })
     }
 
     func pluginsDidChange() {
-        plugins.forEach{ plugin in
+        enabledPlugins.forEach{ plugin in
             guard menuBarItems[plugin.id] == nil else {return}
             menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
         }
         menuBarItems.keys.forEach{ pluginID in
-            guard !plugins.contains(where: {$0.id == pluginID}) else {return}
+            guard !enabledPlugins.contains(where: {$0.id == pluginID}) else {return}
             menuBarItems.removeValue(forKey: pluginID)
         }
-        plugins.isEmpty ? barItem.show():barItem.hide()
+        enabledPlugins.isEmpty ? barItem.show():barItem.hide()
     }
 
     func addPlugin(from fileURL: URL) {
@@ -39,11 +49,11 @@ class PluginManager {
     }
 
     func disablePlugin(plugin: Plugin) {
-        plugins.removeAll(where: {$0.id == plugin.id})
+        prefs.disabledPlugins.append(plugin.id)
     }
     
     func getPluginList() -> [URL] {
-        guard let pluginDirectoryPath = App.pluginDirectoryPath, let url = pluginDirectoryURL else {return []}
+        guard let pluginDirectoryPath = prefs.pluginDirectoryPath, let url = pluginDirectoryURL else {return []}
         let fileManager = FileManager.default
         var isDir: ObjCBool = false
         guard fileManager.fileExists(atPath: pluginDirectoryPath, isDirectory: &isDir), isDir.boolValue else {

@@ -3,12 +3,13 @@ import Combine
 import ShellOut
 
 class ExecutablePlugin: Plugin {
-    var id: PluginID {
-        return file
-    }
+    var id: PluginID
     let type: PluginType = .Executable
     let name: String
     let file: String
+    var enabled: Bool {
+        !prefs.disabledPlugins.contains(id)
+    }
     var updateInterval: Double = 60
     let metadata: PluginMetadata?
     var lastUpdated: Date? = nil
@@ -31,8 +32,11 @@ class ExecutablePlugin: Plugin {
 
     var cancellable: Set<AnyCancellable> = []
 
+    let prefs = Preferences.shared
+
     init(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
+        self.id = fileURL.lastPathComponent
         self.name = nameComponents.first ?? ""
         self.file = fileURL.absoluteString
         if nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
@@ -56,7 +60,6 @@ class ExecutablePlugin: Plugin {
         } else {
             metadata = nil
         }
-
         refresh()
     }
 

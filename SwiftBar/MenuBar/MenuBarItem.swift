@@ -83,7 +83,7 @@ extension MenubarItem {
         let menu = firstLevel ? statusBarMenu:NSMenu(title: "Preferences")
 
         let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshPlugins), keyEquivalent: "r")
-        let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
+        let preferencesItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
         let openPluginFolderItem = NSMenuItem(title: "Open Plugin Folder...", action: #selector(openPluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
         let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
@@ -91,14 +91,14 @@ extension MenubarItem {
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
 
-        [refreshAllItem,changePluginFolderItem,openPluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,runInTerminalItem].forEach{$0.target = self}
+        [refreshAllItem,preferencesItem,openPluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,runInTerminalItem].forEach{$0.target = self}
 
         menu.addItem(refreshAllItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(changePluginFolderItem)
         menu.addItem(openPluginFolderItem)
         menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(preferencesItem)
         menu.addItem(quitItem)
 
         if !firstLevel {
@@ -126,6 +126,10 @@ extension MenubarItem {
 
     @objc func openPluginFolder() {
         App.openPluginFolder()
+    }
+
+    @objc func openPreferences() {
+        App.openPreferences()
     }
 
     @objc func changePluginFolder() {
