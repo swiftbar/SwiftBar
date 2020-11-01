@@ -25,6 +25,9 @@ class MenubarItem: NSObject {
     var currentTitleLine: Int = -1
     var lastMenuItem: NSMenuItem? = nil
 
+    var prevLevel = 0
+    var prevItems = [NSMenuItem]()
+
     var titleCylleTimerPubliser: Timer.TimerPublisher {
         return Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
     }
@@ -42,6 +45,11 @@ class MenubarItem: NSObject {
                     self?.updateMenu()
                 }
             }
+    }
+
+    deinit {
+        contentUpdateCancellable?.cancel()
+        titleCycleCancellable?.cancel()
     }
 
     func enableTitleCycle() {
@@ -218,6 +226,7 @@ extension MenubarItem {
             statusBarMenu.addItem(NSMenuItem.separator())
         }
 
+        //prevItems.append(statusBarMenu.items.last)
         parts.body.forEach { line in
             addMenuItem(from: line)
         }
@@ -231,9 +240,24 @@ extension MenubarItem {
         }
         var workingLine = line
         var submenu: NSMenu? = nil
+        var currentLevel = 0
+
         while workingLine.hasPrefix("--") {
             workingLine = String(workingLine.dropFirst(2))
-            let item = lastMenuItem ?? statusBarMenu.items.last
+            currentLevel += 1
+        }
+
+        if prevLevel >= currentLevel, prevItems.count > 0 {
+            var cnt = prevLevel - currentLevel
+            while cnt >= 0 {
+                if !prevItems.isEmpty {
+                    prevItems.removeFirst()
+                }
+                cnt = cnt - 1
+            }
+        }
+        if currentLevel > 0 {
+            let item = prevItems.first
             if item?.submenu == nil {
                 item?.submenu = NSMenu(title: "")
             }
@@ -244,6 +268,8 @@ extension MenubarItem {
             item.target = self
             (submenu ?? statusBarMenu)?.addItem(item)
             lastMenuItem = item
+            prevLevel = currentLevel
+            prevItems.insert(item, at: 0)
         }
     }
 
