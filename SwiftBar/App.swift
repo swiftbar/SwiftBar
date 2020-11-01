@@ -2,21 +2,17 @@ import Cocoa
 import SwiftUI
 
 class App: NSObject {
-    public static func refreshPlugins() {
-        PluginManager.shared.plugins.forEach{$0.refresh()}
-    }
-
     public static func openPluginFolder() {
         NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryPath ?? "")
     }
 
     public static func changePluginFolder() {
-        let dialog = NSOpenPanel();
-
-        dialog.title                   = "Choose a plugin folder"
+        let dialog = NSOpenPanel()
+        dialog.title                   = "Choose plugin folder"
         dialog.showsResizeIndicator    = true
         dialog.showsHiddenFiles        = false
         dialog.canChooseDirectories    = true
+        dialog.canChooseFiles          = false
         dialog.canCreateDirectories    = true
         dialog.allowsMultipleSelection = false
 
@@ -25,7 +21,7 @@ class App: NSObject {
         else {return}
 
         Preferences.shared.pluginDirectoryPath = path
-        refreshPlugins()
+        delegate.pluginManager.refreshAllPlugins()
     }
 
     public static func getPlugins() {
