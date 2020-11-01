@@ -25,7 +25,7 @@ class ExecutablePlugin: Plugin {
     var error: String?
 
 
-    let queue = DispatchQueue(label: "PluginQueue")
+    let queue = OperationQueue()
     var updateTimerPublisher: Timer.TimerPublisher {
         return Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
     }
@@ -38,7 +38,7 @@ class ExecutablePlugin: Plugin {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
         self.id = fileURL.lastPathComponent
         self.name = nameComponents.first ?? ""
-        self.file = fileURL.absoluteString
+        self.file = fileURL.path
         if nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
             let intervalStr = nameComponents[1]
             if intervalStr.hasSuffix("s") {
@@ -79,7 +79,8 @@ class ExecutablePlugin: Plugin {
 
     func refresh() {
         disableTimer()
-        queue.async { [weak self] in
+        queue.cancelAllOperations()
+        queue.addOperation { [weak self] in
             self?.content = self?.invoke(params: [])
             self?.enableTimer()
         }
@@ -92,7 +93,7 @@ class ExecutablePlugin: Plugin {
     func invoke(params : [String]) -> String? {
         lastUpdated = Date()
         do {
-            let out = try shellOut(to: String(file.dropFirst(7)))
+            let out = try shellOut(to: "'\(file)'")
             self.error = nil
             return out
         } catch {
