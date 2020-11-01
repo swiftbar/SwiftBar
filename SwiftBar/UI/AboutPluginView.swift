@@ -4,7 +4,7 @@ import Combine
 struct AboutPluginView: View {
     let md: PluginMetadata
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
         VStack {
             if let name = md.name {
                 VStack {
@@ -92,25 +92,6 @@ struct ImageView: View {
             .onReceive(imageLoader.didChange) { data in
                 self.image = NSImage(data: data) ?? NSImage()
             }
-    }
-}
-
-class ImageLoader: ObservableObject {
-    var didChange = PassthroughSubject<Data, Never>()
-    var data = Data() {
-        didSet {
-            didChange.send(data)
-        }
-    }
-
-    init(url: URL) {
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data else { return }
-            DispatchQueue.main.async {
-                self.data = data
-            }
-        }
-        task.resume()
     }
 }
 
