@@ -5,7 +5,9 @@ import Combine
 class PluginManager {
     static let shared = PluginManager()
     let prefs = Preferences.shared
-    let barItem = MenubarItem.defaultBarItem()
+    lazy var barItem: MenubarItem = {
+        return MenubarItem.defaultBarItem()
+    }()
     var directoryObserver: DirectoryObserver?
 
     var plugins: [Plugin] = [] {
@@ -16,6 +18,7 @@ class PluginManager {
     var enabledPlugins: [Plugin] {
         return plugins.filter{$0.enabled}
     }
+
     var menuBarItems: [PluginID: MenubarItem] = [:]
     var pluginDirectoryURL: URL? {
         guard let pluginDirectoryPath = prefs.pluginDirectoryPath, let url = URL(string: pluginDirectoryPath) else {return nil}
@@ -25,9 +28,10 @@ class PluginManager {
     var cancellable: AnyCancellable? = nil
 
     init() {
-        configureDirectoryObserver()
         loadPlugins()
-        cancellable = prefs.$disabledPlugins.sink(receiveValue: { [weak self] _ in
+        cancellable = prefs.disabledPluginsPublisher
+            .receive(on: RunLoop.main)
+            .sink(receiveValue: { [weak self] _ in
             self?.pluginsDidChange()
         })
     }
@@ -36,6 +40,7 @@ class PluginManager {
         enabledPlugins.forEach{ plugin in
             guard menuBarItems[plugin.id] == nil else {return}
             menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
+            menuBarItems[plugin.id]?.show()
         }
         menuBarItems.keys.forEach{ pluginID in
             guard !enabledPlugins.contains(where: {$0.id == pluginID}) else {return}
@@ -44,12 +49,16 @@ class PluginManager {
         enabledPlugins.isEmpty ? barItem.show():barItem.hide()
     }
 
-    func addPlugin(from fileURL: URL) {
-        plugins.append(ExecutablePlugin(fileURL: fileURL))
-    }
-
     func disablePlugin(plugin: Plugin) {
         prefs.disabledPlugins.append(plugin.id)
+    }
+
+    func disableAllPlugins() {
+        prefs.disabledPlugins.append(contentsOf: plugins.map{$0.id})
+    }
+
+    func enableAllPlugins() {
+        prefs.disabledPlugins.removeAll()
     }
     
     func getPluginList() -> [URL] {
@@ -86,11 +95,11 @@ class PluginManager {
         }
 
         let newPlugins = pluginFiles.filter { file in
-            !plugins.contains(where: {$0.file == file.absoluteString})
+            !plugins.contains(where: {$0.file == file.path})
         }
 
         let removedPlugins = plugins.filter { plugin in
-            !pluginFiles.contains(where: {$0.absoluteString == plugin.file})
+            !pluginFiles.contains(where: {$0.path == plugin.file})
         }
 
         removedPlugins.forEach { plugin in
@@ -98,7 +107,7 @@ class PluginManager {
             plugins.removeAll(where: {$0.id == plugin.id})
         }
 
-        newPlugins.forEach{addPlugin(from: $0)}
+        plugins.append(contentsOf: newPlugins.map{ExecutablePlugin(fileURL: $0)})
     }
 
     func refreshAllPlugins() {

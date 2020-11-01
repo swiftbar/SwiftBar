@@ -41,9 +41,6 @@ struct GeneralPreferencesView: View {
 struct PluginsPreferencesView: View {
     @EnvironmentObject var preferences: Preferences
 
-    var plugins: [Plugin] {
-        PluginManager.shared.plugins
-    }
     var body: some View {
         VStack {
             PluginsView()
@@ -63,8 +60,9 @@ struct PluginsView: View {
     @EnvironmentObject var preferences: Preferences
 
     var plugins: [Plugin] {
-        PluginManager.shared.plugins
+        delegate.pluginManager.plugins
     }
+
     var body: some View {
         ScrollView(showsIndicators: true) {
             Form {

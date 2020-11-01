@@ -9,6 +9,7 @@ class Preferences: ObservableObject {
         case LaunchAtLogin
         case DisabledPlugins
     }
+    let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
 
     @Published var pluginDirectoryPath: String? {
         didSet {
@@ -24,16 +25,24 @@ class Preferences: ObservableObject {
 
     @Published var disabledPlugins: [PluginID] {
         didSet {
-            Preferences.setValue(value: Array(Set(disabledPlugins)), key: .DisabledPlugins)
+            let unique = Array(Set(disabledPlugins))
+            Preferences.setValue(value: unique, key: .DisabledPlugins)
+            disabledPluginsPublisher.send("")
         }
     }
 
     init() {
+//        Preferences.removeAll()
         pluginDirectoryPath = Preferences.getValue(key: .PluginDirectory) as? String
         launchAtLogin = Preferences.getValue(key: .LaunchAtLogin) as? Bool ?? false
         disabledPlugins = Preferences.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
     }
 
+    static func removeAll() {
+        let domain = Bundle.main.bundleIdentifier!
+        UserDefaults.standard.removePersistentDomain(forName: domain)
+        UserDefaults.standard.synchronize()
+    }
     private static func setValue(value: Any?, key: PreferencesKeys) {
         UserDefaults.standard.setValue(value, forKey: key.rawValue)
         UserDefaults.standard.synchronize()
