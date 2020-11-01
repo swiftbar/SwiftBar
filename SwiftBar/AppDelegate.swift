@@ -1,10 +1,14 @@
 import Cocoa
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    let pluginManager = PluginManager.shared
+    var pluginManager: PluginManager!
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-
+        //Instance of Plugin Manager must be created after app launch
+        pluginManager = PluginManager.shared
+        if Preferences.shared.pluginDirectoryPath == nil {
+            App.changePluginFolder()
+        }
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
