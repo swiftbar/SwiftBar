@@ -61,7 +61,15 @@ class PluginManager {
         }
 
         guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil) else {return []}
-        return enumerator.compactMap{$0 as? URL}.filter{$0.lastPathComponent != ".DS_Store"}
+        return enumerator.compactMap{$0 as? URL}
+            .filter { url in
+                guard url.lastPathComponent != ".DS_Store" else {return false}
+                var isDir: ObjCBool = false
+                guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
+                    return false
+                }
+                return true
+            }
     }
 
     func loadPlugins() {
