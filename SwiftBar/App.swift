@@ -7,7 +7,7 @@ class App: NSObject {
     }
 
     public static func openPluginFolder() {
-        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: "")
+        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryPath ?? "")
     }
 
     public static func changePluginFolder() {
@@ -35,6 +35,7 @@ class App: NSObject {
 
     public static func openPreferences() {
         let panel = NSPanel(contentViewController: NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared)))
+        panel.title = "Preferences"
         NSApp.runModal(for: panel)
     }
 }
