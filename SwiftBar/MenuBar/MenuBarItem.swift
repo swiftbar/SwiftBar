@@ -10,6 +10,7 @@ class MenubarItem: NSObject {
     var contentUpdateCancellable: AnyCancellable? = nil
     var titleCycleCancellable: AnyCancellable? = nil
     let lastUpdatedMenuItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
+    var isOpen = false
 
     var titleLines: [String] = [] {
         didSet {
@@ -35,11 +36,17 @@ class MenubarItem: NSObject {
     init(title: String, plugin: Plugin? = nil) {
         super.init()
         barItem.menu = statusBarMenu
+        guard plugin != nil else {
+            barItem.button?.title = title
+            buildStandardMenu()
+            return
+        }
         self.plugin = plugin
         statusBarMenu.delegate = self
         updateMenu()
         contentUpdateCancellable = (plugin as? ExecutablePlugin)?.contentUpdatePublisher
             .sink {[weak self] _ in
+                guard self?.isOpen == false else {return}
                 DispatchQueue.main.async { [weak self] in
                     self?.disableTitleCycle()
                     self?.updateMenu()
@@ -76,11 +83,16 @@ class MenubarItem: NSObject {
 
 extension MenubarItem: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
+        isOpen = true
         guard let lastUpdated = (plugin as? ExecutablePlugin)?.lastUpdated else {return}
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
         lastUpdatedMenuItem.title = "Updated \(relativeDate)"
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        isOpen = false
     }
 }
 
@@ -90,20 +102,26 @@ extension MenubarItem {
         let firstLevel = (plugin == nil)
         let menu = firstLevel ? statusBarMenu:NSMenu(title: "Preferences")
 
-        let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshPlugins), keyEquivalent: "r")
+        let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshAllPlugins), keyEquivalent: "r")
+        let enableAllItem = NSMenuItem(title: "Enable All", action: #selector(enableAllPlugins), keyEquivalent: "")
+        let disableAllItem = NSMenuItem(title: "Disable All", action: #selector(disableAllPlugins), keyEquivalent: "")
         let preferencesItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
         let openPluginFolderItem = NSMenuItem(title: "Open Plugin Folder...", action: #selector(openPluginFolder), keyEquivalent: "")
+        let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
         let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
 
-        [refreshAllItem,preferencesItem,openPluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,runInTerminalItem].forEach{$0.target = self}
+        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,runInTerminalItem].forEach{$0.target = self}
 
         menu.addItem(refreshAllItem)
+        menu.addItem(enableAllItem)
+        menu.addItem(disableAllItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(openPluginFolderItem)
+        menu.addItem(changePluginFolderItem)
         menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(preferencesItem)
@@ -128,16 +146,30 @@ extension MenubarItem {
         }
     }
 
-    @objc func refreshPlugins() {
-        App.refreshPlugins()
+    @objc func refreshAllPlugins() {
+        delegate.pluginManager.refreshAllPlugins()
+    }
+
+    @objc func disableAllPlugins() {
+        delegate.pluginManager.disableAllPlugins()
+    }
+
+    @objc func enableAllPlugins() {
+        delegate.pluginManager.enableAllPlugins()
     }
 
     @objc func openPluginFolder() {
         App.openPluginFolder()
     }
 
+    //TODO: Preferences should be shown as a standalone window.
     @objc func openPreferences() {
-        App.openPreferences()
+        //        App.openPreferences()
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
+        popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.becomeKey()
     }
 
     @objc func changePluginFolder() {
@@ -153,7 +185,7 @@ extension MenubarItem {
     }
 
     @objc func runInTerminal() {
-        guard let scriptPath = plugin?.file.dropFirst(7) else {return}
+        guard let scriptPath = plugin?.file else {return}
         let script = """
         tell application "Terminal"
             do script "\(scriptPath)" in front window
@@ -172,7 +204,7 @@ extension MenubarItem {
 
     @objc func disablePlugin() {
         guard let plugin = plugin else {return}
-        PluginManager.shared.disablePlugin(plugin: plugin)
+        delegate.pluginManager.disablePlugin(plugin: plugin)
     }
 
     @objc func about() {
@@ -181,7 +213,6 @@ extension MenubarItem {
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
         popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
-        NSApp.activate(ignoringOtherApps: true)
         popover.contentViewController?.view.window?.becomeKey()
     }
 }
