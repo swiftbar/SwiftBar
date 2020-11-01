@@ -1,10 +1,7 @@
 import Cocoa
+import SwiftUI
 
 class App: NSObject {
-    public static var pluginDirectoryPath: String? {
-        set {UserDefaults.standard.setValue(newValue, forKey: "PluginDirectoryPath")}
-        get {{UserDefaults.standard.string(forKey: "PluginDirectoryPath")}()}
-    }
     public static func refreshPlugins() {
         PluginManager.shared.plugins.forEach{$0.refresh()}
     }
@@ -27,12 +24,17 @@ class App: NSObject {
               let path = dialog.url?.path
         else {return}
 
-        pluginDirectoryPath = path
+        Preferences.shared.pluginDirectoryPath = path
         refreshPlugins()
     }
 
     public static func getPlugins() {
         let url = URL(string: "https://github.com/orgs/swiftbar/")!
         NSWorkspace.shared.open(url)
+    }
+
+    public static func openPreferences() {
+        let panel = NSPanel(contentViewController: NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared)))
+        NSApp.runModal(for: panel)
     }
 }
