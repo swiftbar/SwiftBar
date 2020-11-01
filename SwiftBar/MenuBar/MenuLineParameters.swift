@@ -33,7 +33,7 @@ struct MenuLineParameters {
                 value = scanner.scanUpToString(" ")
             }
 
-            if let key = key?.trimmingCharacters(in: .whitespaces),
+            if let key = key?.trimmingCharacters(in: .whitespaces).lowercased(),
                let value = value?.trimmingCharacters(in: .whitespaces) {
                 params[key] = value
             }
@@ -57,7 +57,7 @@ struct MenuLineParameters {
         NSColor.webColor(from: params["color"])
     }
 
-    var font: String?{
+    var font: String? {
         params["font"]
     }
 
@@ -93,7 +93,11 @@ struct MenuLineParameters {
         return image
     }
 
-    var emojize: Bool{
+    var emojize: Bool {
         params["emojize"] != "false"
+    }
+
+    var tooltip: String? {
+        params["tooltip"]
     }
 }
