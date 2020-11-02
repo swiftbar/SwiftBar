@@ -43,12 +43,14 @@ class App: NSObject {
 
     public static func runInTerminal(script: String, runInBackground: Bool = false) {
         if runInBackground {
-            os_log("Executing script in background... \n %s", log: Log.plugin, script)
-            do {
-                try shellOut(to: script)
-            } catch {
-                guard let error = error as? ShellOutError else {return}
-                os_log("Failed to execute script in background\n%s", log: Log.plugin, type:.error, error.message)
+            DispatchQueue.global(qos: .userInitiated).async {
+                os_log("Executing script in background... \n %s", log: Log.plugin, script)
+                do {
+                    try shellOut(to: script)
+                } catch {
+                    guard let error = error as? ShellOutError else {return}
+                    os_log("Failed to execute script in background\n%s", log: Log.plugin, type:.error, error.message)
+                }
             }
             return
         }
