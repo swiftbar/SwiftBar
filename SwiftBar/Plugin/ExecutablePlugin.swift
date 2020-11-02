@@ -61,6 +61,7 @@ class ExecutablePlugin: Plugin {
         } else {
             metadata = nil
         }
+        makeScriptExecutable(file: file)
         os_log("Initialized executable plugin\n%s", log: Log.plugin, description)
         refresh()
     }
@@ -106,5 +107,17 @@ class ExecutablePlugin: Plugin {
             self.error = error.message
         }
         return nil
+    }
+
+    func makeScriptExecutable(file: String) {
+        let script = """
+        if [[ -x "\(file)" ]]
+        then
+            echo "File "\(file)" is executable"
+        else
+            chmod +x "\(file)"
+        fi
+        """
+        _ = try? shellOut(to: script)
     }
 }
