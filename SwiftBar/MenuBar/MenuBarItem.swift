@@ -133,6 +133,7 @@ extension MenubarItem {
             // put swiftbar menu as submenu
             let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
             item.submenu = menu
+            item.image = NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
             statusBarMenu.addItem(item)
 
             // default plugin menu items
@@ -301,7 +302,12 @@ extension MenubarItem {
     }
 
     func setMenuTitle(title: String) {
-        barItem.button?.attributedTitle = atributedTitle(with: MenuLineParameters(line: title)).title
+        let params = MenuLineParameters(line: title)
+        if let image = params.image {
+            barItem.button?.image = image
+            return
+        }
+        barItem.button?.attributedTitle = atributedTitle(with: params).title
     }
 
     func cycleThroughTitles() {

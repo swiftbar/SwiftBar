@@ -99,7 +99,7 @@ struct MenuLineParameters {
     var image: NSImage? {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
-                let config = NSImage.SymbolConfiguration(scale: .small)
+                let config = NSImage.SymbolConfiguration(scale: .large)
                 return NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
             }
         }
