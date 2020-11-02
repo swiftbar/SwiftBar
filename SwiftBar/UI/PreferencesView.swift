@@ -8,7 +8,6 @@ enum ShellOptions: String, CaseIterable {
 struct GeneralPreferencesView: View {
     @EnvironmentObject var preferences: Preferences
     @State private var launchAtLogin = true
-    @State var shell: ShellOptions = .Terminal
 
     var body: some View {
         Form {
@@ -30,7 +29,7 @@ struct GeneralPreferencesView: View {
                 }
             }
             Section(header: Text("Shell")) {
-                EnumPicker(selected: $shell, title: "")
+                EnumPicker(selected: $preferences.terminal, title: "")
             }
         }
         .padding(20)

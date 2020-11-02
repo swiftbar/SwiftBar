@@ -8,6 +8,7 @@ class Preferences: ObservableObject {
         case PluginDirectory
         case LaunchAtLogin
         case DisabledPlugins
+        case Terminal
     }
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
 
@@ -31,11 +32,22 @@ class Preferences: ObservableObject {
         }
     }
 
+    @Published var terminal: ShellOptions {
+        didSet {
+            Preferences.setValue(value: terminal.rawValue, key: .Terminal)
+        }
+    }
+
     init() {
 //        Preferences.removeAll()
         pluginDirectoryPath = Preferences.getValue(key: .PluginDirectory) as? String
         launchAtLogin = Preferences.getValue(key: .LaunchAtLogin) as? Bool ?? false
         disabledPlugins = Preferences.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
+        terminal = .Terminal
+        if let savedTerminal = Preferences.getValue(key: .Terminal) as? String,
+           let shell = ShellOptions(rawValue: savedTerminal) {
+            terminal = shell
+        }
     }
 
     static func removeAll() {

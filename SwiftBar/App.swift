@@ -54,18 +54,43 @@ class App: NSObject {
             }
             return
         }
-        let script = """
-        tell application "Terminal"
-            do script "\(script)" in front window
-            activate
-        end tell
-        """
+        var appleScript: String = ""
+        switch Preferences.shared.terminal {
+            case .Terminal:
+                appleScript = """
+                tell application "Terminal"
+                    do script "\(script)" in front window
+                    activate
+                end tell
+                """
+            case .iTerm:
+                appleScript = """
+                tell application "iTerm"
+                    activate
+                    try
+                        select first window
+                        set onlywindow to false
+                    on error
+                        create window with default profile
+                        select first window
+                        set onlywindow to true
+                    end try
+                    tell the first window
+                        if onlywindow is false then
+                            create tab with default profile
+                        end if
+                        tell current session to write text "\(script)"
+                    end tell
+                end tell
+                """
+        }
+
         var error: NSDictionary?
-        if let scriptObject = NSAppleScript(source: script) {
+        if let scriptObject = NSAppleScript(source: appleScript) {
             if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
                 print(outputString)
             } else if let error = error {
-                os_log("Failed to execute script in Terminal \n%s", log: Log.plugin, type:.error, error)
+                os_log("Failed to execute script in Terminal \n%s", log: Log.plugin, type:.error, error.description)
             }
         }
     }
