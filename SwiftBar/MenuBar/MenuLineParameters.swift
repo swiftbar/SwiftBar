@@ -49,6 +49,19 @@ struct MenuLineParameters {
         params["bash"]
     }
 
+    var bashParams: [String] {
+        var out: [String] = []
+        for i in 1...10 {
+            guard let param = params["param\(i)"] else {continue}
+            out.append(param)
+        }
+        return out
+    }
+
+    var terminal: Bool {
+        params["terminal"] != "false"
+    }
+
     var refresh: Bool {
         params["refresh"] == "true"
     }

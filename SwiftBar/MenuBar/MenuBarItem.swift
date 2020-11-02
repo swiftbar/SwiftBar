@@ -186,20 +186,7 @@ extension MenubarItem {
 
     @objc func runInTerminal() {
         guard let scriptPath = plugin?.file else {return}
-        let script = """
-        tell application "Terminal"
-            do script "\(scriptPath)" in front window
-            activate
-        end tell
-        """
-        var error: NSDictionary?
-        if let scriptObject = NSAppleScript(source: script) {
-            if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
-                print(outputString)
-            } else if let error = error {
-                print("error: ", error)
-            }
-        }
+        App.runInTerminal(script: scriptPath)
     }
 
     @objc func disablePlugin() {
@@ -383,8 +370,14 @@ extension MenubarItem {
         NSWorkspace.shared.open(url)
     }
 
-    @objc func performMenuItemBashAction() {
-
+    @objc func performMenuItemBashAction(_ sender: NSMenuItem) {
+        guard let params = sender.representedObject as? MenuLineParameters,
+              let bash = params.bash
+        else {
+            return
+        }
+        let script = "\(bash) \(params.bashParams.joined(separator: " "))"
+        App.runInTerminal(script: script, runInBackground: params.terminal)
     }
 
     @objc func performMenuItemRefreshAction(_ sender: NSMenuItem) {

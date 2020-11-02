@@ -1,5 +1,6 @@
 import Cocoa
 import SwiftUI
+import ShellOut
 
 class App: NSObject {
     public static func openPluginFolder() {
@@ -33,5 +34,26 @@ class App: NSObject {
         let panel = NSPanel(contentViewController: NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared)))
         panel.title = "Preferences"
         NSApp.runModal(for: panel)
+    }
+
+    public static func runInTerminal(script: String, runInBackground: Bool = false) {
+        if runInBackground {
+            _ = try? shellOut(to: script)
+            return
+        }
+        let script = """
+        tell application "Terminal"
+            do script "\(script)" in front window
+            activate
+        end tell
+        """
+        var error: NSDictionary?
+        if let scriptObject = NSAppleScript(source: script) {
+            if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
+                print(outputString)
+            } else if let error = error {
+                print("error: ", error)
+            }
+        }
     }
 }
