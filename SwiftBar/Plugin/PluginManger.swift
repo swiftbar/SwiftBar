@@ -72,7 +72,8 @@ class PluginManager {
         guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil) else {return []}
         return enumerator.compactMap{$0 as? URL}
             .filter { url in
-                guard url.lastPathComponent != ".DS_Store" else {return false}
+                guard !url.lastPathComponent.hasPrefix(".")
+                      else {return false}
                 var isDir: ObjCBool = false
                 guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
                     return false
@@ -129,7 +130,7 @@ class PluginManager {
             guard let fileURL = fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else { return }
             do {
                 let targetURL = pluginDirectoryURL.appendingPathComponent(url.lastPathComponent)
-                try shellOut(to: "chmod a+x \(fileURL.path)")
+                try shellOut(to: "chmod +x \(fileURL.path)")
                 try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
             } catch {
                 print ("file error: \(error)")
