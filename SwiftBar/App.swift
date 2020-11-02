@@ -37,6 +37,10 @@ class App: NSObject {
         NSApp.runModal(for: panel)
     }
 
+    public static func showAbout() {
+        NSApp.orderFrontStandardAboutPanel(options: [:])
+    }
+
     public static func runInTerminal(script: String, runInBackground: Bool = false) {
         if runInBackground {
             os_log("Executing script in background... \n %s", log: Log.plugin, script)

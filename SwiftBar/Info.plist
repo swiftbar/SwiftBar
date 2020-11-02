@@ -41,5 +41,7 @@
 	<string>NSApplication</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Allow SwiftBar to run plugin in Terminal</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright ©2020 Ameba Labs. All rights reserved.</string>
 </dict>
 </plist>

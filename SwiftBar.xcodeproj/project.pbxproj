@@ -11,6 +11,7 @@
 		3920748225460FD300213DBE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
+		393375EC25508B320050AC28 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
 		39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA0254DD32100713DAF /* AboutPluginView.swift */; };
 		39641EA5254E096200713DAF /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA4254E096200713DAF /* PreferencesView.swift */; };
 		39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA8254E0E0B00713DAF /* EnumPicker.swift */; };
@@ -40,6 +41,7 @@
 		3920748925460FD300213DBE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		39641EA0254DD32100713DAF /* AboutPluginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutPluginView.swift; sourceTree = "<group>"; };
 		39641EA4254E096200713DAF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		39641EA8254E0E0B00713DAF /* EnumPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumPicker.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
 				3920748925460FD300213DBE /* Info.plist */,
 				3920748325460FD300213DBE /* Preview Content */,
+				393375EB25508B320050AC28 /* Credits.rtf */,
 			);
 			path = SwiftBar;
 			sourceTree = "<group>";
@@ -231,6 +234,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */,
+				393375EC25508B320050AC28 /* Credits.rtf in Resources */,
 				3920748225460FD300213DBE /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

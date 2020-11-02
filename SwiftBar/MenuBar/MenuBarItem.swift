@@ -109,12 +109,13 @@ extension MenubarItem {
         let openPluginFolderItem = NSMenuItem(title: "Open Plugin Folder...", action: #selector(openPluginFolder), keyEquivalent: "")
         let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
+        let aboutSwiftBarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
         let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
 
-        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,runInTerminalItem].forEach{$0.target = self}
+        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem].forEach{$0.target = self}
 
         menu.addItem(refreshAllItem)
         menu.addItem(enableAllItem)
@@ -124,6 +125,7 @@ extension MenubarItem {
         menu.addItem(changePluginFolderItem)
         menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
+        menu.addItem(aboutSwiftBarItem)
         menu.addItem(preferencesItem)
         menu.addItem(quitItem)
 
@@ -202,6 +204,10 @@ extension MenubarItem {
         popover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
         popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
         popover.contentViewController?.view.window?.becomeKey()
+    }
+
+    @objc func aboutSwiftBar() {
+        App.showAbout()
     }
 }
 
