@@ -1,6 +1,7 @@
 import Cocoa
 import SwiftUI
 import ShellOut
+import os
 
 class App: NSObject {
     public static func openPluginFolder() {
@@ -38,7 +39,13 @@ class App: NSObject {
 
     public static func runInTerminal(script: String, runInBackground: Bool = false) {
         if runInBackground {
-            _ = try? shellOut(to: script)
+            os_log("Executing script in background... \n %s", log: Log.plugin, script)
+            do {
+                try shellOut(to: script)
+            } catch {
+                guard let error = error as? ShellOutError else {return}
+                os_log("Failed to execute script in background\n%s", log: Log.plugin, type:.error, error.message)
+            }
             return
         }
         let script = """
@@ -52,7 +59,7 @@ class App: NSObject {
             if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
                 print(outputString)
             } else if let error = error {
-                print("error: ", error)
+                os_log("Failed to execute script in Terminal \n%s", log: Log.plugin, type:.error, error)
             }
         }
     }

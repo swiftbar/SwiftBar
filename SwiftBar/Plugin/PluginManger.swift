@@ -1,6 +1,7 @@
 import Foundation
 import ShellOut
 import Combine
+import os
 
 class PluginManager {
     static let shared = PluginManager()
@@ -37,6 +38,7 @@ class PluginManager {
     }
 
     func pluginsDidChange() {
+        os_log("Plugins did change, updating menu bar...", log: Log.plugin)
         enabledPlugins.forEach{ plugin in
             guard menuBarItems[plugin.id] == nil else {return}
             menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
@@ -50,14 +52,17 @@ class PluginManager {
     }
 
     func disablePlugin(plugin: Plugin) {
+        os_log("Disabling plugin \n%s", log: Log.plugin, plugin.description)
         prefs.disabledPlugins.append(plugin.id)
     }
 
     func disableAllPlugins() {
+        os_log("Disabling all plugins.", log: Log.plugin)
         prefs.disabledPlugins.append(contentsOf: plugins.map{$0.id})
     }
 
     func enableAllPlugins() {
+        os_log("Enabling all plugins.", log: Log.plugin)
         prefs.disabledPlugins.removeAll()
     }
     
@@ -126,6 +131,7 @@ class PluginManager {
     }
 
     func importPlugin(from url: URL) {
+        os_log("Starting plugin import from %s", log: Log.plugin, url.absoluteString)
         let downloadTask = URLSession.shared.downloadTask(with: url) { fileURL, _, _ in
             guard let fileURL = fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else { return }
             do {
@@ -133,7 +139,7 @@ class PluginManager {
                 try shellOut(to: "chmod +x \(fileURL.path)")
                 try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
             } catch {
-                print ("file error: \(error)")
+                os_log("Failed to import plugin from %s \n%s", log: Log.plugin, type: .error, url.absoluteString, error.localizedDescription)
             }
         }
         downloadTask.resume()

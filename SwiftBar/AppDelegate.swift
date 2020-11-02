@@ -1,4 +1,5 @@
 import Cocoa
+import os
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var pluginManager: PluginManager!
@@ -30,6 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         pluginManager.importPlugin(from: url)
                     }
                 default:
+                    os_log("Unsupported URL scheme \n %s", log: Log.plugin, type: .error, url.absoluteString)
                     break
             }
         }
