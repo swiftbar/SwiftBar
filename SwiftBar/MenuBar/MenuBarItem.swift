@@ -377,7 +377,7 @@ extension MenubarItem {
             return
         }
         let script = "\(bash) \(params.bashParams.joined(separator: " "))"
-        App.runInTerminal(script: script, runInBackground: params.terminal)
+        App.runInTerminal(script: script, runInBackground: !params.terminal)
     }
 
     @objc func performMenuItemRefreshAction(_ sender: NSMenuItem) {
