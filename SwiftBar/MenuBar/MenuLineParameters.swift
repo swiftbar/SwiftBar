@@ -52,7 +52,7 @@ struct MenuLineParameters {
 
     var bashParams: [String] {
         var out: [String] = []
-        for i in 1...10 {
+        for i in 0...10 {
             guard let param = params["param\(i)"] else {continue}
             out.append(param)
         }
