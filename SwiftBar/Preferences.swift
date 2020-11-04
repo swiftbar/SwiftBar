@@ -6,7 +6,6 @@ class Preferences: ObservableObject {
     static let shared = Preferences()
     enum PreferencesKeys: String {
         case PluginDirectory
-        case LaunchAtLogin
         case DisabledPlugins
         case Terminal
     }
@@ -15,12 +14,6 @@ class Preferences: ObservableObject {
     @Published var pluginDirectoryPath: String? {
         didSet {
             Preferences.setValue(value: pluginDirectoryPath, key: .PluginDirectory)
-        }
-    }
-
-    @Published var launchAtLogin: Bool {
-        didSet {
-            Preferences.setValue(value: launchAtLogin, key: .LaunchAtLogin)
         }
     }
 
@@ -39,9 +32,7 @@ class Preferences: ObservableObject {
     }
 
     init() {
-//        Preferences.removeAll()
         pluginDirectoryPath = Preferences.getValue(key: .PluginDirectory) as? String
-        launchAtLogin = Preferences.getValue(key: .LaunchAtLogin) as? Bool ?? false
         disabledPlugins = Preferences.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
         terminal = .Terminal
         if let savedTerminal = Preferences.getValue(key: .Terminal) as? String,

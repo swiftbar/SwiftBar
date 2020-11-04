@@ -1,4 +1,5 @@
 import SwiftUI
+import LaunchAtLogin
 
 enum ShellOptions: String, CaseIterable {
     case Terminal = "Terminal"
@@ -12,7 +13,7 @@ struct GeneralPreferencesView: View {
     var body: some View {
         Form {
             Section() {
-                Toggle("Launch at Login", isOn: $launchAtLogin)
+                LaunchAtLogin.Toggle()
                     .padding(.bottom)
             }
             Section(header: Text("Plugin Folder")) {
