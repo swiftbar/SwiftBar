@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		391DEA27255353F900C07561 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = 391DEA26255353F900C07561 /* HotKey */; };
 		3920747E25460FD000213DBE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920747D25460FD000213DBE /* AppDelegate.swift */; };
 		3920748225460FD300213DBE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
@@ -67,6 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				391DEA27255353F900C07561 /* HotKey in Frameworks */,
 				39AF778925479535001D76E5 /* ShellOut in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -180,6 +182,7 @@
 				3920747625460FD000213DBE /* Sources */,
 				3920747725460FD000213DBE /* Frameworks */,
 				3920747825460FD000213DBE /* Resources */,
+				398DAE2F2550A86300747D90 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -188,6 +191,7 @@
 			name = SwiftBar;
 			packageProductDependencies = (
 				39AF778825479535001D76E5 /* ShellOut */,
+				391DEA26255353F900C07561 /* HotKey */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -218,6 +222,7 @@
 			mainGroup = 3920747125460FD000213DBE;
 			packageReferences = (
 				39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */,
+				391DEA25255353F900C07561 /* XCRemoteSwiftPackageReference "HotKey" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -240,6 +245,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		398DAE2F2550A86300747D90 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nbuildNumber=$(git rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"$PRODUCT_SETTINGS_PATH\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3920747625460FD000213DBE /* Sources */ = {
@@ -398,7 +423,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = SwiftBar/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -423,7 +448,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = SwiftBar/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -461,6 +486,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		391DEA25255353F900C07561 /* XCRemoteSwiftPackageReference "HotKey" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/soffes/HotKey";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.3;
+			};
+		};
 		39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/JohnSundell/ShellOut";
@@ -472,6 +505,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		391DEA26255353F900C07561 /* HotKey */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 391DEA25255353F900C07561 /* XCRemoteSwiftPackageReference "HotKey" */;
+			productName = HotKey;
+		};
 		39AF778825479535001D76E5 /* ShellOut */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */;

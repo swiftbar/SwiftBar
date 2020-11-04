@@ -1,6 +1,7 @@
 import Cocoa
 import Combine
 import SwiftUI
+import HotKey
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
@@ -11,6 +12,7 @@ class MenubarItem: NSObject {
     var titleCycleCancellable: AnyCancellable? = nil
     let lastUpdatedMenuItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
     var isOpen = false
+    var hotKeys: [HotKey] = []
 
     var titleLines: [String] = [] {
         didSet {
@@ -236,6 +238,11 @@ extension MenubarItem {
         return (header,body)
     }
 
+    func addShortcut(shortcut: HotKey, action: @escaping ()-> Void) {
+        shortcut.keyUpHandler = action
+        hotKeys.append(shortcut)
+    }
+
     func updateMenu() {
         statusBarMenu.removeAllItems()
         guard let scriptOutput = plugin?.content, scriptOutput.count > 0 else {
@@ -246,6 +253,11 @@ extension MenubarItem {
         let parts = splitScriptOutput(scriptOutput: scriptOutput)
         titleLines =  parts.header
         updateMenuTitle(titleLines: parts.header)
+        if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
+            addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
+                self?.barItem.button?.performClick(nil)
+            }
+        }
 
         if !parts.body.isEmpty {
             statusBarMenu.addItem(NSMenuItem.separator())
@@ -295,6 +307,13 @@ extension MenubarItem {
             lastMenuItem = item
             prevLevel = currentLevel
             prevItems.insert(item, at: 0)
+
+            if let kc = MenuLineParameters(line: line).shortcut {
+                addShortcut(shortcut: HotKey(keyCombo: kc)) {
+                    guard let action = item.action else {return}
+                    NSApp.sendAction(action, to: item.target, from: item)
+                }
+            }
         }
     }
 

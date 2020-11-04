@@ -1,4 +1,5 @@
 import Cocoa
+import HotKey
 
 struct MenuLineParameters {
     let title: String
@@ -119,5 +120,32 @@ struct MenuLineParameters {
 
     var tooltip: String? {
         params["tooltip"]
+    }
+
+    var shortcut: KeyCombo? {
+        guard let shortcut = params["shortcut"],
+              let keyStr = shortcut.last?.lowercased(),
+              let key = Key(string: keyStr) else {return nil}
+        var modifiers: NSEvent.ModifierFlags = []
+        shortcut.split(separator: "+").map{$0.trimmingCharacters(in: .whitespaces).lowercased()}.forEach { modifier in
+            switch modifier {
+                case "shift":
+                    modifiers.insert(.shift)
+                case "command", "cmd":
+                    modifiers.insert(.command)
+                case "control", "ctrl":
+                    modifiers.insert(.control)
+                case "option", "opt":
+                    modifiers.insert(.option)
+                case "capslock":
+                    modifiers.insert(.capsLock)
+                case "function", "fn":
+                    modifiers.insert(.function)
+                default:
+                    break
+            }
+        }
+
+        return KeyCombo(key: key, modifiers: modifiers)
     }
 }
