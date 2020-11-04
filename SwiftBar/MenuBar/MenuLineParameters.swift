@@ -88,6 +88,10 @@ struct MenuLineParameters {
         params["trim"] != "false"
     }
 
+    var checked: Bool {
+        params["checked"] == "true"
+    }
+
     var length: Int? {
         guard let lengthStr = params["length"], let pLength = Int(lengthStr) else { return nil }
         return pLength
