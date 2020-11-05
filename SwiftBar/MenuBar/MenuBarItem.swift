@@ -352,14 +352,17 @@ extension MenubarItem {
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
+        title = title.replacingOccurrences(of: "\\n", with: "\n")
         let fontSize = params.size ?? 14
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ?? NSFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .regular)
-
+        let style = NSMutableParagraphStyle()
+        style.alignment = .left
         return (NSAttributedString(string: title,
                                   attributes: [
-                                    NSAttributedString.Key.foregroundColor:color,
-                                    NSAttributedString.Key.font:font
+                                    .foregroundColor:color,
+                                    .font:font,
+                                    .paragraphStyle:style
         ]), fullTitle)
     }
 
