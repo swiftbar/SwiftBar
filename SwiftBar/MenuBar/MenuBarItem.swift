@@ -172,12 +172,7 @@ extension MenubarItem {
 
     //TODO: Preferences should be shown as a standalone window.
     @objc func openPreferences() {
-        //        App.openPreferences()
-        let popover = NSPopover()
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
-        popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.becomeKey()
+        App.openPreferences()
     }
 
     @objc func changePluginFolder() {

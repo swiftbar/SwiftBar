@@ -32,9 +32,19 @@ class App: NSObject {
     }
 
     public static func openPreferences() {
-        let panel = NSPanel(contentViewController: NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared)))
-        panel.title = "Preferences"
-        NSApp.runModal(for: panel)
+        let preferencesWindowController: NSWindowController?
+        let myWindow = NSWindow(
+            contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
+            styleMask: [.closable, .miniaturizable, .resizable, .titled],
+            backing: .buffered,
+            defer: false
+        )
+        myWindow.title = "Preferences"
+        myWindow.center()
+
+        preferencesWindowController = NSWindowController(window: myWindow)
+        preferencesWindowController?.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
+        preferencesWindowController?.showWindow(self)
     }
 
     public static func showAbout() {

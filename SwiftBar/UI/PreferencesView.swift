@@ -132,7 +132,7 @@ struct PreferencesView: View {
                 .tag(Tabs.plugins)
         }
         .padding(20)
-        .frame(width: 375, height: 350)
+        .frame(width: 500, height: 400)
     }
 }
 
