@@ -15,10 +15,13 @@ Get plugins from awesome [BitBar repository](https://github.com/matryer/bitbar-p
 - Download from [GitHub Releases](https://github.com/swiftbar/SwiftBar/releases)
 - Install with Homebrew(in progress)
 
+Runs on macOS Catalina(10.15) and up.
+
 ## ...or build it from source
 - Clone or download a copy of this repository
 - Open SwiftBar/SwiftBar.xcodeproj
 - Press play
+
 
 ## Creating Plugins
 
