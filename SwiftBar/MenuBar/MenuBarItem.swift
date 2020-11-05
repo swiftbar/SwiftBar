@@ -116,8 +116,8 @@ extension MenubarItem {
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
-
-        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem].forEach{$0.target = self}
+        let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
+        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem].forEach{$0.target = self}
 
         menu.addItem(refreshAllItem)
         menu.addItem(enableAllItem)
@@ -143,6 +143,9 @@ extension MenubarItem {
             // default plugin menu items
             statusBarMenu.addItem(NSMenuItem.separator())
             statusBarMenu.addItem(lastUpdatedMenuItem)
+            if plugin?.error != nil {
+                statusBarMenu.addItem(showErrorItem)
+            }
             statusBarMenu.addItem(runInTerminalItem)
             statusBarMenu.addItem(disablePluginItem)
             if plugin?.metadata?.isEmpty == false {
@@ -187,6 +190,15 @@ extension MenubarItem {
 
     @objc func quit() {
         NSApp.terminate(self)
+    }
+
+    @objc func showError() {
+        guard let plugin = plugin, plugin.error != nil else {return}
+        let popover = NSPopover()
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(rootView: PluginErrorView(plugin: plugin))
+        popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.becomeKey()
     }
 
     @objc func runInTerminal() {
@@ -366,13 +378,17 @@ extension MenubarItem {
         ]), fullTitle)
     }
 
+    func itemActionSelector(params: MenuLineParameters) -> Selector? {
+        return params.href != nil ? #selector(performMenuItemHREFAction):
+            params.bash != nil ? #selector(performMenuItemBashAction):
+            params.refresh ? #selector(performMenuItemRefreshAction): nil
+    }
+
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
         guard params.dropdown else {return nil}
 
         let item = NSMenuItem(title: params.title,
-                            action: params.href != nil ? #selector(performMenuItemHREFAction):
-                            params.bash != nil ? #selector(performMenuItemBashAction):
-                            params.refresh ? #selector(performMenuItemRefreshAction): nil,
+                            action: itemActionSelector(params: params),
                           keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)

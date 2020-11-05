@@ -23,7 +23,7 @@ class ExecutablePlugin: Plugin {
             contentUpdatePublisher.send("")
         }
     }
-    var error: String?
+    var error: ShellOutError?
 
 
     let queue = OperationQueue()
@@ -104,7 +104,7 @@ class ExecutablePlugin: Plugin {
         } catch {
             guard let error = error as? ShellOutError else {return nil}
             os_log("Failed to execute script\n%s\n%s", log: Log.plugin, type:.error, file, error.message)
-            self.error = error.message
+            self.error = error
         }
         return nil
     }

@@ -1,4 +1,5 @@
 import Foundation
+import ShellOut
 
 enum PluginType {
     case Executable
@@ -15,8 +16,9 @@ protocol Plugin {
     var enabled: Bool {get}
     var metadata: PluginMetadata? { get }
     var updateInterval: Double {get}
+    var lastUpdated: Date? {get set}
     var content: String? {get set}
-    var error: String? {get set}
+    var error: ShellOutError? {get set}
     func refresh()
     func terminate()
     func invoke(params: [String]) -> String?
