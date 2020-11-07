@@ -122,8 +122,6 @@ SwiftBar adopts metadata format suggested by BitBar:
 # <bitbar.image>http://www.hosted-somewhere/pluginimage</bitbar.image>
 # <bitbar.dependencies>python,ruby,node</bitbar.dependencies>
 # <bitbar.abouturl>http://url-to-about.com/</bitbar.abouturl>
-# <bitbar.droptypes>filenames,public.url</bitbar.droptypes>
-# <bitbar.demo>--demo</bitbar.demo>
 ```
 
 ## Logs and Error
