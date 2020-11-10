@@ -107,6 +107,7 @@ Here is the list of supported parameters:
 | `bash` | Absolute file path| Executable script to run in Shell |
 | `terminal` | False | `bash` script will be run in the background, instead of launching the Terminal |
 | `params` | param0=,param1=, param10=... | Parameters for `bash` script |
+| `shortcut` | CMD+OPT+T | Hotkey assigned to item, if item is in header hotkey will show the menu, otherwise hotkey will launch associated action|
 
 
 ### Script Metadata
