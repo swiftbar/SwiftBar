@@ -366,16 +366,12 @@ extension MenubarItem {
             NSFont.systemFont(ofSize: fontSize, weight: .regular)
         let style = NSMutableParagraphStyle()
         style.alignment = .left
-        var offset = 0
-        if #available(macOS 11.0.1, *) {
-            offset = -1
-        }
+        
         return (NSAttributedString(string: title,
                                   attributes: [
                                     .foregroundColor:color,
                                     .font:font,
-                                    .paragraphStyle:style,
-                                    .baselineOffset: offset
+                                    .paragraphStyle:style
         ]), fullTitle)
     }
 
