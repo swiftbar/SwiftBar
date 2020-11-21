@@ -40,6 +40,8 @@ class App: NSObject {
         preferencesWindowController = NSWindowController(window: myWindow)
         preferencesWindowController?.contentViewController = NSHostingController(rootView: PluginRepositoryView())
         preferencesWindowController?.showWindow(self)
+        preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     public static func openPreferences() {
@@ -56,6 +58,8 @@ class App: NSObject {
         preferencesWindowController = NSWindowController(window: myWindow)
         preferencesWindowController?.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
         preferencesWindowController?.showWindow(self)
+        preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     public static func showAbout() {
