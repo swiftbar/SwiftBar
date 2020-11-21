@@ -43,15 +43,21 @@ struct PluginsPreferencesView: View {
 
     var body: some View {
         VStack {
-            PluginsView()
-            HStack {
-                Spacer()
-                Button("Reset All") {
-                    preferences.disabledPlugins.removeAll()
+            if delegate.pluginManager.plugins.isEmpty {
+                Text("Plugins folder is empty")
+                    .font(.largeTitle)
+                    .padding(.bottom, 50)
+            } else {
+                PluginsView()
+                HStack {
+                    Spacer()
+                    Button("Reset All") {
+                        preferences.disabledPlugins.removeAll()
+                    }
                 }
+                Text("Enabled plugins appear in the menu bar.")
+                    .font(.footnote)
             }
-            Text("Enabled plugins appear in the menu bar.")
-                .font(.footnote)
         }
     }
 }
@@ -139,6 +145,8 @@ struct PreferencesView: View {
 struct PreferencesView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
+            PreferencesView()
+                .environmentObject(Preferences.shared)
             PreferencesView()
                 .environmentObject(Preferences.shared)
         }
