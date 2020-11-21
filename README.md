@@ -12,8 +12,14 @@ Add custom menu bar programs on macOS in three easy steps:
 Get plugins from awesome [BitBar repository](https://github.com/matryer/bitbar-plugins)
 
 ## How to get SwiftBar
-- Download from [GitHub Releases](https://github.com/swiftbar/SwiftBar/releases)
-- Install with Homebrew(in progress)
+Download from [GitHub Releases](https://github.com/swiftbar/SwiftBar/releases)
+
+or Install with Homebrew
+
+```
+brew tap melonamin/formulae
+brew cask install esse
+```
 
 Runs on macOS Catalina(10.15) and up.
 
