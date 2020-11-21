@@ -14,6 +14,9 @@
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
 		393375EC25508B320050AC28 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
+		3962572325682ABF00341A19 /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3962572225682ABF00341A19 /* Onboarding.swift */; };
+		396257262569667000341A19 /* PluginRepositoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396257252569667000341A19 /* PluginRepositoryView.swift */; };
+		3962572B256967DC00341A19 /* PluginRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3962572A256967DC00341A19 /* PluginRepository.swift */; };
 		39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA0254DD32100713DAF /* AboutPluginView.swift */; };
 		39641EA5254E096200713DAF /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA4254E096200713DAF /* PreferencesView.swift */; };
 		39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA8254E0E0B00713DAF /* EnumPicker.swift */; };
@@ -34,6 +37,8 @@
 		39AF7793254B5834001D76E5 /* NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7792254B5834001D76E5 /* NSColor.swift */; };
 		39AF7796254B6203001D76E5 /* NSImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7795254B6203001D76E5 /* NSImage.swift */; };
 		39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7798254C7796001D76E5 /* String+Emoji.swift */; };
+		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
+		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +50,9 @@
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		3962572225682ABF00341A19 /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
+		396257252569667000341A19 /* PluginRepositoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepositoryView.swift; sourceTree = "<group>"; };
+		3962572A256967DC00341A19 /* PluginRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepository.swift; sourceTree = "<group>"; };
 		39641EA0254DD32100713DAF /* AboutPluginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutPluginView.swift; sourceTree = "<group>"; };
 		39641EA4254E096200713DAF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		39641EA8254E0E0B00713DAF /* EnumPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumPicker.swift; sourceTree = "<group>"; };
@@ -64,6 +72,8 @@
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
 		39AF7795254B6203001D76E5 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
 		39AF7798254C7796001D76E5 /* String+Emoji.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Emoji.swift"; sourceTree = "<group>"; };
+		39E1549B25699C8F00287D8A /* URLTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTextView.swift; sourceTree = "<group>"; };
+		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -125,13 +135,24 @@
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
+		3962572D2569949200341A19 /* Plugin Repository */ = {
+			isa = PBXGroup;
+			children = (
+				396257252569667000341A19 /* PluginRepositoryView.swift */,
+				3962572A256967DC00341A19 /* PluginRepository.swift */,
+			);
+			path = "Plugin Repository";
+			sourceTree = "<group>";
+		};
 		39641E9F254DD30C00713DAF /* UI */ = {
 			isa = PBXGroup;
 			children = (
 				39641EA7254E0DFD00713DAF /* Helpers */,
+				3962572D2569949200341A19 /* Plugin Repository */,
 				39641EA0254DD32100713DAF /* AboutPluginView.swift */,
 				39641EA4254E096200713DAF /* PreferencesView.swift */,
 				398DAE7925537DAF00747D90 /* PluginErrorView.swift */,
+				3962572225682ABF00341A19 /* Onboarding.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -141,6 +162,8 @@
 			children = (
 				39641EA8254E0E0B00713DAF /* EnumPicker.swift */,
 				39641EAC254E0E3400713DAF /* ImageLoader.swift */,
+				39E1549B25699C8F00287D8A /* URLTextView.swift */,
+				39E1549E2569A2D700287D8A /* ImageVIew.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -296,13 +319,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3962572B256967DC00341A19 /* PluginRepository.swift in Sources */,
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
+				39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */,
+				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
 				39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */,
 				39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */,
 				398DAE7A25537DAF00747D90 /* PluginErrorView.swift in Sources */,
+				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				39AF77842547750E001D76E5 /* App.swift in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
@@ -312,6 +339,7 @@
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
 				398B86CE254DBF2F00DEA027 /* main.swift in Sources */,
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
+				3962572325682ABF00341A19 /* Onboarding.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,

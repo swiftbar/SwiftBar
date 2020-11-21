@@ -27,8 +27,19 @@ class App: NSObject {
     }
 
     public static func getPlugins() {
-        let url = URL(string: "https://github.com/orgs/swiftbar/")!
-        NSWorkspace.shared.open(url)
+        let preferencesWindowController: NSWindowController?
+        let myWindow = NSWindow(
+            contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
+            styleMask: [.closable, .miniaturizable, .resizable, .titled],
+            backing: .buffered,
+            defer: false
+        )
+        myWindow.title = "Plugin Repository"
+        myWindow.center()
+
+        preferencesWindowController = NSWindowController(window: myWindow)
+        preferencesWindowController?.contentViewController = NSHostingController(rootView: PluginRepositoryView())
+        preferencesWindowController?.showWindow(self)
     }
 
     public static func openPreferences() {

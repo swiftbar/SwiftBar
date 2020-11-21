@@ -130,15 +130,25 @@ class PluginManager {
         plugins[index].refresh()
     }
 
-    func importPlugin(from url: URL) {
+    enum ImportPluginError: Error {
+        case badURL
+        case importFail
+    }
+
+    func importPlugin(from url: URL, completionHandler: ((Result<Any, ImportPluginError>) -> Void )? = nil) {
         os_log("Starting plugin import from %s", log: Log.plugin, url.absoluteString)
         let downloadTask = URLSession.shared.downloadTask(with: url) { fileURL, _, _ in
-            guard let fileURL = fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else { return }
+            guard let fileURL = fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else {
+                completionHandler?(.failure(.badURL))
+                return
+            }
             do {
                 let targetURL = pluginDirectoryURL.appendingPathComponent(url.lastPathComponent)
                 try shellOut(to: "chmod +x \(fileURL.path)")
                 try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
+                completionHandler?(.success(true))
             } catch {
+                completionHandler?(.failure(.importFail))
                 os_log("Failed to import plugin from %s \n%s", log: Log.plugin, type: .error, url.absoluteString, error.localizedDescription)
             }
         }
