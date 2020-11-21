@@ -22,6 +22,14 @@ Runs on macOS Catalina(10.15) and up.
 - Open SwiftBar/SwiftBar.xcodeproj
 - Press play
 
+## Plugin Repository
+
+SwiftBar bundled with Plugin Repository, you can access it at Swiftbar -> Get Plugins...
+
+<p align="center">
+ <img width="600" height="500" src="Resources/Plugin Repository.jpg">
+</p>
+
 
 ## Creating Plugins
 
@@ -34,6 +42,26 @@ With the first launch, Swiftbar will ask you to set the `Plugin Folder`, SwiftBa
 **Important**:
 * hidden folders are ignored
 * nested folders are traversed by SwiftBar
+
+### Plugin Naming
+
+Plugin files must adopt the following format:
+
+```
+{name}.{time}.{ext}
+```
+
+* name - anything you want
+* time - resresh interval, should be a number + duration modifier(see below)
+* ext - file extension
+
+Duration modifier:
+* s - seconds, i.e. 1s - refresh every second
+* m - minute, i.e. 10m - refresh every ten minutes
+* h - hour, i.e. 3h - refresh every three hours
+* d - day, i.e. 1d - refresh every day
+
+Example filename: `date.1m.sh`
 
 ## Plugin API
 
