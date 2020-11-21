@@ -14,7 +14,6 @@
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
 		393375EC25508B320050AC28 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
-		3962572325682ABF00341A19 /* Onboarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3962572225682ABF00341A19 /* Onboarding.swift */; };
 		396257262569667000341A19 /* PluginRepositoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396257252569667000341A19 /* PluginRepositoryView.swift */; };
 		3962572B256967DC00341A19 /* PluginRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3962572A256967DC00341A19 /* PluginRepository.swift */; };
 		39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA0254DD32100713DAF /* AboutPluginView.swift */; };
@@ -50,7 +49,6 @@
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
-		3962572225682ABF00341A19 /* Onboarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Onboarding.swift; sourceTree = "<group>"; };
 		396257252569667000341A19 /* PluginRepositoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepositoryView.swift; sourceTree = "<group>"; };
 		3962572A256967DC00341A19 /* PluginRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepository.swift; sourceTree = "<group>"; };
 		39641EA0254DD32100713DAF /* AboutPluginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutPluginView.swift; sourceTree = "<group>"; };
@@ -152,7 +150,6 @@
 				39641EA0254DD32100713DAF /* AboutPluginView.swift */,
 				39641EA4254E096200713DAF /* PreferencesView.swift */,
 				398DAE7925537DAF00747D90 /* PluginErrorView.swift */,
-				3962572225682ABF00341A19 /* Onboarding.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -339,7 +336,6 @@
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
 				398B86CE254DBF2F00DEA027 /* main.swift in Sources */,
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
-				3962572325682ABF00341A19 /* Onboarding.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
