@@ -23,7 +23,7 @@ struct AboutPluginView: View {
             }
             Divider()
             if let imageURL = md.previewImageURL {
-                ImageView(withURL: imageURL)
+                ImageView(withURL: imageURL, width: 350, height: 200)
             }
 
             if let author = md.author {
@@ -72,26 +72,6 @@ struct LabelView: View {
             }
             Spacer()
         }
-    }
-}
-
-struct ImageView: View {
-    @ObservedObject var imageLoader:ImageLoader
-    @State var image: NSImage = NSImage()
-
-    init(withURL url: URL) {
-        imageLoader = ImageLoader(url: url)
-    }
-
-    var body: some View {
-
-        Image(nsImage: image)
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: 350, height: 200)
-            .onReceive(imageLoader.didChange) { data in
-                self.image = NSImage(data: data) ?? NSImage()
-            }
     }
 }
 
