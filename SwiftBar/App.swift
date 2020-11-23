@@ -23,7 +23,7 @@ class App: NSObject {
         else {return}
 
         Preferences.shared.pluginDirectoryPath = path
-        delegate.pluginManager.refreshAllPlugins()
+        delegate.pluginManager.loadPlugins()
     }
 
     public static func getPlugins() {
