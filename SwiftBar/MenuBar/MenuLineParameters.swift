@@ -109,7 +109,7 @@ struct MenuLineParameters {
             }
         }
 
-        let image = NSImage.createImage(from: params["image"] ?? params["templateImage"], isTemplate: params["templateImage"] != nil)
+        let image = NSImage.createImage(from: params["image"] ?? params["templateimage"], isTemplate: params["templateimage"] != nil)
         if let widthStr = params["width"], let width = Float(widthStr),
            let heightStr = params["height"], let height = Float(heightStr) {
             return image?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
