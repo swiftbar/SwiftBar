@@ -120,7 +120,7 @@ Here is the list of supported parameters:
 | `size` | Number| Sets item text size|
 | `length`| Number| Trims item text to a provided number of characters, the full title will be displayed in a tooltip |
 | `trim` | True | Trims whitespace characters|
-| `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom: into 🍄|
+| `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom:` into 🍄|
 
 **Visuals**:
 | Parameter | Value | Description |
