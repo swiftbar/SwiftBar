@@ -19,7 +19,7 @@ class ExecutablePlugin: Plugin {
 
     var content: String? = "..." {
         didSet {
-//            guard content != oldValue else {return}
+            guard content != oldValue else {return}
             contentUpdatePublisher.send("")
         }
     }
