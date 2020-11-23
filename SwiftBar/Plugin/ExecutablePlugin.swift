@@ -11,7 +11,7 @@ class ExecutablePlugin: Plugin {
     var enabled: Bool {
         !prefs.disabledPlugins.contains(id)
     }
-    var updateInterval: Double = 60
+    var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
     let metadata: PluginMetadata?
     var lastUpdated: Date? = nil
     var lastRefreshSuccesseful:Bool = false
@@ -19,7 +19,7 @@ class ExecutablePlugin: Plugin {
 
     var content: String? = "..." {
         didSet {
-            guard content != oldValue else {return}
+//            guard content != oldValue else {return}
             contentUpdatePublisher.send("")
         }
     }
