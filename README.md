@@ -9,7 +9,7 @@ Add custom menu bar programs on macOS in three easy steps:
 - Add it to SwiftBar
 - ... there is no 3rd step!
 
-Get plugins from awesome [BitBar repository](https://github.com/matryer/bitbar-plugins)
+You can get plugins from awesome [BitBar repository](https://github.com/matryer/bitbar-plugins), or in SwiftBar itself using the `Get Plugins...` menu item.
 
 ## How to get SwiftBar
 Download from [GitHub Releases](https://github.com/swiftbar/SwiftBar/releases)
@@ -21,7 +21,7 @@ brew tap melonamin/formulae
 brew cask install SwiftBar
 ```
 
-Runs on macOS Catalina(10.15) and up.
+Runs on macOS Catalina (10.15) and up.
 
 ## ...or build it from source
 - Clone or download a copy of this repository
@@ -30,7 +30,7 @@ Runs on macOS Catalina(10.15) and up.
 
 ## Plugin Repository
 
-SwiftBar bundled with Plugin Repository, you can access it at Swiftbar -> Get Plugins...
+SwiftBar bundled with Plugin Repository, you can access it at Swiftbar → Get Plugins...
 
 <p align="center">
  <img width="600" height="500" src="Resources/Plugin Repository.jpg">
@@ -39,7 +39,7 @@ SwiftBar bundled with Plugin Repository, you can access it at Swiftbar -> Get Pl
 
 ## Creating Plugins
 
-To add a new plugin to SwiftBar you need to create an executable script following the required format(see below) and put it into `Plugin Folder`. 
+To add a new plugin to SwiftBar you need to create an executable script following the required format (see below) and put it into `Plugin Folder`. 
 
 ### Plugin Folder
 
@@ -58,7 +58,7 @@ Plugin files must adopt the following format:
 ```
 
 * name - anything you want
-* time - resresh interval, should be a number + duration modifier(see below)
+* time - resresh interval, optional, should be a number + duration modifier (see below)
 * ext - file extension
 
 Duration modifier:
@@ -73,7 +73,7 @@ Example filename: `date.1m.sh`
 
 Plugin is an executable script in the language of your choice. When SwiftBar detects a new file in `Plugin Folder` it makes this file executable if needed and runs it. 
 
-Script should produce output(STDOUT) in the required format(see next chapter), error should be redirected to STDERR. 
+Script should produce output (STDOUT) in the required format (see next chapter), error should be redirected to STDERR.
 
 Plugin API is adopted from the [BitBar](https://github.com/matryer/bitbar), which means that SwiftBar can run any existing BitBar plugin.
 
@@ -92,7 +92,7 @@ The simplest plugin looks like this:
 echo "This is Menu Title"
 ```
 
-Multiple title plugin, the title will be cycled in the menu bar and show in the dropdown menu:
+If you provide multiple titles, the provided titles will be cycled in the menu bar and shown in the dropdown menu:
 
 ```
 echo "This is a primary Menu Title"
@@ -120,7 +120,7 @@ Here is the list of supported parameters:
 | `size` | Number| Sets item text size|
 | `length`| Number| Trims item text to a provided number of characters, the full title will be displayed in a tooltip |
 | `trim` | True | Trims whitespace characters|
-| `emojize` | False | Disables parsing of GitHub style emojis, i.e. mushroom: into 🍄|
+| `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom:` into 🍄|
 
 **Visuals**:
 | Parameter | Value | Description |
@@ -129,18 +129,18 @@ Here is the list of supported parameters:
 | `alternate` |True| Marks a line as an alternative to the previous one for when the Option key is pressed in the dropdown|
 | `image` | Image encoded in Base64| Sets an image for item|
 | `templateImage`| Image encoded in Base64| Same as `image`, but the image is a template image. Template images consist of black and clear colors (and an alpha channel). Template images are not intended to be used as standalone images and are usually mixed with other content to create the desired final appearance.|
-| `sfimage` | SFSymbol name| Sets an image for item from [SF Symbol](https://developer.apple.com/sf-symbols/)|
+| `sfimage` | SFSymbol name| Sets an image for item from [SF Symbol](https://developer.apple.com/sf-symbols/). Only available on Big Sur and above.|
 | `checked` | True | Sets a checkmark in front of the item|
 | `tooltip` | Text | Sets a tooltip for the item |
 
 **Actions**:
 | Parameter | Value | Description |
 | ------------- | ------------- |------------- | 
-| `refresh` | True | PLugin Script will be executed on item click |
+| `refresh` | True | Plugin Script will be executed on item click |
 | `href` | Absolute URL | Sets an URL to open when item clicked |
 | `bash` | Absolute file path| Executable script to run in Shell |
 | `terminal` | False | `bash` script will be run in the background, instead of launching the Terminal |
-| `params` | param0=,param1=, param10=... | Parameters for `bash` script |
+| `params` | `param0=`,`param1=`,`param10=`... | Parameters for `bash` script |
 | `shortcut` | CMD+OPT+T | Hotkey assigned to item, if item is in header hotkey will show the menu, otherwise hotkey will launch associated action|
 
 
@@ -162,4 +162,4 @@ SwiftBar adopts metadata format suggested by BitBar:
 ## Logs and Error
 
 If plugin fails to run SwiftBar will show ⚠️ in the menu bar, you can see details by clicking on Error in dropdown menu.
-Use macOS console app to view SwiftBar logs.
+Use macOS `Console.app` to view SwiftBar logs.
