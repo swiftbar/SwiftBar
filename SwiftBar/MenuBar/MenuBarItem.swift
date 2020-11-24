@@ -334,6 +334,9 @@ extension MenubarItem {
     }
 
     func setMenuTitle(title: String) {
+        barItem.button?.attributedTitle = NSAttributedString()
+        barItem.button?.image = nil
+
         let params = MenuLineParameters(line: title)
         if let image = params.image {
             barItem.button?.image = image
