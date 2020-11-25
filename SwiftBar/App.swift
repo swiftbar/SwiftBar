@@ -10,7 +10,7 @@ class App: NSObject {
 
     public static func changePluginFolder() {
         let dialog = NSOpenPanel()
-        dialog.title                   = "Choose plugin folder"
+        dialog.message                 = "Choose plugin folder"
         dialog.showsResizeIndicator    = true
         dialog.showsHiddenFiles        = false
         dialog.canChooseDirectories    = true
@@ -27,6 +27,9 @@ class App: NSObject {
     }
 
     public static func getPlugins() {
+        if Preferences.shared.pluginDirectoryPath == nil {
+            App.changePluginFolder()
+        }
         let preferencesWindowController: NSWindowController?
         let myWindow = NSWindow(
             contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
