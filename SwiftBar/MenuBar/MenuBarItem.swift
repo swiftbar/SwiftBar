@@ -12,6 +12,7 @@ class MenubarItem: NSObject {
     var titleCycleCancellable: AnyCancellable? = nil
     let lastUpdatedMenuItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
     var isOpen = false
+    var refreshOnClose = false
     var hotKeys: [HotKey] = []
 
     var titleLines: [String] = [] {
@@ -48,7 +49,10 @@ class MenubarItem: NSObject {
         updateMenu()
         contentUpdateCancellable = (plugin as? ExecutablePlugin)?.contentUpdatePublisher
             .sink {[weak self] _ in
-                guard self?.isOpen == false else {return}
+                guard self?.isOpen == false else {
+                    self?.refreshOnClose = true
+                    return
+                }
                 DispatchQueue.main.async { [weak self] in
                     self?.disableTitleCycle()
                     self?.updateMenu()
@@ -95,6 +99,12 @@ extension MenubarItem: NSMenuDelegate {
 
     func menuDidClose(_ menu: NSMenu) {
         isOpen = false
+        //if plugin was refreshed when menu was opened refresh on menu close
+        if refreshOnClose {
+            refreshOnClose = false
+            disableTitleCycle()
+            updateMenu()
+        }
     }
 }
 
