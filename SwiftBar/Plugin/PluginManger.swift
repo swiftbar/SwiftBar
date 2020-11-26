@@ -120,6 +120,10 @@ class PluginManager {
         plugins.forEach{$0.refresh()}
     }
 
+    func rebuildAllMenus() {
+        menuBarItems.values.forEach{$0.updateMenu()}
+    }
+
     func refreshPlugin(named name: String) {
         guard let plugin = plugins.first(where: {$0.name.lowercased() == name.lowercased()}) else {return}
         plugin.refresh()
