@@ -27,8 +27,22 @@ class App: NSObject {
     }
 
     public static func getPlugins() {
-        if Preferences.shared.pluginDirectoryPath == nil {
-            App.changePluginFolder()
+        while Preferences.shared.pluginDirectoryPath == nil {
+            
+            let alert = NSAlert()
+            alert.messageText = "Set SwiftBar Plugins Location"
+            alert.informativeText = "Select a folder to store the plugins repository"
+            alert.addButton(withTitle: "Ok")
+            alert.addButton(withTitle: "Cancel")
+            let modalResult = alert.runModal()
+
+            switch modalResult {
+            case .alertFirstButtonReturn:
+                App.changePluginFolder()
+            default:
+                return
+            }
+            
         }
         let preferencesWindowController: NSWindowController?
         let myWindow = NSWindow(
