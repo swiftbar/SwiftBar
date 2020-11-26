@@ -66,12 +66,13 @@ class App: NSObject {
         NSApp.orderFrontStandardAboutPanel(options: [:])
     }
 
-    public static func runInTerminal(script: String, runInBackground: Bool = false) {
+    public static func runInTerminal(script: String, runInBackground: Bool = false, completionHandler: ((() -> Void)?) = nil) {
         if runInBackground {
             DispatchQueue.global(qos: .userInitiated).async {
                 os_log("Executing script in background... \n %s", log: Log.plugin, script)
                 do {
                     try shellOut(to: script)
+                    completionHandler?()
                 } catch {
                     guard let error = error as? ShellOutError else {return}
                     os_log("Failed to execute script in background\n%s", log: Log.plugin, type:.error, error.message)
@@ -117,6 +118,7 @@ class App: NSObject {
             } else if let error = error {
                 os_log("Failed to execute script in Terminal \n%s", log: Log.plugin, type:.error, error.description)
             }
+            completionHandler?()
         }
     }
 }
