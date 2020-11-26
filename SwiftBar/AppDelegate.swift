@@ -19,8 +19,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             case .alertFirstButtonReturn:
                 App.changePluginFolder()
             default:
-//                NSApplication.shared.terminate(self)
-                return
+                NSApplication.shared.terminate(self)
             }
         }
     }
