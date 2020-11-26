@@ -10,7 +10,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         while Preferences.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
             alert.messageText = "Set SwiftBar Plugins Location"
-            alert.informativeText = "Select a folder to store the plugins repository"
+            alert.informativeText = "Select a folder to store the SwiftBar plugins"
             alert.addButton(withTitle: "Ok")
             alert.addButton(withTitle: "Quit SwiftBar")
             let modalResult = alert.runModal()
