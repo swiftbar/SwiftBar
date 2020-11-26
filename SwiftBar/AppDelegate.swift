@@ -7,7 +7,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         //Instance of Plugin Manager must be created after app launch
         pluginManager = PluginManager.shared
-        if Preferences.shared.pluginDirectoryPath == nil {
+        while Preferences.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
             alert.messageText = "Set SwiftBar Plugins Location"
             alert.informativeText = "Select a folder to store the plugins repository"
