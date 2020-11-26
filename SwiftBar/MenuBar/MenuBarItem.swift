@@ -295,6 +295,9 @@ extension MenubarItem {
         while workingLine.hasPrefix("--") {
             workingLine = String(workingLine.dropFirst(2))
             currentLevel += 1
+            if workingLine == "---" {
+                break
+            }
         }
 
         if prevLevel >= currentLevel, prevItems.count > 0 {
@@ -313,8 +316,8 @@ extension MenubarItem {
             }
             submenu = item?.submenu
         }
-
-        if let item = buildMenuItem(params: MenuLineParameters(line: workingLine)) {
+        
+        if let item = workingLine == "---" ? NSMenuItem.separator():buildMenuItem(params: MenuLineParameters(line: workingLine)) {
             item.target = self
             (submenu ?? statusBarMenu)?.addItem(item)
             lastMenuItem = item
