@@ -32,6 +32,11 @@ struct GeneralPreferencesView: View {
             Section(header: Text("Shell")) {
                 EnumPicker(selected: $preferences.terminal, title: "")
             }
+            Section() {
+                Toggle(isOn: $preferences.swiftBarIconIsHidden) {
+                    Text("Hide SwiftBar Icon")
+                }.padding(.top)
+            }
         }
         .padding(20)
         .frame(width: 350, height: 100)

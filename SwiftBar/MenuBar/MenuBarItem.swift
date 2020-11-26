@@ -139,7 +139,7 @@ extension MenubarItem {
             // put swiftbar menu as submenu
             let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
             item.submenu = menu
-            item.image = NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
+            item.image = Preferences.shared.swiftBarIconIsHidden ? nil:NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
             statusBarMenu.addItem(item)
 
             // default plugin menu items
