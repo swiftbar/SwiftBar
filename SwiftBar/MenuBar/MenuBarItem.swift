@@ -381,17 +381,11 @@ extension MenubarItem {
         ]), fullTitle)
     }
 
-    func itemActionSelector(params: MenuLineParameters) -> Selector? {
-        return params.href != nil ? #selector(performMenuItemHREFAction):
-            params.bash != nil ? #selector(performMenuItemBashAction):
-            params.refresh ? #selector(performMenuItemRefreshAction): nil
-    }
-
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
         guard params.dropdown else {return nil}
 
         let item = NSMenuItem(title: params.title,
-                            action: itemActionSelector(params: params),
+                            action: #selector(perfomMenutItemAction),
                           keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)
@@ -419,28 +413,26 @@ extension MenubarItem {
         return item
     }
 
-    @objc func performMenuItemHREFAction(_ sender: NSMenuItem) {
-        guard let params = sender.representedObject as? MenuLineParameters,
-              let href = params.href,
-              let url = URL(string: href)
-        else {
+    @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
+        guard let params = sender.representedObject as? MenuLineParameters else {return}
+
+        if let href = params.href, let url = URL(string: href) {
+            NSWorkspace.shared.open(url)
             return
         }
-        NSWorkspace.shared.open(url)
-    }
 
-    @objc func performMenuItemBashAction(_ sender: NSMenuItem) {
-        guard let params = sender.representedObject as? MenuLineParameters,
-              let bash = params.bash
-        else {
+        if let bash = params.bash {
+            let script = "\(bash) \(params.bashParams.joined(separator: " "))"
+            App.runInTerminal(script: script, runInBackground: !params.terminal) { [weak self] in
+                if params.refresh {
+                    self?.plugin?.refresh()
+                }
+            }
             return
         }
-        let script = "\(bash) \(params.bashParams.joined(separator: " "))"
-        App.runInTerminal(script: script, runInBackground: !params.terminal)
-    }
 
-    @objc func performMenuItemRefreshAction(_ sender: NSMenuItem) {
-        plugin?.refresh()
+        if params.refresh {
+            plugin?.refresh()
+        }
     }
-
 }
