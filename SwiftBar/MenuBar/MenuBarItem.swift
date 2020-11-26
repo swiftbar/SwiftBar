@@ -382,10 +382,10 @@ extension MenubarItem {
             title = String(title.prefix(length)).appending("...")
         }
         title = title.replacingOccurrences(of: "\\n", with: "\n")
-        let fontSize = params.size ?? NSFont.systemFontSize
+        let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
-            NSFont.systemFont(ofSize: fontSize, weight: .regular)
+            NSFont.menuBarFont(ofSize: fontSize)
         let style = NSMutableParagraphStyle()
         style.alignment = .left
         
