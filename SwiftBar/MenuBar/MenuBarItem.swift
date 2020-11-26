@@ -111,13 +111,14 @@ extension MenubarItem {
         let openPluginFolderItem = NSMenuItem(title: "Open Plugin Folder...", action: #selector(openPluginFolder), keyEquivalent: "")
         let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
+        let sendFeedbackItem = NSMenuItem(title: "Send Feedback...", action: #selector(sendFeedback), keyEquivalent: "")
         let aboutSwiftBarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
         let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
         let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
-        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem].forEach{$0.target = self}
+        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{$0.target = self}
 
         menu.addItem(refreshAllItem)
         menu.addItem(enableAllItem)
@@ -129,6 +130,7 @@ extension MenubarItem {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(aboutSwiftBarItem)
         menu.addItem(preferencesItem)
+        menu.addItem(sendFeedbackItem)
         menu.addItem(quitItem)
 
         if !firstLevel {
@@ -181,6 +183,10 @@ extension MenubarItem {
 
     @objc func getPlugins() {
         App.getPlugins()
+    }
+
+    @objc func sendFeedback() {
+        NSWorkspace.shared.open(URL(string: "https://github.com/swiftbar/SwiftBar/issues")!)
     }
 
     @objc func quit() {
