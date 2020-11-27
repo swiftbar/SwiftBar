@@ -419,7 +419,8 @@ extension MenubarItem {
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
-            NSFont.menuBarFont(ofSize: fontSize)
+            NSFont.menuFont(ofSize: fontSize)
+
         let style = NSMutableParagraphStyle()
         style.alignment = .left
         
