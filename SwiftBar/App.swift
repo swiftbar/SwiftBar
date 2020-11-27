@@ -10,7 +10,7 @@ class App: NSObject {
 
     public static func changePluginFolder() {
         let dialog = NSOpenPanel()
-        dialog.title                   = "Choose plugin folder"
+        dialog.message                 = "Choose plugin folder"
         dialog.showsResizeIndicator    = true
         dialog.showsHiddenFiles        = false
         dialog.canChooseDirectories    = true
@@ -27,6 +27,23 @@ class App: NSObject {
     }
 
     public static func getPlugins() {
+        while Preferences.shared.pluginDirectoryPath == nil {
+            
+            let alert = NSAlert()
+            alert.messageText = "Set SwiftBar Plugins Location"
+            alert.informativeText = "Select a folder to store the plugins repository"
+            alert.addButton(withTitle: "Ok")
+            alert.addButton(withTitle: "Cancel")
+            let modalResult = alert.runModal()
+
+            switch modalResult {
+            case .alertFirstButtonReturn:
+                App.changePluginFolder()
+            default:
+                return
+            }
+            
+        }
         let preferencesWindowController: NSWindowController?
         let myWindow = NSWindow(
             contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),

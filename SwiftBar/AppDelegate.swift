@@ -7,8 +7,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         //Instance of Plugin Manager must be created after app launch
         pluginManager = PluginManager.shared
-        if Preferences.shared.pluginDirectoryPath == nil {
-            App.changePluginFolder()
+        while Preferences.shared.pluginDirectoryPath == nil {
+            let alert = NSAlert()
+            alert.messageText = "Set SwiftBar Plugins Location"
+            alert.informativeText = "Select a folder to store the SwiftBar plugins"
+            alert.addButton(withTitle: "Ok")
+            alert.addButton(withTitle: "Quit SwiftBar")
+            let modalResult = alert.runModal()
+
+            switch modalResult {
+            case .alertFirstButtonReturn:
+                App.changePluginFolder()
+            default:
+                NSApplication.shared.terminate(self)
+            }
         }
     }
 
