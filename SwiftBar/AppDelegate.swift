@@ -43,7 +43,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         pluginManager.importPlugin(from: url)
                     }
                 default:
-                    os_log("Unsupported URL scheme \n %s", log: Log.plugin, type: .error, url.absoluteString)
+                    os_log("Unsupported URL scheme \n %{public}@", log: Log.plugin, type: .error, url.absoluteString)
                     break
             }
         }

@@ -51,7 +51,7 @@ class PluginRepository: ObservableObject {
                     self?.repository = rep
                 }
             } catch {
-                os_log("Failed to refresh plugin repository \n%s", log: Log.repository, type: .error, error.localizedDescription)
+                os_log("Failed to refresh plugin repository \n%{public}@", log: Log.repository, type: .error, error.localizedDescription)
             }
         }
         downloadTask.resume()

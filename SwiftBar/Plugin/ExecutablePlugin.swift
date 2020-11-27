@@ -62,7 +62,7 @@ class ExecutablePlugin: Plugin {
             metadata = nil
         }
         makeScriptExecutable(file: file)
-        os_log("Initialized executable plugin\n%s", log: Log.plugin, description)
+        os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh()
     }
 
@@ -81,7 +81,7 @@ class ExecutablePlugin: Plugin {
     }
 
     func refresh() {
-        os_log("Requesting manual refresh for plugin\n%s", log: Log.plugin, description)
+        os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         disableTimer()
         queue.cancelAllOperations()
         queue.addOperation { [weak self] in
@@ -99,11 +99,11 @@ class ExecutablePlugin: Plugin {
         do {
             let out = try shellOut(to: "'\(file)'")
             self.error = nil
-            os_log("Successfully executed script \n%s", log: Log.plugin, file)
+            os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             return out
         } catch {
             guard let error = error as? ShellOutError else {return nil}
-            os_log("Failed to execute script\n%s\n%s", log: Log.plugin, type:.error, file, error.message)
+            os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type:.error, file, error.message)
             self.error = error
         }
         return nil

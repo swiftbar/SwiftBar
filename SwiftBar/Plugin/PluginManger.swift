@@ -52,7 +52,7 @@ class PluginManager {
     }
 
     func disablePlugin(plugin: Plugin) {
-        os_log("Disabling plugin \n%s", log: Log.plugin, plugin.description)
+        os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
         prefs.disabledPlugins.append(plugin.id)
     }
 
@@ -140,7 +140,7 @@ class PluginManager {
     }
 
     func importPlugin(from url: URL, completionHandler: ((Result<Any, ImportPluginError>) -> Void )? = nil) {
-        os_log("Starting plugin import from %s", log: Log.plugin, url.absoluteString)
+        os_log("Starting plugin import from %{public}@", log: Log.plugin, url.absoluteString)
         let downloadTask = URLSession.shared.downloadTask(with: url) { fileURL, _, _ in
             guard let fileURL = fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else {
                 completionHandler?(.failure(.badURL))
@@ -153,7 +153,7 @@ class PluginManager {
                 completionHandler?(.success(true))
             } catch {
                 completionHandler?(.failure(.importFail))
-                os_log("Failed to import plugin from %s \n%s", log: Log.plugin, type: .error, url.absoluteString, error.localizedDescription)
+                os_log("Failed to import plugin from %{public}@ \n%{public}@", log: Log.plugin, type: .error, url.absoluteString, error.localizedDescription)
             }
         }
         downloadTask.resume()

@@ -104,13 +104,13 @@ class App: NSObject {
     public static func runInTerminal(script: String, runInBackground: Bool = false, completionHandler: ((() -> Void)?) = nil) {
         if runInBackground {
             DispatchQueue.global(qos: .userInitiated).async {
-                os_log("Executing script in background... \n %s", log: Log.plugin, script)
+                os_log("Executing script in background... \n%{public}@", log: Log.plugin, script)
                 do {
                     try shellOut(to: script)
                     completionHandler?()
                 } catch {
                     guard let error = error as? ShellOutError else {return}
-                    os_log("Failed to execute script in background\n%s", log: Log.plugin, type:.error, error.message)
+                    os_log("Failed to execute script in background\n%{public}@", log: Log.plugin, type:.error, error.message)
                 }
             }
             return
@@ -151,7 +151,7 @@ class App: NSObject {
             if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
                 print(outputString)
             } else if let error = error {
-                os_log("Failed to execute script in Terminal \n%s", log: Log.plugin, type:.error, error.description)
+                os_log("Failed to execute script in Terminal \n%{public}@", log: Log.plugin, type:.error, error.description)
             }
             completionHandler?()
         }
