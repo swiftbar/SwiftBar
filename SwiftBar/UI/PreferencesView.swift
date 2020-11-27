@@ -54,11 +54,12 @@ struct PluginsPreferencesView: View {
                     .padding(.bottom, 50)
             } else {
                 PluginsView()
+                    .padding()
                 HStack {
                     Spacer()
                     Button("Reset All") {
                         preferences.disabledPlugins.removeAll()
-                    }
+                    }.padding()
                 }
                 Text("Enabled plugins appear in the menu bar.")
                     .font(.footnote)
