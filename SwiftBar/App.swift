@@ -19,10 +19,28 @@ class App: NSObject {
         dialog.allowsMultipleSelection = false
 
         guard dialog.runModal() == .OK,
-              let path = dialog.url?.path
+              let url = dialog.url
         else {return}
+        
+        let restrictedPaths = FileManager.default.urls(for: .allApplicationsDirectory, in: .allDomainsMask)
+        
+        if restrictedPaths.contains(url) {
+            let alert = NSAlert()
+            alert.messageText = "Can't use this folder as SwiftBar plugins location"
+            alert.informativeText = "\(url.path)"
+            alert.addButton(withTitle: "Choose New Location")
+            let modalResult = alert.runModal()
 
-        Preferences.shared.pluginDirectoryPath = path
+            switch modalResult {
+            case .alertFirstButtonReturn:
+                App.changePluginFolder()
+            default:
+                break
+            }
+            return
+        }
+
+        Preferences.shared.pluginDirectoryPath = url.path
         delegate.pluginManager.loadPlugins()
     }
 
