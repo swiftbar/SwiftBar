@@ -3,7 +3,7 @@ import HotKey
 
 struct MenuLineParameters {
     let title: String
-    let params: [String:String]
+    var params: [String:String]
 
     init(line: String) {
         guard let index = line.range(of: "|") else {

@@ -17,7 +17,7 @@ class MenubarItem: NSObject {
 
     var titleLines: [String] = [] {
         didSet {
-            currentTitleLine = -1
+            currentTitleLineIndex = -1
             guard titleLines.count > 1 else {
                 disableTitleCycle()
                 return
@@ -26,7 +26,18 @@ class MenubarItem: NSObject {
         }
     }
     
-    var currentTitleLine: Int = -1
+    var currentTitleLineIndex: Int = -1
+
+    var currentTitleLine: String {
+        if currentTitleLineIndex == -1, let title = titleLines.first {
+            return title
+        }
+        if currentTitleLineIndex < titleLines.count {
+            return titleLines[currentTitleLineIndex]
+        }
+        return "..."
+    }
+
     var lastMenuItem: NSMenuItem? = nil
 
     var prevLevel = 0
@@ -90,6 +101,11 @@ class MenubarItem: NSObject {
 extension MenubarItem: NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         isOpen = true
+
+        var params = MenuLineParameters(line: currentTitleLine)
+        params.params["color"] = "white"
+        barItem.button?.attributedTitle = atributedTitle(with: params).title
+
         guard let lastUpdated = (plugin as? ExecutablePlugin)?.lastUpdated else {return}
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
@@ -99,11 +115,29 @@ extension MenubarItem: NSMenuDelegate {
 
     func menuDidClose(_ menu: NSMenu) {
         isOpen = false
+        setMenuTitle(title: currentTitleLine)
+
         //if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
             refreshOnClose = false
             disableTitleCycle()
             updateMenu()
+        }
+    }
+
+    func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
+        if  let highlitedItem = menu.highlightedItem,
+            highlitedItem.attributedTitle != nil,
+            let params = highlitedItem.representedObject as? MenuLineParameters,
+            params.color != nil {
+            highlitedItem.attributedTitle = atributedTitle(with: params).title
+        }
+
+        if var params = item?.representedObject as? MenuLineParameters,
+           item?.attributedTitle != nil,
+           params.color != nil {
+            params.params.removeValue(forKey: "color")
+            item?.attributedTitle = atributedTitle(with: params).title
         }
     }
 }
@@ -365,11 +399,11 @@ extension MenubarItem {
     }
 
     func cycleThroughTitles() {
-        currentTitleLine += 1
-        if !titleLines.indices.contains(currentTitleLine) {
-            currentTitleLine = 0
+        currentTitleLineIndex += 1
+        if !titleLines.indices.contains(currentTitleLineIndex) {
+            currentTitleLineIndex = 0
         }
-        setMenuTitle(title: titleLines[currentTitleLine])
+        setMenuTitle(title: titleLines[currentTitleLineIndex])
     }
 
     func atributedTitle(with params: MenuLineParameters) -> (title: NSAttributedString, tooltip: String) {
