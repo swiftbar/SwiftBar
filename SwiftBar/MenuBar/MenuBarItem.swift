@@ -401,7 +401,7 @@ extension MenubarItem {
         guard params.dropdown else {return nil}
 
         let item = NSMenuItem(title: params.title,
-                            action: #selector(perfomMenutItemAction),
+                              action: params.hasAction ? #selector(perfomMenutItemAction):nil,
                           keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)

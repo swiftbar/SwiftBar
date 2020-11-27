@@ -152,4 +152,8 @@ struct MenuLineParameters {
 
         return KeyCombo(key: key, modifiers: modifiers)
     }
+    
+    var hasAction: Bool {
+        return href != nil || bash != nil || refresh
+    }
 }
