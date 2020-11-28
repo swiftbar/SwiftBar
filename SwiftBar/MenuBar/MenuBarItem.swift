@@ -29,13 +29,10 @@ class MenubarItem: NSObject {
     var currentTitleLineIndex: Int = -1
 
     var currentTitleLine: String {
-        if currentTitleLineIndex == -1, let title = titleLines.first {
-            return title
+        guard titleLines.indices.contains(currentTitleLineIndex) else {
+            return titleLines.first ?? "..."
         }
-        if currentTitleLineIndex < titleLines.count {
-            return titleLines[currentTitleLineIndex]
-        }
-        return "..."
+        return titleLines[currentTitleLineIndex]
     }
 
     var lastMenuItem: NSMenuItem? = nil
@@ -185,6 +182,7 @@ extension MenubarItem {
 
             // put swiftbar menu as submenu
             let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
+            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuFont(ofSize: 0)])
             item.submenu = menu
             item.image = Preferences.shared.swiftBarIconIsHidden ? nil:NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
             statusBarMenu.addItem(item)
