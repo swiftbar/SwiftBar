@@ -306,6 +306,7 @@ extension MenubarItem {
     func updateMenu() {
         statusBarMenu.removeAllItems()
         guard let scriptOutput = plugin?.content, scriptOutput.count > 0 else {
+            titleLines = ["⚠️"]
             barItem.button?.title = "⚠️"
             buildStandardMenu()
             return
