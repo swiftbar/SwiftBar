@@ -162,7 +162,10 @@ extension MenubarItem {
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
         let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
-        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{$0.target = self}
+        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{ item in
+            item.target = self
+            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuFont(ofSize: 0)])
+        }
 
         menu.addItem(refreshAllItem)
         menu.addItem(enableAllItem)
