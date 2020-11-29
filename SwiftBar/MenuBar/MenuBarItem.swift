@@ -281,18 +281,14 @@ extension MenubarItem {
 
 //parse script output
 extension MenubarItem {
-    func splitScriptOutput(scriptOutput: String) -> (header: [String], body: [String]){
-        guard let index = scriptOutput.range(of: "---") else {
-            return (scriptOutput.components(separatedBy: CharacterSet.newlines).filter{!$0.isEmpty},[])
+    func splitScriptOutput(scriptOutput: String) -> (header: [String], body: [String]) {
+        let lines = scriptOutput.components(separatedBy: CharacterSet.newlines).filter{!$0.isEmpty}
+        guard let index = lines.firstIndex(where:{$0.hasPrefix("---")}) else {
+            return (lines, [])
         }
-        let header = String(scriptOutput[...index.lowerBound])
-            .components(separatedBy: CharacterSet.newlines)
-            .dropLast()
-            .filter{!$0.isEmpty}
-        let body = String(scriptOutput[index.upperBound...])
-            .components(separatedBy: CharacterSet.newlines)
-            .dropFirst()
-            .filter{!$0.isEmpty}
+        let header = Array(lines[...index].dropLast())
+        let body = Array(lines[index...])
+        
         return (header,body)
     }
 
