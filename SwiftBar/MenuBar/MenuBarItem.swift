@@ -161,7 +161,7 @@ extension MenubarItem {
         let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
         [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{ item in
             item.target = self
-            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuFont(ofSize: 0)])
+            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
         }
 
         menu.addItem(refreshAllItem)
@@ -182,7 +182,7 @@ extension MenubarItem {
 
             // put swiftbar menu as submenu
             let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
-            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuFont(ofSize: 0)])
+            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
             item.submenu = menu
             item.image = Preferences.shared.swiftBarIconIsHidden ? nil:NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
             statusBarMenu.addItem(item)
@@ -417,7 +417,7 @@ extension MenubarItem {
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
-            NSFont.menuFont(ofSize: fontSize)
+            NSFont.menuBarFont(ofSize: fontSize)
 
         let style = NSMutableParagraphStyle()
         style.alignment = .left
