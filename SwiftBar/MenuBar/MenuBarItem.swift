@@ -391,7 +391,7 @@ extension MenubarItem {
         let params = MenuLineParameters(line: title)
         if let image = params.image {
             barItem.button?.image = image
-            return
+            barItem.button?.imagePosition = .imageLeft
         }
         barItem.button?.attributedTitle = atributedTitle(with: params).title
     }
