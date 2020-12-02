@@ -3,10 +3,20 @@ import os
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     var pluginManager: PluginManager!
-
+    let prefs = Preferences.shared
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        
+        //Check if plugin folder exists
+        var isDir: ObjCBool = false
+        if let pluginDirectoryPath = prefs.pluginDirectoryPath,
+           (!FileManager.default.fileExists(atPath: pluginDirectoryPath, isDirectory: &isDir) || !isDir.boolValue) {
+            prefs.pluginDirectoryPath = nil
+        }
+        
         //Instance of Plugin Manager must be created after app launch
         pluginManager = PluginManager.shared
+        
         while Preferences.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
             alert.messageText = "Set SwiftBar Plugins Location"
