@@ -299,12 +299,20 @@ extension MenubarItem {
 
     func updateMenu() {
         statusBarMenu.removeAllItems()
-        guard let scriptOutput = plugin?.content, scriptOutput.count > 0 else {
+        barItem.isVisible = true
+        
+        guard (plugin as? ExecutablePlugin)?.lastRefreshSuccesseful == true else {
             titleLines = ["⚠️"]
             barItem.button?.title = "⚠️"
             buildStandardMenu()
             return
         }
+        
+        guard let scriptOutput = plugin?.content, scriptOutput.count > 0 else {
+            barItem.isVisible = false
+            return
+        }
+        
         let parts = splitScriptOutput(scriptOutput: scriptOutput)
         titleLines =  parts.header
         updateMenuTitle(titleLines: parts.header)
