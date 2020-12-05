@@ -57,7 +57,7 @@ Plugin files must adopt the following format:
 {name}.{time}.{ext}
 ```
 
-* [name - anything you want](#plugin-name)
+* name - anything you want
 * time - resresh interval, optional, should be a number + duration modifier (see below)
 * ext - file extension
 
@@ -163,7 +163,7 @@ SwiftBar adopts metadata format suggested by BitBar:
 | Endpoint | Parameter | Description | Example |
 | ------------- | ------------- |------------- | ------------- | 
 |refreshallplugins|none|Force refreshe all loaded plugins|swiftbar://refreshallplugins|
-|refreshplugin|`name` plugin [name](#plugin-name)|Force refresh plugin by name|swiftbar://refreshplugin?name=myplugin|
+|refreshplugin|`name` plugin [name](#plugin-naming)|Force refresh plugin by name|swiftbar://refreshplugin?name=myplugin|
 |refreshplugin|`index` plugin index in menubar, starting from 0 |Force refresh plugin by its position in menubar|swiftbar://refreshplugin?index=1|
 |addplugin|`src` source url to plugin file|Add plugin to Swiftbar from URL|swiftbar://addplugin?src=https://coolplugin|
 
