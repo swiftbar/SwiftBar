@@ -31,7 +31,8 @@ class PluginRepository: ObservableObject {
     }
 
     func refreshRepository() {
-        guard let pluginDirectoryPath = prefs.pluginDirectoryPath, let pluginDirectoryURL = URL(string: pluginDirectoryPath) else {return}
+        guard let pluginDirectoryPath = prefs.pluginDirectoryPath else {return}
+        let pluginDirectoryURL = URL(fileURLWithPath: pluginDirectoryPath)
 
         os_log("Refreshing plugin repository...", log: Log.repository)
         let url = URL(string: "https://raw.githubusercontent.com/swiftbar/swiftbar-plugins/main/repository.json")!
@@ -58,9 +59,10 @@ class PluginRepository: ObservableObject {
     }
 
     static func parseRepositoryFile() -> [RepositoryEntry]? {
-        guard let pluginDirectoryPath = Preferences.shared.pluginDirectoryPath,
-            let url = URL(string: pluginDirectoryPath)?.appendingPathComponent(".repository.json"),
-            let jsonStr = try? String(contentsOfFile: url.path),
+        guard let pluginDirectoryPath = Preferences.shared.pluginDirectoryPath else {return nil}
+        let url = URL(fileURLWithPath: pluginDirectoryPath).appendingPathComponent(".repository.json")
+
+        guard let jsonStr = try? String(contentsOfFile: url.path),
             let data = jsonStr.data(using: .utf8),
             let repository = try? JSONDecoder().decode([RepositoryEntry].self, from: data)
         else {return nil}
