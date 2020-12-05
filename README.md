@@ -18,7 +18,7 @@ or Install with Homebrew
 
 ```
 brew tap melonamin/formulae
-brew cask install SwiftBar
+brew install swiftbar
 ```
 
 Runs on macOS Catalina (10.15) and up.
