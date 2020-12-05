@@ -36,6 +36,7 @@
 		39AF7793254B5834001D76E5 /* NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7792254B5834001D76E5 /* NSColor.swift */; };
 		39AF7796254B6203001D76E5 /* NSImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7795254B6203001D76E5 /* NSImage.swift */; };
 		39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7798254C7796001D76E5 /* String+Emoji.swift */; };
+		39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A0A257C21D400FA012E /* String+Escaped.swift */; };
 		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 /* End PBXBuildFile section */
@@ -70,6 +71,7 @@
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
 		39AF7795254B6203001D76E5 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
 		39AF7798254C7796001D76E5 /* String+Emoji.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Emoji.swift"; sourceTree = "<group>"; };
+		39B84A0A257C21D400FA012E /* String+Escaped.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Escaped.swift"; sourceTree = "<group>"; };
 		39E1549B25699C8F00287D8A /* URLTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTextView.swift; sourceTree = "<group>"; };
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -193,6 +195,7 @@
 				39AF7798254C7796001D76E5 /* String+Emoji.swift */,
 				398B86C3254DA85300DEA027 /* URL+Extension.swift */,
 				398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */,
+				39B84A0A257C21D400FA012E /* String+Escaped.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -318,6 +321,7 @@
 			files = (
 				3962572B256967DC00341A19 /* PluginRepository.swift in Sources */,
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
+				39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */,
 				39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */,
 				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,

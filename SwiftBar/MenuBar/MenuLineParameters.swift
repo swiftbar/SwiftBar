@@ -54,7 +54,7 @@ struct MenuLineParameters {
         var out: [String] = []
         for i in 0...10 {
             guard let param = params["param\(i)"] else {continue}
-            out.append(param)
+            out.append(param.escaped())
         }
         return out
     }

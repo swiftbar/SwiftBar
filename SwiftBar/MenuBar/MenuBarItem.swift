@@ -486,7 +486,7 @@ extension MenubarItem {
         }
 
         if let bash = params.bash {
-            let script = "\(bash) \(params.bashParams.joined(separator: " "))"
+            let script = "\(bash.escaped()) \(params.bashParams.joined(separator: " "))"
             App.runInTerminal(script: script, runInBackground: !params.terminal) { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
