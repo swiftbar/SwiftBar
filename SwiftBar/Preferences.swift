@@ -9,6 +9,7 @@ class Preferences: ObservableObject {
         case DisabledPlugins
         case Terminal
         case HideSwiftBarIcon
+        case MakePluginExecutable
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -38,6 +39,14 @@ class Preferences: ObservableObject {
             Preferences.setValue(value: swiftBarIconIsHidden, key: .HideSwiftBarIcon)
             delegate.pluginManager.rebuildAllMenus()
         }
+    }
+
+    var makePluginExecutable: Bool {
+        guard let out = Preferences.getValue(key: .MakePluginExecutable) as? Bool else {
+            Preferences.setValue(value: true, key: .MakePluginExecutable)
+            return true
+        }
+        return out
     }
 
     init() {

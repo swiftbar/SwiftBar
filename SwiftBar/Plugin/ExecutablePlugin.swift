@@ -114,6 +114,7 @@ class ExecutablePlugin: Plugin {
     }
 
     func makeScriptExecutable(file: String) {
+        guard prefs.makePluginExecutable else {return}
         let script = """
         if [[ -x "\(file)" ]]
         then
