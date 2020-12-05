@@ -5,12 +5,16 @@ import HotKey
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
-    let barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    var executablePlugin: ExecutablePlugin? {
+        return plugin?.executablePlugin
+    }
+    var barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let statusBarMenu = NSMenu(title: "SwiftBar Menu")
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable? = nil
     var titleCycleCancellable: AnyCancellable? = nil
     let lastUpdatedMenuItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
+    var isDefault = false
     var isOpen = false
     var refreshOnClose = false
     var hotKeys: [HotKey] = []
@@ -30,7 +34,7 @@ class MenubarItem: NSObject {
 
     var currentTitleLine: String {
         guard titleLines.indices.contains(currentTitleLineIndex) else {
-            return titleLines.first ?? "..."
+            return titleLines.first ?? ""
         }
         return titleLines[currentTitleLineIndex]
     }
@@ -55,7 +59,7 @@ class MenubarItem: NSObject {
         self.plugin = plugin
         statusBarMenu.delegate = self
         updateMenu()
-        contentUpdateCancellable = (plugin as? ExecutablePlugin)?.contentUpdatePublisher
+        contentUpdateCancellable = executablePlugin?.contentUpdatePublisher
             .sink {[weak self] _ in
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
@@ -103,7 +107,7 @@ extension MenubarItem: NSMenuDelegate {
         params.params["color"] = "white"
         barItem.button?.attributedTitle = atributedTitle(with: params).title
 
-        guard let lastUpdated = (plugin as? ExecutablePlugin)?.lastUpdated else {return}
+        guard let lastUpdated = executablePlugin?.lastUpdated else {return}
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
@@ -153,13 +157,13 @@ extension MenubarItem {
         let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
         let sendFeedbackItem = NSMenuItem(title: "Send Feedback...", action: #selector(sendFeedback), keyEquivalent: "")
-        let aboutSwiftBarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
+        let aboutSwiftbarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
         let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
         let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
         let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
-        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftBarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{ item in
+        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftbarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{ item in
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
         }
@@ -172,7 +176,7 @@ extension MenubarItem {
         menu.addItem(changePluginFolderItem)
         menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(aboutSwiftBarItem)
+        menu.addItem(aboutSwiftbarItem)
         menu.addItem(preferencesItem)
         menu.addItem(sendFeedbackItem)
         menu.addItem(quitItem)
@@ -275,6 +279,7 @@ extension MenubarItem {
 extension MenubarItem {
     static func defaultBarItem() -> MenubarItem {
         let item = MenubarItem(title: "SwiftBar")
+        item.isDefault = true
         return item
     }
 }
@@ -299,17 +304,19 @@ extension MenubarItem {
 
     func updateMenu() {
         statusBarMenu.removeAllItems()
-        barItem.isVisible = true
+        show()
         
-        guard (plugin as? ExecutablePlugin)?.lastRefreshSuccesseful == true else {
+        if executablePlugin?.lastState == .Failed {
             titleLines = ["⚠️"]
             barItem.button?.title = "⚠️"
             buildStandardMenu()
             return
         }
         
-        guard let scriptOutput = plugin?.content, scriptOutput.count > 0 else {
-            barItem.isVisible = false
+        guard let scriptOutput = plugin?.content,
+              (!scriptOutput.isEmpty || plugin?.lastState == .Loading)
+        else {
+            hide()
             return
         }
         

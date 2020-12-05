@@ -42,8 +42,6 @@ class PluginManager {
         enabledPlugins.forEach{ plugin in
             guard menuBarItems[plugin.id] == nil else {return}
             menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
-            menuBarItems[plugin.id]?.show()
-            
         }
         menuBarItems.keys.forEach{ pluginID in
             guard !enabledPlugins.contains(where: {$0.id == pluginID}) else {return}
