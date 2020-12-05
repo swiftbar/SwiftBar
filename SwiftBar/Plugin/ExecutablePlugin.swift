@@ -14,7 +14,7 @@ class ExecutablePlugin: Plugin {
     var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
     let metadata: PluginMetadata?
     var lastUpdated: Date? = nil
-    var lastRefreshSuccesseful:Bool = false
+    var lastState: PluginState
     var contentUpdatePublisher = PassthroughSubject<Any, Never>()
 
     var content: String? = "..." {
@@ -61,13 +61,14 @@ class ExecutablePlugin: Plugin {
         } else {
             metadata = nil
         }
+        lastState = .Loading
         makeScriptExecutable(file: file)
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh()
     }
 
     func enableTimer() {
-        disableTimer()
+        guard cancellable.isEmpty else {return}
         updateTimerPublisher
             .autoconnect()
             .receive(on: queue)
@@ -78,6 +79,7 @@ class ExecutablePlugin: Plugin {
 
     func disableTimer() {
         cancellable.forEach{$0.cancel()}
+        cancellable.removeAll()
     }
 
     func refresh() {
@@ -98,13 +100,15 @@ class ExecutablePlugin: Plugin {
         lastUpdated = Date()
         do {
             let out = try shellOut(to: "'\(file)'")
-            self.error = nil
+            error = nil
+            lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             return out
         } catch {
             guard let error = error as? ShellOutError else {return nil}
             os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type:.error, file, error.message)
             self.error = error
+            lastState = .Failed
         }
         return nil
     }

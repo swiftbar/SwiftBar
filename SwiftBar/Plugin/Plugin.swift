@@ -6,6 +6,12 @@ enum PluginType {
     case Streamable
 }
 
+enum PluginState {
+    case Loading
+    case Success
+    case Failed
+}
+
 typealias PluginID = String
 
 protocol Plugin {
@@ -17,6 +23,7 @@ protocol Plugin {
     var metadata: PluginMetadata? { get }
     var updateInterval: Double {get}
     var lastUpdated: Date? {get set}
+    var lastState: PluginState {get set }
     var content: String? {get set}
     var error: ShellOutError? {get set}
     func refresh()
@@ -25,6 +32,9 @@ protocol Plugin {
 }
 
 extension Plugin {
+    var executablePlugin: ExecutablePlugin? {
+        return self as? ExecutablePlugin
+    }
     var description: String {
         return """
         id: \(id)
