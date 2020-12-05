@@ -99,7 +99,7 @@ class ExecutablePlugin: Plugin {
     func invoke(params : [String]) -> String? {
         lastUpdated = Date()
         do {
-            let out = try shellOut(to: "'\(file)'")
+            let out = try runScript(to: "'\(file)'")
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
@@ -122,6 +122,6 @@ class ExecutablePlugin: Plugin {
             chmod +x "\(file)"
         fi
         """
-        _ = try? shellOut(to: script)
+        _ = try? runScript(to: script)
     }
 }
