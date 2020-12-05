@@ -22,8 +22,8 @@ class PluginManager {
 
     var menuBarItems: [PluginID: MenubarItem] = [:]
     var pluginDirectoryURL: URL? {
-        guard let pluginDirectoryPath = prefs.pluginDirectoryPath, let url = URL(string: pluginDirectoryPath) else {return nil}
-        return url
+        guard let pluginDirectoryPath = prefs.pluginDirectoryPath else {return nil}
+        return URL(fileURLWithPath: pluginDirectoryPath)
     }
 
     var cancellable: AnyCancellable? = nil
@@ -74,10 +74,10 @@ class PluginManager {
     }
     
     func getPluginList() -> [URL] {
-        guard let pluginDirectoryPath = prefs.pluginDirectoryPath, let url = pluginDirectoryURL else {return []}
+        guard let url = pluginDirectoryURL else {return []}
         let fileManager = FileManager.default
         var isDir: ObjCBool = false
-        guard fileManager.fileExists(atPath: pluginDirectoryPath, isDirectory: &isDir), isDir.boolValue else {
+        guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue else {
             return []
         }
 
