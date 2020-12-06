@@ -122,6 +122,10 @@ struct MenuLineParameters {
         params["emojize"] != "false"
     }
 
+    var symbolize: Bool {
+        params["symbolize"] != "false"
+    }
+
     var tooltip: String? {
         params["tooltip"]
     }

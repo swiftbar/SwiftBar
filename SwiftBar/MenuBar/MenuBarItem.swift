@@ -439,6 +439,7 @@ extension MenubarItem {
             title = String(title.prefix(length)).appending("...")
         }
         title = title.replacingOccurrences(of: "\\n", with: "\n")
+
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
@@ -446,13 +447,13 @@ extension MenubarItem {
 
         let style = NSMutableParagraphStyle()
         style.alignment = .left
-        
-        return (NSAttributedString(string: title,
-                                  attributes: [
-                                    .foregroundColor:color,
-                                    .font:font,
-                                    .paragraphStyle:style
-        ]), fullTitle)
+
+        let attributedTitle = params.symbolize ? title.symbolize(font: font):NSMutableAttributedString(string: title)
+
+        attributedTitle.addAttributes([.foregroundColor:color,.font:font,.paragraphStyle:style],
+                                      range: NSRange(0..<attributedTitle.length))
+
+        return (attributedTitle, fullTitle)
     }
 
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
