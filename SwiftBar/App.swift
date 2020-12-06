@@ -120,6 +120,9 @@ class App: NSObject {
             case .Terminal:
                 appleScript = """
                 tell application "Terminal"
+                    activate
+                    tell application "System Events" to keystroke "t" using {command down}
+                    delay 0.2
                     do script "\(script)" in front window
                     activate
                 end tell
