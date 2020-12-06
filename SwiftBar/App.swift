@@ -106,7 +106,7 @@ class App: NSObject {
             DispatchQueue.global(qos: .userInitiated).async {
                 os_log("Executing script in background... \n%{public}@", log: Log.plugin, script)
                 do {
-                    try shellOut(to: script)
+                    try runScript(to: script)
                     completionHandler?()
                 } catch {
                     guard let error = error as? ShellOutError else {return}
