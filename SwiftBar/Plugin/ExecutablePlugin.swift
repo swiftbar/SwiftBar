@@ -12,7 +12,7 @@ class ExecutablePlugin: Plugin {
         !prefs.disabledPlugins.contains(id)
     }
     var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
-    let metadata: PluginMetadata?
+    var metadata: PluginMetadata? = nil
     var lastUpdated: Date? = nil
     var lastState: PluginState
     var contentUpdatePublisher = PassthroughSubject<Any, Never>()
@@ -56,15 +56,20 @@ class ExecutablePlugin: Plugin {
             }
 
         }
-        if let script = try? String(contentsOf: fileURL) {
-            self.metadata = PluginMetadata.bitbarParser(script: script)
-        } else {
-            metadata = nil
-        }
+        
         lastState = .Loading
         makeScriptExecutable(file: file)
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh()
+    }
+
+    func refreshPluginMetadata() {
+        let url = URL(fileURLWithPath: file)
+        if let script = try? String(contentsOf: url) {
+            self.metadata = PluginMetadata.parser(script: script)
+        } else {
+            metadata = nil
+        }
     }
 
     func enableTimer() {
@@ -86,6 +91,7 @@ class ExecutablePlugin: Plugin {
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         disableTimer()
         queue.cancelAllOperations()
+        refreshPluginMetadata()
         queue.addOperation { [weak self] in
             self?.content = self?.invoke(params: [])
             self?.enableTimer()

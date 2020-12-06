@@ -13,7 +13,11 @@ class MenubarItem: NSObject {
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable? = nil
     var titleCycleCancellable: AnyCancellable? = nil
-    let lastUpdatedMenuItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
+    let lastUpdatedItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
+    let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
+    let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
+    let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
+    let swiftBarItem = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
     var isDefault = false
     var isOpen = false
     var refreshOnClose = false
@@ -111,7 +115,17 @@ extension MenubarItem: NSMenuDelegate {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
-        lastUpdatedMenuItem.title = "Updated \(relativeDate)"
+        lastUpdatedItem.title = "Updated \(relativeDate)"
+
+        guard NSApp.currentEvent?.modifierFlags.contains(.option) == false else {
+            [lastUpdatedItem,runInTerminalItem,disablePluginItem,aboutItem,swiftBarItem].forEach{$0.isHidden = false}
+            return
+        }
+        lastUpdatedItem.isHidden = plugin?.metadata?.hideLastUpdated ?? false
+        runInTerminalItem.isHidden = plugin?.metadata?.hideRunInTerminal ?? false
+        disablePluginItem.isHidden = plugin?.metadata?.hideDisablePlugin ?? false
+        aboutItem.isHidden = plugin?.metadata?.hideAbout ?? false
+        swiftBarItem.isHidden = plugin?.metadata?.hideSwiftBar ?? false
     }
 
     func menuDidClose(_ menu: NSMenu) {
@@ -158,10 +172,7 @@ extension MenubarItem {
         let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
         let sendFeedbackItem = NSMenuItem(title: "Send Feedback...", action: #selector(sendFeedback), keyEquivalent: "")
         let aboutSwiftbarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
-        let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
-        let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
-        let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
         let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
         [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftbarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{ item in
             item.target = self
@@ -185,15 +196,14 @@ extension MenubarItem {
             statusBarMenu.addItem(NSMenuItem.separator())
 
             // put swiftbar menu as submenu
-            let item = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
-            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
-            item.submenu = menu
-            item.image = Preferences.shared.swiftBarIconIsHidden ? nil:NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
-            statusBarMenu.addItem(item)
+            swiftBarItem.attributedTitle = NSAttributedString(string: swiftBarItem.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
+            swiftBarItem.submenu = menu
+            swiftBarItem.image = Preferences.shared.swiftBarIconIsHidden ? nil:NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
+            statusBarMenu.addItem(swiftBarItem)
 
             // default plugin menu items
             statusBarMenu.addItem(NSMenuItem.separator())
-            statusBarMenu.addItem(lastUpdatedMenuItem)
+            statusBarMenu.addItem(lastUpdatedItem)
             if plugin?.error != nil {
                 statusBarMenu.addItem(showErrorItem)
             }
