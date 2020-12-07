@@ -53,7 +53,7 @@ struct PluginEntryView: View {
     }
 
     var rawPluginSourceURL: URL? {
-        URL(string: "https://raw.githubusercontent.com/matryer/bitbar-plugins/master\(pluginEntry.source.dropFirst(2))")
+        URL(string: "https://raw.githubusercontent.com/matryer/bitbar-plugins/master/\(pluginEntry.source.dropFirst(2))")
     }
 
     var body: some View {
