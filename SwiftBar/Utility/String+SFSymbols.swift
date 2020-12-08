@@ -25,10 +25,19 @@ extension String {
 
 extension NSTextAttachment {
     static func centeredImage(with image: NSImage, and
-                                            font: NSFont) -> NSTextAttachment {
+                                font: NSFont) -> NSTextAttachment {
         let imageAttachment = NSTextAttachment()
         imageAttachment.bounds = CGRect(x: 0, y: (font.capHeight - image.size.height).rounded() / 2, width: image.size.width, height: image.size.height)
-        imageAttachment.image = image
+        imageAttachment.attachmentCell = ImageAttachmentCell(imageCell: image)
         return imageAttachment
+    }
+}
+
+
+class ImageAttachmentCell: NSTextAttachmentCell {
+    override func cellBaselineOffset() -> NSPoint {
+        var baseline = super.cellBaselineOffset()
+        baseline.y = baseline.y - 3 - (image!.size.height - 16)/2
+        return baseline
     }
 }
