@@ -48,5 +48,7 @@
 	<string>Copyright ©2020 Ameba Labs. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>SUFeedURL</key>
+	<string>https://swiftbar.app/release.xml</string>
 </dict>
 </plist>
