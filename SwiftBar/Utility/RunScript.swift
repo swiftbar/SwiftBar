@@ -6,6 +6,7 @@ enum EnvironmentVariables: String {
     case swiftBarVersion = "SWIFTBAR_VERSION"
     case swiftBarBuild = "SWIFTBAR_BUILD"
     case swiftPluginsPath = "SWIFTBAR_PLUGINS_PATH"
+    case swiftPluginPath = "SWIFTBAR_PLUGIN_PATH"
     case osVersionMajor = "OS_VERSION_MAJOR"
     case osVersionMinor = "OS_VERSION_MINOR"
     case osVersionPatch = "OS_VERSION_PATCH"

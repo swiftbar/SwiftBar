@@ -105,7 +105,9 @@ class ExecutablePlugin: Plugin {
     func invoke(params : [String]) -> String? {
         lastUpdated = Date()
         do {
-            let out = try runScript(to: "'\(file)'")
+            let out = try runScript(to: "'\(file)'", env: [
+                EnvironmentVariables.swiftPluginPath.rawValue:file
+            ])
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
