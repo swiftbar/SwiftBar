@@ -1,18 +1,33 @@
 import Foundation
 import ShellOut
 
-fileprivate let systemEnv: [String:String] = [
-    "SWIFTBAR":"1",
-    "SWIFTBAR_VERSION": (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""),
-    "SWIFTBAR_BUILD": (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""),
-    "SWIFTBAR_PLUGINS_PATH": Preferences.shared.pluginDirectoryPath ?? "",
-    "OS_VERSION_MAJOR": String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
-    "OS_VERSION_MINOR": String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
-    "OS_VERSION_PATCH": String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion)
+enum EnvironmentVariables: String {
+    case swiftBar = "SWIFTBAR"
+    case swiftBarVersion = "SWIFTBAR_VERSION"
+    case swiftBarBuild = "SWIFTBAR_BUILD"
+    case swiftPluginsPath = "SWIFTBAR_PLUGINS_PATH"
+    case osVersionMajor = "OS_VERSION_MAJOR"
+    case osVersionMinor = "OS_VERSION_MINOR"
+    case osVersionPatch = "OS_VERSION_PATCH"
+}
+
+fileprivate let systemEnv: [EnvironmentVariables:String] = [
+    .swiftBar: "1",
+    .swiftBarVersion: (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""),
+    .swiftBarBuild: (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""),
+    .swiftPluginsPath: Preferences.shared.pluginDirectoryPath ?? "",
+    .osVersionMajor: String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
+    .osVersionMinor: String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
+    .osVersionPatch: String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion)
 ]
+
+fileprivate var systemEnvStr: [String:String] {
+    Dictionary(uniqueKeysWithValues:
+                systemEnv.map { key, value in (key.rawValue, value) })
+}
 
 @discardableResult func runScript(to command: String, env: [String:String] = [:]) throws -> String {
     let process = Process()
-    process.environment = systemEnv.merging(env){ (current, _) in current }
+    process.environment = systemEnvStr.merging(env){ (current, _) in current }
     return try shellOut(to: command, process: process)
 }
