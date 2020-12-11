@@ -263,7 +263,7 @@ extension MenubarItem {
 
     @objc func runInTerminal() {
         guard let scriptPath = plugin?.file else {return}
-        App.runInTerminal(script: scriptPath)
+        App.runInTerminal(script: scriptPath.escaped())
     }
 
     @objc func disablePlugin() {
