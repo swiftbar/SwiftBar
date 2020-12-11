@@ -5,6 +5,7 @@ fileprivate let systemEnv: [String:String] = [
     "SWIFTBAR":"1",
     "SWIFTBAR_VERSION": (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""),
     "SWIFTBAR_BUILD": (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""),
+    "SWIFTBAR_PLUGINS_PATH": Preferences.shared.pluginDirectoryPath ?? "",
     "OS_VERSION_MAJOR": String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
     "OS_VERSION_MINOR": String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
     "OS_VERSION_PATCH": String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion)
