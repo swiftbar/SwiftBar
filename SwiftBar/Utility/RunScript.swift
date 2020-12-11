@@ -4,7 +4,10 @@ import ShellOut
 fileprivate let systemEnv: [String:String] = [
     "SWIFTBAR":"1",
     "SWIFTBAR_VERSION": (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""),
-    "SWIFTBAR_BUILD": (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "")
+    "SWIFTBAR_BUILD": (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""),
+    "OS_VERSION_MAJOR": String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
+    "OS_VERSION_MINOR": String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
+    "OS_VERSION_PATCH": String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion)
 ]
 
 @discardableResult func runScript(to command: String, env: [String:String] = [:]) throws -> String {
