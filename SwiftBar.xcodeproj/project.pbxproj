@@ -41,7 +41,29 @@
 		39B84A22257D63F700FA012E /* String+SFSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A21257D63F700FA012E /* String+SFSymbols.swift */; };
 		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
+		FAD14BCE2583216100CB7BBE /* RSSparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FAD14BCD2583216100CB7BBE /* RSSparkle */; };
+		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FAD14BD7258323D300CB7BBE /* Embed XPC Services */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
+			dstSubfolderSpec = 16;
+			files = (
+				FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */,
+				FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */,
+				FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */,
+				FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */,
+			);
+			name = "Embed XPC Services";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3920747A25460FD000213DBE /* SwiftBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -78,6 +100,10 @@
 		39B84A21257D63F700FA012E /* String+SFSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SFSymbols.swift"; sourceTree = "<group>"; };
 		39E1549B25699C8F00287D8A /* URLTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTextView.swift; sourceTree = "<group>"; };
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
+		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
+		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
+		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
+		FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerConnection.xpc"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +111,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FAD14BCE2583216100CB7BBE /* RSSparkle in Frameworks */,
 				391DEA2B2553732100C07561 /* LaunchAtLogin in Frameworks */,
 				391DEA27255353F900C07561 /* HotKey in Frameworks */,
 				39AF778925479535001D76E5 /* ShellOut in Frameworks */,
@@ -122,11 +149,8 @@
 				3988C8932546116200A02B9B /* Plugin */,
 				39AF7791254B5824001D76E5 /* Utility */,
 				39641E9F254DD30C00713DAF /* UI */,
-				3920748125460FD300213DBE /* Assets.xcassets */,
-				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
-				3920748925460FD300213DBE /* Info.plist */,
+				FAD14BE42583249B00CB7BBE /* Resources */,
 				3920748325460FD300213DBE /* Preview Content */,
-				393375EB25508B320050AC28 /* Credits.rtf */,
 			);
 			path = SwiftBar;
 			sourceTree = "<group>";
@@ -206,6 +230,21 @@
 			path = Utility;
 			sourceTree = "<group>";
 		};
+		FAD14BE42583249B00CB7BBE /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */,
+				FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */,
+				FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */,
+				FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */,
+				3920748125460FD300213DBE /* Assets.xcassets */,
+				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
+				3920748925460FD300213DBE /* Info.plist */,
+				393375EB25508B320050AC28 /* Credits.rtf */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -215,9 +254,11 @@
 			buildPhases = (
 				3920747625460FD000213DBE /* Sources */,
 				3920747725460FD000213DBE /* Frameworks */,
+				FAD14BD7258323D300CB7BBE /* Embed XPC Services */,
 				3920747825460FD000213DBE /* Resources */,
-				398DAE2F2550A86300747D90 /* ShellScript */,
-				398DAE76255373B700747D90 /* ShellScript */,
+				398DAE2F2550A86300747D90 /* Version Number */,
+				398DAE76255373B700747D90 /* Launch At Login */,
+				FAD14BF62583256A00CB7BBE /* Codesign Sparkle */,
 			);
 			buildRules = (
 			);
@@ -228,6 +269,7 @@
 				39AF778825479535001D76E5 /* ShellOut */,
 				391DEA26255353F900C07561 /* HotKey */,
 				391DEA2A2553732100C07561 /* LaunchAtLogin */,
+				FAD14BCD2583216100CB7BBE /* RSSparkle */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -260,6 +302,7 @@
 				39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */,
 				391DEA25255353F900C07561 /* XCRemoteSwiftPackageReference "HotKey" */,
 				391DEA292553732100C07561 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
+				FAD14BCC2583216100CB7BBE /* XCRemoteSwiftPackageReference "Sparkle-Binary" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -284,7 +327,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		398DAE2F2550A86300747D90 /* ShellScript */ = {
+		398DAE2F2550A86300747D90 /* Version Number */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -293,6 +336,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Version Number";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -301,7 +345,7 @@
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nbuildNumber=$(git rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"$PRODUCT_SETTINGS_PATH\"\n";
 		};
-		398DAE76255373B700747D90 /* ShellScript */ = {
+		398DAE76255373B700747D90 /* Launch At Login */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -310,6 +354,7 @@
 			);
 			inputPaths = (
 			);
+			name = "Launch At Login";
 			outputFileListPaths = (
 			);
 			outputPaths = (
@@ -317,6 +362,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/copy-helper-swiftpm.sh\"\n";
+		};
+		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Codesign Sparkle";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Remove unused Sparkle components\nSPARKLE_DIR=\"${CODESIGNING_FOLDER_PATH}/Contents/Frameworks/Sparkle.framework\"\nfind \"${SPARKLE_DIR}\" -name Updater.app -execdir rm -rf {} \\;\nfind \"${SPARKLE_DIR}\" -name Autoupdate -execdir rm -rf {} \\;\n\n# Sign XPC Helpers and their internal binaries\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/Updater.app\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/Autoupdate\"\ncodesign --verbose --entitlements \"${PROJECT_DIR}/submodules/Sparkle/Downloader/org.sparkle-project.Downloader.entitlements\" --force -o runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.Downloader.xpc\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerLauncher.xpc\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerConnection.xpc\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerStatus.xpc\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -479,7 +542,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = SwiftBar/SwiftBar.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SwiftBar/Resources/SwiftBar.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -487,7 +550,7 @@
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = SwiftBar/Info.plist;
+				INFOPLIST_FILE = SwiftBar/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -504,7 +567,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = SwiftBar/SwiftBar.entitlements;
+				CODE_SIGN_ENTITLEMENTS = SwiftBar/Resources/SwiftBar.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -512,7 +575,7 @@
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = SwiftBar/Info.plist;
+				INFOPLIST_FILE = SwiftBar/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -572,6 +635,14 @@
 				minimumVersion = 2.3.0;
 			};
 		};
+		FAD14BCC2583216100CB7BBE /* XCRemoteSwiftPackageReference "Sparkle-Binary" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Ranchero-Software/Sparkle-Binary";
+			requirement = {
+				branch = main;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -589,6 +660,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 39AF778725479535001D76E5 /* XCRemoteSwiftPackageReference "ShellOut" */;
 			productName = ShellOut;
+		};
+		FAD14BCD2583216100CB7BBE /* RSSparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FAD14BCC2583216100CB7BBE /* XCRemoteSwiftPackageReference "Sparkle-Binary" */;
+			productName = RSSparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

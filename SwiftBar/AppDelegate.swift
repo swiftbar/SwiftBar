@@ -1,11 +1,23 @@
 import Cocoa
 import os
+import Sparkle
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate {
     var pluginManager: PluginManager!
     let prefs = Preferences.shared
+    private var softwareUpdater: SPUUpdater!
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        let hostBundle = Bundle.main
+        let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
+        self.softwareUpdater = SPUUpdater(hostBundle: hostBundle, applicationBundle: hostBundle, userDriver: updateDriver, delegate: self)
+
+        do {
+            try self.softwareUpdater.start()
+        }
+        catch {
+            NSLog("Failed to start software updater with error: \(error)")
+        }
         
         //Check if plugin folder exists
         var isDir: ObjCBool = false
