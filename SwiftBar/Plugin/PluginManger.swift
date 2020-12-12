@@ -2,6 +2,7 @@ import Foundation
 import ShellOut
 import Combine
 import os
+import Cocoa
 
 class PluginManager {
     static let shared = PluginManager()
@@ -26,15 +27,20 @@ class PluginManager {
         return URL(fileURLWithPath: pluginDirectoryPath)
     }
 
-    var cancellable: AnyCancellable? = nil
+    var disablePluginCancellable: AnyCancellable? = nil
+    var osAppearanceChangeCancellable: AnyCancellable? = nil
 
     init() {
         loadPlugins()
-        cancellable = prefs.disabledPluginsPublisher
+        disablePluginCancellable = prefs.disabledPluginsPublisher
             .receive(on: RunLoop.main)
             .sink(receiveValue: { [weak self] _ in
             self?.pluginsDidChange()
         })
+        
+        osAppearanceChangeCancellable = DistributedNotificationCenter.default().publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification")).sink { [weak self] _ in
+            self?.menuBarItems.values.forEach{$0.updateMenu()}
+        }
     }
 
     func pluginsDidChange() {

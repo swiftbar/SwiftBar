@@ -159,4 +159,8 @@ class App: NSObject {
             completionHandler?()
         }
     }
+    
+    public static var isDarkTheme: Bool {
+        UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
+    }
 }

@@ -68,7 +68,10 @@ struct MenuLineParameters {
     }
 
     var color: NSColor? {
-        NSColor.webColor(from: params["color"])
+        let colors = params["color"]?.components(separatedBy: ",")
+        let lightColor = colors?.first
+        let darkColor = colors?.last
+        return NSColor.webColor(from: App.isDarkTheme ? darkColor:lightColor)
     }
 
     var font: String? {
