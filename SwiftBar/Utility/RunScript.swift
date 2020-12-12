@@ -29,6 +29,7 @@ fileprivate var systemEnvStr: [String:String] {
 
 @discardableResult func runScript(to command: String, env: [String:String] = [:]) throws -> String {
     let process = Process()
-    process.environment = systemEnvStr.merging(env){ (current, _) in current }
+    let swiftbarEnv = systemEnvStr.merging(env){ (current, _) in current }
+    process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment){ (current, _) in current }
     return try shellOut(to: command, process: process)
 }
