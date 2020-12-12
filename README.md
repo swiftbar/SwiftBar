@@ -143,6 +143,18 @@ Here is the list of supported parameters:
 | `params` | `param0=`,`param1=`,`param10=`... | Parameters for `bash` script |
 | `shortcut` | CMD+OPT+T | Hotkey assigned to item, if item is in header hotkey will show the menu, otherwise hotkey will launch associated action|
 
+### Environment Variables
+
+When running a plugin, SwiftBar sets the following environment variables:
+| Variable | Value |
+| -------- | ----- |
+| `SWIFTBAR` | `1` |
+| `SWIFTBAR_VERSION` | The running SwiftBar version number (in `x.y.z` format) |
+| `SWIFTBAR_BUILD` | The running SwiftBar build number (`CFBundleVersion`) |
+| `SWIFTBAR_PLUGINS_PATH` | The path to the `Plugin Folder` |
+| `OS_VERSION_MAJOR` | The first part of the macOS version, e.g. `11` for macOS 11.0.1 |
+| `OS_VERSION_MINOR` | The second part of the macOS version, e.g. `0` for macOS 11.0.1 |
+| `OS_VERSION_PATCH` | The third part of the macOS version, e.g. `1` for macOS 11.0.1 |
 
 ### Script Metadata
 
