@@ -449,12 +449,23 @@ extension MenubarItem {
 
         let style = NSMutableParagraphStyle()
         style.alignment = .left
-
-        let attributedTitle = params.symbolize ? title.symbolize(font: font):NSMutableAttributedString(string: title)
-
-        attributedTitle.addAttributes([.foregroundColor:color,.font:font,.paragraphStyle:style],
+        
+        var attributedTitle = NSMutableAttributedString(string: title)
+        
+        if params.symbolize && !params.ansi {
+            attributedTitle = title.symbolize(font: font)
+        }
+        if params.ansi {
+            attributedTitle = title.colorizedWithANSIColor()
+        }
+        if !params.ansi {
+            attributedTitle.addAttributes([.foregroundColor:color],
+                                          range: NSRange(0..<attributedTitle.length))
+        }
+        
+        attributedTitle.addAttributes([.font:font,.paragraphStyle:style],
+            
                                       range: NSRange(0..<attributedTitle.length))
-
         return (attributedTitle, fullTitle)
     }
 
