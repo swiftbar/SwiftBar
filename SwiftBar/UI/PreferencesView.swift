@@ -37,6 +37,14 @@ struct GeneralPreferencesView: View {
                     Text("Hide SwiftBar Icon")
                 }.padding(.top)
             }
+            Section() {
+                HStack {
+                    Spacer()
+                    Button("Check for updates") {
+                        App.checkForUpdates()
+                    }
+                }
+            }
         }
         .padding(20)
         .frame(width: 350, height: 100)

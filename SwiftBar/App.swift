@@ -2,6 +2,7 @@ import Cocoa
 import SwiftUI
 import ShellOut
 import os
+import Sparkle
 
 class App: NSObject {
     public static func openPluginFolder() {
@@ -162,5 +163,9 @@ class App: NSObject {
     
     public static var isDarkTheme: Bool {
         UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
+    }
+    
+    public  static func checkForUpdates() {
+        delegate.softwareUpdater.checkForUpdates()
     }
 }
