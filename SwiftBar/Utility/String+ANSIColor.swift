@@ -45,8 +45,7 @@ fileprivate var ANSIBackground: [Int:NSColor] = [
 extension String {
     func colorizedWithANSIColor() -> NSMutableAttributedString {
         let out = NSMutableAttributedString()
-        var attributes: [NSAttributedString.Key: Any] = [:]
-        
+
         let parts = self
             .replacingOccurrences(of: "\\e", with: "\u{1B}")
             .components(separatedBy: "\u{1B}[")
@@ -54,6 +53,8 @@ extension String {
         
         for part in parts[1...] {
             guard part.count > 0 else {continue}
+            var attributes: [NSAttributedString.Key: Any] = [:]
+
             let sequence = part.components(separatedBy: "m")
             var text = sequence.last ?? ""
             
