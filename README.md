@@ -120,7 +120,7 @@ Here is the list of supported parameters:
 | `size` | Number| Sets item text size|
 | `length`| Number| Trims item text to a provided number of characters, the full title will be displayed in a tooltip |
 | `trim` | True | Trims whitespace characters|
-| `ansi` | True | Enables support of ANSI color codes|
+| `ansi` | True | Enables support of ANSI color codes. **Conflicts with** `symbolize` |
 | `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom:` into 🍄. **May conflict with** `symbolize` |
 | `symbolize` | False | Disables parsing of [SF Symbols](https://developer.apple.com/sf-symbols/) i.e. "SF Symbols Test :sun.max: :cloud.fill: :gamecontroller.fill: :bookmark: :sun.dust:" <img width="218" alt="CleanShot 2020-12-13 at 14 40 33@2x" src="https://user-images.githubusercontent.com/222100/102021898-2d80e780-3d51-11eb-9e99-c71e92d14837.png"> **May conflict with** `emojize`|
 
