@@ -46,6 +46,7 @@
 		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -104,6 +105,7 @@
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
 		FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerConnection.xpc"; sourceTree = "<group>"; };
+		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -223,6 +225,7 @@
 				39AF7798254C7796001D76E5 /* String+Emoji.swift */,
 				39B84A0A257C21D400FA012E /* String+Escaped.swift */,
 				39B84A21257D63F700FA012E /* String+SFSymbols.swift */,
+				FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */,
 				398B86C3254DA85300DEA027 /* URL+Extension.swift */,
 				398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */,
 				39B84A1E257D436200FA012E /* RunScript.swift */,
@@ -414,6 +417,7 @@
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39B84A1F257D436200FA012E /* RunScript.swift in Sources */,
+				FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,
 				39641EB0254E163C00713DAF /* Preferences.swift in Sources */,
 			);

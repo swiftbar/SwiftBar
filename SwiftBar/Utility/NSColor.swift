@@ -56,3 +56,34 @@ extension String  {
         return pattern.evaluate(with: self)
     }
 }
+
+extension NSColor {
+    static func colorForAnsi256ColorIndex(index: Int) -> NSColor? {
+        var r: CGFloat
+        var g: CGFloat
+        var b: CGFloat
+        
+        if (index >= 16 && index < 232) {
+            let i: CGFloat = CGFloat(index - 16)
+            r = (i / 36.0) > 1.0 ? ((i / 36.0) * 40.0 + 55.0) / 255.0 : 0.0
+            if i.truncatingRemainder(dividingBy: 36) / 6.0 > 1 {
+                g = ((i.truncatingRemainder(dividingBy: 36) / 6.0) * 40.0 + 55.0) / 255.0
+            } else {
+                g = 0.0
+            }
+            if i.truncatingRemainder(dividingBy: 6) > 1 {
+                b = (i.truncatingRemainder(dividingBy: 36) * 40.0 + 55.0) / 255.0
+            } else {
+                b = 0.0
+            }
+        } else if (index >= 232 && index < 256) {
+            let i: CGFloat =  CGFloat(index - 232)
+            r = (i * 10 + 8) / 255.0
+            g = (i * 10 + 8) / 255.0
+            b = (i * 10 + 8) / 255.0
+        } else {
+          return nil
+        }
+        return NSColor(deviceRed: r, green: g, blue: b, alpha: 1.0).usingColorSpace(.sRGB)
+    }
+}

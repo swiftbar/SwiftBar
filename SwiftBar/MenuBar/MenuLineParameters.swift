@@ -128,6 +128,10 @@ struct MenuLineParameters {
     var symbolize: Bool {
         params["symbolize"] != "false"
     }
+    
+    var ansi: Bool {
+        params["ansi"] == "true"
+    }
 
     var tooltip: String? {
         params["tooltip"]
