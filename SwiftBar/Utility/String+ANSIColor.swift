@@ -43,14 +43,13 @@ fileprivate var ANSIBackground: [Int:NSColor] = [
 ]
 
 extension String {
-    var hasANSIColor: Bool {
-        self.contains("\u{1B}[")
-    }
-    
     func colorizedWithANSIColor() -> NSMutableAttributedString {
         let out = NSMutableAttributedString()
         var attributes: [NSAttributedString.Key: Any] = [:]
-        let parts = self.components(separatedBy: "\u{1B}[")
+        
+        let parts = self
+            .replacingOccurrences(of: "\\e", with: "\u{1B}")
+            .components(separatedBy: "\u{1B}[")
         out.append(NSAttributedString(string: parts.first ?? ""))
         
         for part in parts[1...] {
