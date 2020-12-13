@@ -115,12 +115,14 @@ Here is the list of supported parameters:
 **Text Formatting**:
 | Parameter | Value | Description |
 | ------------- | ------------- |------------- | 
-| `color` | CSS color or HEX |Sets item text color |
+| `color` | CSS color or HEX, `light_color,dark_color` |Sets item text color, if only one color provided it will be used for both light and dark appearance. |
 | `font` | macOS font name| Sets font name to use in item text|
 | `size` | Number| Sets item text size|
 | `length`| Number| Trims item text to a provided number of characters, the full title will be displayed in a tooltip |
 | `trim` | True | Trims whitespace characters|
-| `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom:` into 🍄|
+| `ansi` | True | Enables support of ANSI color codes|
+| `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom:` into 🍄. **May conflict with** `symbolize` |
+| `symbolize` | False | Disables parsing of [SF Symbols](https://developer.apple.com/sf-symbols/) i.e. "SF Symbols Test :sun.max: :cloud.fill: :gamecontroller.fill: :bookmark: :sun.dust:" <img width="218" alt="CleanShot 2020-12-13 at 14 40 33@2x" src="https://user-images.githubusercontent.com/222100/102021898-2d80e780-3d51-11eb-9e99-c71e92d14837.png"> **May conflict with** `emojize`|
 
 **Visuals**:
 | Parameter | Value | Description |
@@ -171,6 +173,21 @@ SwiftBar adopts metadata format suggested by BitBar:
 # <bitbar.dependencies>python,ruby,node</bitbar.dependencies>
 # <bitbar.abouturl>http://url-to-about.com/</bitbar.abouturl>
 ```
+
+#### Hiding default items
+
+SwiftBar supports these optional metadata flags to hide default menu items:
+```
+# <swiftbar.hideAbout>true</swiftbar.hideAbout>
+# <swiftbar.hideRunInTerminal>true</swiftbar.hideRunInTerminal>
+# <swiftbar.hideLastUpdated>true</swiftbar.hideLastUpdated>
+# <swiftbar.hideDisablePlugin>true</swiftbar.hideDisablePlugin>
+# <swiftbar.hideSwiftBar>true</swiftbar.hideSwiftBar>
+```
+
+Option+Click will show all items  
+![SwiftBar](https://user-images.githubusercontent.com/222100/101261866-267e2780-3708-11eb-9042-a57ad0ac6c78.gif)
+
 
 ## URL Scheme
 | Endpoint | Parameter | Description | Example |
