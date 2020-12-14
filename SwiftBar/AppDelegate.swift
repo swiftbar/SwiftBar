@@ -21,7 +21,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         
         //Check if plugin folder exists
         var isDir: ObjCBool = false
-        if let pluginDirectoryPath = prefs.pluginDirectoryPath,
+        if let pluginDirectoryPath = prefs.pluginDirectoryResolvedPath,
            (!FileManager.default.fileExists(atPath: pluginDirectoryPath, isDirectory: &isDir) || !isDir.boolValue) {
             prefs.pluginDirectoryPath = nil
         }

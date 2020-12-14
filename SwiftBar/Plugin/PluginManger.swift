@@ -23,8 +23,7 @@ class PluginManager {
 
     var menuBarItems: [PluginID: MenubarItem] = [:]
     var pluginDirectoryURL: URL? {
-        guard let pluginDirectoryPath = prefs.pluginDirectoryPath else {return nil}
-        return URL(fileURLWithPath: pluginDirectoryPath)
+        prefs.pluginDirectoryResolvedURL
     }
 
     var disablePluginCancellable: AnyCancellable? = nil

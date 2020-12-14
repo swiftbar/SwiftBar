@@ -19,6 +19,15 @@ class Preferences: ObservableObject {
             Preferences.setValue(value: pluginDirectoryPath, key: .PluginDirectory)
         }
     }
+    
+    var pluginDirectoryResolvedURL: URL? {
+        guard let path = pluginDirectoryPath as NSString? else {return nil}
+        return URL(fileURLWithPath: path.expandingTildeInPath).resolvingSymlinksInPath()
+    }
+    
+    var pluginDirectoryResolvedPath: String? {
+        pluginDirectoryResolvedURL?.path
+    }
 
     @Published var disabledPlugins: [PluginID] {
         didSet {

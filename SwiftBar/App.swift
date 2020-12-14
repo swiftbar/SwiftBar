@@ -6,7 +6,7 @@ import Sparkle
 
 class App: NSObject {
     public static func openPluginFolder() {
-        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryPath ?? "")
+        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryResolvedPath ?? "")
     }
 
     public static func changePluginFolder() {
