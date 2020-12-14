@@ -24,7 +24,6 @@ struct PluginRepositoryView: View {
     }
 }
 
-
 struct PluginEntryView: View {
     enum InstallStatus: String {
         case Install
@@ -141,25 +140,41 @@ struct PluginEntryView: View {
     }
 }
 
-
-struct CategoryDetailView: View {
-    let plugins: [RepositoryEntry.PluginEntry]
+struct CategoryDetailScrollView: View {
+    let category: String
     var body: some View {
+        let plugins = PluginRepository.shared.getPlugins(for: category)
         ScrollView(showsIndicators: true) {
             ForEach(plugins, id: \.self) { plugin in
                 PluginEntryView(pluginEntry: plugin)
                     .padding()
                     .shadow(radius: 20)
+                    .id(plugins.firstIndex(of: plugin))
             }
         }.frame(minWidth: 100, maxWidth: .infinity)
     }
 }
 
+struct CategoryDetailView: View {
+    let category: String
+    var body: some View {
+        if #available(OSX 11.0, *) {
+            ScrollViewReader { proxy in
+                CategoryDetailScrollView(category: category)
+                    .onChange(of: category) { _ in
+                        proxy.scrollTo(0, anchor: .top)
+                    }
+            }
+        } else {
+            CategoryDetailScrollView(category: category)
+        }
+    }
+}
+
 struct Category {
     let category: String
-    let pluginRepository = PluginRepository.shared
     var contentView: CategoryDetailView {
-        return CategoryDetailView(plugins: pluginRepository.getPlugins(for: category))
+        return CategoryDetailView(category: category)
     }
 }
 
