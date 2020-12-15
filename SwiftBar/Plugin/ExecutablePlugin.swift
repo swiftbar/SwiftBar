@@ -88,6 +88,10 @@ class ExecutablePlugin: Plugin {
     }
 
     func refresh() {
+        guard enabled else {
+            os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
+            return
+        }
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         disableTimer()
         queue.cancelAllOperations()
