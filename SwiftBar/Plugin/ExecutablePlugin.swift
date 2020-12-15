@@ -110,7 +110,8 @@ class ExecutablePlugin: Plugin {
         lastUpdated = Date()
         do {
             let out = try runScript(to: "'\(file)'", env: [
-                EnvironmentVariables.swiftPluginPath.rawValue:file
+                EnvironmentVariables.swiftPluginPath.rawValue:file,
+                EnvironmentVariables.osAppearance.rawValue: (App.isDarkTheme ? "Dark":"Light"),
             ])
             error = nil
             lastState = .Success

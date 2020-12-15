@@ -264,7 +264,8 @@ extension MenubarItem {
     @objc func runInTerminal() {
         guard let scriptPath = plugin?.file else {return}
         App.runInTerminal(script: scriptPath.escaped(), env: [
-            EnvironmentVariables.swiftPluginPath.rawValue:plugin?.file ?? ""
+            EnvironmentVariables.swiftPluginPath.rawValue:plugin?.file ?? "",
+            EnvironmentVariables.osAppearance.rawValue: (App.isDarkTheme ? "Dark":"Light"),
         ])
     }
 
@@ -511,7 +512,9 @@ extension MenubarItem {
 
         if let bash = params.bash {
             let script = "\(bash.escaped()) \(params.bashParams.joined(separator: " "))"
-            App.runInTerminal(script: script, runInBackground: !params.terminal) { [weak self] in
+            App.runInTerminal(script: script, runInBackground: !params.terminal, env: [
+                                EnvironmentVariables.swiftPluginPath.rawValue:plugin?.file ?? "",
+                                EnvironmentVariables.osAppearance.rawValue: (App.isDarkTheme ? "Dark":"Light")]) { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
                 }

@@ -10,6 +10,7 @@ enum EnvironmentVariables: String {
     case osVersionMajor = "OS_VERSION_MAJOR"
     case osVersionMinor = "OS_VERSION_MINOR"
     case osVersionPatch = "OS_VERSION_PATCH"
+    case osAppearance = "OS_APPEARANCE"
 }
 
 fileprivate let systemEnv: [EnvironmentVariables:String] = [
