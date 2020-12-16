@@ -3,7 +3,7 @@ import HotKey
 
 struct MenuLineParameters {
     let title: String
-    var params: [String:String]
+    var params: [String: String]
 
     init(line: String) {
         guard let index = line.range(of: "|") else {
@@ -15,12 +15,12 @@ struct MenuLineParameters {
         params = MenuLineParameters.getParams(from: String(line[index.upperBound...]).trimmingCharacters(in: .whitespaces))
     }
 
-    static func getParams(from line: String) -> [String:String] {
+    static func getParams(from line: String) -> [String: String] {
         let scanner = Scanner(string: line)
         let keyValueSeparator = CharacterSet(charactersIn: "=")
         let quoteSeparator = CharacterSet(charactersIn: "\"'")
 
-        var params: [String:String] = [:]
+        var params: [String: String] = [:]
 
         while !scanner.isAtEnd {
             var key: String? = ""
@@ -35,7 +35,8 @@ struct MenuLineParameters {
             }
 
             if let key = key?.trimmingCharacters(in: .whitespaces).lowercased(),
-               let value = value?.trimmingCharacters(in: .whitespaces) {
+               let value = value?.trimmingCharacters(in: .whitespaces)
+            {
                 params[key] = value
             }
         }
@@ -52,8 +53,8 @@ struct MenuLineParameters {
 
     var bashParams: [String] {
         var out: [String] = []
-        for i in 0...10 {
-            guard let param = params["param\(i)"] else {continue}
+        for i in 0 ... 10 {
+            guard let param = params["param\(i)"] else { continue }
             out.append(param.escaped())
         }
         return out
@@ -71,7 +72,7 @@ struct MenuLineParameters {
         let colors = params["color"]?.components(separatedBy: ",")
         let lightColor = colors?.first
         let darkColor = colors?.last
-        return NSColor.webColor(from: App.isDarkTheme ? darkColor:lightColor)
+        return NSColor.webColor(from: App.isDarkTheme ? darkColor : lightColor)
     }
 
     var font: String? {
@@ -79,7 +80,7 @@ struct MenuLineParameters {
     }
 
     var size: CGFloat? {
-        guard let sizeStr = params["size"], let pSize = Int(sizeStr) else {return nil}
+        guard let sizeStr = params["size"], let pSize = Int(sizeStr) else { return nil }
         return CGFloat(pSize)
     }
 
@@ -114,7 +115,8 @@ struct MenuLineParameters {
 
         let image = NSImage.createImage(from: params["image"] ?? params["templateimage"], isTemplate: params["templateimage"] != nil)
         if let widthStr = params["width"], let width = Float(widthStr),
-           let heightStr = params["height"], let height = Float(heightStr) {
+           let heightStr = params["height"], let height = Float(heightStr)
+        {
             return image?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
         }
 
@@ -128,7 +130,7 @@ struct MenuLineParameters {
     var symbolize: Bool {
         params["symbolize"] != "false"
     }
-    
+
     var ansi: Bool {
         params["ansi"] == "true"
     }
@@ -140,31 +142,31 @@ struct MenuLineParameters {
     var shortcut: KeyCombo? {
         guard let shortcut = params["shortcut"],
               let keyStr = shortcut.last?.lowercased(),
-              let key = Key(string: keyStr) else {return nil}
+              let key = Key(string: keyStr) else { return nil }
         var modifiers: NSEvent.ModifierFlags = []
-        shortcut.split(separator: "+").map{$0.trimmingCharacters(in: .whitespaces).lowercased()}.forEach { modifier in
+        shortcut.split(separator: "+").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.forEach { modifier in
             switch modifier {
-                case "shift":
-                    modifiers.insert(.shift)
-                case "command", "cmd":
-                    modifiers.insert(.command)
-                case "control", "ctrl":
-                    modifiers.insert(.control)
-                case "option", "opt":
-                    modifiers.insert(.option)
-                case "capslock":
-                    modifiers.insert(.capsLock)
-                case "function", "fn":
-                    modifiers.insert(.function)
-                default:
-                    break
+            case "shift":
+                modifiers.insert(.shift)
+            case "command", "cmd":
+                modifiers.insert(.command)
+            case "control", "ctrl":
+                modifiers.insert(.control)
+            case "option", "opt":
+                modifiers.insert(.option)
+            case "capslock":
+                modifiers.insert(.capsLock)
+            case "function", "fn":
+                modifiers.insert(.function)
+            default:
+                break
             }
         }
 
         return KeyCombo(key: key, modifiers: modifiers)
     }
-    
+
     var hasAction: Bool {
-        return href != nil || bash != nil || refresh
+        href != nil || bash != nil || refresh
     }
 }

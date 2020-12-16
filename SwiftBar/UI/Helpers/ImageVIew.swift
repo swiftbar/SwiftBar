@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ImageView: View {
-    @ObservedObject var imageLoader:ImageLoader
-    @State var image: NSImage = NSImage(named: "AppIcon")!
+    @ObservedObject var imageLoader: ImageLoader
+    @State var image = NSImage(named: "AppIcon")!
 
     var width: CGFloat
     var height: CGFloat
@@ -14,7 +14,6 @@ struct ImageView: View {
     }
 
     var body: some View {
-
         Image(nsImage: image)
             .resizable()
             .aspectRatio(contentMode: .fit)

@@ -1,8 +1,8 @@
 import Cocoa
-import SwiftUI
-import ShellOut
 import os
+import ShellOut
 import Sparkle
+import SwiftUI
 
 class App: NSObject {
     public static func openPluginFolder() {
@@ -11,20 +11,20 @@ class App: NSObject {
 
     public static func changePluginFolder() {
         let dialog = NSOpenPanel()
-        dialog.message                 = "Choose plugin folder"
-        dialog.showsResizeIndicator    = true
-        dialog.showsHiddenFiles        = false
-        dialog.canChooseDirectories    = true
-        dialog.canChooseFiles          = false
-        dialog.canCreateDirectories    = true
+        dialog.message = "Choose plugin folder"
+        dialog.showsResizeIndicator = true
+        dialog.showsHiddenFiles = false
+        dialog.canChooseDirectories = true
+        dialog.canChooseFiles = false
+        dialog.canCreateDirectories = true
         dialog.allowsMultipleSelection = false
 
         guard dialog.runModal() == .OK,
               let url = dialog.url
-        else {return}
-        
+        else { return }
+
         let restrictedPaths = FileManager.default.urls(for: .allApplicationsDirectory, in: .allDomainsMask)
-        
+
         if restrictedPaths.contains(url) {
             let alert = NSAlert()
             alert.messageText = "Can't use this folder as SwiftBar plugins location"
@@ -47,7 +47,6 @@ class App: NSObject {
 
     public static func getPlugins() {
         while Preferences.shared.pluginDirectoryPath == nil {
-            
             let alert = NSAlert()
             alert.messageText = "Set SwiftBar Plugins Location"
             alert.informativeText = "Select a folder to store the plugins repository"
@@ -61,7 +60,6 @@ class App: NSObject {
             default:
                 return
             }
-            
         }
         let preferencesWindowController: NSWindowController?
         let myWindow = NSWindow(
@@ -102,7 +100,7 @@ class App: NSObject {
         NSApp.orderFrontStandardAboutPanel(options: [:])
     }
 
-    public static func runInTerminal(script: String, runInBackground: Bool = false, env: [String:String] = [:], completionHandler: ((() -> Void)?) = nil) {
+    public static func runInTerminal(script: String, runInBackground: Bool = false, env: [String: String] = [:], completionHandler: ((() -> Void)?) = nil) {
         if runInBackground {
             DispatchQueue.global(qos: .userInitiated).async {
                 os_log("Executing script in background... \n%{public}@", log: Log.plugin, script)
@@ -110,44 +108,44 @@ class App: NSObject {
                     try runScript(to: script, env: env)
                     completionHandler?()
                 } catch {
-                    guard let error = error as? ShellOutError else {return}
-                    os_log("Failed to execute script in background\n%{public}@", log: Log.plugin, type:.error, error.message)
+                    guard let error = error as? ShellOutError else { return }
+                    os_log("Failed to execute script in background\n%{public}@", log: Log.plugin, type: .error, error.message)
                 }
             }
             return
         }
         var appleScript: String = ""
         switch Preferences.shared.terminal {
-            case .Terminal:
-                appleScript = """
-                tell application "Terminal"
-                    activate
-                    tell application "System Events" to keystroke "t" using {command down}
-                    delay 0.2
-                    do script "\(script)" in front window
-                    activate
+        case .Terminal:
+            appleScript = """
+            tell application "Terminal"
+                activate
+                tell application "System Events" to keystroke "t" using {command down}
+                delay 0.2
+                do script "\(script)" in front window
+                activate
+            end tell
+            """
+        case .iTerm:
+            appleScript = """
+            tell application "iTerm"
+                activate
+                try
+                    select first window
+                    set onlywindow to false
+                on error
+                    create window with default profile
+                    select first window
+                    set onlywindow to true
+                end try
+                tell the first window
+                    if onlywindow is false then
+                        create tab with default profile
+                    end if
+                    tell current session to write text "\(script)"
                 end tell
-                """
-            case .iTerm:
-                appleScript = """
-                tell application "iTerm"
-                    activate
-                    try
-                        select first window
-                        set onlywindow to false
-                    on error
-                        create window with default profile
-                        select first window
-                        set onlywindow to true
-                    end try
-                    tell the first window
-                        if onlywindow is false then
-                            create tab with default profile
-                        end if
-                        tell current session to write text "\(script)"
-                    end tell
-                end tell
-                """
+            end tell
+            """
         }
 
         var error: NSDictionary?
@@ -155,17 +153,17 @@ class App: NSObject {
             if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
                 print(outputString)
             } else if let error = error {
-                os_log("Failed to execute script in Terminal \n%{public}@", log: Log.plugin, type:.error, error.description)
+                os_log("Failed to execute script in Terminal \n%{public}@", log: Log.plugin, type: .error, error.description)
             }
             completionHandler?()
         }
     }
-    
+
     public static var isDarkTheme: Bool {
         UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
     }
-    
-    public  static func checkForUpdates() {
+
+    public static func checkForUpdates() {
         delegate.softwareUpdater.checkForUpdates()
     }
 }

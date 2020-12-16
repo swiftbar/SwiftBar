@@ -1,18 +1,19 @@
 import Cocoa
 import Combine
-import SwiftUI
 import HotKey
+import SwiftUI
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
     var executablePlugin: ExecutablePlugin? {
-        return plugin?.executablePlugin
+        plugin?.executablePlugin
     }
+
     var barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let statusBarMenu = NSMenu(title: "SwiftBar Menu")
     let titleCylleInterval: Double = 5
-    var contentUpdateCancellable: AnyCancellable? = nil
-    var titleCycleCancellable: AnyCancellable? = nil
+    var contentUpdateCancellable: AnyCancellable?
+    var titleCycleCancellable: AnyCancellable?
     let lastUpdatedItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
     let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
     let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
@@ -33,7 +34,7 @@ class MenubarItem: NSObject {
             enableTitleCycle()
         }
     }
-    
+
     var currentTitleLineIndex: Int = -1
 
     var currentTitleLine: String {
@@ -43,13 +44,13 @@ class MenubarItem: NSObject {
         return titleLines[currentTitleLineIndex]
     }
 
-    var lastMenuItem: NSMenuItem? = nil
+    var lastMenuItem: NSMenuItem?
 
     var prevLevel = 0
     var prevItems = [NSMenuItem]()
 
     var titleCylleTimerPubliser: Timer.TimerPublisher {
-        return Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
+        Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
     }
 
     init(title: String, plugin: Plugin? = nil) {
@@ -64,7 +65,7 @@ class MenubarItem: NSObject {
         statusBarMenu.delegate = self
         updateMenu()
         contentUpdateCancellable = executablePlugin?.contentUpdatePublisher
-            .sink {[weak self] _ in
+            .sink { [weak self] _ in
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
@@ -85,7 +86,7 @@ class MenubarItem: NSObject {
         titleCycleCancellable = titleCylleTimerPubliser
             .autoconnect()
             .receive(on: RunLoop.main)
-            .sink(receiveValue: {[weak self] _ in
+            .sink(receiveValue: { [weak self] _ in
                 self?.cycleThroughTitles()
             })
     }
@@ -104,21 +105,21 @@ class MenubarItem: NSObject {
 }
 
 extension MenubarItem: NSMenuDelegate {
-    func menuWillOpen(_ menu: NSMenu) {
+    func menuWillOpen(_: NSMenu) {
         isOpen = true
 
         var params = MenuLineParameters(line: currentTitleLine)
         params.params["color"] = "white"
         barItem.button?.attributedTitle = atributedTitle(with: params).title
 
-        guard let lastUpdated = executablePlugin?.lastUpdated else {return}
+        guard let lastUpdated = executablePlugin?.lastUpdated else { return }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
         lastUpdatedItem.title = "Updated \(relativeDate)"
 
         guard NSApp.currentEvent?.modifierFlags.contains(.option) == false else {
-            [lastUpdatedItem,runInTerminalItem,disablePluginItem,aboutItem,swiftBarItem].forEach{$0.isHidden = false}
+            [lastUpdatedItem, runInTerminalItem, disablePluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
             return
         }
         lastUpdatedItem.isHidden = plugin?.metadata?.hideLastUpdated ?? false
@@ -128,11 +129,11 @@ extension MenubarItem: NSMenuDelegate {
         swiftBarItem.isHidden = plugin?.metadata?.hideSwiftBar ?? false
     }
 
-    func menuDidClose(_ menu: NSMenu) {
+    func menuDidClose(_: NSMenu) {
         isOpen = false
         setMenuTitle(title: currentTitleLine)
 
-        //if plugin was refreshed when menu was opened refresh on menu close
+        // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
             refreshOnClose = false
             disableTitleCycle()
@@ -141,16 +142,18 @@ extension MenubarItem: NSMenuDelegate {
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
-        if  let highlitedItem = menu.highlightedItem,
-            highlitedItem.attributedTitle != nil,
-            let params = highlitedItem.representedObject as? MenuLineParameters,
-            params.color != nil {
+        if let highlitedItem = menu.highlightedItem,
+           highlitedItem.attributedTitle != nil,
+           let params = highlitedItem.representedObject as? MenuLineParameters,
+           params.color != nil
+        {
             highlitedItem.attributedTitle = atributedTitle(with: params).title
         }
 
         if var params = item?.representedObject as? MenuLineParameters,
            item?.attributedTitle != nil,
-           params.color != nil {
+           params.color != nil
+        {
             params.params.removeValue(forKey: "color")
             item?.attributedTitle = atributedTitle(with: params).title
         }
@@ -161,7 +164,7 @@ extension MenubarItem: NSMenuDelegate {
 extension MenubarItem {
     func buildStandardMenu() {
         let firstLevel = (plugin == nil)
-        let menu = firstLevel ? statusBarMenu:NSMenu(title: "Preferences")
+        let menu = firstLevel ? statusBarMenu : NSMenu(title: "Preferences")
 
         let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshAllPlugins), keyEquivalent: "r")
         let enableAllItem = NSMenuItem(title: "Enable All", action: #selector(enableAllPlugins), keyEquivalent: "")
@@ -174,9 +177,9 @@ extension MenubarItem {
         let aboutSwiftbarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
         let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
         let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
-        [refreshAllItem,enableAllItem,disableAllItem,preferencesItem,openPluginFolderItem,changePluginFolderItem,getPluginsItem,quitItem,disablePluginItem,aboutItem,aboutSwiftbarItem,runInTerminalItem,showErrorItem,sendFeedbackItem].forEach{ item in
+        [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
             item.target = self
-            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
+            item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
         }
 
         menu.addItem(refreshAllItem)
@@ -196,9 +199,9 @@ extension MenubarItem {
             statusBarMenu.addItem(NSMenuItem.separator())
 
             // put swiftbar menu as submenu
-            swiftBarItem.attributedTitle = NSAttributedString(string: swiftBarItem.title, attributes: [.font:NSFont.menuBarFont(ofSize: 0)])
+            swiftBarItem.attributedTitle = NSAttributedString(string: swiftBarItem.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
             swiftBarItem.submenu = menu
-            swiftBarItem.image = Preferences.shared.swiftBarIconIsHidden ? nil:NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
+            swiftBarItem.image = Preferences.shared.swiftBarIconIsHidden ? nil : NSImage(named: "AppIcon")?.resizedCopy(w: 21, h: 21)
             statusBarMenu.addItem(swiftBarItem)
 
             // default plugin menu items
@@ -231,7 +234,7 @@ extension MenubarItem {
         App.openPluginFolder()
     }
 
-    //TODO: Preferences should be shown as a standalone window.
+    // TODO: Preferences should be shown as a standalone window.
     @objc func openPreferences() {
         App.openPreferences()
     }
@@ -253,7 +256,7 @@ extension MenubarItem {
     }
 
     @objc func showError() {
-        guard let plugin = plugin, plugin.error != nil else {return}
+        guard let plugin = plugin, plugin.error != nil else { return }
         let popover = NSPopover()
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: PluginErrorView(plugin: plugin))
@@ -262,19 +265,20 @@ extension MenubarItem {
     }
 
     @objc func runInTerminal() {
-        guard let scriptPath = plugin?.file else {return}
+        guard let scriptPath = plugin?.file else { return }
         App.runInTerminal(script: scriptPath.escaped(), env: [
-            EnvironmentVariables.swiftPluginPath.rawValue:plugin?.file ?? ""
+            EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
+            EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
         ])
     }
 
     @objc func disablePlugin() {
-        guard let plugin = plugin else {return}
+        guard let plugin = plugin else { return }
         delegate.pluginManager.disablePlugin(plugin: plugin)
     }
 
     @objc func about() {
-        guard let pluginMetadata = plugin?.metadata else {return}
+        guard let pluginMetadata = plugin?.metadata else { return }
         let popover = NSPopover()
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
@@ -287,7 +291,6 @@ extension MenubarItem {
     }
 }
 
-
 extension MenubarItem {
     static func defaultBarItem() -> MenubarItem {
         let item = MenubarItem(title: "SwiftBar")
@@ -296,20 +299,20 @@ extension MenubarItem {
     }
 }
 
-//parse script output
+// parse script output
 extension MenubarItem {
     func splitScriptOutput(scriptOutput: String) -> (header: [String], body: [String]) {
-        let lines = scriptOutput.components(separatedBy: CharacterSet.newlines).filter{!$0.isEmpty}
-        guard let index = lines.firstIndex(where:{$0.hasPrefix("---")}) else {
+        let lines = scriptOutput.components(separatedBy: CharacterSet.newlines).filter { !$0.isEmpty }
+        guard let index = lines.firstIndex(where: { $0.hasPrefix("---") }) else {
             return (lines, [])
         }
         let header = Array(lines[...index].dropLast())
         let body = Array(lines[index...])
-        
-        return (header,body)
+
+        return (header, body)
     }
 
-    func addShortcut(shortcut: HotKey, action: @escaping ()-> Void) {
+    func addShortcut(shortcut: HotKey, action: @escaping () -> Void) {
         shortcut.keyUpHandler = action
         hotKeys.append(shortcut)
     }
@@ -317,23 +320,23 @@ extension MenubarItem {
     func updateMenu() {
         statusBarMenu.removeAllItems()
         show()
-        
+
         if executablePlugin?.lastState == .Failed {
             titleLines = ["⚠️"]
             barItem.button?.title = "⚠️"
             buildStandardMenu()
             return
         }
-        
+
         guard let scriptOutput = plugin?.content,
-              (!scriptOutput.isEmpty || plugin?.lastState == .Loading)
+              !scriptOutput.isEmpty || plugin?.lastState == .Loading
         else {
             hide()
             return
         }
-        
+
         let parts = splitScriptOutput(scriptOutput: scriptOutput)
-        titleLines =  parts.header
+        titleLines = parts.header
         updateMenuTitle(titleLines: parts.header)
         if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
             addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
@@ -345,7 +348,7 @@ extension MenubarItem {
             statusBarMenu.addItem(NSMenuItem.separator())
         }
 
-        //prevItems.append(statusBarMenu.items.last)
+        // prevItems.append(statusBarMenu.items.last)
         parts.body.forEach { line in
             addMenuItem(from: line)
         }
@@ -358,7 +361,7 @@ extension MenubarItem {
             return
         }
         var workingLine = line
-        var submenu: NSMenu? = nil
+        var submenu: NSMenu?
         var currentLevel = 0
 
         while workingLine.hasPrefix("--") {
@@ -385,8 +388,8 @@ extension MenubarItem {
             }
             submenu = item?.submenu
         }
-        
-        if let item = workingLine == "---" ? NSMenuItem.separator():buildMenuItem(params: MenuLineParameters(line: workingLine)) {
+
+        if let item = workingLine == "---" ? NSMenuItem.separator() : buildMenuItem(params: MenuLineParameters(line: workingLine)) {
             item.target = self
             (submenu ?? statusBarMenu)?.addItem(item)
             lastMenuItem = item
@@ -395,7 +398,7 @@ extension MenubarItem {
 
             if let kc = MenuLineParameters(line: line).shortcut {
                 addShortcut(shortcut: HotKey(keyCombo: kc)) {
-                    guard let action = item.action else {return}
+                    guard let action = item.action else { return }
                     NSApp.sendAction(action, to: item.target, from: item)
                 }
             }
@@ -404,9 +407,9 @@ extension MenubarItem {
 
     func updateMenuTitle(titleLines: [String]) {
         setMenuTitle(title: titleLines.first ?? "⚠️")
-        guard titleLines.count > 1 else {return}
+        guard titleLines.count > 1 else { return }
 
-        titleLines.forEach{ line in
+        titleLines.forEach { line in
             addMenuItem(from: line)
         }
     }
@@ -432,8 +435,10 @@ extension MenubarItem {
     }
 
     func atributedTitle(with params: MenuLineParameters) -> (title: NSAttributedString, tooltip: String) {
-        var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces):params.title
-        if params.emojize {
+        var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces) : params.title
+        guard !title.isEmpty else { return (NSAttributedString(), "") }
+
+        if params.emojize, !params.symbolize {
             title = title.emojify()
         }
         let fullTitle = title
@@ -450,38 +455,38 @@ extension MenubarItem {
 
         let style = NSMutableParagraphStyle()
         style.alignment = .left
-        
+
         var attributedTitle = NSMutableAttributedString(string: title)
-        
-        if params.symbolize && !params.ansi {
+
+        if params.symbolize, !params.ansi {
             attributedTitle = title.symbolize(font: font)
         }
         if params.ansi {
             attributedTitle = title.colorizedWithANSIColor()
         }
         if !params.ansi {
-            attributedTitle.addAttributes([.foregroundColor:color],
-                                          range: NSRange(0..<attributedTitle.length))
+            attributedTitle.addAttributes([.foregroundColor: color],
+                                          range: NSRange(0 ..< attributedTitle.length))
         }
-        
-        attributedTitle.addAttributes([.font:font,.paragraphStyle:style,.baselineOffset:offset],
-            
-                                      range: NSRange(0..<attributedTitle.length))
+
+        attributedTitle.addAttributes([.font: font, .paragraphStyle: style, .baselineOffset: offset],
+
+                                      range: NSRange(0 ..< attributedTitle.length))
         return (attributedTitle, fullTitle)
     }
 
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
-        guard params.dropdown else {return nil}
+        guard params.dropdown else { return nil }
 
         let item = NSMenuItem(title: params.title,
-                              action: params.hasAction ? #selector(perfomMenutItemAction):nil,
-                          keyEquivalent: "")
+                              action: params.hasAction ? #selector(perfomMenutItemAction) : nil,
+                              keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)
         item.attributedTitle = title.title
 
         item.toolTip = params.tooltip
-        
+
         if let length = params.length, length < title.title.string.count {
             item.toolTip = title.tooltip
         }
@@ -503,7 +508,7 @@ extension MenubarItem {
     }
 
     @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
-        guard let params = sender.representedObject as? MenuLineParameters else {return}
+        guard let params = sender.representedObject as? MenuLineParameters else { return }
 
         if let href = params.href, let url = URL(string: href) {
             NSWorkspace.shared.open(url)
@@ -512,7 +517,10 @@ extension MenubarItem {
 
         if let bash = params.bash {
             let script = "\(bash.escaped()) \(params.bashParams.joined(separator: " "))"
-            App.runInTerminal(script: script, runInBackground: !params.terminal) { [weak self] in
+            App.runInTerminal(script: script, runInBackground: !params.terminal, env: [
+                EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
+                EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
+            ]) { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
                 }

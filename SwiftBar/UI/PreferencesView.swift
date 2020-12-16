@@ -1,9 +1,9 @@
-import SwiftUI
 import LaunchAtLogin
+import SwiftUI
 
 enum ShellOptions: String, CaseIterable {
-    case Terminal = "Terminal"
-    case iTerm = "iTerm"
+    case Terminal
+    case iTerm
 }
 
 struct GeneralPreferencesView: View {
@@ -12,7 +12,7 @@ struct GeneralPreferencesView: View {
 
     var body: some View {
         Form {
-            Section() {
+            Section {
                 LaunchAtLogin.Toggle()
                     .padding(.bottom)
             }
@@ -32,12 +32,12 @@ struct GeneralPreferencesView: View {
             Section(header: Text("Shell")) {
                 EnumPicker(selected: $preferences.terminal, title: "")
             }
-            Section() {
+            Section {
                 Toggle(isOn: $preferences.swiftBarIconIsHidden) {
                     Text("Hide SwiftBar Icon")
                 }.padding(.top)
             }
-            Section() {
+            Section {
                 HStack {
                     Spacer()
                     Button("Check for updates") {
@@ -104,12 +104,13 @@ struct PluginRowView: View {
     var enabled: Bool {
         !preferences.disabledPlugins.contains(plugin.id)
     }
+
     let plugin: Plugin
     var body: some View {
         HStack {
             Circle()
                 .frame(width: 15, height: 15, alignment: .center)
-                .foregroundColor(enabled ? .green:.red)
+                .foregroundColor(enabled ? .green : .red)
                 .padding(.leading)
             VStack(alignment: .leading) {
                 Text(plugin.name)
@@ -125,7 +126,7 @@ struct PluginRowView: View {
                 }
             } else {
                 Button("Enable") {
-                    preferences.disabledPlugins.removeAll(where: {$0 == plugin.id})
+                    preferences.disabledPlugins.removeAll(where: { $0 == plugin.id })
                 }
             }
         }

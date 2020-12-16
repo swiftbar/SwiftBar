@@ -1,5 +1,5 @@
-import SwiftUI
 import os
+import SwiftUI
 
 struct PluginRepositoryView: View {
     @ObservedObject var pluginRepository = PluginRepository.shared
@@ -31,22 +31,25 @@ struct PluginEntryView: View {
         case Failed
         case Downloading
     }
+
     @State var installStatus: InstallStatus = .Install
     var installButtonColor: Color? {
         switch installStatus {
-            case .Install, .Downloading:
-                return nil
-            case .Installed:
-                return .green
-            case .Failed:
-                return .red
+        case .Install, .Downloading:
+            return nil
+        case .Installed:
+            return .green
+        case .Failed:
+            return .red
         }
     }
+
     let pluginEntry: RepositoryEntry.PluginEntry
     var githubURL: URL? {
-        guard let name = pluginEntry.github else {return nil}
+        guard let name = pluginEntry.github else { return nil }
         return URL(string: "https://github.com/\(name)")
     }
+
     var pluginSourceURL: URL? {
         URL(string: "https://github.com/matryer/bitbar-plugins/blob/master/\(pluginEntry.source.dropFirst(2))")
     }
@@ -88,10 +91,10 @@ struct PluginEntryView: View {
                                     installStatus = .Downloading
                                     delegate.pluginManager.importPlugin(from: url) { result in
                                         switch result {
-                                            case .success( _):
-                                                installStatus = .Installed
-                                            case .failure( _):
-                                                installStatus = .Failed
+                                        case .success:
+                                            installStatus = .Installed
+                                        case .failure:
+                                            installStatus = .Failed
                                         }
                                     }
                                 }
@@ -174,13 +177,13 @@ struct CategoryDetailView: View {
 struct Category {
     let category: String
     var contentView: CategoryDetailView {
-        return CategoryDetailView(category: category)
+        CategoryDetailView(category: category)
     }
 }
 
 struct SplitView: View {
     let categories: [String]
-    @State var selectedCategory: Category = Category(category: "AWS")
+    @State var selectedCategory = Category(category: "AWS")
     var body: some View {
         HSplitView {
             VStack(alignment: .leading) {
@@ -194,7 +197,7 @@ struct SplitView: View {
                                 .padding([.leading, .trailing])
                                 .padding(.bottom, 2)
                                 .foregroundColor(category == selectedCategory.category ?
-                                                    .orange:Color(NSColor.labelColor)
+                                    .orange : Color(NSColor.labelColor)
                                 )
                                 .onTapGesture {
                                     selectedCategory = Category(category: category)
@@ -203,7 +206,7 @@ struct SplitView: View {
                     }
                 }
                 .padding(.top)
-                .frame(minWidth: 100)
+                .frame(minWidth: 128)
             }
             selectedCategory.contentView
                 .frame(minWidth: 100, maxWidth: .infinity)
