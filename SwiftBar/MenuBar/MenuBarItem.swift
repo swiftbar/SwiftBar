@@ -434,7 +434,7 @@ extension MenubarItem {
 
     func atributedTitle(with params: MenuLineParameters) -> (title: NSAttributedString, tooltip: String) {
         var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces):params.title
-        if params.emojize {
+        if params.emojize && !params.symbolize {
             title = title.emojify()
         }
         let fullTitle = title
