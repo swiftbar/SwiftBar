@@ -203,7 +203,7 @@ struct SplitView: View {
                     }
                 }
                 .padding(.top)
-                .frame(minWidth: 100)
+                .frame(minWidth: 128)
             }
             selectedCategory.contentView
                 .frame(minWidth: 100, maxWidth: .infinity)
