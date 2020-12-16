@@ -22,4 +22,3 @@ public extension EnumPicker where T: RawRepresentable, T.RawValue == String, V =
         }
     }
 }
-

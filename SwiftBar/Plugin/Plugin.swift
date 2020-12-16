@@ -19,13 +19,13 @@ protocol Plugin {
     var type: PluginType { get }
     var name: String { get }
     var file: String { get }
-    var enabled: Bool {get}
+    var enabled: Bool { get }
     var metadata: PluginMetadata? { get }
-    var updateInterval: Double {get}
-    var lastUpdated: Date? {get set}
-    var lastState: PluginState {get set }
-    var content: String? {get set}
-    var error: ShellOutError? {get set}
+    var updateInterval: Double { get }
+    var lastUpdated: Date? { get set }
+    var lastState: PluginState { get set }
+    var content: String? { get set }
+    var error: ShellOutError? { get set }
     func refresh()
     func terminate()
     func invoke(params: [String]) -> String?
@@ -33,10 +33,11 @@ protocol Plugin {
 
 extension Plugin {
     var executablePlugin: ExecutablePlugin? {
-        return self as? ExecutablePlugin
+        self as? ExecutablePlugin
     }
+
     var description: String {
-        return """
+        """
         id: \(id)
         type: \(type)
         name: \(name)

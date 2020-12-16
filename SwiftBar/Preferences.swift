@@ -1,6 +1,5 @@
-import Combine
 import Cocoa
-
+import Combine
 
 class Preferences: ObservableObject {
     static let shared = Preferences()
@@ -19,12 +18,12 @@ class Preferences: ObservableObject {
             Preferences.setValue(value: pluginDirectoryPath, key: .PluginDirectory)
         }
     }
-    
+
     var pluginDirectoryResolvedURL: URL? {
-        guard let path = pluginDirectoryPath as NSString? else {return nil}
+        guard let path = pluginDirectoryPath as NSString? else { return nil }
         return URL(fileURLWithPath: path.expandingTildeInPath).resolvingSymlinksInPath()
     }
-    
+
     var pluginDirectoryResolvedPath: String? {
         pluginDirectoryResolvedURL?.path
     }
@@ -64,7 +63,8 @@ class Preferences: ObservableObject {
         terminal = .Terminal
         swiftBarIconIsHidden = Preferences.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         if let savedTerminal = Preferences.getValue(key: .Terminal) as? String,
-           let shell = ShellOptions(rawValue: savedTerminal) {
+           let shell = ShellOptions(rawValue: savedTerminal)
+        {
             terminal = shell
         }
     }
@@ -74,6 +74,7 @@ class Preferences: ObservableObject {
         UserDefaults.standard.removePersistentDomain(forName: domain)
         UserDefaults.standard.synchronize()
     }
+
     private static func setValue(value: Any?, key: PreferencesKeys) {
         UserDefaults.standard.setValue(value, forKey: key.rawValue)
         UserDefaults.standard.synchronize()

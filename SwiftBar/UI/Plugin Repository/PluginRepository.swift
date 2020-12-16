@@ -7,7 +7,7 @@ class PluginRepository: ObservableObject {
 
     @Published var repository: [RepositoryEntry] {
         didSet {
-            categories = Array(Set(repository.map{$0.category})).sorted()
+            categories = Array(Set(repository.map(\.category))).sorted()
         }
     }
 
@@ -17,26 +17,26 @@ class PluginRepository: ObservableObject {
         guard let repository = PluginRepository.parseRepositoryFile()
         else {
             self.repository = []
-            self.categories = []
+            categories = []
             refreshRepository()
             return
         }
 
         self.repository = repository
-        self.categories = Array(Set(repository.map{$0.category})).sorted()
+        categories = Array(Set(repository.map(\.category))).sorted()
     }
 
     func getPlugins(for category: String) -> [RepositoryEntry.PluginEntry] {
-        repository.filter{$0.category == category}.flatMap{$0.plugins}
+        repository.filter { $0.category == category }.flatMap(\.plugins)
     }
 
     func refreshRepository() {
-        guard let pluginDirectoryURL = prefs.pluginDirectoryResolvedURL else {return}
+        guard let pluginDirectoryURL = prefs.pluginDirectoryResolvedURL else { return }
 
         os_log("Refreshing plugin repository...", log: Log.repository)
         let url = URL(string: "https://raw.githubusercontent.com/swiftbar/swiftbar-plugins/main/repository.json")!
-        
-        let downloadTask = URLSession.shared.downloadTask(with: url) {[weak self] fileURL, _, _ in
+
+        let downloadTask = URLSession.shared.downloadTask(with: url) { [weak self] fileURL, _, _ in
             guard let fileURL = fileURL else {
                 os_log("Failed to download plugin repository manifest.", log: Log.repository)
                 return
@@ -45,8 +45,8 @@ class PluginRepository: ObservableObject {
             do {
                 let targetURL = pluginDirectoryURL.appendingPathComponent(".repository.json")
                 try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
-                guard let rep = PluginRepository.parseRepositoryFile() else {return}
-                self?.categories = Array(Set(rep.map{$0.category})).sorted()
+                guard let rep = PluginRepository.parseRepositoryFile() else { return }
+                self?.categories = Array(Set(rep.map(\.category))).sorted()
                 DispatchQueue.main.async {
                     self?.repository = rep
                 }
@@ -58,17 +58,16 @@ class PluginRepository: ObservableObject {
     }
 
     static func parseRepositoryFile() -> [RepositoryEntry]? {
-        guard let pluginDirectoryPath = Preferences.shared.pluginDirectoryResolvedPath else {return nil}
+        guard let pluginDirectoryPath = Preferences.shared.pluginDirectoryResolvedPath else { return nil }
         let url = URL(fileURLWithPath: pluginDirectoryPath).appendingPathComponent(".repository.json")
 
         guard let jsonStr = try? String(contentsOfFile: url.path),
-            let data = jsonStr.data(using: .utf8),
-            let repository = try? JSONDecoder().decode([RepositoryEntry].self, from: data)
-        else {return nil}
+              let data = jsonStr.data(using: .utf8),
+              let repository = try? JSONDecoder().decode([RepositoryEntry].self, from: data)
+        else { return nil }
         return repository
     }
 }
-
 
 struct RepositoryEntry: Codable {
     enum Category: String, Codable {
@@ -86,7 +85,7 @@ struct RepositoryEntry: Codable {
         let source: String
         let version: String?
 
-        enum CodingKeys : String, CodingKey {
+        enum CodingKeys: String, CodingKey {
             case title
             case author
             case github = "author.github"

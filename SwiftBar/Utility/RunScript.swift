@@ -13,24 +13,24 @@ enum EnvironmentVariables: String {
     case osAppearance = "OS_APPEARANCE"
 }
 
-fileprivate let systemEnv: [EnvironmentVariables:String] = [
+private let systemEnv: [EnvironmentVariables: String] = [
     .swiftBar: "1",
-    .swiftBarVersion: (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""),
-    .swiftBarBuild: (Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? ""),
+    .swiftBarVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "",
+    .swiftBarBuild: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
     .swiftPluginsPath: Preferences.shared.pluginDirectoryPath ?? "",
     .osVersionMajor: String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
     .osVersionMinor: String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
-    .osVersionPatch: String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion)
+    .osVersionPatch: String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion),
 ]
 
-fileprivate var systemEnvStr: [String:String] {
+private var systemEnvStr: [String: String] {
     Dictionary(uniqueKeysWithValues:
-                systemEnv.map { key, value in (key.rawValue, value) })
+        systemEnv.map { key, value in (key.rawValue, value) })
 }
 
-@discardableResult func runScript(to command: String, env: [String:String] = [:]) throws -> String {
+@discardableResult func runScript(to command: String, env: [String: String] = [:]) throws -> String {
     let process = Process()
-    let swiftbarEnv = systemEnvStr.merging(env){ (current, _) in current }
-    process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment){ (current, _) in current }
+    let swiftbarEnv = systemEnvStr.merging(env) { current, _ in current }
+    process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
     return try shellOut(to: command, process: process)
 }

@@ -16,14 +16,14 @@ struct PluginMetadata {
     let hideSwiftBar: Bool
 
     var isEmpty: Bool {
-        return name == nil
-        && version == nil
-        && author == nil
-        && github == nil
-        && desc == nil
-        && previewImageURL == nil
-        && dependencies == nil
-        && aboutURL == nil
+        name == nil
+            && version == nil
+            && author == nil
+            && github == nil
+            && desc == nil
+            && previewImageURL == nil
+            && dependencies == nil
+            && aboutURL == nil
     }
 
     init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
@@ -54,11 +54,11 @@ struct PluginMetadata {
         func getSwiftBarTagValue(tag: String) -> String? {
             getTagValue(tag: tag, prefix: "swiftbar")
         }
-        var imageURL: URL? = nil
+        var imageURL: URL?
         if let imageStr = getBitBarTagValue(tag: "image") {
             imageURL = URL(string: imageStr)
         }
-        var aboutURL: URL? = nil
+        var aboutURL: URL?
         if let imageStr = getBitBarTagValue(tag: "about") {
             aboutURL = URL(string: imageStr)
         }
@@ -80,9 +80,9 @@ struct PluginMetadata {
 
 extension String {
     func slice(from: String, to: String) -> String? {
-        return (range(of: from)?.upperBound).flatMap { substringFrom in
-            (range(of: to, range: substringFrom..<endIndex)?.lowerBound).map { substringTo in
-                String(self[substringFrom..<substringTo])
+        (range(of: from)?.upperBound).flatMap { substringFrom in
+            (range(of: to, range: substringFrom ..< endIndex)?.lowerBound).map { substringTo in
+                String(self[substringFrom ..< substringTo])
             }
         }
     }

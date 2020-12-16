@@ -10,14 +10,13 @@ class DirectoryObserver {
         close(fileDescriptor)
     }
 
-    init(url: URL, block: @escaping ()->Void) {
+    init(url: URL, block: @escaping () -> Void) {
         self.url = url
-        self.fileDescriptor = open(url.path, O_EVTONLY)
-        self.source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: self.fileDescriptor, eventMask: .all, queue: DispatchQueue.global())
-        self.source.setEventHandler {
+        fileDescriptor = open(url.path, O_EVTONLY)
+        source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fileDescriptor, eventMask: .all, queue: DispatchQueue.global())
+        source.setEventHandler {
             block()
         }
-        self.source.resume()
+        source.resume()
     }
 }
-

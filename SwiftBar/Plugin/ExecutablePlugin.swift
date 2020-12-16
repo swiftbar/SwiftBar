@@ -1,7 +1,7 @@
-import Foundation
 import Combine
-import ShellOut
+import Foundation
 import os
+import ShellOut
 
 class ExecutablePlugin: Plugin {
     var id: PluginID
@@ -11,24 +11,25 @@ class ExecutablePlugin: Plugin {
     var enabled: Bool {
         !prefs.disabledPlugins.contains(id)
     }
+
     var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
-    var metadata: PluginMetadata? = nil
-    var lastUpdated: Date? = nil
+    var metadata: PluginMetadata?
+    var lastUpdated: Date?
     var lastState: PluginState
     var contentUpdatePublisher = PassthroughSubject<Any, Never>()
 
     var content: String? = "..." {
         didSet {
-            guard content != oldValue else {return}
+            guard content != oldValue else { return }
             contentUpdatePublisher.send("")
         }
     }
-    var error: ShellOutError?
 
+    var error: ShellOutError?
 
     let queue = OperationQueue()
     var updateTimerPublisher: Timer.TimerPublisher {
-        return Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
+        Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
     }
 
     var cancellable: Set<AnyCancellable> = []
@@ -37,9 +38,9 @@ class ExecutablePlugin: Plugin {
 
     init(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
-        self.id = fileURL.lastPathComponent
-        self.name = nameComponents.first ?? ""
-        self.file = fileURL.path
+        id = fileURL.lastPathComponent
+        name = nameComponents.first ?? ""
+        file = fileURL.path
         if nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
             let intervalStr = nameComponents[1]
             if intervalStr.hasSuffix("s") {
@@ -54,9 +55,8 @@ class ExecutablePlugin: Plugin {
             if intervalStr.hasSuffix("d") {
                 updateInterval = interval * 60 * 60 * 24
             }
-
         }
-        
+
         lastState = .Loading
         makeScriptExecutable(file: file)
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
@@ -66,24 +66,24 @@ class ExecutablePlugin: Plugin {
     func refreshPluginMetadata() {
         let url = URL(fileURLWithPath: file)
         if let script = try? String(contentsOf: url) {
-            self.metadata = PluginMetadata.parser(script: script)
+            metadata = PluginMetadata.parser(script: script)
         } else {
             metadata = nil
         }
     }
 
     func enableTimer() {
-        guard cancellable.isEmpty else {return}
+        guard cancellable.isEmpty else { return }
         updateTimerPublisher
             .autoconnect()
             .receive(on: queue)
-            .sink(receiveValue: {[weak self] _ in
+            .sink(receiveValue: { [weak self] _ in
                 self?.content = self?.invoke(params: [])
             }).store(in: &cancellable)
     }
 
     func disableTimer() {
-        cancellable.forEach{$0.cancel()}
+        cancellable.forEach { $0.cancel() }
         cancellable.removeAll()
     }
 
@@ -102,24 +102,22 @@ class ExecutablePlugin: Plugin {
         }
     }
 
-    func terminate() {
+    func terminate() {}
 
-    }
-
-    func invoke(params : [String]) -> String? {
+    func invoke(params _: [String]) -> String? {
         lastUpdated = Date()
         do {
             let out = try runScript(to: "'\(file)'", env: [
-                EnvironmentVariables.swiftPluginPath.rawValue:file,
-                EnvironmentVariables.osAppearance.rawValue: (App.isDarkTheme ? "Dark":"Light"),
+                EnvironmentVariables.swiftPluginPath.rawValue: file,
+                EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
             ])
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             return out
         } catch {
-            guard let error = error as? ShellOutError else {return nil}
-            os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type:.error, file, error.message)
+            guard let error = error as? ShellOutError else { return nil }
+            os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type: .error, file, error.message)
             self.error = error
             lastState = .Failed
         }
@@ -127,7 +125,7 @@ class ExecutablePlugin: Plugin {
     }
 
     func makeScriptExecutable(file: String) {
-        guard prefs.makePluginExecutable else {return}
+        guard prefs.makePluginExecutable else { return }
         let script = """
         if [[ -x "\(file)" ]]
         then

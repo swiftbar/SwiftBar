@@ -101,6 +101,8 @@
 		39B84A21257D63F700FA012E /* String+SFSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SFSymbols.swift"; sourceTree = "<group>"; };
 		39E1549B25699C8F00287D8A /* URLTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTextView.swift; sourceTree = "<group>"; };
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
+		FA3864EB2589AB05000C6C97 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
 		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
@@ -126,6 +128,7 @@
 		3920747125460FD000213DBE = {
 			isa = PBXGroup;
 			children = (
+				FA3864EA2589AAF2000C6C97 /* BuildTools */,
 				3920747C25460FD000213DBE /* SwiftBar */,
 				3920747B25460FD000213DBE /* Products */,
 			);
@@ -233,6 +236,15 @@
 			path = Utility;
 			sourceTree = "<group>";
 		};
+		FA3864EA2589AAF2000C6C97 /* BuildTools */ = {
+			isa = PBXGroup;
+			children = (
+				FA3864EB2589AB05000C6C97 /* Package.swift */,
+				FA3864EF2589AB28000C6C97 /* Empty.swift */,
+			);
+			path = BuildTools;
+			sourceTree = "<group>";
+		};
 		FAD14BE42583249B00CB7BBE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -262,6 +274,7 @@
 				398DAE2F2550A86300747D90 /* Version Number */,
 				398DAE76255373B700747D90 /* Launch At Login */,
 				FAD14BF62583256A00CB7BBE /* Codesign Sparkle */,
+				FA3864F42589AB61000C6C97 /* Swift Format */,
 			);
 			buildRules = (
 			);
@@ -365,6 +378,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/copy-helper-swiftpm.sh\"\n";
+		};
+		FA3864F42589AB61000C6C97 /* Swift Format */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Swift Format";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd BuildTools\nSDKROOT=macosx\n#swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\nswift run -c release swiftformat --swiftversion 5.3.2 \"$SRCROOT\"\n";
 		};
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -637,8 +668,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swiftbar/ShellOut";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.3.0;
+				branch = master;
+				kind = branch;
 			};
 		};
 		3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */ = {
