@@ -94,7 +94,7 @@ struct PluginsView: View {
                         }
                     }
                 }
-            }
+            }.padding(.trailing)
         }
     }
 }
