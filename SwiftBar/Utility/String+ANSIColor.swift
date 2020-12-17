@@ -45,14 +45,13 @@ private var ANSIBackground: [Int: NSColor] = [
 extension String {
     func colorizedWithANSIColor() -> NSMutableAttributedString {
         let out = NSMutableAttributedString()
-
+        var attributes: [NSAttributedString.Key: Any] = [:]
         let parts = replacingOccurrences(of: "\\e", with: "\u{1B}")
             .components(separatedBy: "\u{1B}[")
         out.append(NSAttributedString(string: parts.first ?? ""))
 
         for part in parts[1...] {
             guard part.count > 0 else { continue }
-            var attributes: [NSAttributedString.Key: Any] = [:]
 
             let sequence = part.components(separatedBy: "m")
             var text = sequence.last ?? ""
@@ -63,14 +62,21 @@ extension String {
             }
 
             text = sequence[1...].joined(separator: "m")
-            attributes = attributes.merging(attributesForANSICodes(codes: sequence[0], attributes: attributes)) { _, new in new }
+            let parsedANSICodes = attributesForANSICodes(codes: sequence[0], attributes: attributes)
+
+            if parsedANSICodes.resetAttributes {
+                attributes.removeAll()
+            } else {
+                attributes = attributes.merging(parsedANSICodes.attributes) { _, new in new }
+            }
             out.append(NSAttributedString(string: text, attributes: attributes))
         }
 
         return out
     }
 
-    func attributesForANSICodes(codes: String, attributes: [NSAttributedString.Key: Any]) -> [NSAttributedString.Key: Any] {
+    func attributesForANSICodes(codes: String, attributes: [NSAttributedString.Key: Any]) -> (attributes: [NSAttributedString.Key: Any], resetAttributes: Bool) {
+        var resetAttributes = false
         var out = attributes
         var color256 = false
         var foreground: Bool = false
@@ -86,6 +92,9 @@ extension String {
                     continue
                 }
 
+                if code >= 8, code < 16 {
+                    code -= 8
+                }
                 code += foreground ? 30 : 40
             } else if code == 5 {
                 color256 = true
@@ -95,6 +104,7 @@ extension String {
             if code == 0 {
                 out.removeAll()
                 out[.font] = font
+                resetAttributes = true
                 continue
             }
             if code == 38 {
@@ -122,6 +132,6 @@ extension String {
                 continue
             }
         }
-        return out
+        return (out, resetAttributes)
     }
 }
