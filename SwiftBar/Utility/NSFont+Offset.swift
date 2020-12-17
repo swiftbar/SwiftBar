@@ -1,10 +1,3 @@
-//
-//  NSFont+Offset.swift
-//  SwiftBar
-//
-//  Created by Jonathan Jordan on 12/15/20.
-//
-
 import Cocoa
 
 extension NSFont {
