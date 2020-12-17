@@ -451,6 +451,7 @@ extension MenubarItem {
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
             NSFont.menuBarFont(ofSize: fontSize)
+        let offset = font.menuBarOffset
 
         let style = NSMutableParagraphStyle()
         style.alignment = .left
@@ -468,7 +469,7 @@ extension MenubarItem {
                                           range: NSRange(0 ..< attributedTitle.length))
         }
 
-        attributedTitle.addAttributes([.font: font, .paragraphStyle: style],
+        attributedTitle.addAttributes([.font: font, .paragraphStyle: style, .baselineOffset: offset],
 
                                       range: NSRange(0 ..< attributedTitle.length))
         return (attributedTitle, fullTitle)
