@@ -62,32 +62,27 @@ extension String {
             }
 
             text = sequence[1...].joined(separator: "m")
-            let parsedANSICodes = attributesForANSICodes(codes: sequence[0], attributes: attributes)
+            attributes.attributesForANSICodes(codes: sequence[0])
 
-            if parsedANSICodes.resetAttributes {
-                attributes.removeAll()
-            } else {
-                attributes = attributes.merging(parsedANSICodes.attributes) { _, new in new }
-            }
             out.append(NSAttributedString(string: text, attributes: attributes))
         }
 
         return out
     }
+}
 
-    func attributesForANSICodes(codes: String, attributes: [NSAttributedString.Key: Any]) -> (attributes: [NSAttributedString.Key: Any], resetAttributes: Bool) {
-        var resetAttributes = false
-        var out = attributes
+extension Dictionary where Key == NSAttributedString.Key, Value == Any {
+    mutating func attributesForANSICodes(codes: String) {
         var color256 = false
         var foreground: Bool = false
-        let font = attributes[.font]
+        let font = self[.font]
 
         for codeString in codes.components(separatedBy: ";") {
             guard var code = Int(codeString) else { continue }
             if color256 {
                 color256 = false
                 if let color = NSColor.colorForAnsi256ColorIndex(index: code) {
-                    out[foreground ? .foregroundColor : .backgroundColor] = color
+                    self[foreground ? .foregroundColor : .backgroundColor] = color
                     foreground = false
                     continue
                 }
@@ -102,9 +97,8 @@ extension String {
             }
 
             if code == 0 {
-                out.removeAll()
-                out[.font] = font
-                resetAttributes = true
+                removeAll()
+                self[.font] = font
                 continue
             }
             if code == 38 {
@@ -112,7 +106,7 @@ extension String {
                 continue
             }
             if code == 39 {
-                out.removeValue(forKey: .foregroundColor)
+                removeValue(forKey: .foregroundColor)
                 continue
             }
             if code == 48 {
@@ -120,18 +114,17 @@ extension String {
                 continue
             }
             if code == 49 {
-                out.removeValue(forKey: .backgroundColor)
+                removeValue(forKey: .backgroundColor)
                 continue
             }
             if let color = ANSIForeground[code] {
-                out[.foregroundColor] = color
+                self[.foregroundColor] = color
                 continue
             }
             if let color = ANSIBackground[code] {
-                out[.backgroundColor] = color
+                self[.backgroundColor] = color
                 continue
             }
         }
-        return (out, resetAttributes)
     }
 }
