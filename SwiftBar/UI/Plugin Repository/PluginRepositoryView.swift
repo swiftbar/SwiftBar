@@ -6,7 +6,7 @@ struct PluginRepositoryView: View {
     var body: some View {
         if pluginRepository.repository.isEmpty {
             VStack {
-                Text("Refreshing repository data...")
+                Text(Localizable.PluginRepository.RefreshingDataMessage.localized)
                     .font(.largeTitle)
                     .padding()
 
@@ -30,6 +30,19 @@ struct PluginEntryView: View {
         case Installed
         case Failed
         case Downloading
+
+        var localized: String {
+            switch self {
+            case .Install:
+                return Localizable.PluginRepository.InstallStatusInstall.localized
+            case .Installed:
+                return Localizable.PluginRepository.InstallStatusInstalled.localized
+            case .Failed:
+                return Localizable.PluginRepository.InstallStatusFailed.localized
+            case .Downloading:
+                return Localizable.PluginRepository.InstallStatusDownloading.localized
+            }
+        }
     }
 
     @State var installStatus: InstallStatus = .Install
@@ -79,13 +92,13 @@ struct PluginEntryView: View {
                             Text(pluginEntry.title)
                                 .font(.title)
                                 .foregroundColor(.white)
-                            Text("by \(pluginEntry.author)")
+                            Text(Localizable.PluginRepository.AuthorPreposition.localized + " \(pluginEntry.author)")
                                 .font(.callout)
                                 .foregroundColor(.white)
                         }
                         Spacer()
                         VStack {
-                            Button(installStatus.rawValue) {
+                            Button(installStatus.localized) {
                                 os_log("User requested to install plugin from PLugin repository", log: Log.repository)
                                 if let url = rawPluginSourceURL {
                                     installStatus = .Downloading
@@ -115,7 +128,7 @@ struct PluginEntryView: View {
                     }
 
                     if let dependencies = pluginEntry.dependencies {
-                        Text("Dependencies: \(dependencies)")
+                        Text(Localizable.PluginRepository.Dependencies.localized + ": \(dependencies)")
                             .font(.body)
                             .foregroundColor(.white)
                             .padding(.bottom, 1)
@@ -128,12 +141,12 @@ struct PluginEntryView: View {
                         }
 
                         if let url = pluginSourceURL {
-                            URLTextView(text: "Source", url: url)
+                            URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url)
                                 .foregroundColor(.white)
                         }
 
                         if let url = pluginEntry.aboutURL {
-                            URLTextView(text: "About", url: url)
+                            URLTextView(text: Localizable.PluginRepository.AboutPlugin.localized, url: url)
                                 .foregroundColor(.white)
                         }
                     }
@@ -187,7 +200,7 @@ struct SplitView: View {
     var body: some View {
         HSplitView {
             VStack(alignment: .leading) {
-                Text("Category")
+                Text(Localizable.PluginRepository.Category.localized)
                     .font(.headline)
                     .padding([.top, .leading])
                 ScrollView(showsIndicators: false) {

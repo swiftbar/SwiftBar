@@ -16,31 +16,31 @@ struct GeneralPreferencesView: View {
                 LaunchAtLogin.Toggle()
                     .padding(.bottom)
             }
-            Section(header: Text("Plugin Folder")) {
+            Section(header: Text(Localizable.Preferences.PluginsFolder.localized)) {
                 HStack(alignment: .top) {
-                    Text("Path: ")
-                    Text(preferences.pluginDirectoryPath ?? "None")
+                    Text(Localizable.Preferences.Path.localized + ": ")
+                    Text(preferences.pluginDirectoryPath ?? Localizable.Preferences.PathIsNone.localized)
                         .fixedSize(horizontal: false, vertical: true)
                 }.padding(.top)
                 HStack {
                     Spacer()
-                    Button("Change") {
+                    Button(Localizable.Preferences.ChangePath.localized) {
                         App.changePluginFolder()
                     }
                 }
             }
-            Section(header: Text("Shell")) {
+            Section(header: Text(Localizable.Preferences.Shell.localized)) {
                 EnumPicker(selected: $preferences.terminal, title: "")
             }
             Section {
                 Toggle(isOn: $preferences.swiftBarIconIsHidden) {
-                    Text("Hide SwiftBar Icon")
+                    Text(Localizable.Preferences.HideSwiftBarIcon.localized)
                 }.padding(.top)
             }
             Section {
                 HStack {
                     Spacer()
-                    Button("Check for updates") {
+                    Button(Localizable.Preferences.CheckForUpdates.localized) {
                         App.checkForUpdates()
                     }
                 }
@@ -57,7 +57,7 @@ struct PluginsPreferencesView: View {
     var body: some View {
         VStack {
             if delegate.pluginManager.plugins.isEmpty {
-                Text("Plugins folder is empty")
+                Text(Localizable.Preferences.NoPluginsMessage.localized)
                     .font(.largeTitle)
                     .padding(.bottom, 50)
             } else {
@@ -65,11 +65,11 @@ struct PluginsPreferencesView: View {
                     .padding()
                 HStack {
                     Spacer()
-                    Button("Reset All") {
+                    Button(Localizable.Preferences.EnableAll.localized) {
                         preferences.disabledPlugins.removeAll()
                     }.padding()
                 }
-                Text("Enabled plugins appear in the menu bar.")
+                Text(Localizable.Preferences.PluginsFootnote.localized)
                     .font(.footnote)
             }
         }
@@ -168,12 +168,12 @@ struct PreferencesView: View {
         TabView {
             GeneralPreferencesView()
                 .tabItem {
-                    Text("General")
+                    Text(Localizable.Preferences.General.localized)
                 }
                 .tag(Tabs.general)
             PluginsPreferencesView()
                 .tabItem {
-                    Text("Plugins")
+                    Text(Localizable.Preferences.Plugins.localized)
                 }
                 .tag(Tabs.plugins)
         }

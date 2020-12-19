@@ -10,15 +10,15 @@ class MenubarItem: NSObject {
     }
 
     var barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-    let statusBarMenu = NSMenu(title: "SwiftBar Menu")
+    let statusBarMenu = NSMenu(title: "")
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
-    let lastUpdatedItem = NSMenuItem(title: "Updating...", action: nil, keyEquivalent: "")
-    let aboutItem = NSMenuItem(title: "About", action: #selector(about), keyEquivalent: "")
-    let runInTerminalItem = NSMenuItem(title: "Run in Terminal...", action: #selector(runInTerminal), keyEquivalent: "")
-    let disablePluginItem = NSMenuItem(title: "Disable Plugin", action: #selector(disablePlugin), keyEquivalent: "")
-    let swiftBarItem = NSMenuItem(title: "SwiftBar", action: nil, keyEquivalent: "")
+    let lastUpdatedItem = NSMenuItem(title: Localizable.MenuBar.UpdatingMenu.localized, action: nil, keyEquivalent: "")
+    let aboutItem = NSMenuItem(title: Localizable.MenuBar.AboutSwiftBar.localized, action: #selector(about), keyEquivalent: "")
+    let runInTerminalItem = NSMenuItem(title: Localizable.MenuBar.RunInTerminal.localized, action: #selector(runInTerminal), keyEquivalent: "")
+    let disablePluginItem = NSMenuItem(title: Localizable.MenuBar.DisablePlugin.localized, action: #selector(disablePlugin), keyEquivalent: "")
+    let swiftBarItem = NSMenuItem(title: Localizable.MenuBar.SwiftBar.localized, action: nil, keyEquivalent: "")
     var isDefault = false
     var isOpen = false
     var refreshOnClose = false
@@ -116,7 +116,7 @@ extension MenubarItem: NSMenuDelegate {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
-        lastUpdatedItem.title = "Updated \(relativeDate)"
+        lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
 
         guard NSApp.currentEvent?.modifierFlags.contains(.option) == false else {
             [lastUpdatedItem, runInTerminalItem, disablePluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
@@ -164,19 +164,19 @@ extension MenubarItem: NSMenuDelegate {
 extension MenubarItem {
     func buildStandardMenu() {
         let firstLevel = (plugin == nil)
-        let menu = firstLevel ? statusBarMenu : NSMenu(title: "Preferences")
+        let menu = firstLevel ? statusBarMenu : NSMenu(title: "")
 
-        let refreshAllItem = NSMenuItem(title: "Refresh All", action: #selector(refreshAllPlugins), keyEquivalent: "r")
-        let enableAllItem = NSMenuItem(title: "Enable All", action: #selector(enableAllPlugins), keyEquivalent: "")
-        let disableAllItem = NSMenuItem(title: "Disable All", action: #selector(disableAllPlugins), keyEquivalent: "")
-        let preferencesItem = NSMenuItem(title: "Preferences...", action: #selector(openPreferences), keyEquivalent: ",")
-        let openPluginFolderItem = NSMenuItem(title: "Open Plugin Folder...", action: #selector(openPluginFolder), keyEquivalent: "")
-        let changePluginFolderItem = NSMenuItem(title: "Change Plugin Folder...", action: #selector(changePluginFolder), keyEquivalent: "")
-        let getPluginsItem = NSMenuItem(title: "Get Plugins...", action: #selector(getPlugins), keyEquivalent: "")
-        let sendFeedbackItem = NSMenuItem(title: "Send Feedback...", action: #selector(sendFeedback), keyEquivalent: "")
-        let aboutSwiftbarItem = NSMenuItem(title: "About", action: #selector(aboutSwiftBar), keyEquivalent: "")
-        let quitItem = NSMenuItem(title: "Quit SwiftBar", action: #selector(quit), keyEquivalent: "q")
-        let showErrorItem = NSMenuItem(title: "Show Error", action: #selector(showError), keyEquivalent: "")
+        let refreshAllItem = NSMenuItem(title: Localizable.MenuBar.RefreshAll.localized, action: #selector(refreshAllPlugins), keyEquivalent: "r")
+        let enableAllItem = NSMenuItem(title: Localizable.MenuBar.EnableAll.localized, action: #selector(enableAllPlugins), keyEquivalent: "")
+        let disableAllItem = NSMenuItem(title: Localizable.MenuBar.DisableAll.localized, action: #selector(disableAllPlugins), keyEquivalent: "")
+        let preferencesItem = NSMenuItem(title: Localizable.MenuBar.Preferences.localized, action: #selector(openPreferences), keyEquivalent: ",")
+        let openPluginFolderItem = NSMenuItem(title: Localizable.MenuBar.OpenPluginsFolder.localized, action: #selector(openPluginFolder), keyEquivalent: "")
+        let changePluginFolderItem = NSMenuItem(title: Localizable.MenuBar.ChangePluginsFolder.localized, action: #selector(changePluginFolder), keyEquivalent: "")
+        let getPluginsItem = NSMenuItem(title: Localizable.MenuBar.GetPlugins.localized, action: #selector(getPlugins), keyEquivalent: "")
+        let sendFeedbackItem = NSMenuItem(title: Localizable.MenuBar.SendFeedback.localized, action: #selector(sendFeedback), keyEquivalent: "")
+        let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
+        let quitItem = NSMenuItem(title: Localizable.App.Quit.localized, action: #selector(quit), keyEquivalent: "q")
+        let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showError), keyEquivalent: "")
         [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])

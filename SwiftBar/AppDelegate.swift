@@ -31,10 +31,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
         while Preferences.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
-            alert.messageText = "Set SwiftBar Plugins Location"
-            alert.informativeText = "Select a folder to store the SwiftBar plugins"
-            alert.addButton(withTitle: "Ok")
-            alert.addButton(withTitle: "Quit SwiftBar")
+            alert.messageText = Localizable.App.ChoosePluginFolderMessage.localized
+            alert.informativeText = Localizable.App.ChoosePluginFolderInfo.localized
+            alert.addButton(withTitle: Localizable.App.OKButton.localized)
+            alert.addButton(withTitle: Localizable.App.Quit.localized)
             let modalResult = alert.runModal()
 
             switch modalResult {

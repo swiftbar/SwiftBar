@@ -11,7 +11,7 @@ class App: NSObject {
 
     public static func changePluginFolder() {
         let dialog = NSOpenPanel()
-        dialog.message = "Choose plugin folder"
+        dialog.message = Localizable.App.ChoosePluginFolderTitle.localized
         dialog.showsResizeIndicator = true
         dialog.showsHiddenFiles = false
         dialog.canChooseDirectories = true
@@ -27,9 +27,9 @@ class App: NSObject {
 
         if restrictedPaths.contains(url) {
             let alert = NSAlert()
-            alert.messageText = "Can't use this folder as SwiftBar plugins location"
+            alert.messageText = Localizable.App.FolderNotAllowedMessage.localized
             alert.informativeText = "\(url.path)"
-            alert.addButton(withTitle: "Choose New Location")
+            alert.addButton(withTitle: Localizable.App.FolderNotAllowedAction.localized)
             let modalResult = alert.runModal()
 
             switch modalResult {
@@ -48,10 +48,10 @@ class App: NSObject {
     public static func getPlugins() {
         while Preferences.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
-            alert.messageText = "Set SwiftBar Plugins Location"
-            alert.informativeText = "Select a folder to store the plugins repository"
-            alert.addButton(withTitle: "Ok")
-            alert.addButton(withTitle: "Cancel")
+            alert.messageText = Localizable.App.ChoosePluginFolderMessage.localized
+            alert.informativeText = Localizable.App.ChoosePluginFolderInfo.localized
+            alert.addButton(withTitle: Localizable.App.OKButton.localized)
+            alert.addButton(withTitle: Localizable.App.CancelButton.localized)
             let modalResult = alert.runModal()
 
             switch modalResult {
@@ -68,7 +68,7 @@ class App: NSObject {
             backing: .buffered,
             defer: false
         )
-        myWindow.title = "Plugin Repository"
+        myWindow.title = Localizable.PluginRepository.PluginRepository.localized
         myWindow.center()
 
         preferencesWindowController = NSWindowController(window: myWindow)
@@ -86,7 +86,7 @@ class App: NSObject {
             backing: .buffered,
             defer: false
         )
-        myWindow.title = "Preferences"
+        myWindow.title = Localizable.Preferences.Preferences.localized
         myWindow.center()
 
         preferencesWindowController = NSWindowController(window: myWindow)
