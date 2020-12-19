@@ -28,6 +28,11 @@ private var systemEnvStr: [String: String] {
         systemEnv.map { key, value in (key.rawValue, value) })
 }
 
+func getEnvExportString(env: [String: String]) -> String {
+    let dict = systemEnvStr.merging(env) { current, _ in current }
+    return "export \(dict.map { "\($0.key)='\($0.value)'" }.joined(separator: " "))"
+}
+
 @discardableResult func runScript(to command: String, env: [String: String] = [:]) throws -> String {
     let process = Process()
     let swiftbarEnv = systemEnvStr.merging(env) { current, _ in current }

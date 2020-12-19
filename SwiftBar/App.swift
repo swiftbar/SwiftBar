@@ -114,6 +114,8 @@ class App: NSObject {
             }
             return
         }
+
+        let runInTerminalScript = getEnvExportString(env: env).appending(";").appending(script)
         var appleScript: String = ""
         switch Preferences.shared.terminal {
         case .Terminal:
@@ -122,7 +124,7 @@ class App: NSObject {
                 activate
                 tell application "System Events" to keystroke "t" using {command down}
                 delay 0.2
-                do script "\(script)" in front window
+                do script "\(runInTerminalScript)" in front window
                 activate
             end tell
             """
@@ -142,7 +144,7 @@ class App: NSObject {
                     if onlywindow is false then
                         create tab with default profile
                     end if
-                    tell current session to write text "\(script)"
+                    tell current session to write text "\(runInTerminalScript)"
                 end tell
             end tell
             """
