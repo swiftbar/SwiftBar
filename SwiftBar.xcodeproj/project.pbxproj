@@ -43,6 +43,7 @@
 		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
+		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -105,6 +106,7 @@
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA3864EB2589AB05000C6C97 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
+		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
 		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
@@ -198,6 +200,7 @@
 				39641EAC254E0E3400713DAF /* ImageLoader.swift */,
 				39E1549B25699C8F00287D8A /* URLTextView.swift */,
 				39E1549E2569A2D700287D8A /* ImageVIew.swift */,
+				FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -425,6 +428,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */,
 				3962572B256967DC00341A19 /* PluginRepository.swift in Sources */,
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
 				39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */,

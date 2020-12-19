@@ -101,35 +101,60 @@ struct PluginsView: View {
 
 struct PluginRowView: View {
     @EnvironmentObject var preferences: Preferences
-    var enabled: Bool {
-        !preferences.disabledPlugins.contains(plugin.id)
+    @State private var enabled: Bool = false
+    @State private var showPopover: Bool = false
+
+    var lastUpdated: String? {
+        guard let date = plugin.lastUpdated else { return nil }
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: date, relativeTo: Date()).capitalized
     }
 
     let plugin: Plugin
     var body: some View {
         HStack {
-            Circle()
-                .frame(width: 15, height: 15, alignment: .center)
-                .foregroundColor(enabled ? .green : .red)
-                .padding(.leading)
+            Toggle("", isOn: $enabled.onUpdate(updatePluginStatus))
             VStack(alignment: .leading) {
-                Text(plugin.name)
-                Text(plugin.id)
-                    .font(.footnote)
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
+                HStack(spacing: 1) {
+                    Text(plugin.metadata?.name ?? plugin.name)
+                    if let version = plugin.metadata?.version {
+                        Text("(\(version))")
+                            .font(.footnote)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                HStack(alignment: .bottom, spacing: 1) {
+                    Text(plugin.id)
+                        .onTapGesture {
+                            App.openPluginFolder(path: plugin.file)
+                        }
+                    if let author = plugin.metadata?.author {
+                        Text(", by " + author)
+                    }
+                }
+                .font(.footnote)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
             }
             Spacer()
-            if enabled {
-                Button("Disable") {
-                    preferences.disabledPlugins.append(plugin.id)
-                }
-            } else {
-                Button("Enable") {
-                    preferences.disabledPlugins.removeAll(where: { $0 == plugin.id })
-                }
+            if let md = plugin.metadata {
+                Text("ⓘ")
+                    .onTapGesture {
+                        self.showPopover = true
+                    }.popover(
+                        isPresented: self.$showPopover,
+                        arrowEdge: .bottom
+                    ) { AboutPluginView(md: md) }
             }
+        }.onAppear {
+            enabled = !preferences.disabledPlugins.contains(plugin.id)
         }
+    }
+
+    private func updatePluginStatus() {
+        enabled ? preferences.disabledPlugins.removeAll(where: { $0 == plugin.id }) :
+            preferences.disabledPlugins.append(plugin.id)
     }
 }
 

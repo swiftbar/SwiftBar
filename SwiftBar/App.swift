@@ -5,8 +5,8 @@ import Sparkle
 import SwiftUI
 
 class App: NSObject {
-    public static func openPluginFolder() {
-        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryResolvedPath ?? "")
+    public static func openPluginFolder(path: String? = nil) {
+        NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryResolvedPath ?? "")
     }
 
     public static func changePluginFolder() {
