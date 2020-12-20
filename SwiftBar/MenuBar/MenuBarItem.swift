@@ -9,6 +9,12 @@ class MenubarItem: NSObject {
         plugin?.executablePlugin
     }
 
+    private lazy var workQueue: OperationQueue = {
+        let providerQueue = OperationQueue()
+        providerQueue.qualityOfService = .userInitiated
+        return providerQueue
+    }()
+
     var barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     let statusBarMenu = NSMenu(title: "")
     let titleCylleInterval: Double = 5
@@ -64,7 +70,8 @@ class MenubarItem: NSObject {
         self.plugin = plugin
         statusBarMenu.delegate = self
         if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
-            barItem.button?.window?.registerForDraggedTypes(dropTypes)
+            barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL])
+            barItem.button?.window?.registerForDraggedTypes(NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) })
             barItem.button?.window?.delegate = self
         }
         updateMenu()
@@ -548,19 +555,35 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
             EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
             EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
         ]
-        let pboard = sender.draggingPasteboard
+        var files: [String] = []
+        let supportedClasses = [
+            NSFilePromiseReceiver.self,
+            NSURL.self,
+        ]
 
-        pboard.types?.forEach { type in
-            guard [NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL].contains(type) else { return }
+        let searchOptions: [NSPasteboard.ReadingOptionKey: Any] = [
+            .urlReadingFileURLsOnly: true,
+            .urlReadingContentsConformToTypes: plugin?.metadata?.dropTypes ?? [],
+        ]
 
-            if type == .fileURL, let files = pboard.propertyList(forType: .fileURL) as? String {
-                env["FILE"] = files
-                return
-            }
-            if let item = pboard.string(forType: type) {
-                env[type.rawValue.uppercased()] = item.escaped()
+        let destinationURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Drops")
+        try? FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true, attributes: nil)
+
+        sender.enumerateDraggingItems(options: [], for: nil, classes: supportedClasses, searchOptions: searchOptions) { draggingItem, _, _ in
+            switch draggingItem.item {
+            case let filePromiseReceiver as NSFilePromiseReceiver:
+                filePromiseReceiver.receivePromisedFiles(atDestination: destinationURL, options: [:], operationQueue: self.workQueue) { fileURL, error in
+                    if error == nil {
+                        files.append(fileURL.path)
+                    }
+                }
+            case let fileURL as URL:
+                files.append(fileURL.path)
+            default: break
             }
         }
+
+        env["DROPPED_FILES"] = files.joined(separator: ",")
         guard let scriptPath = plugin?.file else { return false }
         App.runInTerminal(script: scriptPath.escaped(), env: env)
         return true

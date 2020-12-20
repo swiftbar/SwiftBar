@@ -10,7 +10,7 @@ struct PluginMetadata {
     let previewImageURL: URL?
     let dependencies: [String]?
     let aboutURL: URL?
-    let dropTypes: [NSPasteboard.PasteboardType]?
+    let dropTypes: [String]?
     let hideAbout: Bool
     let hideRunInTerminal: Bool
     let hideLastUpdated: Bool
@@ -29,7 +29,7 @@ struct PluginMetadata {
             && dropTypes == nil
     }
 
-    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [NSPasteboard.PasteboardType]? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
+    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
         self.name = name
         self.version = version
         self.author = author
@@ -66,17 +66,7 @@ struct PluginMetadata {
         if let imageStr = getBitBarTagValue(tag: "about") {
             aboutURL = URL(string: imageStr)
         }
-        var dropTypes: [NSPasteboard.PasteboardType] = []
-        getBitBarTagValue(tag: "droptypes")?.components(separatedBy: ",").forEach { type in
-            switch type.lowercased() {
-            case "file":
-                dropTypes.append(NSPasteboard.PasteboardType.fileURL)
-            case "url":
-                dropTypes.append(NSPasteboard.PasteboardType.URL)
-            default:
-                break
-            }
-        }
+
         return PluginMetadata(name: getBitBarTagValue(tag: "title"),
                               version: getBitBarTagValue(tag: "version"),
                               author: getBitBarTagValue(tag: "author"),
@@ -85,7 +75,7 @@ struct PluginMetadata {
                               previewImageURL: imageURL,
                               dependencies: getBitBarTagValue(tag: "dependencies")?.components(separatedBy: ","),
                               aboutURL: aboutURL,
-                              dropTypes: dropTypes,
+                              dropTypes: getBitBarTagValue(tag: "droptypes")?.components(separatedBy: ","),
                               hideAbout: getSwiftBarTagValue(tag: "hideAbout") == "true",
                               hideRunInTerminal: getSwiftBarTagValue(tag: "hideRunInTerminal") == "true",
                               hideLastUpdated: getSwiftBarTagValue(tag: "hideLastUpdated") == "true",
