@@ -62,6 +62,11 @@ class PluginManager {
         plugin.executablePlugin?.disable()
     }
 
+    func enablePlugin(plugin: Plugin) {
+        os_log("Enabling plugin \n%{public}@", log: Log.plugin, plugin.description)
+        plugin.executablePlugin?.enable()
+    }
+
     func disableAllPlugins() {
         os_log("Disabling all plugins.", log: Log.plugin)
         plugins.forEach { $0.executablePlugin?.disable() }

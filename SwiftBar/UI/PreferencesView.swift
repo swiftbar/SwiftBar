@@ -68,7 +68,7 @@ struct PluginsPreferencesView: View {
                 HStack {
                     Spacer()
                     Button(Localizable.Preferences.EnableAll.localized) {
-                        preferences.disabledPlugins.removeAll()
+                        delegate.pluginManager.enableAllPlugins()
                     }.padding()
                 }
                 Text(Localizable.Preferences.PluginsFootnote.localized)
@@ -150,13 +150,13 @@ struct PluginRowView: View {
                     ) { AboutPluginView(md: md) }
             }
         }.onAppear {
-            enabled = !preferences.disabledPlugins.contains(plugin.id)
+            enabled = plugin.enabled
         }
     }
 
     private func updatePluginStatus() {
-        enabled ? preferences.disabledPlugins.removeAll(where: { $0 == plugin.id }) :
-            preferences.disabledPlugins.append(plugin.id)
+        enabled ? delegate.pluginManager.enablePlugin(plugin: plugin) :
+            delegate.pluginManager.disablePlugin(plugin: plugin)
     }
 }
 
