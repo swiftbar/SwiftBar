@@ -1,17 +1,17 @@
 //Menubar strings
 "MB_SWIFT_BAR" = "SwiftBar";
-"MB_UPDATING_MENU" = "Updating...";
+"MB_UPDATING_MENU" = "Updating…";
 "MB_LAST_UPDATED" = "Updated";
 "MB_ABOUT_SWIFT_BAR" = "About";
 "MB_ABOUT_PLUGIN" = "About";
-"MB_RUN_IN_TERMINAL" = "Run In Terminal...";
+"MB_RUN_IN_TERMINAL" = "Run In Terminal…";
 "MB_DISABLE_PLUGIN" = "Disable Plugin";
-"MB_PREFERENCES" = "Preferences...";
+"MB_PREFERENCES" = "Preferences…";
 "MB_REFRESH_ALL" = "Refresh All";
 "MB_ENABLE_ALL" = "Enable All";
 "MB_DISABLE_ALL" = "Disable All";
-"MB_OPEN_PLUGINS_FOLDER" = "Open Plugin Folder...";
-"MB_CHANGE_PLUGINS_FOLDER" = "Change Plugin Folder...";
+"MB_OPEN_PLUGINS_FOLDER" = "Open Plugin Folder…";
+"MB_CHANGE_PLUGINS_FOLDER" = "Change Plugin Folder…";
 "MB_GET_PLUGINS" = "Get Plugins...";
 "MB_SEND_FEEDBACK" = "Send Feedback...";
 "MB_SHOW_ERROR" = "Show Error";
@@ -21,6 +21,7 @@
 "PF_GENERAL" = "General";
 "PF_PLUGINS" = "Plugins";
 "PF_PLUGINS_FOLDER" = "Plugin Folder";
+"PR_LAUNCH_AT_LOGIN" = "Launch at Login";
 "PF_PATH" = "Path";
 "PF_PATH_IS_NONE" = "None";
 "PF_CHANGE_PATH" = "Change";
@@ -34,7 +35,7 @@
 //Plugin Repository strings
 "PR_CATEGORY" = "Category";
 "PR_PLUGIN_REPOSITORY" = "Plugin Repository";
-"PR_REFRESHING_DATA_MESSAGE" = "Refreshing repository data...";
+"PR_REFRESHING_DATA_MESSAGE" = "Refreshing repository data…";
 "PR_DEPENDENCIES" = "Dependencies";
 "PR_PLUGIN_SOURCE" = "Source";
 "PR_ABOUT_PLUGIN" = "About";
@@ -52,5 +53,5 @@
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Set SwiftBar Plugins Location";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Select a folder to store the plugins repository";
 "APP_QUIT" = "Quite SwiftBar";
-"OK" = "Ok";
+"OK" = "OK";
 "CANCEL" = "Cancel";

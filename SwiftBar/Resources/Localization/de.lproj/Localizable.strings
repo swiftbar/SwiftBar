@@ -21,6 +21,7 @@
 "PF_GENERAL" = "General";
 "PF_PLUGINS" = "Plugins";
 "PF_PLUGINS_FOLDER" = "Plugin Folder";
+"PR_LAUNCH_AT_LOGIN" = "Launch at Login";
 "PF_PATH" = "Path";
 "PF_PATH_IS_NONE" = "None";
 "PF_CHANGE_PATH" = "Change";

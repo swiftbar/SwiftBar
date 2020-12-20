@@ -13,8 +13,10 @@ struct GeneralPreferencesView: View {
     var body: some View {
         Form {
             Section {
-                LaunchAtLogin.Toggle()
-                    .padding(.bottom)
+                LaunchAtLogin.Toggle {
+                    Text(Localizable.Preferences.LaunchAtLogin.localized)
+                }
+                .padding(.bottom)
             }
             Section(header: Text(Localizable.Preferences.PluginsFolder.localized)) {
                 HStack(alignment: .top) {
