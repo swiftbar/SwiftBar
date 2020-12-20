@@ -10,6 +10,7 @@ enum PluginState {
     case Loading
     case Success
     case Failed
+    case Disabled
 }
 
 typealias PluginID = String

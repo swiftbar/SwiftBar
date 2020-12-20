@@ -72,6 +72,17 @@ class ExecutablePlugin: Plugin {
         }
     }
 
+    func disable() {
+        lastState = .Disabled
+        disableTimer()
+        prefs.disabledPlugins.append(id)
+    }
+
+    func enable() {
+        prefs.disabledPlugins.removeAll(where: { $0 == id })
+        refresh()
+    }
+
     func enableTimer() {
         guard cancellable.isEmpty else { return }
         updateTimerPublisher

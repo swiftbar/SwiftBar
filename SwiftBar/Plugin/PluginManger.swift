@@ -54,30 +54,22 @@ class PluginManager {
             guard !enabledPlugins.contains(where: { $0.id == pluginID }) else { return }
             menuBarItems.removeValue(forKey: pluginID)
         }
-
-        plugins.forEach { plugin in
-            if enabledPlugins.firstIndex(where: { $0.id == plugin.id }) != nil {
-                plugin.executablePlugin?.enableTimer()
-                return
-            }
-            plugin.executablePlugin?.disableTimer()
-        }
         enabledPlugins.isEmpty ? barItem.show() : barItem.hide()
     }
 
     func disablePlugin(plugin: Plugin) {
         os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
-        prefs.disabledPlugins.append(plugin.id)
+        plugin.executablePlugin?.disable()
     }
 
     func disableAllPlugins() {
         os_log("Disabling all plugins.", log: Log.plugin)
-        prefs.disabledPlugins.append(contentsOf: plugins.map(\.id))
+        plugins.forEach { $0.executablePlugin?.disable() }
     }
 
     func enableAllPlugins() {
         os_log("Enabling all plugins.", log: Log.plugin)
-        prefs.disabledPlugins.removeAll()
+        plugins.forEach { $0.executablePlugin?.enable() }
     }
 
     func getPluginList() -> [URL] {
