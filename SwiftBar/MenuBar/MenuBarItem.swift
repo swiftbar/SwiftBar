@@ -63,6 +63,10 @@ class MenubarItem: NSObject {
         }
         self.plugin = plugin
         statusBarMenu.delegate = self
+        if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
+            barItem.button?.window?.registerForDraggedTypes(dropTypes)
+            barItem.button?.window?.delegate = self
+        }
         updateMenu()
         contentUpdateCancellable = executablePlugin?.contentUpdatePublisher
             .sink { [weak self] _ in
@@ -531,5 +535,34 @@ extension MenubarItem {
         if params.refresh {
             plugin?.refresh()
         }
+    }
+}
+
+extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
+    func draggingEntered(_: NSDraggingInfo) -> NSDragOperation {
+        .copy
+    }
+
+    func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        var env: [String: String] = [
+            EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
+            EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
+        ]
+        let pboard = sender.draggingPasteboard
+
+        pboard.types?.forEach { type in
+            guard [NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL].contains(type) else { return }
+
+            if type == .fileURL, let files = pboard.propertyList(forType: .fileURL) as? String {
+                env["FILE"] = files
+                return
+            }
+            if let item = pboard.string(forType: type) {
+                env[type.rawValue.uppercased()] = item.escaped()
+            }
+        }
+        guard let scriptPath = plugin?.file else { return false }
+        App.runInTerminal(script: scriptPath.escaped(), env: env)
+        return true
     }
 }
