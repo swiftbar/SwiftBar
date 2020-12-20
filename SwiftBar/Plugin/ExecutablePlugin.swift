@@ -66,7 +66,7 @@ class ExecutablePlugin: Plugin {
     func refreshPluginMetadata() {
         let url = URL(fileURLWithPath: file)
         if let script = try? String(contentsOf: url) {
-            metadata = PluginMetadata.parser(script: script)
+            metadata = PluginMetadata.parser(fileURL: url) ?? PluginMetadata.parser(script: script)
         } else {
             metadata = nil
         }

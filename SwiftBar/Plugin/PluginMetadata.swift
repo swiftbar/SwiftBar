@@ -26,6 +26,7 @@ struct PluginMetadata {
             && previewImageURL == nil
             && dependencies == nil
             && aboutURL == nil
+            && dropTypes == nil
     }
 
     init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [NSPasteboard.PasteboardType]? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
@@ -90,6 +91,16 @@ struct PluginMetadata {
                               hideLastUpdated: getSwiftBarTagValue(tag: "hideLastUpdated") == "true",
                               hideDisablePlugin: getSwiftBarTagValue(tag: "hideDisablePlugin") == "true",
                               hideSwiftBar: getSwiftBarTagValue(tag: "hideSwiftBar") == "true")
+    }
+
+    static func parser(fileURL: URL) -> Self? {
+        guard let base64 = try? fileURL.extendedAttribute(forName: "com.ameba.SwiftBar"),
+              let decodedData = Data(base64Encoded: base64),
+              let decodedString = String(data: decodedData, encoding: .utf8)
+        else {
+            return nil
+        }
+        return parser(script: decodedString)
     }
 }
 
