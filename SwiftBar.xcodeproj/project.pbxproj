@@ -79,6 +79,7 @@
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
+		395ADA652592359E003EFA25 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
 		396257252569667000341A19 /* PluginRepositoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepositoryView.swift; sourceTree = "<group>"; };
 		3962572A256967DC00341A19 /* PluginRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepository.swift; sourceTree = "<group>"; };
 		39641EA0254DD32100713DAF /* AboutPluginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutPluginView.swift; sourceTree = "<group>"; };
@@ -334,6 +335,7 @@
 				en,
 				Base,
 				de,
+				nl,
 			);
 			mainGroup = 3920747125460FD000213DBE;
 			packageReferences = (
@@ -488,6 +490,7 @@
 			children = (
 				396E6CAA258E8C5C002C735D /* en */,
 				396E6CAD258E8CA8002C735D /* de */,
+				395ADA652592359E003EFA25 /* nl */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
