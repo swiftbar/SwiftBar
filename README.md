@@ -204,3 +204,13 @@ Option+Click will show all items
 
 If plugin fails to run SwiftBar will show ⚠️ in the menu bar, you can see details by clicking on Error in dropdown menu.
 Use macOS `Console.app` to view SwiftBar logs.
+
+## Acknowledgements
+
+SwiftBar uses these opensource libraries:
+* [HotKey](https://github.com/soffes/HotKey)
+* [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin)
+* [Sparkle](https://github.com/sparkle-project/Sparkle)
+* [ShellOut](https://github.com/JohnSundell/ShellOut)
+
+To freeze and secure dependencies these libraries are forked to SwiftBar organization.
