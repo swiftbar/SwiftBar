@@ -15,7 +15,12 @@ class MenubarItem: NSObject {
         return providerQueue
     }()
 
-    var barItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+    var barItem: NSStatusItem = {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        return item
+    }()
+
     let statusBarMenu = NSMenu(title: "")
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
@@ -61,7 +66,8 @@ class MenubarItem: NSObject {
 
     init(title: String, plugin: Plugin? = nil) {
         super.init()
-        barItem.menu = statusBarMenu
+        barItem.button?.action = #selector(barItemClicked)
+        barItem.button?.target = self
         guard plugin != nil else {
             barItem.button?.title = title
             buildStandardMenu()
@@ -150,6 +156,8 @@ extension MenubarItem: NSMenuDelegate {
             disableTitleCycle()
             updateMenu()
         }
+        // since we're handling click in barItemClicked we need to remove the menu
+        barItem.menu = nil
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
@@ -518,12 +526,29 @@ extension MenubarItem {
         return item
     }
 
-    @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
-        guard let params = sender.representedObject as? MenuLineParameters else { return }
+    @objc func barItemClicked() {
+        guard let eventType = NSApp.currentEvent?.type,
+              eventType == .leftMouseUp || eventType == .rightMouseUp
+        else { return }
 
+        if eventType == .leftMouseUp,
+           performItemAction(params: MenuLineParameters(line: currentTitleLine))
+        {
+            return
+        }
+
+        showMenu()
+    }
+
+    func showMenu() {
+        barItem.menu = statusBarMenu
+        barItem.button?.performClick(nil)
+    }
+
+    @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {
         if let href = params.href, let url = URL(string: href) {
             NSWorkspace.shared.open(url)
-            return
+            return true
         }
 
         if let bash = params.bash {
@@ -536,12 +561,19 @@ extension MenubarItem {
                     self?.plugin?.refresh()
                 }
             }
-            return
+            return true
         }
 
         if params.refresh {
             plugin?.refresh()
+            return true
         }
+        return false
+    }
+
+    @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
+        guard let params = sender.representedObject as? MenuLineParameters else { return }
+        performItemAction(params: params)
     }
 }
 
