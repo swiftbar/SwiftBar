@@ -27,4 +27,19 @@ extension NSImage {
 
         return result
     }
+
+    func tintedImage(color: NSColor?) -> NSImage {
+        guard let color = color else { return self }
+        let newImage = NSImage(size: size)
+        newImage.lockFocus()
+
+        let imageRect = NSRect(origin: .zero, size: size)
+        draw(in: imageRect, from: imageRect, operation: .sourceOver, fraction: color.alphaComponent)
+
+        color.withAlphaComponent(1).set()
+        imageRect.fill(using: .sourceAtop)
+
+        newImage.unlockFocus()
+        return newImage
+    }
 }

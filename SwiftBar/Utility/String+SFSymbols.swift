@@ -1,7 +1,7 @@
 import Cocoa
 
 extension String {
-    func symbolize(font: NSFont) -> NSMutableAttributedString {
+    func symbolize(font: NSFont, color: NSColor?) -> NSMutableAttributedString {
         if #available(OSX 11.0, *) {
             let out = NSMutableAttributedString()
             self.components(separatedBy: .whitespaces).forEach { word in
@@ -10,8 +10,7 @@ extension String {
                     out.append(NSAttributedString(string: word))
                     return
                 }
-                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil) {
-                    image.isTemplate = true
+                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil)?.tintedImage(color: color) {
                     out.append(NSAttributedString(attachment: NSTextAttachment.centeredImage(with: image, and: font)))
                     return
                 }
