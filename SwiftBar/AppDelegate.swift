@@ -1,8 +1,9 @@
 import Cocoa
 import os
 import Sparkle
+import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate {
     var pluginManager: PluginManager!
     let prefs = Preferences.shared
     var softwareUpdater: SPUUpdater!
@@ -64,9 +65,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 if let src = url.queryParameters?["src"], let url = URL(string: src) {
                     pluginManager.importPlugin(from: url)
                 }
+            case "notify":
+                guard let pluginID = url.queryParameters?["plugin"] else { return }
+                pluginManager.showNotification(pluginID: pluginID,
+                                               title: url.queryParameters?["title"],
+                                               subtitle: url.queryParameters?["subtitle"],
+                                               body: url.queryParameters?["body"],
+                                               silent: url.queryParameters?["silent"] == "true")
             default:
                 os_log("Unsupported URL scheme \n %{public}@", log: Log.plugin, type: .error, url.absoluteString)
             }
         }
+    }
+
+    func userNotificationCenter(_: UNUserNotificationCenter, willPresent _: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
+    {
+        completionHandler([.alert, .sound])
     }
 }

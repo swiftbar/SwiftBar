@@ -3,6 +3,7 @@ import Combine
 import Foundation
 import os
 import ShellOut
+import UserNotifications
 
 class PluginManager {
     static let shared = PluginManager()
@@ -180,5 +181,27 @@ class PluginManager {
         DispatchQueue.main.async { [weak self] in
             self?.loadPlugins()
         }
+    }
+}
+
+extension PluginManager {
+    func showNotification(pluginID: PluginID, title: String?, subtitle: String?, body: String?, silent: Bool = false) {
+        guard let plugin = plugins.first(where: { $0.id == pluginID }),
+              plugin.enabled else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = title ?? ""
+        content.subtitle = subtitle ?? ""
+        content.body = body ?? ""
+        content.sound = silent ? nil : .default
+        content.threadIdentifier = pluginID
+
+        let uuidString = UUID().uuidString
+        let request = UNNotificationRequest(identifier: uuidString,
+                                            content: content, trigger: nil)
+
+        let notificationCenter = UNUserNotificationCenter.current()
+        notificationCenter.delegate = delegate
+        notificationCenter.add(request)
     }
 }
