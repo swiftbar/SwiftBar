@@ -41,7 +41,7 @@ class ExecutablePlugin: Plugin {
         id = fileURL.lastPathComponent
         name = nameComponents.first ?? ""
         file = fileURL.path
-        if nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
+        if metadata?.nextDate == nil, nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
             let intervalStr = nameComponents[1]
             if intervalStr.hasSuffix("s") {
                 updateInterval = interval
@@ -83,6 +83,12 @@ class ExecutablePlugin: Plugin {
     }
 
     func enableTimer() {
+        // handle cron scheduled plugins
+        if let nextDate = metadata?.nextDate {
+            let timer = Timer(fireAt: nextDate, interval: 0, target: self, selector: #selector(scheduledContentUpdate), userInfo: nil, repeats: false)
+            RunLoop.main.add(timer, forMode: .common)
+            return
+        }
         guard cancellable.isEmpty else { return }
         updateTimerPublisher
             .autoconnect()
@@ -132,6 +138,11 @@ class ExecutablePlugin: Plugin {
             lastState = .Failed
         }
         return nil
+    }
+
+    @objc func scheduledContentUpdate() {
+        content = invoke(params: [])
+        enableTimer()
     }
 
     func makeScriptExecutable(file: String) {

@@ -46,6 +46,7 @@
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
+		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
 		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -127,6 +128,7 @@
 			files = (
 				3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */,
 				3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */,
+				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
 				3989359E25896E29007CF2E8 /* HotKey in Frameworks */,
 				3989359A25896E10007CF2E8 /* ShellOut in Frameworks */,
 			);
@@ -308,6 +310,7 @@
 				3989359525896DF9007CF2E8 /* LaunchAtLogin */,
 				3989359925896E10007CF2E8 /* ShellOut */,
 				3989359D25896E29007CF2E8 /* HotKey */,
+				FA8518F42598E786008AD21C /* SwifCron */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -343,6 +346,7 @@
 				3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
 				3989359825896E10007CF2E8 /* XCRemoteSwiftPackageReference "ShellOut" */,
 				3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */,
+				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -723,6 +727,14 @@
 				minimumVersion = 0.1.3;
 			};
 		};
+		FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/swiftbar/SwifCron";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -745,6 +757,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */;
 			productName = HotKey;
+		};
+		FA8518F42598E786008AD21C /* SwifCron */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */;
+			productName = SwifCron;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

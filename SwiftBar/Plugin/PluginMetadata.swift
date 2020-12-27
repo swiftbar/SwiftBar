@@ -1,5 +1,6 @@
 import Cocoa
 import Foundation
+import SwifCron
 
 struct PluginMetadata {
     let name: String?
@@ -11,6 +12,7 @@ struct PluginMetadata {
     let dependencies: [String]?
     let aboutURL: URL?
     let dropTypes: [String]?
+    let schedule: String?
     let hideAbout: Bool
     let hideRunInTerminal: Bool
     let hideLastUpdated: Bool
@@ -29,7 +31,14 @@ struct PluginMetadata {
             && dropTypes == nil
     }
 
-    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
+    var nextDate: Date? {
+        guard let schedule = schedule,
+              let cron = try? SwifCron(schedule)
+        else { return nil }
+        return try? cron.next()
+    }
+
+    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, schedule: String? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
         self.name = name
         self.version = version
         self.author = author
@@ -38,6 +47,7 @@ struct PluginMetadata {
         self.previewImageURL = previewImageURL
         self.dependencies = dependencies
         self.dropTypes = dropTypes
+        self.schedule = schedule
         self.aboutURL = aboutURL
         self.hideAbout = hideAbout
         self.hideRunInTerminal = hideRunInTerminal
@@ -76,6 +86,7 @@ struct PluginMetadata {
                               dependencies: getBitBarTagValue(tag: "dependencies")?.components(separatedBy: ","),
                               aboutURL: aboutURL,
                               dropTypes: getBitBarTagValue(tag: "droptypes")?.components(separatedBy: ","),
+                              schedule: getSwiftBarTagValue(tag: "schedule"),
                               hideAbout: getSwiftBarTagValue(tag: "hideAbout") == "true",
                               hideRunInTerminal: getSwiftBarTagValue(tag: "hideRunInTerminal") == "true",
                               hideLastUpdated: getSwiftBarTagValue(tag: "hideLastUpdated") == "true",
