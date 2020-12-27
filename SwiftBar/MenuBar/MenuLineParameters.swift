@@ -135,7 +135,10 @@ struct MenuLineParameters {
     }
 
     var symbolize: Bool {
-        params["symbolize"] != "false"
+        if #available(OSX 11.0, *) {
+            return params["symbolize"] != "false"
+        }
+        return false
     }
 
     var ansi: Bool {
