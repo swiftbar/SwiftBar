@@ -23,7 +23,11 @@ class App: NSObject {
               let url = dialog.url
         else { return }
 
-        let restrictedPaths = FileManager.default.urls(for: .allApplicationsDirectory, in: .allDomainsMask)
+        let restrictedPaths =
+            [FileManager.SearchPathDirectory.allApplicationsDirectory, .documentDirectory, .downloadsDirectory, .desktopDirectory, .libraryDirectory, .developerDirectory, .userDirectory, .musicDirectory, .moviesDirectory,
+             .picturesDirectory]
+            .map { FileManager.default.urls(for: $0, in: .allDomainsMask) }
+            .flatMap { $0 }
 
         if restrictedPaths.contains(url) {
             let alert = NSAlert()

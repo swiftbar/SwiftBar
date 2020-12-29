@@ -103,6 +103,10 @@ class PluginManager {
         }
 
         let pluginFiles = getPluginList()
+        guard pluginFiles.count < 50 else {
+            App.changePluginFolder()
+            return
+        }
         guard !pluginFiles.isEmpty else {
             plugins.removeAll()
             menuBarItems.removeAll()
