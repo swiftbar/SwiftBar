@@ -29,6 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
         // Instance of Plugin Manager must be created after app launch
         pluginManager = PluginManager.shared
+        pluginManager.loadPlugins()
 
         while Preferences.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()

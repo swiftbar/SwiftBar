@@ -64,6 +64,10 @@ class MenubarItem: NSObject {
         Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
     }
 
+    lazy var menuUpdateQueue: OperationQueue = {
+        delegate.pluginManager.menuUpdateQueue
+    }()
+
     init(title: String, plugin: Plugin? = nil) {
         super.init()
         barItem.button?.action = #selector(barItemClicked)
@@ -82,12 +86,13 @@ class MenubarItem: NSObject {
         }
         updateMenu()
         contentUpdateCancellable = executablePlugin?.contentUpdatePublisher
+            .receive(on: menuUpdateQueue)
             .sink { [weak self] _ in
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
                 }
-                DispatchQueue.main.async { [weak self] in
+                DispatchQueue.main.sync { [weak self] in
                     self?.disableTitleCycle()
                     self?.updateMenu()
                 }
@@ -152,9 +157,11 @@ extension MenubarItem: NSMenuDelegate {
 
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
-            refreshOnClose = false
-            disableTitleCycle()
-            updateMenu()
+            menuUpdateQueue.addOperation { [weak self] in
+                self?.refreshOnClose = false
+                self?.disableTitleCycle()
+                self?.updateMenu()
+            }
         }
         // since we're handling click in barItemClicked we need to remove the menu
         barItem.menu = nil

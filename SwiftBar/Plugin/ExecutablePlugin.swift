@@ -27,7 +27,10 @@ class ExecutablePlugin: Plugin {
 
     var error: ShellOutError?
 
-    let queue = OperationQueue()
+    lazy var invokeQueue: OperationQueue = {
+        delegate.pluginManager.pluginInvokeQueue
+    }()
+
     var updateTimerPublisher: Timer.TimerPublisher {
         Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
     }
@@ -92,7 +95,7 @@ class ExecutablePlugin: Plugin {
         guard cancellable.isEmpty else { return }
         updateTimerPublisher
             .autoconnect()
-            .receive(on: queue)
+            .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
                 self?.content = self?.invoke(params: [])
             }).store(in: &cancellable)
@@ -110,9 +113,11 @@ class ExecutablePlugin: Plugin {
         }
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         disableTimer()
-        queue.cancelAllOperations()
+        // TODO: Cancel only operations from this plugin
+//        invokeQueue.cancelAllOperations()
         refreshPluginMetadata()
-        queue.addOperation { [weak self] in
+
+        invokeQueue.addOperation { [weak self] in
             self?.content = self?.invoke(params: [])
             self?.enableTimer()
         }

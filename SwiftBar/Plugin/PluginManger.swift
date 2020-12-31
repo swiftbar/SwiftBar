@@ -32,8 +32,23 @@ class PluginManager {
     var disablePluginCancellable: AnyCancellable?
     var osAppearanceChangeCancellable: AnyCancellable?
 
+    let pluginInvokeQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.qualityOfService = .userInitiated
+        queue.maxConcurrentOperationCount = 5
+        queue.underlyingQueue = DispatchQueue(label: "Plugin Invoke Queue", qos: .userInitiated)
+        return queue
+    }()
+
+    let menuUpdateQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.qualityOfService = .userInteractive
+        queue.maxConcurrentOperationCount = 1
+        queue.underlyingQueue = DispatchQueue(label: "Menu Update Queue", qos: .userInteractive)
+        return queue
+    }()
+
     init() {
-        loadPlugins()
         disablePluginCancellable = prefs.disabledPluginsPublisher
             .receive(on: RunLoop.main)
             .sink(receiveValue: { [weak self] _ in
