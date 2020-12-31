@@ -50,7 +50,7 @@ extension Plugin {
             github: \(metadata?.github ?? "")
             desc: \(metadata?.desc ?? "")
             previewImageURL: \(metadata?.previewImageURL?.absoluteString ?? "")
-            dependencies: \(metadata?.dependencies?.joined(separator: ",") ?? "")
+            dependencies: \(metadata?.dependencies.joined(separator: ",") ?? "")
             aboutURL: \(metadata?.aboutURL?.absoluteString ?? "")
         """
     }

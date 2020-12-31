@@ -49,7 +49,7 @@ struct GeneralPreferencesView: View {
             }
         }
         .padding(20)
-        .frame(width: 350, height: 100)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -57,22 +57,16 @@ struct PluginsPreferencesView: View {
     @EnvironmentObject var preferences: Preferences
 
     var body: some View {
-        VStack {
+        VStack(alignment: .leading) {
             if delegate.pluginManager.plugins.isEmpty {
                 Text(Localizable.Preferences.NoPluginsMessage.localized)
                     .font(.largeTitle)
                     .padding(.bottom, 50)
             } else {
                 PluginsView()
-                    .padding()
-                HStack {
-                    Spacer()
-                    Button(Localizable.Preferences.EnableAll.localized) {
-                        delegate.pluginManager.enableAllPlugins()
-                    }.padding()
-                }
                 Text(Localizable.Preferences.PluginsFootnote.localized)
                     .font(.footnote)
+                    .padding(.leading, 5)
             }
         }
     }
@@ -86,17 +80,17 @@ struct PluginsView: View {
     }
 
     var body: some View {
-        ScrollView(showsIndicators: true) {
-            Form {
-                Section {
-                    ForEach(plugins, id: \.id) { plugin in
-                        VStack {
+        NavigationView {
+            List {
+                ForEach(plugins, id: \.id) { plugin in
+                    NavigationLink(
+                        destination: PluginDetailsView(md: plugin.metadata ?? .empty()),
+                        label: {
                             PluginRowView(plugin: plugin)
-                            Divider()
                         }
-                    }
+                    )
                 }
-            }.padding(.trailing)
+            }
         }
     }
 }
@@ -104,7 +98,12 @@ struct PluginsView: View {
 struct PluginRowView: View {
     @EnvironmentObject var preferences: Preferences
     @State private var enabled: Bool = false
-    @State private var showPopover: Bool = false
+    var label: String {
+        guard let name = plugin.metadata?.name, !name.isEmpty else {
+            return plugin.name
+        }
+        return name
+    }
 
     var lastUpdated: String? {
         guard let date = plugin.lastUpdated else { return nil }
@@ -115,40 +114,11 @@ struct PluginRowView: View {
 
     let plugin: Plugin
     var body: some View {
-        HStack {
+        HStack(alignment: .bottom) {
             Toggle("", isOn: $enabled.onUpdate(updatePluginStatus))
-            VStack(alignment: .leading) {
-                HStack(spacing: 1) {
-                    Text(plugin.metadata?.name ?? plugin.name)
-                    if let version = plugin.metadata?.version {
-                        Text("(\(version))")
-                            .font(.footnote)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                HStack(alignment: .bottom, spacing: 1) {
-                    Text(plugin.id)
-                        .onTapGesture {
-                            App.openPluginFolder(path: plugin.file)
-                        }
-                    if let author = plugin.metadata?.author {
-                        Text(", by " + author)
-                    }
-                }
-                .font(.footnote)
-                .foregroundColor(.secondary)
-                .lineLimit(1)
-            }
+            Text(label)
+
             Spacer()
-            if let md = plugin.metadata {
-                Text("ⓘ")
-                    .onTapGesture {
-                        self.showPopover = true
-                    }.popover(
-                        isPresented: self.$showPopover,
-                        arrowEdge: .bottom
-                    ) { AboutPluginView(md: md) }
-            }
         }.onAppear {
             enabled = plugin.enabled
         }
@@ -166,29 +136,37 @@ struct PreferencesView: View {
         case general, plugins
     }
 
+    @State var tabSelectedIndex: Tabs = .general
     var body: some View {
-        TabView {
+        TabView(selection: $tabSelectedIndex) {
             GeneralPreferencesView()
                 .tabItem {
-                    Text(Localizable.Preferences.General.localized)
+                    if #available(OSX 11.0, *) {
+                        Label(Localizable.Preferences.General.localized, systemImage: "gear")
+                    } else {
+                        Text(Localizable.Preferences.General.localized)
+                    }
                 }
                 .tag(Tabs.general)
             PluginsPreferencesView()
                 .tabItem {
-                    Text(Localizable.Preferences.Plugins.localized)
+                    if #available(OSX 11.0, *) {
+                        Label(Localizable.Preferences.Plugins.localized, systemImage: "list.bullet")
+                    } else {
+                        Text(Localizable.Preferences.Plugins.localized)
+                    }
                 }
                 .tag(Tabs.plugins)
         }
         .padding(20)
-        .frame(width: 500, height: 400)
+        .frame(width: tabSelectedIndex == .plugins ? 700 : 500,
+               height: tabSelectedIndex == .plugins ? 470 : 400)
     }
 }
 
 struct PreferencesView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            PreferencesView()
-                .environmentObject(Preferences.shared)
             PreferencesView()
                 .environmentObject(Preferences.shared)
         }

@@ -86,8 +86,8 @@ class App: NSObject {
 
     public static func openPreferences() {
         let preferencesWindowController: NSWindowController?
-        let myWindow = NSWindow(
-            contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
+        let myWindow = AnimatableWindow(
+            contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 700)),
             styleMask: [.closable, .miniaturizable, .resizable, .titled],
             backing: .buffered,
             defer: false

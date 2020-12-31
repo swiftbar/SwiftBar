@@ -2,43 +2,42 @@ import Cocoa
 import Foundation
 import SwifCron
 
-struct PluginMetadata {
-    let name: String?
-    let version: String?
-    let author: String?
-    let github: String?
-    let desc: String?
-    let previewImageURL: URL?
-    let dependencies: [String]?
-    let aboutURL: URL?
-    let dropTypes: [String]?
-    let schedule: String?
-    let hideAbout: Bool
-    let hideRunInTerminal: Bool
-    let hideLastUpdated: Bool
-    let hideDisablePlugin: Bool
-    let hideSwiftBar: Bool
+class PluginMetadata: ObservableObject {
+    @Published var name: String
+    @Published var version: String
+    @Published var author: String
+    @Published var github: String
+    @Published var desc: String
+    @Published var previewImageURL: URL?
+    @Published var dependencies: [String]
+    @Published var aboutURL: URL?
+    @Published var dropTypes: [String]
+    @Published var schedule: String
+    @Published var hideAbout: Bool
+    @Published var hideRunInTerminal: Bool
+    @Published var hideLastUpdated: Bool
+    @Published var hideDisablePlugin: Bool
+    @Published var hideSwiftBar: Bool
 
     var isEmpty: Bool {
-        name == nil
-            && version == nil
-            && author == nil
-            && github == nil
-            && desc == nil
-            && previewImageURL == nil
-            && dependencies == nil
-            && aboutURL == nil
-            && dropTypes == nil
+        name.isEmpty
+            && version.isEmpty
+            && author.isEmpty
+            && github.isEmpty
+            && desc.isEmpty
+            && previewImageURL != nil
+            && dependencies.isEmpty
+            && aboutURL != nil
+            && dropTypes.isEmpty
     }
 
     var nextDate: Date? {
-        guard let schedule = schedule,
-              let cron = try? SwifCron(schedule)
+        guard let cron = try? SwifCron(schedule)
         else { return nil }
         return try? cron.next()
     }
 
-    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, schedule: String? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
+    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
         self.name = name
         self.version = version
         self.author = author
@@ -56,25 +55,25 @@ struct PluginMetadata {
         self.hideSwiftBar = hideSwiftBar
     }
 
-    static func parser(script: String) -> Self {
-        func getTagValue(tag: String, prefix: String) -> String? {
+    static func parser(script: String) -> PluginMetadata {
+        func getTagValue(tag: String, prefix: String) -> String {
             let openTag = "<\(prefix).\(tag)>"
             let closeTag = "</\(prefix).\(tag)>"
-            return script.slice(from: openTag, to: closeTag)
+            return script.slice(from: openTag, to: closeTag) ?? ""
         }
-        func getBitBarTagValue(tag: String) -> String? {
+        func getBitBarTagValue(tag: String) -> String {
             getTagValue(tag: tag, prefix: "bitbar")
         }
-        func getSwiftBarTagValue(tag: String) -> String? {
+        func getSwiftBarTagValue(tag: String) -> String {
             getTagValue(tag: tag, prefix: "swiftbar")
         }
         var imageURL: URL?
-        if let imageStr = getBitBarTagValue(tag: "image") {
-            imageURL = URL(string: imageStr)
+        if !getBitBarTagValue(tag: "image").isEmpty {
+            imageURL = URL(string: getBitBarTagValue(tag: "image"))
         }
         var aboutURL: URL?
-        if let imageStr = getBitBarTagValue(tag: "about") {
-            aboutURL = URL(string: imageStr)
+        if !getBitBarTagValue(tag: "about").isEmpty {
+            aboutURL = URL(string: getBitBarTagValue(tag: "about"))
         }
 
         return PluginMetadata(name: getBitBarTagValue(tag: "title"),
@@ -83,9 +82,9 @@ struct PluginMetadata {
                               github: getBitBarTagValue(tag: "github"),
                               desc: getBitBarTagValue(tag: "desc"),
                               previewImageURL: imageURL,
-                              dependencies: getBitBarTagValue(tag: "dependencies")?.components(separatedBy: ","),
+                              dependencies: getBitBarTagValue(tag: "dependencies").components(separatedBy: ","),
                               aboutURL: aboutURL,
-                              dropTypes: getBitBarTagValue(tag: "droptypes")?.components(separatedBy: ","),
+                              dropTypes: getBitBarTagValue(tag: "droptypes").components(separatedBy: ","),
                               schedule: getSwiftBarTagValue(tag: "schedule"),
                               hideAbout: getSwiftBarTagValue(tag: "hideAbout") == "true",
                               hideRunInTerminal: getSwiftBarTagValue(tag: "hideRunInTerminal") == "true",
@@ -94,7 +93,7 @@ struct PluginMetadata {
                               hideSwiftBar: getSwiftBarTagValue(tag: "hideSwiftBar") == "true")
     }
 
-    static func parser(fileURL: URL) -> Self? {
+    static func parser(fileURL: URL) -> PluginMetadata? {
         guard let base64 = try? fileURL.extendedAttribute(forName: "com.ameba.SwiftBar"),
               let decodedData = Data(base64Encoded: base64),
               let decodedString = String(data: decodedData, encoding: .utf8)
@@ -102,6 +101,10 @@ struct PluginMetadata {
             return nil
         }
         return parser(script: decodedString)
+    }
+
+    static func empty() -> PluginMetadata {
+        PluginMetadata()
     }
 }
 

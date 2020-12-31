@@ -34,7 +34,7 @@ struct AboutPluginView: View {
                     LabelView(label: "GitHub:", value: github, url: URL(string: "https://github.com/\(github.replacingOccurrences(of: "@", with: ""))"))
                 }
 
-                if let dependencies = md.dependencies?.joined(separator: ",") {
+                if let dependencies = md.dependencies.joined(separator: ",") {
                     LabelView(label: "Dependencies:", value: dependencies)
                 }
 

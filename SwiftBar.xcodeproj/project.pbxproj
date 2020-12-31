@@ -47,6 +47,8 @@
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
+		FA8518F8259AA7B0008AD21C /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518F7259AA7B0008AD21C /* PluginDetailsView.swift */; };
+		FA8518FB259AA7F4008AD21C /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518FA259AA7F4008AD21C /* AnimatableWindow.swift */; };
 		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -114,6 +116,8 @@
 		FA3864EB2589AB05000C6C97 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
 		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
+		FA8518F7259AA7B0008AD21C /* PluginDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailsView.swift; sourceTree = "<group>"; };
+		FA8518FA259AA7F4008AD21C /* AnimatableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatableWindow.swift; sourceTree = "<group>"; };
 		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
@@ -194,9 +198,9 @@
 			children = (
 				39641EA7254E0DFD00713DAF /* Helpers */,
 				3962572D2569949200341A19 /* Plugin Repository */,
-				39641EA0254DD32100713DAF /* AboutPluginView.swift */,
-				39641EA4254E096200713DAF /* PreferencesView.swift */,
-				398DAE7925537DAF00747D90 /* PluginErrorView.swift */,
+				FAD5719D259BF48000623B57 /* Menu bar */,
+				FAD5719E259BF49100623B57 /* Preferences */,
+				FA8518FA259AA7F4008AD21C /* AnimatableWindow.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -282,6 +286,24 @@
 				393375EB25508B320050AC28 /* Credits.rtf */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		FAD5719D259BF48000623B57 /* Menu bar */ = {
+			isa = PBXGroup;
+			children = (
+				39641EA0254DD32100713DAF /* AboutPluginView.swift */,
+				398DAE7925537DAF00747D90 /* PluginErrorView.swift */,
+			);
+			path = "Menu bar";
+			sourceTree = "<group>";
+		};
+		FAD5719E259BF49100623B57 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				FA8518F7259AA7B0008AD21C /* PluginDetailsView.swift */,
+				39641EA4254E096200713DAF /* PreferencesView.swift */,
+			);
+			path = Preferences;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -464,11 +486,13 @@
 				39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */,
 				398DAE7A25537DAF00747D90 /* PluginErrorView.swift in Sources */,
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
+				FA8518FB259AA7F4008AD21C /* AnimatableWindow.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
 				39AF77842547750E001D76E5 /* App.swift in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
+				FA8518F8259AA7B0008AD21C /* PluginDetailsView.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,

@@ -41,6 +41,8 @@ class ExecutablePlugin: Plugin {
         id = fileURL.lastPathComponent
         name = nameComponents.first ?? ""
         file = fileURL.path
+        lastState = .Loading
+        refreshPluginMetadata()
         if metadata?.nextDate == nil, nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
             let intervalStr = nameComponents[1]
             if intervalStr.hasSuffix("s") {
@@ -57,7 +59,6 @@ class ExecutablePlugin: Plugin {
             }
         }
 
-        lastState = .Loading
         makeScriptExecutable(file: file)
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh()
