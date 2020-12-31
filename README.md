@@ -116,13 +116,14 @@ Here is the list of supported parameters:
 | Parameter | Value | Description |
 | ------------- | ------------- |------------- | 
 | `color` | CSS color or HEX, `light_color,dark_color` |Sets item text color, if only one color provided it will be used for both light and dark appearance. |
+| `sfcolor` | CSS color or HEX, `light_color,dark_color` |Sets SF Symbol color, if only one color provided it will be used for both light and dark appearance. |
 | `font` | macOS font name| Sets font name to use in item text|
 | `size` | Number| Sets item text size|
 | `length`| Number| Trims item text to a provided number of characters, the full title will be displayed in a tooltip |
 | `trim` | True | Trims whitespace characters|
 | `ansi` | True | Enables support of ANSI color codes. **Conflicts with** `symbolize` |
 | `emojize` | False | Disables parsing of GitHub style emojis, i.e. `:mushroom:` into 🍄. **Requires** `symbolize=false` |
-| `symbolize` | False | Disables parsing of [SF Symbols](https://developer.apple.com/sf-symbols/) i.e. "SF Symbols Test :sun.max: :cloud.fill: :gamecontroller.fill: :bookmark: :sun.dust:" <img width="218" alt="CleanShot 2020-12-13 at 14 40 33@2x" src="https://user-images.githubusercontent.com/222100/102021898-2d80e780-3d51-11eb-9e99-c71e92d14837.png">|
+| `symbolize` | False | Disables parsing of [SF Symbols](https://developer.apple.com/sf-symbols/) i.e. "SF Symbols Test :sun.max: :cloud.fill: :gamecontroller.fill: :bookmark: :sun.dust:" <img width="218" alt="CleanShot 2020-12-13 at 14 40 33@2x" src="https://user-images.githubusercontent.com/222100/102021898-2d80e780-3d51-11eb-9e99-c71e92d14837.png"> Always `False` on Catalina|
 
 **Visuals**:
 | Parameter | Value | Description |
@@ -173,6 +174,8 @@ SwiftBar adopts metadata format suggested by BitBar:
 # <bitbar.image>http://www.hosted-somewhere/pluginimage</bitbar.image>
 # <bitbar.dependencies>python,ruby,node</bitbar.dependencies>
 # <bitbar.abouturl>http://url-to-about.com/</bitbar.abouturl>
+# <bitbar.droptypes>Supported UTI's for dropping things on menu bar</droptypes.abouturl>
+
 ```
 
 #### Hiding default items
@@ -197,6 +200,7 @@ Option+Click will show all items
 |refreshplugin|`name` plugin [name](#plugin-naming)|Force refresh plugin by name|swiftbar://refreshplugin?name=myplugin|
 |refreshplugin|`index` plugin index in menubar, starting from 0 |Force refresh plugin by its position in menubar|swiftbar://refreshplugin?index=1|
 |addplugin|`src` source url to plugin file|Add plugin to Swiftbar from URL|swiftbar://addplugin?src=https://coolplugin|
+|notify|`plugin` plugin [name](#plugin-naming), notification fields `title`, `subtitile`, `body` and disable sound `silent=true` |Show notification|swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true|
 
 
 
