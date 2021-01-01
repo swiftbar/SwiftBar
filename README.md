@@ -200,7 +200,7 @@ Option+Click will show all items
 |refreshplugin|`name` plugin [name](#plugin-naming)|Force refresh plugin by name|swiftbar://refreshplugin?name=myplugin|
 |refreshplugin|`index` plugin index in menubar, starting from 0 |Force refresh plugin by its position in menubar|swiftbar://refreshplugin?index=1|
 |addplugin|`src` source url to plugin file|Add plugin to Swiftbar from URL|swiftbar://addplugin?src=https://coolplugin|
-|notify|`plugin` plugin [name](#plugin-naming), notification fields `title`, `subtitile`, `body` and disable sound `silent=true` |Show notification|swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true|
+|notify|`plugin` plugin [name](#plugin-naming), notification fields `title`, `subtitle`, `body` and disable sound `silent=true` |Show notification|swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true|
 
 
 
