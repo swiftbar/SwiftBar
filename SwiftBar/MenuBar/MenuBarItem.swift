@@ -534,13 +534,14 @@ extension MenubarItem {
     }
 
     @objc func barItemClicked() {
-        guard let eventType = NSApp.currentEvent?.type,
-              eventType == .leftMouseUp || eventType == .rightMouseUp
-        else { return }
+        guard let eventType = NSApp.currentEvent?.type else { return }
 
-        if eventType == .leftMouseUp,
-           performItemAction(params: MenuLineParameters(line: currentTitleLine))
-        {
+        if eventType == .rightMouseUp {
+            showMenu()
+            return
+        }
+
+        if performItemAction(params: MenuLineParameters(line: currentTitleLine)) {
             return
         }
 
