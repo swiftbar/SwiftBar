@@ -13,6 +13,7 @@ struct PluginMetadata {
     let aboutURL: URL?
     let dropTypes: [String]?
     let schedule: String?
+    let streamable: Bool
     let hideAbout: Bool
     let hideRunInTerminal: Bool
     let hideLastUpdated: Bool
@@ -38,7 +39,7 @@ struct PluginMetadata {
         return try? cron.next()
     }
 
-    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, schedule: String? = nil, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
+    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, schedule: String? = nil, streamable: Bool = false, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
         self.name = name
         self.version = version
         self.author = author
@@ -49,6 +50,7 @@ struct PluginMetadata {
         self.dropTypes = dropTypes
         self.schedule = schedule
         self.aboutURL = aboutURL
+        self.streamable = streamable
         self.hideAbout = hideAbout
         self.hideRunInTerminal = hideRunInTerminal
         self.hideLastUpdated = hideLastUpdated
@@ -87,6 +89,7 @@ struct PluginMetadata {
                               aboutURL: aboutURL,
                               dropTypes: getBitBarTagValue(tag: "droptypes")?.components(separatedBy: ","),
                               schedule: getSwiftBarTagValue(tag: "schedule"),
+                              streamable: getSwiftBarTagValue(tag: "type") == "streamable",
                               hideAbout: getSwiftBarTagValue(tag: "hideAbout") == "true",
                               hideRunInTerminal: getSwiftBarTagValue(tag: "hideRunInTerminal") == "true",
                               hideLastUpdated: getSwiftBarTagValue(tag: "hideLastUpdated") == "true",

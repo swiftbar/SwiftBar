@@ -142,7 +142,11 @@ class PluginManager {
             plugins.removeAll(where: { $0.id == plugin.id })
         }
 
-        plugins.append(contentsOf: newPlugins.map { ExecutablePlugin(fileURL: $0) })
+        plugins.append(contentsOf: newPlugins.map { loadPlugin(fileURL: $0) })
+    }
+
+    func loadPlugin(fileURL: URL) -> Plugin {
+        StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
     }
 
     func refreshAllPlugins() {

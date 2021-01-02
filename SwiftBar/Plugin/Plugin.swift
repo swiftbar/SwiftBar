@@ -64,16 +64,6 @@ extension Plugin {
         !prefs.disabledPlugins.contains(id)
     }
 
-    func disable() {
-        lastState = .Disabled
-        prefs.disabledPlugins.append(id)
-    }
-
-    func enable() {
-        prefs.disabledPlugins.removeAll(where: { $0 == id })
-        refresh()
-    }
-
     func makeScriptExecutable(file: String) {
         guard prefs.makePluginExecutable else { return }
         let script = """
@@ -93,5 +83,17 @@ extension Plugin {
         if let script = try? String(contentsOf: url) {
             metadata = PluginMetadata.parser(script: script)
         }
+    }
+}
+
+final class PluginOperation: Operation {
+    let code: () -> Void
+    init(code: @escaping () -> Void) {
+        self.code = code
+    }
+
+    override func main() {
+        guard !isCancelled else { return }
+        code()
     }
 }

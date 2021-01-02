@@ -84,6 +84,17 @@ class ExecutablePlugin: Plugin {
         cancellable.removeAll()
     }
 
+    func disable() {
+        lastState = .Disabled
+        disableTimer()
+        prefs.disabledPlugins.append(id)
+    }
+
+    func enable() {
+        prefs.disabledPlugins.removeAll(where: { $0 == id })
+        refresh()
+    }
+
     func refresh() {
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)

@@ -89,10 +89,8 @@ class MenubarItem: NSObject {
                     self?.refreshOnClose = true
                     return
                 }
-                DispatchQueue.main.sync { [weak self] in
-                    self?.disableTitleCycle()
-                    self?.updateMenu()
-                }
+                self?.disableTitleCycle()
+                self?.updateMenu()
             }
     }
 
@@ -341,6 +339,12 @@ extension MenubarItem {
     }
 
     func updateMenu() {
+        DispatchQueue.main.async { [weak self] in
+            self?._updateMenu()
+        }
+    }
+
+    func _updateMenu() {
         statusBarMenu.removeAllItems()
         show()
 
