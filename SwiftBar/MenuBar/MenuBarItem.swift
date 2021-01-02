@@ -356,7 +356,7 @@ extension MenubarItem {
         }
 
         guard let scriptOutput = plugin?.content,
-              !scriptOutput.isEmpty || plugin?.lastState == .Loading
+              !scriptOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || plugin?.lastState == .Loading
         else {
             hide()
             return

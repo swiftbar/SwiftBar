@@ -9,6 +9,7 @@ enum PluginType {
 
 enum PluginState {
     case Loading
+    case Streaming
     case Success
     case Failed
     case Disabled

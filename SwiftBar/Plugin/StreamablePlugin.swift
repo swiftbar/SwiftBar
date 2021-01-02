@@ -41,7 +41,7 @@ class StreamablePlugin: Plugin {
         id = fileURL.lastPathComponent
         name = nameComponents.first ?? ""
         file = fileURL.path
-        lastState = .Loading
+        lastState = .Streaming
         makeScriptExecutable(file: file)
         refreshPluginMetadata()
         guard metadata?.streamable == true else { return nil }
