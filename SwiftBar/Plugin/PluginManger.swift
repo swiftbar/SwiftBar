@@ -222,6 +222,7 @@ extension PluginManager {
                                             content: content, trigger: nil)
 
         let notificationCenter = UNUserNotificationCenter.current()
+        notificationCenter.requestAuthorization(options: [.alert, .sound]) { _, _ in }
         notificationCenter.delegate = delegate
         notificationCenter.add(request)
     }
