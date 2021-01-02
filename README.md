@@ -192,6 +192,13 @@ SwiftBar supports these optional metadata flags to hide default menu items:
 Option+Click will show all items:
 ![SwiftBar](https://user-images.githubusercontent.com/222100/101261866-267e2780-3708-11eb-9042-a57ad0ac6c78.gif)
 
+#### Refresh schedule
+
+A special tag can be used as an alternative to refresh interval defined in plugin's [name](#plugin-naming), value adopts Cron syntax:
+
+```
+<swiftbar.schedule>01,16,31,46 * * * *</swiftbar.schedule>
+```
 
 ## URL Scheme
 | Endpoint | Parameter | Description | Example |
@@ -216,5 +223,6 @@ SwiftBar uses these open source libraries:
 * [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin)
 * [Sparkle](https://github.com/sparkle-project/Sparkle)
 * [ShellOut](https://github.com/JohnSundell/ShellOut)
+* [SwiftCron](https://github.com/MihaelIsaev/SwifCron)
 
 To freeze and secure dependencies these libraries are forked to SwiftBar organization.
