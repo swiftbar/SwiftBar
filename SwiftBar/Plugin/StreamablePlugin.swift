@@ -33,10 +33,8 @@ class StreamablePlugin: Plugin {
         delegate.pluginManager.pluginInvokeQueue
     }()
 
-    var cancellable: Set<AnyCancellable> = []
-
+    var procces: Process?
     let prefs = Preferences.shared
-    var operation: PluginOperation?
 
     init?(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
@@ -47,11 +45,9 @@ class StreamablePlugin: Plugin {
         makeScriptExecutable(file: file)
         refreshPluginMetadata()
         guard metadata?.streamable == true else { return nil }
+        guard enabled else { return }
         os_log("Initialized streamable plugin\n%{public}@", log: Log.plugin, description)
-        operation = PluginOperation(code: { [weak self] in self?.invoke() })
-        if let operation = operation {
-            invokeQueue.addOperation(operation)
-        }
+        invokeQueue.addOperation { [weak self] in self?.invoke() }
     }
 
     func refresh() {
@@ -60,21 +56,22 @@ class StreamablePlugin: Plugin {
 
     func disable() {
         lastState = .Disabled
-        operation?.cancel()
+        content = ""
+        procces?.terminate()
         prefs.disabledPlugins.append(id)
     }
 
     func enable() {
         prefs.disabledPlugins.removeAll(where: { $0 == id })
-        if let operation = operation {
-            invokeQueue.addOperation(operation)
-        }
+        invokeQueue.addOperation { [weak self] in self?.invoke() }
     }
 
     @discardableResult func invoke() -> String? {
         lastUpdated = Date()
         do {
-            let out = try runScript(to: "'\(file)'", onOutputUpdate: { [weak self] str in
+            procces = Process()
+            guard let procces = procces else { return nil }
+            let out = try runScript(to: "'\(file)'", process: procces, onOutputUpdate: { [weak self] str in
                 guard let str = str else {
                     self?.content = nil
                     return
@@ -94,7 +91,8 @@ class StreamablePlugin: Plugin {
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             return out
         } catch {
-            guard let error = error as? ShellOutError else { return nil }
+            guard lastState != .Disabled,
+                  let error = error as? ShellOutError else { return nil }
             os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type: .error, file, error.message)
             self.error = error
             lastState = .Failed

@@ -85,15 +85,3 @@ extension Plugin {
         }
     }
 }
-
-final class PluginOperation: Operation {
-    let code: () -> Void
-    init(code: @escaping () -> Void) {
-        self.code = code
-    }
-
-    override func main() {
-        guard !isCancelled else { return }
-        code()
-    }
-}
