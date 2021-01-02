@@ -8,9 +8,6 @@ class ExecutablePlugin: Plugin {
     let type: PluginType = .Executable
     let name: String
     let file: String
-    var enabled: Bool {
-        !prefs.disabledPlugins.contains(id)
-    }
 
     var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
     var metadata: PluginMetadata?
@@ -66,25 +63,6 @@ class ExecutablePlugin: Plugin {
         refresh()
     }
 
-    func refreshPluginMetadata() {
-        let url = URL(fileURLWithPath: file)
-        metadata = PluginMetadata.parser(fileURL: url)
-        if let script = try? String(contentsOf: url) {
-            metadata = PluginMetadata.parser(script: script)
-        }
-    }
-
-    func disable() {
-        lastState = .Disabled
-        disableTimer()
-        prefs.disabledPlugins.append(id)
-    }
-
-    func enable() {
-        prefs.disabledPlugins.removeAll(where: { $0 == id })
-        refresh()
-    }
-
     func enableTimer() {
         // handle cron scheduled plugins
         if let nextDate = metadata?.nextDate {
@@ -97,7 +75,7 @@ class ExecutablePlugin: Plugin {
             .autoconnect()
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
-                self?.content = self?.invoke(params: [])
+                self?.content = self?.invoke()
             }).store(in: &cancellable)
     }
 
@@ -118,14 +96,12 @@ class ExecutablePlugin: Plugin {
         refreshPluginMetadata()
 
         invokeQueue.addOperation { [weak self] in
-            self?.content = self?.invoke(params: [])
+            self?.content = self?.invoke()
             self?.enableTimer()
         }
     }
 
-    func terminate() {}
-
-    func invoke(params _: [String]) -> String? {
+    func invoke() -> String? {
         lastUpdated = Date()
         do {
             let out = try runScript(to: "'\(file)'", env: [
@@ -146,20 +122,7 @@ class ExecutablePlugin: Plugin {
     }
 
     @objc func scheduledContentUpdate() {
-        content = invoke(params: [])
+        content = invoke()
         enableTimer()
-    }
-
-    func makeScriptExecutable(file: String) {
-        guard prefs.makePluginExecutable else { return }
-        let script = """
-        if [[ -x "\(file)" ]]
-        then
-            echo "File "\(file)" is executable"
-        else
-            chmod +x "\(file)"
-        fi
-        """
-        _ = try? shellOut(to: script)
     }
 }

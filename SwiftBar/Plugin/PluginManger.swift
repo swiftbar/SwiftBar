@@ -75,22 +75,22 @@ class PluginManager {
 
     func disablePlugin(plugin: Plugin) {
         os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
-        plugin.executablePlugin?.disable()
+        plugin.disable()
     }
 
     func enablePlugin(plugin: Plugin) {
         os_log("Enabling plugin \n%{public}@", log: Log.plugin, plugin.description)
-        plugin.executablePlugin?.enable()
+        plugin.enable()
     }
 
     func disableAllPlugins() {
         os_log("Disabling all plugins.", log: Log.plugin)
-        plugins.forEach { $0.executablePlugin?.disable() }
+        plugins.forEach { $0.disable() }
     }
 
     func enableAllPlugins() {
         os_log("Enabling all plugins.", log: Log.plugin)
-        plugins.forEach { $0.executablePlugin?.enable() }
+        plugins.forEach { $0.enable() }
     }
 
     func getPluginList() -> [URL] {
