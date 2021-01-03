@@ -35,8 +35,7 @@ class PluginManager {
     let pluginInvokeQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInitiated
-        queue.maxConcurrentOperationCount = 5
-        queue.underlyingQueue = DispatchQueue(label: "Plugin Invoke Queue", qos: .userInitiated)
+        queue.maxConcurrentOperationCount = 20
         return queue
     }()
 
@@ -44,7 +43,6 @@ class PluginManager {
         let queue = OperationQueue()
         queue.qualityOfService = .userInteractive
         queue.maxConcurrentOperationCount = 1
-        queue.underlyingQueue = DispatchQueue(label: "Menu Update Queue", qos: .userInteractive)
         return queue
     }()
 

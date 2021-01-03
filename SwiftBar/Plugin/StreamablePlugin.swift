@@ -22,7 +22,6 @@ class StreamablePlugin: Plugin {
         didSet {
             guard content != oldValue else { return }
             lastUpdated = Date()
-            print(content)
             contentUpdatePublisher.send("")
         }
     }
