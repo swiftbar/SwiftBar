@@ -50,5 +50,7 @@
 	<string>NSApplication</string>
 	<key>SUFeedURL</key>
 	<string>https://swiftbar.app/release.xml</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Allow SwiftBar to access your Calendar. This is required by one of your plugins.</string>
 </dict>
 </plist>
