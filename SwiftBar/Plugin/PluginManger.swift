@@ -99,15 +99,26 @@ class PluginManager {
             return []
         }
 
-        guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles) else { return [] }
-        return enumerator.compactMap { $0 as? URL }
-            .filter { url in
-                var isDir: ObjCBool = false
-                guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
-                    return false
+        func filter(url: URL) -> (files: [URL], dirs: [URL]) {
+            guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+            else { return ([], []) }
+            var dirs: [URL] = []
+            let files = enumerator.compactMap { $0 as? URL }.map { $0.resolvingSymlinksInPath() }
+                .filter { url in
+                    var isDir: ObjCBool = false
+                    guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
+                        dirs.append(url)
+                        return false
+                    }
+                    return true
                 }
-                return true
-            }
+            return (files, dirs)
+        }
+        var (files, dirs) = filter(url: url)
+        if !dirs.isEmpty {
+            files.append(contentsOf: dirs.map { filter(url: $0) }.flatMap(\.files))
+        }
+        return Array(Set(files))
     }
 
     func loadPlugins() {
