@@ -52,6 +52,7 @@
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
+		FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD571A225A0071700623B57 /* StreamablePlugin.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -119,6 +120,7 @@
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
 		FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerConnection.xpc"; sourceTree = "<group>"; };
 		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
+		FAD571A225A0071700623B57 /* StreamablePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamablePlugin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -226,8 +228,9 @@
 			isa = PBXGroup;
 			children = (
 				39AF776E25461277001D76E5 /* Plugin.swift */,
-				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
+				FAD571A225A0071700623B57 /* StreamablePlugin.swift */,
 				39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */,
+				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
 			);
 			path = Plugin;
@@ -477,6 +480,7 @@
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
 				39B84A22257D63F700FA012E /* String+SFSymbols.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
+				FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39B84A1F257D436200FA012E /* RunScript.swift in Sources */,

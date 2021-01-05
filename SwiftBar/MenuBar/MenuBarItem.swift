@@ -5,9 +5,6 @@ import SwiftUI
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
-    var executablePlugin: ExecutablePlugin? {
-        plugin?.executablePlugin
-    }
 
     private lazy var workQueue: OperationQueue = {
         let providerQueue = OperationQueue()
@@ -85,17 +82,15 @@ class MenubarItem: NSObject {
             barItem.button?.window?.delegate = self
         }
         updateMenu()
-        contentUpdateCancellable = executablePlugin?.contentUpdatePublisher
+        contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] _ in
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
                 }
-                DispatchQueue.main.sync { [weak self] in
-                    self?.disableTitleCycle()
-                    self?.updateMenu()
-                }
+                self?.disableTitleCycle()
+                self?.updateMenu()
             }
     }
 
@@ -134,7 +129,7 @@ extension MenubarItem: NSMenuDelegate {
         params.params["color"] = "white"
         barItem.button?.attributedTitle = atributedTitle(with: params).title
 
-        guard let lastUpdated = executablePlugin?.lastUpdated else { return }
+        guard let lastUpdated = plugin?.lastUpdated else { return }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
@@ -344,10 +339,16 @@ extension MenubarItem {
     }
 
     func updateMenu() {
+        DispatchQueue.main.async { [weak self] in
+            self?._updateMenu()
+        }
+    }
+
+    func _updateMenu() {
         statusBarMenu.removeAllItems()
         show()
 
-        if executablePlugin?.lastState == .Failed {
+        if plugin?.lastState == .Failed {
             titleLines = ["⚠️"]
             barItem.button?.title = "⚠️"
             buildStandardMenu()
@@ -355,7 +356,7 @@ extension MenubarItem {
         }
 
         guard let scriptOutput = plugin?.content,
-              !scriptOutput.isEmpty || plugin?.lastState == .Loading
+              !scriptOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || plugin?.lastState == .Loading
         else {
             hide()
             return

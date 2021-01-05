@@ -35,8 +35,7 @@ class PluginManager {
     let pluginInvokeQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInitiated
-        queue.maxConcurrentOperationCount = 5
-        queue.underlyingQueue = DispatchQueue(label: "Plugin Invoke Queue", qos: .userInitiated)
+        queue.maxConcurrentOperationCount = 20
         return queue
     }()
 
@@ -44,7 +43,6 @@ class PluginManager {
         let queue = OperationQueue()
         queue.qualityOfService = .userInteractive
         queue.maxConcurrentOperationCount = 1
-        queue.underlyingQueue = DispatchQueue(label: "Menu Update Queue", qos: .userInteractive)
         return queue
     }()
 
@@ -75,22 +73,22 @@ class PluginManager {
 
     func disablePlugin(plugin: Plugin) {
         os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
-        plugin.executablePlugin?.disable()
+        plugin.disable()
     }
 
     func enablePlugin(plugin: Plugin) {
         os_log("Enabling plugin \n%{public}@", log: Log.plugin, plugin.description)
-        plugin.executablePlugin?.enable()
+        plugin.enable()
     }
 
     func disableAllPlugins() {
         os_log("Disabling all plugins.", log: Log.plugin)
-        plugins.forEach { $0.executablePlugin?.disable() }
+        plugins.forEach { $0.disable() }
     }
 
     func enableAllPlugins() {
         os_log("Enabling all plugins.", log: Log.plugin)
-        plugins.forEach { $0.executablePlugin?.enable() }
+        plugins.forEach { $0.enable() }
     }
 
     func getPluginList() -> [URL] {
@@ -142,7 +140,11 @@ class PluginManager {
             plugins.removeAll(where: { $0.id == plugin.id })
         }
 
-        plugins.append(contentsOf: newPlugins.map { ExecutablePlugin(fileURL: $0) })
+        plugins.append(contentsOf: newPlugins.map { loadPlugin(fileURL: $0) })
+    }
+
+    func loadPlugin(fileURL: URL) -> Plugin {
+        StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
     }
 
     func refreshAllPlugins() {
