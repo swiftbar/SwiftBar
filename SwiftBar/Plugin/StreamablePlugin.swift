@@ -95,6 +95,7 @@ class StreamablePlugin: Plugin {
             os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type: .error, file, error.message)
             self.error = error
             lastState = .Failed
+            content = nil
         }
         return nil
     }
