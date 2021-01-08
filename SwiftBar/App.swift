@@ -103,7 +103,7 @@ class App: NSObject {
     }
 
     public static func showAbout() {
-        NSApp.orderFrontStandardAboutPanel(options: [:])
+        NSApp.orderFrontStandardAboutPanel()
     }
 
     public static func runInTerminal(script: String, runInBackground: Bool = false, env: [String: String] = [:], completionHandler: ((() -> Void)?) = nil) {
