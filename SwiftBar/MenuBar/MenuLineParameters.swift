@@ -150,10 +150,9 @@ struct MenuLineParameters {
     }
 
     var shortcut: KeyCombo? {
-        guard let shortcut = params["shortcut"],
-              let keyStr = shortcut.last?.lowercased(),
-              let key = Key(string: keyStr) else { return nil }
+        guard let shortcut = params["shortcut"] else { return nil }
         var modifiers: NSEvent.ModifierFlags = []
+        var maybeKeyStr: String?
         shortcut.split(separator: "+").map { $0.trimmingCharacters(in: .whitespaces).lowercased() }.forEach { modifier in
             switch modifier {
             case "shift":
@@ -169,9 +168,14 @@ struct MenuLineParameters {
             case "function", "fn":
                 modifiers.insert(.function)
             default:
+                maybeKeyStr = modifier
                 break
             }
+                                                                                                             
         }
+        guard let keyStr = maybeKeyStr,
+              let key = Key(string: keyStr) else { return nil }
+
 
         return KeyCombo(key: key, modifiers: modifiers)
     }
