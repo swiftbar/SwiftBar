@@ -103,15 +103,15 @@ class PluginManager {
             guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
             else { return ([], []) }
             var dirs: [URL] = []
-            let files = enumerator.compactMap { $0 as? URL }.map { $0.resolvingSymlinksInPath() }
-                .filter { url in
-                    var isDir: ObjCBool = false
-                    guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
-                        dirs.append(url)
-                        return false
-                    }
-                    return true
+            let files = enumerator.compactMap { $0 as? URL }.filter { origURL in
+                let url = origURL.resolvingSymlinksInPath()
+                var isDir: ObjCBool = false
+                guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
+                    dirs.append(url)
+                    return false
                 }
+                return true
+            }
             return (files, dirs)
         }
         var (files, dirs) = filter(url: url)
