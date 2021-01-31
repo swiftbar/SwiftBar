@@ -106,6 +106,10 @@ class ExecutablePlugin: Plugin {
 //        invokeQueue.cancelAllOperations()
         refreshPluginMetadata()
 
+        guard invokeQueue.operationCount < invokeQueue.maxConcurrentOperationCount else {
+            os_log("Failed to schedule refresh of script\n%{public}@\n%{public}@. Execution queue is full!", log: Log.plugin, type: .error, file)
+            return
+        }
         invokeQueue.addOperation { [weak self] in
             self?.content = self?.invoke()
             self?.enableTimer()

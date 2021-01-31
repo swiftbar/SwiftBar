@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import os
 import ShellOut
 
 enum PluginType {
@@ -79,6 +80,7 @@ extension Plugin {
     }
 
     func refreshPluginMetadata() {
+        os_log("Refreshing plugin metadata \n%{public}@", log: Log.plugin, file)
         let url = URL(fileURLWithPath: file)
         metadata = PluginMetadata.parser(fileURL: url)
         if let script = try? String(contentsOf: url) {

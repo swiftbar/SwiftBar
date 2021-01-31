@@ -50,6 +50,7 @@ class PluginManager {
         disablePluginCancellable = prefs.disabledPluginsPublisher
             .receive(on: RunLoop.main)
             .sink(receiveValue: { [weak self] _ in
+                os_log("Recieved plugin enable/disable notification", log: Log.plugin)
                 self?.pluginsDidChange()
             })
 
@@ -159,6 +160,7 @@ class PluginManager {
     }
 
     func refreshAllPlugins() {
+        os_log("Refreshing all plugins.", log: Log.plugin)
         plugins.forEach { $0.refresh() }
     }
 
