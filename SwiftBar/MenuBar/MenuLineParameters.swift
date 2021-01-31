@@ -169,13 +169,10 @@ struct MenuLineParameters {
                 modifiers.insert(.function)
             default:
                 maybeKeyStr = modifier
-                break
             }
-                                                                                                             
         }
         guard let keyStr = maybeKeyStr,
               let key = Key(string: keyStr) else { return nil }
-
 
         return KeyCombo(key: key, modifiers: modifiers)
     }
