@@ -478,7 +478,13 @@ extension MenubarItem {
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
             NSFont.menuBarFont(ofSize: fontSize)
-        let offset = font.menuBarOffset
+
+        var offset: CGFloat = 0
+
+        // custom offset for Big Sur, Catalina doesn't need one
+        if #available(OSX 11.0, *) {
+            offset = font.menuBarOffset
+        }
 
         let style = NSMutableParagraphStyle()
         style.alignment = .left
