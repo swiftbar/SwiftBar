@@ -472,22 +472,29 @@ extension MenubarItem {
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
+        let isMultilineTitle = title.contains("\\n")
         title = title.replacingOccurrences(of: "\\n", with: "\n")
 
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
             NSFont.menuBarFont(ofSize: fontSize)
+        let style = NSMutableParagraphStyle()
+        style.alignment = .left
 
         var offset: CGFloat = 0
 
         // custom offset for Big Sur, Catalina doesn't need one
         if #available(OSX 11.0, *) {
             offset = font.menuBarOffset
+            if isMultilineTitle {
+                offset = -5
+            }
         }
 
-        let style = NSMutableParagraphStyle()
-        style.alignment = .left
+        if isMultilineTitle {
+            style.paragraphSpacing = 0.1
+        }
 
         var attributedTitle = NSMutableAttributedString(string: title)
 
