@@ -75,6 +75,7 @@ class MenubarItem: NSObject {
             return
         }
         self.plugin = plugin
+        barItem.autosaveName = plugin?.id
         statusBarMenu.delegate = self
         if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
             barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL])
