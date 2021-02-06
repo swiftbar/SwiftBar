@@ -131,6 +131,7 @@ extension MenubarItem: NSMenuDelegate {
             barItem.button?.attributedTitle = atributedTitle(with: params).title
         }
 
+        hotKeys.forEach { $0.isPaused = true }
         guard let lastUpdated = plugin?.lastUpdated else { return }
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
@@ -151,6 +152,7 @@ extension MenubarItem: NSMenuDelegate {
     func menuDidClose(_: NSMenu) {
         isOpen = false
         setMenuTitle(title: currentTitleLine)
+        hotKeys.forEach { $0.isPaused = false }
 
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
@@ -426,6 +428,8 @@ extension MenubarItem {
             prevItems.insert(item, at: 0)
 
             if let kc = MenuLineParameters(line: line).shortcut {
+                item.keyEquivalentModifierMask = kc.modifiers
+                item.keyEquivalent = kc.key?.description.lowercased() ?? ""
                 addShortcut(shortcut: HotKey(keyCombo: kc)) {
                     guard let action = item.action else { return }
                     NSApp.sendAction(action, to: item.target, from: item)
