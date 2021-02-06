@@ -171,6 +171,10 @@ class App: NSObject {
         UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
     }
 
+    public static var isReduceTransparencyEnabled: Bool {
+        UserDefaults(suiteName: "com.apple.universalaccess.plist")?.bool(forKey: "reduceTransparency") ?? false
+    }
+
     public static func checkForUpdates() {
         delegate.softwareUpdater.checkForUpdates()
     }

@@ -127,7 +127,9 @@ extension MenubarItem: NSMenuDelegate {
 
         var params = MenuLineParameters(line: currentTitleLine)
         params.params["color"] = "white"
-        barItem.button?.attributedTitle = atributedTitle(with: params).title
+        if !App.isReduceTransparencyEnabled {
+            barItem.button?.attributedTitle = atributedTitle(with: params).title
+        }
 
         guard let lastUpdated = plugin?.lastUpdated else { return }
         let formatter = RelativeDateTimeFormatter()
@@ -472,29 +474,16 @@ extension MenubarItem {
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
-        let isMultilineTitle = title.contains("\\n")
         title = title.replacingOccurrences(of: "\\n", with: "\n")
 
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.labelColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
             NSFont.menuBarFont(ofSize: fontSize)
+        let offset = font.menuBarOffset
+
         let style = NSMutableParagraphStyle()
         style.alignment = .left
-
-        var offset: CGFloat = 0
-
-        // custom offset for Big Sur, Catalina doesn't need one
-        if #available(OSX 11.0, *) {
-            offset = font.menuBarOffset
-            if isMultilineTitle {
-                offset = -5
-            }
-        }
-
-        if isMultilineTitle {
-            style.paragraphSpacing = 0.1
-        }
 
         var attributedTitle = NSMutableAttributedString(string: title)
 
