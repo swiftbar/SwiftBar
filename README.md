@@ -36,7 +36,7 @@ SwiftBar is bundled with a Plugin Repository. You can access it at Swiftbar → 
  <img width="600" height="500" alt="A screenshot of SwiftBar’s Plugin Repository" src="Resources/Plugin Repository.jpg">
 </p>
 
-If you want to add\remove plugin or have other questions about repository conttent please refer to this [issue](https://github.com/swiftbar/swiftbar-plugins/issues/1)
+If you want to add\remove plugin or have other questions about repository content please refer to this [issue](https://github.com/swiftbar/swiftbar-plugins/issues/1).
 
 ## Creating Plugins
 
