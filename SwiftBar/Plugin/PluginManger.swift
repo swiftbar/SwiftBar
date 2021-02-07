@@ -14,14 +14,27 @@ class PluginManager {
 
     var directoryObserver: DirectoryObserver?
 
-    var plugins: [Plugin] = [] {
+    private var plugins: [Plugin] = [] {
         didSet {
             pluginsDidChange()
         }
     }
 
+    var sortedPlugins: [Plugin] {
+        plugins
+            .sorted(by: {
+                guard let first = prefs.pluginsOrder.firstIndex(of: $0.id) else {
+                    return false
+                }
+                guard let second = prefs.pluginsOrder.firstIndex(of: $1.id) else {
+                    return true
+                }
+                return first < second
+            })
+    }
+
     var enabledPlugins: [Plugin] {
-        plugins.filter { $0.enabled }
+        sortedPlugins.filter { $0.enabled }
     }
 
     var menuBarItems: [PluginID: MenubarItem] = [:]
@@ -139,9 +152,10 @@ class PluginManager {
             return
         }
 
-        let newPlugins = pluginFiles.filter { file in
+        let newPluginsFiles = pluginFiles.filter { file in
             !plugins.contains(where: { $0.file == file.path })
         }
+        let newPlugins = newPluginsFiles.map { loadPlugin(fileURL: $0) }
 
         let removedPlugins = plugins.filter { plugin in
             !pluginFiles.contains(where: { $0.path == plugin.file })
@@ -150,9 +164,11 @@ class PluginManager {
         removedPlugins.forEach { plugin in
             menuBarItems.removeValue(forKey: plugin.id)
             plugins.removeAll(where: { $0.id == plugin.id })
+            prefs.pluginsOrder.removeAll(where: { $0 == plugin.id })
         }
 
-        plugins.append(contentsOf: newPlugins.map { loadPlugin(fileURL: $0) })
+        prefs.pluginsOrder.append(contentsOf: newPlugins.map(\.id))
+        plugins.append(contentsOf: newPlugins)
     }
 
     func loadPlugin(fileURL: URL) -> Plugin {

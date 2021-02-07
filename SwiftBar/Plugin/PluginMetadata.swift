@@ -29,7 +29,6 @@ struct PluginMetadata {
             && previewImageURL == nil
             && dependencies == nil
             && aboutURL == nil
-            && dropTypes == nil
     }
 
     var nextDate: Date? {

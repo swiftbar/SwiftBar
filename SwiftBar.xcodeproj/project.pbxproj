@@ -45,6 +45,8 @@
 		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
+		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
+		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
 		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -114,6 +116,8 @@
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA3864EB2589AB05000C6C97 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
+		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
+		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
 		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
 		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
@@ -194,10 +198,10 @@
 		39641E9F254DD30C00713DAF /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				FA64C9DD25CF68FC00C4E5C5 /* Preferences */,
 				39641EA7254E0DFD00713DAF /* Helpers */,
 				3962572D2569949200341A19 /* Plugin Repository */,
 				39641EA0254DD32100713DAF /* AboutPluginView.swift */,
-				39641EA4254E096200713DAF /* PreferencesView.swift */,
 				398DAE7925537DAF00747D90 /* PluginErrorView.swift */,
 			);
 			path = UI;
@@ -269,6 +273,16 @@
 				FA3864EF2589AB28000C6C97 /* Empty.swift */,
 			);
 			path = BuildTools;
+			sourceTree = "<group>";
+		};
+		FA64C9DD25CF68FC00C4E5C5 /* Preferences */ = {
+			isa = PBXGroup;
+			children = (
+				39641EA4254E096200713DAF /* PreferencesView.swift */,
+				FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */,
+				FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */,
+			);
+			path = Preferences;
 			sourceTree = "<group>";
 		};
 		FAD14BE42583249B00CB7BBE /* Resources */ = {
@@ -464,6 +478,7 @@
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
 				39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */,
+				FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */,
 				39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */,
 				398DAE7A25537DAF00747D90 /* PluginErrorView.swift in Sources */,
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
@@ -484,6 +499,7 @@
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39B84A1F257D436200FA012E /* RunScript.swift in Sources */,
+				FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */,
 				FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,
 				39641EB0254E163C00713DAF /* Preferences.swift in Sources */,

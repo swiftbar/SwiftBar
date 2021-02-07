@@ -9,6 +9,7 @@ class Preferences: ObservableObject {
         case Terminal
         case HideSwiftBarIcon
         case MakePluginExecutable
+        case PluginsOrder
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -36,6 +37,12 @@ class Preferences: ObservableObject {
         }
     }
 
+    @Published var pluginsOrder: [PluginID] {
+        didSet {
+            Preferences.setValue(value: pluginsOrder, key: .PluginsOrder)
+        }
+    }
+
     @Published var terminal: ShellOptions {
         didSet {
             Preferences.setValue(value: terminal.rawValue, key: .Terminal)
@@ -60,6 +67,7 @@ class Preferences: ObservableObject {
     init() {
         pluginDirectoryPath = Preferences.getValue(key: .PluginDirectory) as? String
         disabledPlugins = Preferences.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
+        pluginsOrder = Preferences.getValue(key: .PluginsOrder) as? [PluginID] ?? []
         terminal = .Terminal
         swiftBarIconIsHidden = Preferences.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         if let savedTerminal = Preferences.getValue(key: .Terminal) as? String,
