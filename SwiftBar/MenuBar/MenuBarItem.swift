@@ -128,7 +128,7 @@ extension MenubarItem: NSMenuDelegate {
 
         var params = MenuLineParameters(line: currentTitleLine)
         params.params["color"] = "white"
-        if !App.isReduceTransparencyEnabled {
+        if !AppShared.isReduceTransparencyEnabled {
             barItem.button?.attributedTitle = atributedTitle(with: params).title
         }
 
@@ -257,20 +257,20 @@ extension MenubarItem {
     }
 
     @objc func openPluginFolder() {
-        App.openPluginFolder()
+        AppShared.openPluginFolder()
     }
 
     // TODO: Preferences should be shown as a standalone window.
     @objc func openPreferences() {
-        App.openPreferences()
+        AppShared.openPreferences()
     }
 
     @objc func changePluginFolder() {
-        App.changePluginFolder()
+        AppShared.changePluginFolder()
     }
 
     @objc func getPlugins() {
-        App.getPlugins()
+        AppShared.getPlugins()
     }
 
     @objc func sendFeedback() {
@@ -292,9 +292,9 @@ extension MenubarItem {
 
     @objc func runInTerminal() {
         guard let scriptPath = plugin?.file else { return }
-        App.runInTerminal(script: scriptPath.escaped(), env: [
+        AppShared.runInTerminal(script: scriptPath.escaped(), env: [
             EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
-            EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
+            EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
         ])
     }
 
@@ -313,7 +313,7 @@ extension MenubarItem {
     }
 
     @objc func aboutSwiftBar() {
-        App.showAbout()
+        AppShared.showAbout()
     }
 }
 
@@ -569,9 +569,9 @@ extension MenubarItem {
 
         if let bash = params.bash {
             let script = "\(bash.escaped()) \(params.bashParams.joined(separator: " "))"
-            App.runInTerminal(script: script, runInBackground: !params.terminal, env: [
+            AppShared.runInTerminal(script: script, runInBackground: !params.terminal, env: [
                 EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
-                EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
+                EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
             ]) { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
@@ -601,7 +601,7 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
     func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         var env: [String: String] = [
             EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
-            EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
+            EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
         ]
         var files: [String] = []
         let supportedClasses = [
@@ -633,7 +633,7 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
 
         env["DROPPED_FILES"] = files.joined(separator: ",")
         guard let scriptPath = plugin?.file else { return false }
-        App.runInTerminal(script: scriptPath.escaped(), env: env)
+        AppShared.runInTerminal(script: scriptPath.escaped(), env: env)
         return true
     }
 }

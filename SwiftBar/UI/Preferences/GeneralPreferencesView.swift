@@ -27,7 +27,7 @@ struct GeneralPreferencesView: View {
                 HStack {
                     Spacer()
                     Button(Localizable.Preferences.ChangePath.localized) {
-                        App.changePluginFolder()
+                        AppShared.changePluginFolder()
                     }
                 }
             }
@@ -43,7 +43,7 @@ struct GeneralPreferencesView: View {
                 HStack {
                     Spacer()
                     Button(Localizable.Preferences.CheckForUpdates.localized) {
-                        App.checkForUpdates()
+                        AppShared.checkForUpdates()
                     }
                 }
             }

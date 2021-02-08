@@ -77,7 +77,7 @@ struct PluginRowView: View {
                 HStack(alignment: .bottom, spacing: 1) {
                     Text(plugin.id)
                         .onTapGesture {
-                            App.openPluginFolder(path: plugin.file)
+                            AppShared.openPluginFolder(path: plugin.file)
                         }
                     if let author = plugin.metadata?.author {
                         Text(", by " + author)

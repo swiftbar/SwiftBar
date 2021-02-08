@@ -72,14 +72,14 @@ struct MenuLineParameters {
         let colors = params["color"]?.components(separatedBy: ",")
         let lightColor = colors?.first
         let darkColor = colors?.last
-        return NSColor.webColor(from: App.isDarkTheme ? darkColor : lightColor)
+        return NSColor.webColor(from: AppShared.isDarkTheme ? darkColor : lightColor)
     }
 
     var sfcolor: NSColor? {
         let colors = params["sfcolor"]?.components(separatedBy: ",")
         let lightColor = colors?.first
         let darkColor = colors?.last
-        return NSColor.webColor(from: App.isDarkTheme ? darkColor : lightColor)
+        return NSColor.webColor(from: AppShared.isDarkTheme ? darkColor : lightColor)
     }
 
     var font: String? {

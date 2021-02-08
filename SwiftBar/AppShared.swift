@@ -4,7 +4,7 @@ import ShellOut
 import Sparkle
 import SwiftUI
 
-class App: NSObject {
+class AppShared: NSObject {
     public static func openPluginFolder(path: String? = nil) {
         NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryResolvedPath ?? "")
     }
@@ -40,7 +40,7 @@ class App: NSObject {
 
             switch modalResult {
             case .alertFirstButtonReturn:
-                App.changePluginFolder()
+                AppShared.changePluginFolder()
             default:
                 break
             }
@@ -62,7 +62,7 @@ class App: NSObject {
 
             switch modalResult {
             case .alertFirstButtonReturn:
-                App.changePluginFolder()
+                AppShared.changePluginFolder()
             default:
                 return
             }

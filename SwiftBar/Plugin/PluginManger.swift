@@ -142,7 +142,7 @@ class PluginManager {
 
         let pluginFiles = getPluginList()
         guard pluginFiles.count < 50 else {
-            App.changePluginFolder()
+            AppShared.changePluginFolder()
             return
         }
         guard !pluginFiles.isEmpty else {

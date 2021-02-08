@@ -34,7 +34,7 @@
 		39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7774254613C9001D76E5 /* PluginManger.swift */; };
 		39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */; };
 		39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777B254618F6001D76E5 /* MenuBarItem.swift */; };
-		39AF77842547750E001D76E5 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF77832547750E001D76E5 /* App.swift */; };
+		39AF77842547750E001D76E5 /* AppShared.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF77832547750E001D76E5 /* AppShared.swift */; };
 		39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */; };
 		39AF7793254B5834001D76E5 /* NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7792254B5834001D76E5 /* NSColor.swift */; };
 		39AF7796254B6203001D76E5 /* NSImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7795254B6203001D76E5 /* NSImage.swift */; };
@@ -103,7 +103,7 @@
 		39AF7774254613C9001D76E5 /* PluginManger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManger.swift; sourceTree = "<group>"; };
 		39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutablePlugin.swift; sourceTree = "<group>"; };
 		39AF777B254618F6001D76E5 /* MenuBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarItem.swift; sourceTree = "<group>"; };
-		39AF77832547750E001D76E5 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
+		39AF77832547750E001D76E5 /* AppShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShared.swift; sourceTree = "<group>"; };
 		39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuLineParameters.swift; sourceTree = "<group>"; };
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
 		39AF7795254B6203001D76E5 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
@@ -165,7 +165,7 @@
 			children = (
 				398B86CD254DBF2F00DEA027 /* main.swift */,
 				3920747D25460FD000213DBE /* AppDelegate.swift */,
-				39AF77832547750E001D76E5 /* App.swift */,
+				39AF77832547750E001D76E5 /* AppShared.swift */,
 				393375E625507ADE0050AC28 /* Log.swift */,
 				39641EAF254E163C00713DAF /* Preferences.swift */,
 				398B86D4254DC01800DEA027 /* MenuBar */,
@@ -484,7 +484,7 @@
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
-				39AF77842547750E001D76E5 /* App.swift in Sources */,
+				39AF77842547750E001D76E5 /* AppShared.swift in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,

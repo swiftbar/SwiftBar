@@ -83,7 +83,7 @@ class StreamablePlugin: Plugin {
             },
             env: [
                 EnvironmentVariables.swiftPluginPath.rawValue: file,
-                EnvironmentVariables.osAppearance.rawValue: App.isDarkTheme ? "Dark" : "Light",
+                EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
             ])
             error = nil
             lastState = .Success

@@ -41,7 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
             switch modalResult {
             case .alertFirstButtonReturn:
-                App.changePluginFolder()
+                AppShared.changePluginFolder()
             default:
                 NSApplication.shared.terminate(self)
             }
