@@ -67,7 +67,14 @@ class AppShared: NSObject {
                 return
             }
         }
-        let preferencesWindowController: NSWindowController?
+
+        defer {
+            delegate.repositoryWindowController?.showWindow(self)
+            delegate.repositoryWindowController?.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        guard delegate.repositoryWindowController == nil else { return }
+
         let myWindow = NSWindow(
             contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
             styleMask: [.closable, .miniaturizable, .resizable, .titled],
@@ -77,16 +84,18 @@ class AppShared: NSObject {
         myWindow.title = Localizable.PluginRepository.PluginRepository.localized
         myWindow.center()
 
-        preferencesWindowController = NSWindowController(window: myWindow)
-        preferencesWindowController?.contentViewController = NSHostingController(rootView: PluginRepositoryView())
-        preferencesWindowController?.showWindow(self)
-        preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        delegate.repositoryWindowController = NSWindowController(window: myWindow)
+        delegate.repositoryWindowController?.contentViewController = NSHostingController(rootView: PluginRepositoryView())
     }
 
     public static func openPreferences() {
-        let preferencesWindowController: NSWindowController?
-        let myWindow = NSWindow(
+        defer {
+            delegate.preferencesWindowController?.showWindow(self)
+            delegate.preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+        }
+        guard delegate.preferencesWindowController == nil else { return }
+        let myWindow = AnimatableWindow(
             contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
             styleMask: [.closable, .miniaturizable, .resizable, .titled],
             backing: .buffered,
@@ -95,11 +104,8 @@ class AppShared: NSObject {
         myWindow.title = Localizable.Preferences.Preferences.localized
         myWindow.center()
 
-        preferencesWindowController = NSWindowController(window: myWindow)
-        preferencesWindowController?.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
-        preferencesWindowController?.showWindow(self)
-        preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        delegate.preferencesWindowController = NSWindowController(window: myWindow)
+        delegate.preferencesWindowController?.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
     }
 
     public static func showAbout() {

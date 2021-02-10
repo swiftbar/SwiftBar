@@ -4,6 +4,8 @@ import Sparkle
 import UserNotifications
 
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate {
+    var preferencesWindowController: NSWindowController?
+    var repositoryWindowController: NSWindowController?
     var pluginManager: PluginManager!
     let prefs = Preferences.shared
     var softwareUpdater: SPUUpdater!
