@@ -6,8 +6,10 @@ struct PreferencesView: View {
         case general, plugins
     }
 
+    @State var tabSelectedIndex: Tabs = .general
+
     var body: some View {
-        TabView {
+        TabView(selection: $tabSelectedIndex) {
             GeneralPreferencesView()
                 .tabItem {
                     Text(Localizable.Preferences.General.localized)
@@ -20,7 +22,8 @@ struct PreferencesView: View {
                 .tag(Tabs.plugins)
         }
         .padding(20)
-        .frame(width: 500, height: 400)
+        .frame(width: tabSelectedIndex == .plugins ? 700 : 500,
+               height: tabSelectedIndex == .plugins ? 470 : 400)
     }
 }
 

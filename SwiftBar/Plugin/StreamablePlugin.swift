@@ -43,7 +43,7 @@ class StreamablePlugin: Plugin {
         lastState = .Streaming
         makeScriptExecutable(file: file)
         refreshPluginMetadata()
-        guard metadata?.streamable == true else { return nil }
+        guard metadata?.type == .Streamable else { return nil }
         guard enabled else { return }
         os_log("Initialized streamable plugin\n%{public}@", log: Log.plugin, description)
         invokeQueue.addOperation { [weak self] in self?.invoke() }

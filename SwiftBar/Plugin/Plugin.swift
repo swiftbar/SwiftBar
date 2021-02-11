@@ -3,7 +3,7 @@ import Foundation
 import os
 import ShellOut
 
-enum PluginType {
+enum PluginType: String {
     case Executable
     case Streamable
 }
@@ -53,7 +53,7 @@ extension Plugin {
             github: \(metadata?.github ?? "")
             desc: \(metadata?.desc ?? "")
             previewImageURL: \(metadata?.previewImageURL?.absoluteString ?? "")
-            dependencies: \(metadata?.dependencies?.joined(separator: ",") ?? "")
+            dependencies: \(metadata?.dependencies.joined(separator: ",") ?? "")
             aboutURL: \(metadata?.aboutURL?.absoluteString ?? "")
         """
     }
@@ -82,9 +82,11 @@ extension Plugin {
     func refreshPluginMetadata() {
         os_log("Refreshing plugin metadata \n%{public}@", log: Log.plugin, file)
         let url = URL(fileURLWithPath: file)
-        metadata = PluginMetadata.parser(fileURL: url)
         if let script = try? String(contentsOf: url) {
             metadata = PluginMetadata.parser(script: script)
+        }
+        if let md = PluginMetadata.parser(fileURL: url) {
+            metadata = md
         }
     }
 }

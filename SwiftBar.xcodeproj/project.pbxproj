@@ -54,6 +54,8 @@
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
+		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
+		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
 		FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD571A225A0071700623B57 /* StreamablePlugin.swift */; };
 /* End PBXBuildFile section */
 
@@ -124,6 +126,8 @@
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
 		FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerConnection.xpc"; sourceTree = "<group>"; };
 		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
+		FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailsView.swift; sourceTree = "<group>"; };
+		FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatableWindow.swift; sourceTree = "<group>"; };
 		FAD571A225A0071700623B57 /* StreamablePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamablePlugin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -215,6 +219,7 @@
 				39E1549B25699C8F00287D8A /* URLTextView.swift */,
 				39E1549E2569A2D700287D8A /* ImageVIew.swift */,
 				FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */,
+				FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -281,6 +286,7 @@
 				39641EA4254E096200713DAF /* PreferencesView.swift */,
 				FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */,
 				FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */,
+				FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -474,6 +480,7 @@
 				39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */,
 				39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */,
 				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
+				FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
@@ -489,6 +496,7 @@
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
+				FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
 				398B86CE254DBF2F00DEA027 /* main.swift in Sources */,
 				ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */,

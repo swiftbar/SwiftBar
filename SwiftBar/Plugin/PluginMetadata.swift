@@ -2,43 +2,76 @@ import Cocoa
 import Foundation
 import SwifCron
 
-struct PluginMetadata {
-    let name: String?
-    let version: String?
-    let author: String?
-    let github: String?
-    let desc: String?
-    let previewImageURL: URL?
-    let dependencies: [String]?
-    let aboutURL: URL?
-    let dropTypes: [String]?
-    let schedule: String?
-    let streamable: Bool
-    let hideAbout: Bool
-    let hideRunInTerminal: Bool
-    let hideLastUpdated: Bool
-    let hideDisablePlugin: Bool
-    let hideSwiftBar: Bool
+enum PluginMetadataType: String {
+    case bitbar
+    case swiftbar
+}
+
+enum PluginMetadataOption: String, CaseIterable {
+    case title
+    case version
+    case author
+    case github
+    case desc
+    case about
+    case image
+    case dependencies
+    case droptypes
+    case schedule
+    case type
+    case hideAbout
+    case hideRunInTerminal
+    case hideLastUpdated
+    case hideDisablePlugin
+    case hideSwiftBar
+    case environment
+
+    var optionType: PluginMetadataType {
+        switch self {
+        case .title, .version, .author, .github, .desc, .about, .image, .dependencies:
+            return .bitbar
+        case .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar:
+            return .swiftbar
+        }
+    }
+}
+
+class PluginMetadata: ObservableObject {
+    @Published var name: String
+    @Published var version: String
+    @Published var author: String
+    @Published var github: String
+    @Published var desc: String
+    @Published var previewImageURL: URL?
+    @Published var dependencies: [String]
+    @Published var aboutURL: URL?
+    @Published var dropTypes: [String]
+    @Published var schedule: String
+    @Published var type: PluginType
+    @Published var hideAbout: Bool
+    @Published var hideRunInTerminal: Bool
+    @Published var hideLastUpdated: Bool
+    @Published var hideDisablePlugin: Bool
+    @Published var hideSwiftBar: Bool
+    @Published var environment: [String: String]
 
     var isEmpty: Bool {
-        name == nil
-            && version == nil
-            && author == nil
-            && github == nil
-            && desc == nil
-            && previewImageURL == nil
-            && dependencies == nil
-            && aboutURL == nil
+        name.isEmpty
+            && version.isEmpty
+            && author.isEmpty
+            && github.isEmpty
+            && desc.isEmpty
+            && previewImageURL != nil
+            && dependencies.isEmpty
+            && aboutURL != nil
     }
 
     var nextDate: Date? {
-        guard let schedule = schedule,
-              let cron = try? SwifCron(schedule)
-        else { return nil }
+        guard let cron = try? SwifCron(schedule) else { return nil }
         return try? cron.next()
     }
 
-    init(name: String? = nil, version: String? = nil, author: String? = nil, github: String? = nil, desc: String? = nil, previewImageURL: URL? = nil, dependencies: [String]? = nil, aboutURL: URL? = nil, dropTypes: [String]? = nil, schedule: String? = nil, streamable: Bool = false, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false) {
+    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:]) {
         self.name = name
         self.version = version
         self.author = author
@@ -49,54 +82,60 @@ struct PluginMetadata {
         self.dropTypes = dropTypes
         self.schedule = schedule
         self.aboutURL = aboutURL
-        self.streamable = streamable
+        self.type = type
         self.hideAbout = hideAbout
         self.hideRunInTerminal = hideRunInTerminal
         self.hideLastUpdated = hideLastUpdated
         self.hideDisablePlugin = hideDisablePlugin
         self.hideSwiftBar = hideSwiftBar
+        self.environment = environment
     }
 
-    static func parser(script: String) -> Self {
-        func getTagValue(tag: String, prefix: String) -> String? {
+    static func parser(script: String) -> PluginMetadata {
+        func getTagValue(tag: PluginMetadataOption) -> String {
+            let prefix = tag.optionType.rawValue
             let openTag = "<\(prefix).\(tag)>"
             let closeTag = "</\(prefix).\(tag)>"
-            return script.slice(from: openTag, to: closeTag)
+            return script.slice(from: openTag, to: closeTag) ?? ""
         }
-        func getBitBarTagValue(tag: String) -> String? {
-            getTagValue(tag: tag, prefix: "bitbar")
-        }
-        func getSwiftBarTagValue(tag: String) -> String? {
-            getTagValue(tag: tag, prefix: "swiftbar")
-        }
+
         var imageURL: URL?
-        if let imageStr = getBitBarTagValue(tag: "image") {
-            imageURL = URL(string: imageStr)
+        if !getTagValue(tag: .image).isEmpty {
+            imageURL = URL(string: getTagValue(tag: .image))
         }
         var aboutURL: URL?
-        if let imageStr = getBitBarTagValue(tag: "about") {
-            aboutURL = URL(string: imageStr)
+        if !getTagValue(tag: .about).isEmpty {
+            aboutURL = URL(string: getTagValue(tag: .about))
+        }
+        var environment: [String: String] = [:]
+        if !getTagValue(tag: .environment).isEmpty {
+            getTagValue(tag: .environment).split(separator: ",").forEach { str in
+                let pair = str.split(separator: ":").map { $0.trimmingCharacters(in: .whitespaces) }
+                guard pair.count == 2 else { return }
+                environment[pair[0]] = pair[1]
+            }
         }
 
-        return PluginMetadata(name: getBitBarTagValue(tag: "title"),
-                              version: getBitBarTagValue(tag: "version"),
-                              author: getBitBarTagValue(tag: "author"),
-                              github: getBitBarTagValue(tag: "github"),
-                              desc: getBitBarTagValue(tag: "desc"),
+        return PluginMetadata(name: getTagValue(tag: .title),
+                              version: getTagValue(tag: .version),
+                              author: getTagValue(tag: .author),
+                              github: getTagValue(tag: .github),
+                              desc: getTagValue(tag: .desc),
                               previewImageURL: imageURL,
-                              dependencies: getBitBarTagValue(tag: "dependencies")?.components(separatedBy: ","),
+                              dependencies: getTagValue(tag: .dependencies).components(separatedBy: ","),
                               aboutURL: aboutURL,
-                              dropTypes: getBitBarTagValue(tag: "droptypes")?.components(separatedBy: ","),
-                              schedule: getSwiftBarTagValue(tag: "schedule"),
-                              streamable: getSwiftBarTagValue(tag: "type") == "streamable",
-                              hideAbout: getSwiftBarTagValue(tag: "hideAbout") == "true",
-                              hideRunInTerminal: getSwiftBarTagValue(tag: "hideRunInTerminal") == "true",
-                              hideLastUpdated: getSwiftBarTagValue(tag: "hideLastUpdated") == "true",
-                              hideDisablePlugin: getSwiftBarTagValue(tag: "hideDisablePlugin") == "true",
-                              hideSwiftBar: getSwiftBarTagValue(tag: "hideSwiftBar") == "true")
+                              dropTypes: getTagValue(tag: .droptypes).components(separatedBy: ","),
+                              schedule: getTagValue(tag: .schedule),
+                              type: PluginType(rawValue: getTagValue(tag: .type).capitalized) ?? .Executable,
+                              hideAbout: getTagValue(tag: .hideAbout) == "true",
+                              hideRunInTerminal: getTagValue(tag: .hideRunInTerminal) == "true",
+                              hideLastUpdated: getTagValue(tag: .hideLastUpdated) == "true",
+                              hideDisablePlugin: getTagValue(tag: .hideDisablePlugin) == "true",
+                              hideSwiftBar: getTagValue(tag: .hideSwiftBar) == "true",
+                              environment: environment)
     }
 
-    static func parser(fileURL: URL) -> Self? {
+    static func parser(fileURL: URL) -> PluginMetadata? {
         guard let base64 = try? fileURL.extendedAttribute(forName: "com.ameba.SwiftBar"),
               let decodedData = Data(base64Encoded: base64),
               let decodedString = String(data: decodedData, encoding: .utf8)
@@ -104,6 +143,67 @@ struct PluginMetadata {
             return nil
         }
         return parser(script: decodedString)
+    }
+
+    static func writeMetadata(metadata: PluginMetadata, fileURL: URL) {
+        let metadataString = metadata.generetaMetadataString()
+        if let encodedString = metadataString.data(using: .utf8)?.base64EncodedData() {
+            try? fileURL.setExtendedAttribute(data: encodedString, forName: "com.ameba.SwiftBar")
+            return
+        }
+    }
+
+    static func empty() -> PluginMetadata {
+        PluginMetadata()
+    }
+
+    func generetaMetadataString() -> String {
+        var result = ""
+        PluginMetadataOption.allCases.forEach { option in
+            var value = ""
+            switch option {
+            case .title:
+                value = name
+            case .version:
+                value = version
+            case .author:
+                value = author
+            case .github:
+                value = github
+            case .desc:
+                value = desc
+            case .about:
+                value = aboutURL?.absoluteString ?? ""
+            case .image:
+                value = previewImageURL?.absoluteString ?? ""
+            case .dependencies:
+                value = dependencies.joined(separator: ",")
+            case .droptypes:
+                value = dropTypes.joined(separator: ",")
+            case .schedule:
+                value = schedule
+            case .type:
+                value = type == .Streamable ? type.rawValue : ""
+            case .hideAbout:
+                value = hideAbout ? "true" : ""
+            case .hideRunInTerminal:
+                value = hideRunInTerminal ? "true" : ""
+            case .hideLastUpdated:
+                value = hideLastUpdated ? "true" : ""
+            case .hideDisablePlugin:
+                value = hideDisablePlugin ? "true" : ""
+            case .hideSwiftBar:
+                value = hideSwiftBar ? "true" : ""
+            case .environment:
+                value = environment.map { "\($0.key):\($0.value)" }.joined(separator: ",")
+            }
+            guard !value.isEmpty else { return }
+            let tag = option
+            let prefix = tag.optionType.rawValue
+            result.append("\n<\(prefix).\(tag)>\(value)</\(prefix).\(tag)>")
+        }
+
+        return result.trimmingCharacters(in: .whitespaces)
     }
 }
 

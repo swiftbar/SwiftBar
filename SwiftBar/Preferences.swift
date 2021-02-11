@@ -10,6 +10,7 @@ class Preferences: ObservableObject {
         case HideSwiftBarIcon
         case MakePluginExecutable
         case PluginsOrder
+        case PluginDeveloperMode
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -62,6 +63,10 @@ class Preferences: ObservableObject {
             return true
         }
         return out
+    }
+
+    var pluginDeveloperMode: Bool {
+        Preferences.getValue(key: .PluginDeveloperMode) as? Bool ?? false
     }
 
     init() {

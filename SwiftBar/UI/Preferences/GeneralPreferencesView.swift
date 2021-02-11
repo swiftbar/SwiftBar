@@ -49,6 +49,6 @@ struct GeneralPreferencesView: View {
             }
         }
         .padding(20)
-        .frame(width: 350, height: 100)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
