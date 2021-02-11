@@ -1,6 +1,5 @@
 import Cocoa
 import os
-import ShellOut
 import Sparkle
 import SwiftUI
 

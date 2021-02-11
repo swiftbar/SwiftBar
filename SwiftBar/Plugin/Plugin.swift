@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 import os
-import ShellOut
 
 enum PluginType: String {
     case Executable
@@ -76,7 +75,7 @@ extension Plugin {
             chmod +x "\(file)"
         fi
         """
-        _ = try? shellOut(to: script)
+        _ = try? runScript(to: script)
     }
 
     func refreshPluginMetadata() {

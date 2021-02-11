@@ -2,7 +2,6 @@ import Cocoa
 import Combine
 import Foundation
 import os
-import ShellOut
 import UserNotifications
 
 class PluginManager {

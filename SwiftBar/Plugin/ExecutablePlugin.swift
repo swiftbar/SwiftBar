@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 import os
-import ShellOut
 
 class ExecutablePlugin: Plugin {
     var id: PluginID
@@ -122,10 +121,11 @@ class ExecutablePlugin: Plugin {
     func invoke() -> String? {
         lastUpdated = Date()
         do {
-            let out = try runScript(to: "'\(file)'", env: [
+            let out = try runScript(to: file, env: [
                 EnvironmentVariables.swiftPluginPath.rawValue: file,
                 EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-            ])
+            ],
+            runInBash: metadata?.shouldRunInBash ?? true)
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)

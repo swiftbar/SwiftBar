@@ -1,7 +1,6 @@
 import Combine
 import Foundation
 import os
-import ShellOut
 
 private let streamSeparator = "~~~"
 
@@ -70,21 +69,23 @@ class StreamablePlugin: Plugin {
         do {
             procces = Process()
             guard let procces = procces else { return nil }
-            let out = try runScript(to: "'\(file)'", process: procces, onOutputUpdate: { [weak self] str in
-                guard let str = str else {
-                    self?.content = nil
-                    return
-                }
-                if str.contains(streamSeparator) {
-                    self?.content = str.components(separatedBy: streamSeparator).last
-                    return
-                }
-                self?.content?.append(str)
-            },
-            env: [
-                EnvironmentVariables.swiftPluginPath.rawValue: file,
-                EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-            ])
+            let out = try runScript(to: file, process: procces,
+                                    env: [
+                                        EnvironmentVariables.swiftPluginPath.rawValue: file,
+                                        EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
+                                    ],
+                                    runInBash: metadata?.shouldRunInBash ?? true,
+                                    onOutputUpdate: { [weak self] str in
+                                        guard let str = str else {
+                                            self?.content = nil
+                                            return
+                                        }
+                                        if str.contains(streamSeparator) {
+                                            self?.content = str.components(separatedBy: streamSeparator).last
+                                            return
+                                        }
+                                        self?.content?.append(str)
+                                    })
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)

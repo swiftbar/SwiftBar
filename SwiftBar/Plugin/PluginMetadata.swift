@@ -25,12 +25,13 @@ enum PluginMetadataOption: String, CaseIterable {
     case hideDisablePlugin
     case hideSwiftBar
     case environment
+    case runInBash
 
     var optionType: PluginMetadataType {
         switch self {
         case .title, .version, .author, .github, .desc, .about, .image, .dependencies:
             return .bitbar
-        case .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar:
+        case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar:
             return .swiftbar
         }
     }
@@ -54,6 +55,7 @@ class PluginMetadata: ObservableObject {
     @Published var hideDisablePlugin: Bool
     @Published var hideSwiftBar: Bool
     @Published var environment: [String: String]
+    @Published var runInBash: Bool
 
     var isEmpty: Bool {
         name.isEmpty
@@ -71,7 +73,7 @@ class PluginMetadata: ObservableObject {
         return try? cron.next()
     }
 
-    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:]) {
+    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:], runInBash: Bool = true) {
         self.name = name
         self.version = version
         self.author = author
@@ -89,6 +91,14 @@ class PluginMetadata: ObservableObject {
         self.hideDisablePlugin = hideDisablePlugin
         self.hideSwiftBar = hideSwiftBar
         self.environment = environment
+        self.runInBash = runInBash
+    }
+
+    var shouldRunInBash: Bool {
+        if Preferences.shared.disableBashWrapper {
+            return false
+        }
+        return runInBash
     }
 
     static func parser(script: String) -> PluginMetadata {
@@ -132,7 +142,8 @@ class PluginMetadata: ObservableObject {
                               hideLastUpdated: getTagValue(tag: .hideLastUpdated) == "true",
                               hideDisablePlugin: getTagValue(tag: .hideDisablePlugin) == "true",
                               hideSwiftBar: getTagValue(tag: .hideSwiftBar) == "true",
-                              environment: environment)
+                              environment: environment,
+                              runInBash: getTagValue(tag: .runInBash) == "false" ? false : true)
     }
 
     static func parser(fileURL: URL) -> PluginMetadata? {
@@ -196,6 +207,8 @@ class PluginMetadata: ObservableObject {
                 value = hideSwiftBar ? "true" : ""
             case .environment:
                 value = environment.map { "\($0.key):\($0.value)" }.joined(separator: ",")
+            case .runInBash:
+                value = runInBash ? "" : "false"
             }
             guard !value.isEmpty else { return }
             let tag = option

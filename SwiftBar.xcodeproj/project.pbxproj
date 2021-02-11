@@ -23,7 +23,6 @@
 		396E6CB0258E8D47002C735D /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396E6CAF258E8D47002C735D /* Localizable.swift */; };
 		3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359025896DBC007CF2E8 /* RSSparkle */; };
 		3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359525896DF9007CF2E8 /* LaunchAtLogin */; };
-		3989359A25896E10007CF2E8 /* ShellOut in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359925896E10007CF2E8 /* ShellOut */; };
 		3989359E25896E29007CF2E8 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359D25896E29007CF2E8 /* HotKey */; };
 		398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C3254DA85300DEA027 /* URL+Extension.swift */; };
 		398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */; };
@@ -140,7 +139,6 @@
 				3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
 				3989359E25896E29007CF2E8 /* HotKey in Frameworks */,
-				3989359A25896E10007CF2E8 /* ShellOut in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -331,7 +329,6 @@
 			packageProductDependencies = (
 				3989359025896DBC007CF2E8 /* RSSparkle */,
 				3989359525896DF9007CF2E8 /* LaunchAtLogin */,
-				3989359925896E10007CF2E8 /* ShellOut */,
 				3989359D25896E29007CF2E8 /* HotKey */,
 				FA8518F42598E786008AD21C /* SwifCron */,
 			);
@@ -367,7 +364,6 @@
 			packageReferences = (
 				3989358F25896DBC007CF2E8 /* XCRemoteSwiftPackageReference "Sparkle-Binary" */,
 				3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
-				3989359825896E10007CF2E8 /* XCRemoteSwiftPackageReference "ShellOut" */,
 				3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */,
 				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
 			);
@@ -739,14 +735,6 @@
 				minimumVersion = 4.0.0;
 			};
 		};
-		3989359825896E10007CF2E8 /* XCRemoteSwiftPackageReference "ShellOut" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swiftbar/ShellOut";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
 		3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swiftbar/HotKey";
@@ -775,11 +763,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */;
 			productName = LaunchAtLogin;
-		};
-		3989359925896E10007CF2E8 /* ShellOut */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3989359825896E10007CF2E8 /* XCRemoteSwiftPackageReference "ShellOut" */;
-			productName = ShellOut;
 		};
 		3989359D25896E29007CF2E8 /* HotKey */ = {
 			isa = XCSwiftPackageProductDependency;
