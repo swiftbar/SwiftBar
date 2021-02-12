@@ -59,6 +59,10 @@ class StreamablePlugin: Plugin {
         prefs.disabledPlugins.append(id)
     }
 
+    func terminate() {
+        procces?.terminate()
+    }
+
     func enable() {
         prefs.disabledPlugins.removeAll(where: { $0 == id })
         invokeQueue.addOperation { [weak self] in self?.invoke() }

@@ -92,6 +92,10 @@ class ExecutablePlugin: Plugin {
         prefs.disabledPlugins.append(id)
     }
 
+    func terminate() {
+        disableTimer()
+    }
+
     func enable() {
         prefs.disabledPlugins.removeAll(where: { $0 == id })
         refresh()
@@ -108,10 +112,12 @@ class ExecutablePlugin: Plugin {
 //        invokeQueue.cancelAllOperations()
         refreshPluginMetadata()
 
-        guard invokeQueue.operationCount < invokeQueue.maxConcurrentOperationCount else {
+        if invokeQueue.operationCount < invokeQueue.maxConcurrentOperationCount {
             os_log("Failed to schedule refresh of script\n%{public}@\n%{public}@. Execution queue is full!", log: Log.plugin, type: .error, file)
-            return
+            os_log("Cancelling all scheduled plugin updates, to free the queue", log: Log.plugin, type: .error)
+            invokeQueue.cancelAllOperations()
         }
+
         invokeQueue.addOperation { [weak self] in
             self?.content = self?.invoke()
             self?.enableTimer()

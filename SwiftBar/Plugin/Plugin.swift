@@ -33,6 +33,7 @@ protocol Plugin: AnyObject {
     func refresh()
     func enable()
     func disable()
+    func terminate()
     func invoke() -> String?
     func makeScriptExecutable(file: String)
     func refreshPluginMetadata()

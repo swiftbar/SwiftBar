@@ -54,7 +54,7 @@ class PluginManager {
     let menuUpdateQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInteractive
-        queue.maxConcurrentOperationCount = 1
+        queue.maxConcurrentOperationCount = 5
         return queue
     }()
 
@@ -175,8 +175,14 @@ class PluginManager {
     }
 
     func refreshAllPlugins() {
-        os_log("Refreshing all plugins.", log: Log.plugin)
-        plugins.forEach { $0.refresh() }
+        os_log("Refreshing all enabled plugins.", log: Log.plugin)
+        enabledPlugins.forEach { $0.refresh() }
+    }
+
+    func terminateAllPlugins() {
+        os_log("Stoping all enabled plugins.", log: Log.plugin)
+        enabledPlugins.forEach { $0.terminate() }
+        pluginInvokeQueue.cancelAllOperations()
     }
 
     func rebuildAllMenus() {

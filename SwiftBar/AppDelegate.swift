@@ -48,6 +48,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 NSApplication.shared.terminate(self)
             }
         }
+
+        NotificationCenter.default.addObserver(forName: NSWorkspace.willSleepNotification,
+                                               object: nil,
+                                               queue: OperationQueue.main) { [weak self] _ in
+            self?.pluginManager.terminateAllPlugins()
+        }
+
+        NotificationCenter.default.addObserver(forName: NSWorkspace.didWakeNotification,
+                                               object: nil,
+                                               queue: OperationQueue.main) { [weak self] _ in
+            self?.pluginManager.refreshAllPlugins()
+        }
     }
 
     func application(_: NSApplication, open urls: [URL]) {
