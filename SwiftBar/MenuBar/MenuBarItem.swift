@@ -34,7 +34,8 @@ class MenubarItem: NSObject {
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
-    private var eventMonitor: EventMonitor?
+    private var popoverDismissMonitor: Any?
+    private let popoverDismissEventMask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown]
 
     var titleLines: [String] = [] {
         didSet {
@@ -97,7 +98,6 @@ class MenubarItem: NSObject {
                 self?.disableTitleCycle()
                 self?.updateMenu()
             }
-        eventMonitor = EventMonitor(mask: [.leftMouseDown, .rightMouseDown], handler: mouseEventHandler)
     }
 
     deinit {
@@ -294,6 +294,17 @@ extension MenubarItem {
         ], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
     }
 
+    func startPopupMonitor() {
+        popoverDismissMonitor = NSEvent.addGlobalMonitorForEvents(matching: popoverDismissEventMask, handler: popoverHideHandler) as? NSObject
+    }
+
+    func stopPopupMonitor() {
+        if let monitor = popoverDismissMonitor {
+            NSEvent.removeMonitor(monitor)
+            popoverDismissMonitor = nil
+        }
+    }
+
     @objc func disablePlugin() {
         guard let plugin = plugin else { return }
         delegate.pluginManager.disablePlugin(plugin: plugin)
@@ -305,12 +316,12 @@ extension MenubarItem {
         errorPopover.contentViewController = NSHostingController(rootView: PluginErrorView(plugin: plugin))
         errorPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
         errorPopover.contentViewController?.view.window?.becomeKey()
-        eventMonitor?.start()
+        startPopupMonitor()
     }
 
     @objc func hideErrorPopover(_ sender: AnyObject?) {
         errorPopover.performClose(sender)
-        eventMonitor?.stop()
+        stopPopupMonitor()
     }
 
     @objc func showAboutPopover() {
@@ -319,15 +330,15 @@ extension MenubarItem {
         aboutPopover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
         aboutPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
         aboutPopover.contentViewController?.view.window?.becomeKey()
-        eventMonitor?.start()
+        startPopupMonitor()
     }
 
     @objc func hideAboutPopover(_ sender: AnyObject?) {
         aboutPopover.performClose(sender)
-        eventMonitor?.stop()
+        stopPopupMonitor()
     }
 
-    func mouseEventHandler(_ event: NSEvent?) {
+    func popoverHideHandler(_ event: NSEvent?) {
         if aboutPopover.isShown {
             hideAboutPopover(event)
         }
