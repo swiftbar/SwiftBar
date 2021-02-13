@@ -45,10 +45,13 @@ class ExecutablePlugin: Plugin {
         makeScriptExecutable(file: file)
         refreshPluginMetadata()
 
-        if metadata?.nextDate == nil, nameComponents.count > 2, let interval = Double(nameComponents[1].dropLast()) {
+        if metadata?.nextDate == nil, nameComponents.count > 2, let interval = Double(nameComponents[1].filter("0123456789.".contains)) {
             let intervalStr = nameComponents[1]
             if intervalStr.hasSuffix("s") {
                 updateInterval = interval
+                if intervalStr.hasSuffix("ms") {
+                    updateInterval = interval / 1000
+                }
             }
             if intervalStr.hasSuffix("m") {
                 updateInterval = interval * 60
