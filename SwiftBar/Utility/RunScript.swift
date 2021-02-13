@@ -1,5 +1,6 @@
 import Dispatch
 import Foundation
+import os
 
 enum EnvironmentVariables: String {
     case swiftBar = "SWIFTBAR"
@@ -34,6 +35,7 @@ func getEnvExportString(env: [String: String]) -> String {
 }
 
 @discardableResult func runScript(to command: String,
+                                  args: [String] = [],
                                   process: Process = Process(),
                                   env: [String: String] = [:],
                                   runInBash: Bool = true,
@@ -41,7 +43,7 @@ func getEnvExportString(env: [String: String]) -> String {
 {
     let swiftbarEnv = systemEnvStr.merging(env) { current, _ in current }
     process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
-    return try process.launchScript(with: command, runInBash: runInBash, onOutputUpdate: onOutputUpdate)
+    return try process.launchScript(with: command, args: args, runInBash: runInBash, onOutputUpdate: onOutputUpdate)
 }
 
 // Code below is adopted from https://github.com/JohnSundell/ShellOut
@@ -63,12 +65,18 @@ public struct ShellOutError: Swift.Error {
 // MARK: - Private
 
 private extension Process {
-    @discardableResult func launchScript(with script: String, outputHandle: FileHandle? = nil, errorHandle: FileHandle? = nil, runInBash: Bool = true, onOutputUpdate: @escaping (String?) -> Void) throws -> String {
+    @discardableResult func launchScript(with script: String, args: [String], outputHandle: FileHandle? = nil, errorHandle: FileHandle? = nil, runInBash: Bool = true, onOutputUpdate: @escaping (String?) -> Void) throws -> String {
         if !runInBash {
             executableURL = URL(fileURLWithPath: script)
+            arguments = args
         } else {
             executableURL = URL(fileURLWithPath: "/bin/bash")
-            arguments = ["-c", "-l", script]
+            arguments = ["-c", "-l", script.escaped()]
+            arguments?.append(contentsOf: args)
+        }
+
+        guard let executableURL = executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {
+            return ""
         }
 
         let outputQueue = DispatchQueue(label: "bash-output-queue")
@@ -99,7 +107,12 @@ private extension Process {
             }
         }
 
-        try! run()
+        do {
+            try run()
+        } catch {
+            os_log("Failed to launch plugin", log: Log.plugin, type: .error)
+            throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: outputData)
+        }
 
         waitUntilExit()
 

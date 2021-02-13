@@ -73,7 +73,7 @@ class StreamablePlugin: Plugin {
         do {
             procces = Process()
             guard let procces = procces else { return nil }
-            let out = try runScript(to: "\"\(file)\"", process: procces,
+            let out = try runScript(to: file, process: procces,
                                     env: [
                                         EnvironmentVariables.swiftPluginPath.rawValue: file,
                                         EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",

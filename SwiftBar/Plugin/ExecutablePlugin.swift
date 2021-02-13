@@ -130,7 +130,7 @@ class ExecutablePlugin: Plugin {
     func invoke() -> String? {
         lastUpdated = Date()
         do {
-            let out = try runScript(to: "\"\(file)\"", env: [
+            let out = try runScript(to: file, env: [
                 EnvironmentVariables.swiftPluginPath.rawValue: file,
                 EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
             ],

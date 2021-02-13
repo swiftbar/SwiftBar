@@ -111,12 +111,12 @@ class AppShared: NSObject {
         NSApp.orderFrontStandardAboutPanel()
     }
 
-    public static func runInTerminal(script: String, runInBackground: Bool = false, env: [String: String] = [:], runInBash: Bool, completionHandler: ((() -> Void)?) = nil) {
+    public static func runInTerminal(script: String, args: [String] = [], runInBackground: Bool = false, env: [String: String] = [:], runInBash: Bool, completionHandler: ((() -> Void)?) = nil) {
         if runInBackground {
             DispatchQueue.global(qos: .userInitiated).async {
                 os_log("Executing script in background... \n%{public}@", log: Log.plugin, script)
                 do {
-                    try runScript(to: script, env: env, runInBash: runInBash)
+                    try runScript(to: script, args: args, env: env, runInBash: runInBash)
 
                     completionHandler?()
                 } catch {
@@ -127,7 +127,7 @@ class AppShared: NSObject {
             return
         }
 
-        let runInTerminalScript = getEnvExportString(env: env).appending(";").appending(script)
+        let runInTerminalScript = getEnvExportString(env: env).appending(";").appending(script.escaped())
         var appleScript: String = ""
         switch Preferences.shared.terminal {
         case .Terminal:
