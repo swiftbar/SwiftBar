@@ -91,7 +91,7 @@ struct PluginDetailsTextView: View {
                 Text("\(label):")
             }.frame(width: width)
             TextField("", text: $text)
-                .disabled(!preferences.pluginDeveloperMode)
+                .disabled(!Preferences.shared.pluginDeveloperMode)
             Spacer()
         }
     }
