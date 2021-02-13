@@ -295,7 +295,7 @@ extension MenubarItem {
         AppShared.runInTerminal(script: scriptPath.escaped(), env: [
             EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
             EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-        ])
+        ], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
     }
 
     @objc func disablePlugin() {
@@ -572,7 +572,7 @@ extension MenubarItem {
             AppShared.runInTerminal(script: script, runInBackground: !params.terminal, env: [
                 EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
                 EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-            ]) { [weak self] in
+            ], runInBash: plugin?.metadata?.shouldRunInBash ?? true) { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
                 }
@@ -633,7 +633,7 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
 
         env["DROPPED_FILES"] = files.joined(separator: ",")
         guard let scriptPath = plugin?.file else { return false }
-        AppShared.runInTerminal(script: scriptPath.escaped(), env: env)
+        AppShared.runInTerminal(script: scriptPath.escaped(), env: env, runInBash: plugin?.metadata?.shouldRunInBash ?? true)
         return true
     }
 }

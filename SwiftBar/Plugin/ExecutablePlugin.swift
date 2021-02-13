@@ -112,7 +112,7 @@ class ExecutablePlugin: Plugin {
 //        invokeQueue.cancelAllOperations()
         refreshPluginMetadata()
 
-        if invokeQueue.operationCount < invokeQueue.maxConcurrentOperationCount {
+        if invokeQueue.operationCount == invokeQueue.maxConcurrentOperationCount {
             os_log("Failed to schedule refresh of script\n%{public}@\n%{public}@. Execution queue is full!", log: Log.plugin, type: .error, file)
             os_log("Cancelling all scheduled plugin updates, to free the queue", log: Log.plugin, type: .error)
             invokeQueue.cancelAllOperations()
@@ -127,7 +127,7 @@ class ExecutablePlugin: Plugin {
     func invoke() -> String? {
         lastUpdated = Date()
         do {
-            let out = try runScript(to: file, env: [
+            let out = try runScript(to: "\"\(file)\"", env: [
                 EnvironmentVariables.swiftPluginPath.rawValue: file,
                 EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
             ],

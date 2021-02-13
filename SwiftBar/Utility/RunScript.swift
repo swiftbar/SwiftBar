@@ -68,7 +68,7 @@ private extension Process {
             executableURL = URL(fileURLWithPath: script)
         } else {
             executableURL = URL(fileURLWithPath: "/bin/bash")
-            arguments = ["-c", "-l", "'\(script)'"]
+            arguments = ["-c", "-l", script]
         }
 
         let outputQueue = DispatchQueue(label: "bash-output-queue")
