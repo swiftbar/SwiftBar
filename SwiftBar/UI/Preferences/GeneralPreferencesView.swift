@@ -31,6 +31,7 @@ struct GeneralPreferencesView: View {
                     }
                 }
             }
+            Spacer()
             Section(header: Text(Localizable.Preferences.Shell.localized)) {
                 EnumPicker(selected: $preferences.terminal, title: "")
             }
@@ -47,6 +48,7 @@ struct GeneralPreferencesView: View {
                     }
                 }
             }
+            Spacer()
         }
         .padding(20)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

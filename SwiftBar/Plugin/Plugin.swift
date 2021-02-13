@@ -46,15 +46,6 @@ extension Plugin {
         type: \(type)
         name: \(name)
         path: \(file)
-        metadata:
-            name: \(metadata?.name ?? "")
-            author: \(metadata?.author ?? "")
-            version: \(metadata?.version ?? "")
-            github: \(metadata?.github ?? "")
-            desc: \(metadata?.desc ?? "")
-            previewImageURL: \(metadata?.previewImageURL?.absoluteString ?? "")
-            dependencies: \(metadata?.dependencies.joined(separator: ",") ?? "")
-            aboutURL: \(metadata?.aboutURL?.absoluteString ?? "")
         """
     }
 

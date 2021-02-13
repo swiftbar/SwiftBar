@@ -7,6 +7,6 @@ class AnimatableWindow: NSWindow {
     override func setContentSize(_ size: NSSize) {
         if lastContentSize == size { return }
         lastContentSize = size
-        animator().setFrame(NSRect(origin: frame.origin, size: size), display: true, animate: true)
+        animator().setFrame(NSRect(origin: frame.origin, size: size), display: true, animate: false)
     }
 }

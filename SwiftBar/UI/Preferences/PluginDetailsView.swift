@@ -9,65 +9,73 @@ struct PluginDetailsView: View {
     let width: CGFloat = 400
     var body: some View {
         VStack {
-            ScrollView(showsIndicators: true) {
-                Form {
-                    Section(header: Text("About Plugin")) {
-                        PluginDetailsTextView(label: "Name",
-                                              text: $md.name,
-                                              width: width * screenProportion)
-                        PluginDetailsTextView(label: "Description",
-                                              text: $md.desc,
-                                              width: width * screenProportion)
-                        PluginDetailsTextView(label: "Dependencies",
-                                              text: $dependencies,
-                                              width: width * screenProportion)
-                            .onAppear(perform: {
-                                dependencies = md.dependencies.joined(separator: ",")
-                            })
-                        HStack {
-                            PluginDetailsTextView(label: "GitHub",
-                                                  text: $md.github,
-                                                  width: width * screenProportion)
-                            PluginDetailsTextView(label: "Author",
-                                                  text: $md.author,
-                                                  width: width * 0.2)
-                        }
-                        HStack {
-                            PluginDetailsTextView(label: "Version",
-                                                  text: $md.version,
-                                                  width: width * screenProportion)
-                            PluginDetailsTextView(label: "Schedule",
-                                                  text: $md.schedule,
-                                                  width: width * 0.2)
+            Form {
+                Section(header: HStack {
+                    Text("About Plugin")
+                    Spacer()
+                    if #available(OSX 11.0, *) {
+                        Button(action: {
+                            AppShared.openPluginFolder(path: plugin.file)
+                        }) {
+                            Image(systemName: "folder")
                         }
                     }
-
-                    Section(header: Text("Hide Standard Menu Items")) {
-                        PluginDetailsToggleView(label: "About",
-                                                state: $md.hideAbout,
-                                                width: width * screenProportion)
-                        PluginDetailsToggleView(label: "Run In Terminal",
-                                                state: $md.hideRunInTerminal,
-                                                width: width * screenProportion)
-                        PluginDetailsToggleView(label: "Last Updated",
-                                                state: $md.hideLastUpdated,
-                                                width: width * screenProportion)
-                        PluginDetailsToggleView(label: "Disable Plugin",
-                                                state: $md.hideDisablePlugin,
-                                                width: width * screenProportion)
-                        PluginDetailsToggleView(label: "SwiftBar",
-                                                state: $md.hideSwiftBar,
-                                                width: width * screenProportion)
+                }) {
+                    PluginDetailsTextView(label: "Name",
+                                          text: $md.name,
+                                          width: width * screenProportion)
+                    PluginDetailsTextView(label: "Description",
+                                          text: $md.desc,
+                                          width: width * screenProportion)
+                    PluginDetailsTextView(label: "Dependencies",
+                                          text: $dependencies,
+                                          width: width * screenProportion)
+                        .onAppear(perform: {
+                            dependencies = md.dependencies.joined(separator: ",")
+                        })
+                    HStack {
+                        PluginDetailsTextView(label: "GitHub",
+                                              text: $md.github,
+                                              width: width * screenProportion)
+                        PluginDetailsTextView(label: "Author",
+                                              text: $md.author,
+                                              width: width * 0.2)
+                    }
+                    HStack {
+                        PluginDetailsTextView(label: "Version",
+                                              text: $md.version,
+                                              width: width * screenProportion)
+                        PluginDetailsTextView(label: "Schedule",
+                                              text: $md.schedule,
+                                              width: width * 0.2)
                     }
                 }
-            }.padding(8)
+
+                Section(header: Text("Hide Standard Menu Items")) {
+                    PluginDetailsToggleView(label: "About",
+                                            state: $md.hideAbout,
+                                            width: width * screenProportion)
+                    PluginDetailsToggleView(label: "Run In Terminal",
+                                            state: $md.hideRunInTerminal,
+                                            width: width * screenProportion)
+                    PluginDetailsToggleView(label: "Last Updated",
+                                            state: $md.hideLastUpdated,
+                                            width: width * screenProportion)
+                    PluginDetailsToggleView(label: "Disable Plugin",
+                                            state: $md.hideDisablePlugin,
+                                            width: width * screenProportion)
+                    PluginDetailsToggleView(label: "SwiftBar",
+                                            state: $md.hideSwiftBar,
+                                            width: width * screenProportion)
+                }
+            }
             HStack {
                 Spacer()
                 Button("Save", action: {
                     PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
-                }).padding([.trailing])
+                })
             }
-        }
+        }.padding(8)
     }
 }
 

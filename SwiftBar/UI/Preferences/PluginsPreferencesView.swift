@@ -43,9 +43,10 @@ struct PluginsView: View {
                         }
                     )
                 }.onMove(perform: move)
+
             }.onAppear(perform: {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    selection = 0
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    selection = 1
                 }
             })
         }
@@ -66,20 +67,11 @@ struct PluginRowView: View {
         return name
     }
 
-    var lastUpdated: String? {
-        guard let date = plugin.lastUpdated else { return nil }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return formatter.localizedString(for: date, relativeTo: Date()).capitalized
-    }
-
     let plugin: Plugin
     var body: some View {
-        HStack(alignment: .bottom) {
+        HStack(alignment: .center) {
             Toggle("", isOn: $enabled.onUpdate(updatePluginStatus))
             Text(label)
-
-            Spacer()
         }.onAppear {
             enabled = plugin.enabled
         }
