@@ -23,7 +23,7 @@ class MenubarItem: NSObject {
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
     let lastUpdatedItem = NSMenuItem(title: Localizable.MenuBar.UpdatingMenu.localized, action: nil, keyEquivalent: "")
-    let aboutItem = NSMenuItem(title: Localizable.MenuBar.AboutSwiftBar.localized, action: #selector(about), keyEquivalent: "")
+    let aboutItem = NSMenuItem(title: Localizable.MenuBar.AboutSwiftBar.localized, action: #selector(showAboutPopover), keyEquivalent: "")
     let runInTerminalItem = NSMenuItem(title: Localizable.MenuBar.RunInTerminal.localized, action: #selector(runInTerminal), keyEquivalent: "")
     let disablePluginItem = NSMenuItem(title: Localizable.MenuBar.DisablePlugin.localized, action: #selector(disablePlugin), keyEquivalent: "")
     let swiftBarItem = NSMenuItem(title: Localizable.MenuBar.SwiftBar.localized, action: nil, keyEquivalent: "")
@@ -31,6 +31,10 @@ class MenubarItem: NSObject {
     var isOpen = false
     var refreshOnClose = false
     var hotKeys: [HotKey] = []
+
+    private var aboutPopover = NSPopover()
+    private var errorPopover = NSPopover()
+    private var eventMonitor: EventMonitor?
 
     var titleLines: [String] = [] {
         didSet {
@@ -93,6 +97,7 @@ class MenubarItem: NSObject {
                 self?.disableTitleCycle()
                 self?.updateMenu()
             }
+        eventMonitor = EventMonitor(mask: [.leftMouseDown, .rightMouseDown], handler: mouseEventHandler)
     }
 
     deinit {
@@ -202,7 +207,7 @@ extension MenubarItem {
         let sendFeedbackItem = NSMenuItem(title: Localizable.MenuBar.SendFeedback.localized, action: #selector(sendFeedback), keyEquivalent: "")
         let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
         let quitItem = NSMenuItem(title: Localizable.App.Quit.localized, action: #selector(quit), keyEquivalent: "q")
-        let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showError), keyEquivalent: "")
+        let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showErrorPopover), keyEquivalent: "")
         [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
@@ -281,15 +286,6 @@ extension MenubarItem {
         NSApp.terminate(self)
     }
 
-    @objc func showError() {
-        guard let plugin = plugin, plugin.error != nil else { return }
-        let popover = NSPopover()
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: PluginErrorView(plugin: plugin))
-        popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.becomeKey()
-    }
-
     @objc func runInTerminal() {
         guard let scriptPath = plugin?.file else { return }
         AppShared.runInTerminal(script: scriptPath.escaped(), env: [
@@ -303,13 +299,42 @@ extension MenubarItem {
         delegate.pluginManager.disablePlugin(plugin: plugin)
     }
 
-    @objc func about() {
+    @objc func showErrorPopover() {
+        guard let plugin = plugin, plugin.error != nil else { return }
+        errorPopover.behavior = .transient
+        errorPopover.contentViewController = NSHostingController(rootView: PluginErrorView(plugin: plugin))
+        errorPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+        errorPopover.contentViewController?.view.window?.becomeKey()
+        eventMonitor?.start()
+    }
+
+    @objc func hideErrorPopover(_ sender: AnyObject?) {
+        errorPopover.performClose(sender)
+        eventMonitor?.stop()
+    }
+
+    @objc func showAboutPopover() {
         guard let pluginMetadata = plugin?.metadata else { return }
-        let popover = NSPopover()
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
-        popover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
-        popover.contentViewController?.view.window?.becomeKey()
+        aboutPopover.behavior = .transient
+        aboutPopover.contentViewController = NSHostingController(rootView: AboutPluginView(md: pluginMetadata))
+        aboutPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+        aboutPopover.contentViewController?.view.window?.becomeKey()
+        eventMonitor?.start()
+    }
+
+    @objc func hideAboutPopover(_ sender: AnyObject?) {
+        aboutPopover.performClose(sender)
+        eventMonitor?.stop()
+    }
+
+    func mouseEventHandler(_ event: NSEvent?) {
+        if aboutPopover.isShown {
+            hideAboutPopover(event)
+        }
+
+        if errorPopover.isShown {
+            hideErrorPopover(event)
+        }
     }
 
     @objc func aboutSwiftBar() {

@@ -41,6 +41,7 @@
 		39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A0A257C21D400FA012E /* String+Escaped.swift */; };
 		39B84A1F257D436200FA012E /* RunScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A1E257D436200FA012E /* RunScript.swift */; };
 		39B84A22257D63F700FA012E /* String+SFSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A21257D63F700FA012E /* String+SFSymbols.swift */; };
+		39CBA99E25D8223200FDE12E /* EventMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39CBA99D25D8223200FDE12E /* EventMonitor.swift */; };
 		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
@@ -112,6 +113,7 @@
 		39B84A0A257C21D400FA012E /* String+Escaped.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Escaped.swift"; sourceTree = "<group>"; };
 		39B84A1E257D436200FA012E /* RunScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunScript.swift; sourceTree = "<group>"; };
 		39B84A21257D63F700FA012E /* String+SFSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SFSymbols.swift"; sourceTree = "<group>"; };
+		39CBA99D25D8223200FDE12E /* EventMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMonitor.swift; sourceTree = "<group>"; };
 		39E1549B25699C8F00287D8A /* URLTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTextView.swift; sourceTree = "<group>"; };
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
@@ -218,6 +220,7 @@
 				39E1549E2569A2D700287D8A /* ImageVIew.swift */,
 				FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */,
 				FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */,
+				39CBA99D25D8223200FDE12E /* EventMonitor.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -487,6 +490,7 @@
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
+				39CBA99E25D8223200FDE12E /* EventMonitor.swift in Sources */,
 				39AF77842547750E001D76E5 /* AppShared.swift in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
@@ -662,7 +666,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -688,7 +692,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
