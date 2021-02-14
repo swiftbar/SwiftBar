@@ -50,6 +50,7 @@
 "APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "Choose plugin folder";
 "APP_FOLDER_NOT_ALLOWED_MESSAGE" = "Can't use this folder as SwiftBar plugins location";
 "APP_FOLDER_NOT_ALLOWED_ACTION" = "Choose New Location";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "WOW! Looks like you chose a folder with a LOT OF FILES, please choose another one. If you have node_modules folder that you need for a plugin, please make it hidden.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Set SwiftBar Plugins Location";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Select a folder to store the plugins repository";
 "APP_QUIT" = "Quit SwiftBar";

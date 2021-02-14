@@ -141,6 +141,10 @@ class PluginManager {
 
         let pluginFiles = getPluginList()
         guard pluginFiles.count < 50 else {
+            let alert = NSAlert()
+            alert.messageText = Localizable.App.FolderHasToManyFilesMessage.localized
+            alert.runModal()
+
             AppShared.changePluginFolder()
             return
         }

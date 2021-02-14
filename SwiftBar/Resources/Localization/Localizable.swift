@@ -4,6 +4,7 @@ enum Localizable {
     enum App: String {
         case ChoosePluginFolderTitle = "APP_CHOOSE_PLUGIN_FOLDER_TITLE"
         case FolderNotAllowedMessage = "APP_FOLDER_NOT_ALLOWED_MESSAGE"
+        case FolderHasToManyFilesMessage = "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE"
         case FolderNotAllowedAction = "APP_FOLDER_NOT_ALLOWED_ACTION"
         case ChoosePluginFolderMessage = "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE"
         case ChoosePluginFolderInfo = "APP_CHOOSE_PLUGIN_FOLDER_INFO"
