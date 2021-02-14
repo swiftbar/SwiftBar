@@ -71,8 +71,9 @@ private extension Process {
             arguments = args
         } else {
             executableURL = URL(fileURLWithPath: "/bin/bash")
-            arguments = ["-c", "-l", script.escaped()]
-            arguments?.append(contentsOf: args)
+            var argsFull = ["-c", "-l", script.escaped()]
+            argsFull.append(contentsOf: args)
+            arguments = argsFull
         }
 
         guard let executableURL = executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {

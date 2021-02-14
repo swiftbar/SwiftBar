@@ -127,7 +127,10 @@ class AppShared: NSObject {
             return
         }
 
-        let runInTerminalScript = getEnvExportString(env: env).appending(";").appending(script.escaped())
+        let runInTerminalScript = getEnvExportString(env: env).appending(";")
+            .appending(script.escaped())
+            .appending(" ")
+            .appending(args.joined(separator: " "))
         var appleScript: String = ""
         switch Preferences.shared.terminal {
         case .Terminal:
