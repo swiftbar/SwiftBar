@@ -62,6 +62,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         }
     }
 
+    func applicationWillTerminate(_: Notification) {
+        pluginManager.terminateAllPlugins()
+    }
+
     func application(_: NSApplication, open urls: [URL]) {
         for url in urls {
             switch url.host?.lowercased() {
