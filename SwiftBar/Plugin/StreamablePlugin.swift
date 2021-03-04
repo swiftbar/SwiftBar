@@ -15,13 +15,13 @@ class StreamablePlugin: Plugin {
     var lastState: PluginState
     var updateInterval = 0.0
 
-    var contentUpdatePublisher = PassthroughSubject<Any, Never>()
+    var contentUpdatePublisher = PassthroughSubject<String?, Never>()
 
     var content: String? = "" {
         didSet {
             guard content != oldValue else { return }
             lastUpdated = Date()
-            contentUpdatePublisher.send("")
+            contentUpdatePublisher.send(content)
         }
     }
 
@@ -80,6 +80,9 @@ class StreamablePlugin: Plugin {
                                     ],
                                     runInBash: metadata?.shouldRunInBash ?? true,
                                     onOutputUpdate: { [weak self] str in
+                                        guard str != "\n" else {
+                                            return
+                                        }
                                         guard let str = str else {
                                             self?.content = nil
                                             return

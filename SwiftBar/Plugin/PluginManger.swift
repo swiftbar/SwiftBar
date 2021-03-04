@@ -67,7 +67,7 @@ class PluginManager {
             })
 
         osAppearanceChangeCancellable = DistributedNotificationCenter.default().publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification")).sink { [weak self] _ in
-            self?.menuBarItems.values.forEach { $0.updateMenu() }
+            self?.menuBarItems.values.forEach { $0.updateMenu(content: $0.plugin?.content) }
         }
     }
 
@@ -190,7 +190,7 @@ class PluginManager {
     }
 
     func rebuildAllMenus() {
-        menuBarItems.values.forEach { $0.updateMenu() }
+        menuBarItems.values.forEach { $0.updateMenu(content: $0.plugin?.content) }
     }
 
     func refreshPlugin(named name: String) {

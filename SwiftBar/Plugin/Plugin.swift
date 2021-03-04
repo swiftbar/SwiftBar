@@ -24,7 +24,7 @@ protocol Plugin: AnyObject {
     var file: String { get }
     var enabled: Bool { get }
     var metadata: PluginMetadata? { get set }
-    var contentUpdatePublisher: PassthroughSubject<Any, Never> { get set }
+    var contentUpdatePublisher: PassthroughSubject<String?, Never> { get set }
     var updateInterval: Double { get }
     var lastUpdated: Date? { get set }
     var lastState: PluginState { get set }

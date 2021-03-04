@@ -12,12 +12,12 @@ class ExecutablePlugin: Plugin {
     var metadata: PluginMetadata?
     var lastUpdated: Date?
     var lastState: PluginState
-    var contentUpdatePublisher = PassthroughSubject<Any, Never>()
+    var contentUpdatePublisher = PassthroughSubject<String?, Never>()
 
     var content: String? = "..." {
         didSet {
             guard content != oldValue else { return }
-            contentUpdatePublisher.send("")
+            contentUpdatePublisher.send(content)
         }
     }
 

@@ -87,16 +87,16 @@ class MenubarItem: NSObject {
             barItem.button?.window?.registerForDraggedTypes(NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) })
             barItem.button?.window?.delegate = self
         }
-        updateMenu()
+        updateMenu(content: plugin?.content)
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
-            .sink { [weak self] _ in
+            .sink { [weak self] content in
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
                 }
                 self?.disableTitleCycle()
-                self?.updateMenu()
+                self?.updateMenu(content: content)
             }
     }
 
@@ -165,7 +165,7 @@ extension MenubarItem: NSMenuDelegate {
             menuUpdateQueue.addOperation { [weak self] in
                 self?.refreshOnClose = false
                 self?.disableTitleCycle()
-                self?.updateMenu()
+                self?.updateMenu(content: self?.plugin?.content)
             }
         }
         // since we're handling click in barItemClicked we need to remove the menu
@@ -379,13 +379,13 @@ extension MenubarItem {
         hotKeys.append(shortcut)
     }
 
-    func updateMenu() {
+    func updateMenu(content: String?) {
         DispatchQueue.main.async { [weak self] in
-            self?._updateMenu()
+            self?._updateMenu(content: content)
         }
     }
 
-    func _updateMenu() {
+    func _updateMenu(content: String?) {
         statusBarMenu.removeAllItems()
         show()
 
@@ -396,10 +396,13 @@ extension MenubarItem {
             return
         }
 
-        guard let scriptOutput = plugin?.content,
+        guard let scriptOutput = content,
               !scriptOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || plugin?.lastState == .Loading
         else {
-            hide()
+            // not sure if the best option, adding to address #161 for now
+            if plugin?.type == .Executable {
+                hide()
+            }
             return
         }
 
