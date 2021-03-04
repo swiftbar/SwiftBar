@@ -95,7 +95,7 @@ class PluginRepository: ObservableObject {
         case "network":
             return "network"
         case "politics":
-            return "person.3"
+            return "person.2"
         case "science":
             return "graduationcap"
         case "sports":
@@ -115,7 +115,7 @@ class PluginRepository: ObservableObject {
         case "web":
             return "globe"
         default:
-            return "home"
+            return "questionmark.circle"
         }
     }
 }
