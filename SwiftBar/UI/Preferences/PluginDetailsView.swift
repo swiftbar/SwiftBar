@@ -18,7 +18,7 @@ struct PluginDetailsView: View {
                             AppShared.openPluginFolder(path: plugin.file)
                         }) {
                             Image(systemName: "folder")
-                        }
+                        }.padding()
                     }
                 }) {
                     PluginDetailsTextView(label: "Name",
@@ -51,30 +51,46 @@ struct PluginDetailsView: View {
                     }
                 }
 
-                Section(header: Text("Hide Standard Menu Items")) {
-                    PluginDetailsToggleView(label: "About",
-                                            state: $md.hideAbout,
-                                            width: width * screenProportion)
-                    PluginDetailsToggleView(label: "Run In Terminal",
-                                            state: $md.hideRunInTerminal,
-                                            width: width * screenProportion)
-                    PluginDetailsToggleView(label: "Last Updated",
-                                            state: $md.hideLastUpdated,
-                                            width: width * screenProportion)
-                    PluginDetailsToggleView(label: "Disable Plugin",
-                                            state: $md.hideDisablePlugin,
-                                            width: width * screenProportion)
-                    PluginDetailsToggleView(label: "SwiftBar",
-                                            state: $md.hideSwiftBar,
-                                            width: width * screenProportion)
+                Section(header: Text("Hide Menu Items")) {
+                    HStack {
+                        PluginDetailsToggleView(label: "About",
+                                                state: $md.hideAbout,
+                                                width: width * screenProportion)
+                        PluginDetailsToggleView(label: "Run In Terminal",
+                                                state: $md.hideRunInTerminal,
+                                                width: width * screenProportion)
+                        PluginDetailsToggleView(label: "Last Updated",
+                                                state: $md.hideLastUpdated,
+                                                width: width * screenProportion)
+                            .padding(.trailing, 5)
+                    }
+                    HStack {
+                        PluginDetailsToggleView(label: "SwiftBar",
+                                                state: $md.hideSwiftBar,
+                                                width: width * screenProportion)
+
+                        PluginDetailsToggleView(label: "Disable Plugin",
+                                                state: $md.hideDisablePlugin,
+                                                width: width * screenProportion)
+                    }
                 }
-            }
+                if !md.environment.isEmpty {
+                    Section(header: Text("Environment Variables")) {
+                        PluginDetailsTextView(label: "Variable 1",
+                                              text: $md.github,
+                                              width: width * screenProportion)
+                        PluginDetailsTextView(label: "Variable 3",
+                                              text: $md.github,
+                                              width: width * screenProportion)
+                    }
+                }
+            }.padding()
             HStack {
                 Spacer()
                 Button("Save", action: {
                     PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
-                })
-            }
+                }).padding(.trailing, 5)
+            }.padding()
         }.padding(8)
     }
 }

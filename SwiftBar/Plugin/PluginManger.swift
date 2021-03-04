@@ -217,8 +217,8 @@ class PluginManager {
             }
             do {
                 let targetURL = pluginDirectoryURL.appendingPathComponent(url.lastPathComponent)
-                try runScript(to: "chmod +x \(fileURL.path.escaped())")
                 try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
+                try runScript(to: "chmod", args: ["+x", "\(targetURL.path.escaped())"])
                 completionHandler?(.success(true))
             } catch {
                 completionHandler?(.failure(.importFail))

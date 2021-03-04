@@ -67,6 +67,57 @@ class PluginRepository: ObservableObject {
         else { return nil }
         return repository
     }
+
+    static func categorySFImage(_ category: String) -> String {
+        switch category.lowercased() {
+        case "aws":
+            return "bolt"
+        case "cryptocurrency":
+            return "bitcoinsign.circle"
+        case "dev":
+            return "hammer"
+        case "e-commerce":
+            return "bag.circle"
+        case "email":
+            return "envelope"
+        case "environment":
+            return "leaf"
+        case "finance":
+            return "dollarsign.circle"
+        case "games":
+            return "gamecontroller"
+        case "lifestyle":
+            return "face.smiling.fill"
+        case "messenger":
+            return "message"
+        case "music":
+            return "music.note"
+        case "network":
+            return "network"
+        case "politics":
+            return "person.3"
+        case "science":
+            return "graduationcap"
+        case "sports":
+            return "sportscourt"
+        case "system":
+            return "gear"
+        case "time":
+            return "clock"
+        case "tools":
+            return "paintbrush"
+        case "travel":
+            return "briefcase"
+        case "tutorial":
+            return "bubble.left.and.bubble.right"
+        case "weather":
+            return "cloud.sun"
+        case "web":
+            return "globe"
+        default:
+            return "home"
+        }
+    }
 }
 
 struct RepositoryEntry: Codable {
