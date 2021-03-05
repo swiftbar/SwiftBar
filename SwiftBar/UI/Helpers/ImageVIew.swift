@@ -2,7 +2,12 @@ import SwiftUI
 
 struct ImageView: View {
     @ObservedObject var imageLoader: ImageLoader
-    @State var image = NSImage(named: "AppIcon")!
+    var image: NSImage {
+        if let data = imageLoader.imageData, let image = NSImage(data: data) {
+            return image
+        }
+        return NSImage(named: "AppIcon")!
+    }
 
     var width: CGFloat
     var height: CGFloat
@@ -18,8 +23,5 @@ struct ImageView: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(width: width, height: height)
-            .onReceive(imageLoader.didChange) { data in
-                self.image = NSImage(data: data) ?? NSImage()
-            }
     }
 }
