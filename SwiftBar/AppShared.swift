@@ -81,6 +81,7 @@ class AppShared: NSObject {
             backing: .buffered,
             defer: false
         )
+        myWindow.toolbar = .repositoryToolbar
         myWindow.title = Localizable.PluginRepository.PluginRepository.localized
         myWindow.center()
 

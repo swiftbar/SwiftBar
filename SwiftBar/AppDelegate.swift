@@ -16,11 +16,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         }
     }
 
+    var repositoryToolbarSearchItem: NSToolbarItem?
+
     var pluginManager: PluginManager!
     let prefs = Preferences.shared
     var softwareUpdater: SPUUpdater!
 
     func applicationDidFinishLaunching(_: Notification) {
+        setupToolbar()
         let hostBundle = Bundle.main
         let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
         softwareUpdater = SPUUpdater(hostBundle: hostBundle, applicationBundle: hostBundle, userDriver: updateDriver, delegate: self)
@@ -70,7 +73,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                queue: OperationQueue.main) { [weak self] _ in
             self?.pluginManager.refreshAllPlugins()
         }
-        AppShared.getPlugins()
     }
 
     func changePresentationType() {

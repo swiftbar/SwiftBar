@@ -79,13 +79,19 @@ struct PluginEntryView: View {
                         if let desc = pluginEntry.desc {
                             Text(desc)
                                 .font(.body)
-                                .lineLimit(3)
+                                .lineLimit(4)
+                                .padding([.bottom, .top], 1)
+                        } else {
+                            Text("No description")
+                                .font(.body)
+                                .foregroundColor(Color(NSColor.secondaryLabelColor))
                                 .padding([.bottom, .top], 1)
                         }
                     }
                 }.padding(.bottom, 5)
                 Spacer()
                 HStack(alignment: .top) {
+                    Spacer()
                     if let url = pluginSourceURL {
                         URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url, sfSymbol: "chevron.left.slash.chevron.right")
                     }
@@ -93,43 +99,37 @@ struct PluginEntryView: View {
                     if let url = pluginEntry.aboutURL {
                         URLTextView(text: Localizable.PluginRepository.AboutPlugin.localized, url: url, sfSymbol: "info.circle")
                     }
-                    Spacer()
                     VStack {
-                        Button(action: {
-                            os_log("User requested to install plugin from PLugin repository", log: Log.repository)
-                            if let url = rawPluginSourceURL {
-                                installStatus = .Downloading
-                                delegate.pluginManager.importPlugin(from: url) { result in
-                                    switch result {
-                                    case .success:
-                                        installStatus = .Installed
-                                    case .failure:
-                                        installStatus = .Failed
-                                    }
-                                }
-                            }
-                        }) {
-                            HStack {
-                                if #available(OSX 11.0, *) {
-                                    switch installStatus {
-                                    case .Install, .Downloading:
-                                        Image(systemName: "icloud.and.arrow.down")
-                                    case .Installed:
-                                        Image(systemName: "checkmark.icloud")
-                                    case .Failed:
-                                        Image(systemName: "xmark.icloud")
-                                    }
-                                    Text(installStatus.localized)
-                                } else {
-                                    Text(installStatus.localized)
-                                }
-                            }
-                        }.foregroundColor(installButtonColor)
-
-                        if let version = pluginEntry.version {
-                            Text(version)
-                                .font(.footnote)
-                        }
+//                        Button(action: {
+//                            os_log("User requested to install plugin from PLugin repository", log: Log.repository)
+//                            if let url = rawPluginSourceURL {
+//                                installStatus = .Downloading
+//                                delegate.pluginManager.importPlugin(from: url) { result in
+//                                    switch result {
+//                                    case .success:
+//                                        installStatus = .Installed
+//                                    case .failure:
+//                                        installStatus = .Failed
+//                                    }
+//                                }
+//                            }
+//                        }) {
+//                            HStack {
+//                                if #available(OSX 11.0, *) {
+//                                    switch installStatus {
+//                                    case .Install, .Downloading:
+//                                        Image(systemName: "icloud.and.arrow.down")
+//                                    case .Installed:
+//                                        Image(systemName: "checkmark.icloud")
+//                                    case .Failed:
+//                                        Image(systemName: "xmark.icloud")
+//                                    }
+//                                    Text(installStatus.localized)
+//                                } else {
+//                                    Text(installStatus.localized)
+//                                }
+//                            }
+//                        }
                     }
                 }
             }.padding()

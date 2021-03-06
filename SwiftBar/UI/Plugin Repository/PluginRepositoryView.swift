@@ -18,8 +18,13 @@ struct PluginRepositoryView: View {
             }.frame(width: 400, height: 200)
 
         } else {
-            SplitView(categories: pluginRepository.categories)
-                .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
+            if pluginRepository.searchString.isEmpty {
+                SplitView(categories: pluginRepository.categories)
+                    .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
+            } else {
+                SearchlScrollView(searchString: $pluginRepository.searchString)
+                    .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
+            }
         }
     }
 }
@@ -52,6 +57,35 @@ struct CategoryDetailScrollView: View {
                 }
             }
         }.frame(minWidth: 100, maxWidth: .infinity)
+    }
+}
+
+struct SearchlScrollView: View {
+    @Binding var searchString: String
+    private let size: CGFloat = 150
+    private let padding: CGFloat = 5
+    var body: some View {
+        let plugins = PluginRepository.shared.searchPlugins(with: searchString)
+        if plugins.isEmpty {
+            Text("No plugins found")
+                .font(.title)
+        } else {
+            ScrollView(showsIndicators: true) {
+                if #available(OSX 11.0, *) {
+                    LazyVGrid(
+                        columns: [GridItem(.adaptive(minimum: 300, maximum: 300))],
+                        spacing: padding
+                    ) {
+                        ForEach(plugins, id: \.self) { plugin in
+                            PluginEntryView(pluginEntry: plugin)
+                                .padding()
+                                .shadow(radius: 5)
+                                .id(plugins.firstIndex(of: plugin))
+                        }
+                    }.padding(padding)
+                }
+            }
+        }
     }
 }
 

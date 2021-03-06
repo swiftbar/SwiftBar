@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import os
 
@@ -10,6 +11,9 @@ class PluginRepository: ObservableObject {
             categories = Array(Set(repository.map(\.category))).sorted()
         }
     }
+
+    @Published var searchString: String = ""
+    var cancellable: AnyCancellable?
 
     var categories: [String]
 
@@ -24,10 +28,24 @@ class PluginRepository: ObservableObject {
 
         self.repository = repository
         categories = Array(Set(repository.map(\.category))).sorted()
+
+        if #available(OSX 11.0, *) {
+            NotificationCenter.default.publisher(for: .repositoirySearchUpdate)
+                .compactMap { $0.userInfo?["query"] as? String }
+                .map { $0 }
+                .debounce(for: 0.2, scheduler: RunLoop.main)
+                .assign(to: &$searchString)
+        }
     }
 
     func getPlugins(for category: String) -> [RepositoryEntry.PluginEntry] {
-        repository.filter { $0.category == category }.flatMap(\.plugins)
+        repository.filter { $0.category == category }.flatMap(\.plugins).sorted(by: { $0.title > $1.title })
+    }
+
+    func searchPlugins(with searchString: String) -> [RepositoryEntry.PluginEntry] {
+        repository.flatMap(\.plugins)
+            .filter { $0.bagOfWords.contains(searchString.lowercased()) }
+            .sorted(by: { $0.title > $1.title })
     }
 
     func refreshRepository() {
@@ -146,6 +164,14 @@ struct RepositoryEntry: Codable {
             case aboutURL
             case source
             case version
+        }
+
+        var bagOfWords: [String] {
+            var out: [String] = []
+            [title, author, desc].compactMap { $0 }.forEach { str in
+                out.append(contentsOf: str.lowercased().components(separatedBy: .whitespaces))
+            }
+            return out
         }
     }
 
