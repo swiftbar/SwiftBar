@@ -51,20 +51,17 @@ struct PluginEntryView: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
-                .foregroundColor(Color(NSColor.darkGray))
+                .foregroundColor(Color(NSColor.controlColor))
             VStack(alignment: .leading) {
                 VStack(alignment: .leading) {
                     Text(pluginEntry.title)
                         .font(.headline)
-                        .foregroundColor(.white)
                     if let url = githubURL {
                         URLTextView(text: "\(Localizable.PluginRepository.AuthorPreposition.localized) \(pluginEntry.author)", url: url)
-                            .font(.callout)
-                            .foregroundColor(.white)
+                            .font(.subheadline)
                     } else {
                         Text(Localizable.PluginRepository.AuthorPreposition.localized + " \(pluginEntry.author)")
-                            .font(.callout)
-                            .foregroundColor(.white)
+                            .font(.subheadline)
                     }
                 }
                 HStack {
@@ -82,7 +79,6 @@ struct PluginEntryView: View {
                         if let desc = pluginEntry.desc {
                             Text(desc)
                                 .font(.body)
-                                .foregroundColor(.white)
                                 .lineLimit(3)
                                 .padding([.bottom, .top], 1)
                         }
@@ -92,12 +88,10 @@ struct PluginEntryView: View {
                 HStack(alignment: .top) {
                     if let url = pluginSourceURL {
                         URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url, sfSymbol: "chevron.left.slash.chevron.right")
-                            .foregroundColor(.white)
                     }
 
                     if let url = pluginEntry.aboutURL {
                         URLTextView(text: Localizable.PluginRepository.AboutPlugin.localized, url: url, sfSymbol: "info.circle")
-                            .foregroundColor(.white)
                     }
                     Spacer()
                     VStack {
@@ -117,18 +111,24 @@ struct PluginEntryView: View {
                         }) {
                             HStack {
                                 if #available(OSX 11.0, *) {
-                                    Image(systemName: "icloud.and.arrow.down")
+                                    switch installStatus {
+                                    case .Install, .Downloading:
+                                        Image(systemName: "icloud.and.arrow.down")
+                                    case .Installed:
+                                        Image(systemName: "checkmark.icloud")
+                                    case .Failed:
+                                        Image(systemName: "xmark.icloud")
+                                    }
                                     Text(installStatus.localized)
                                 } else {
                                     Text(installStatus.localized)
                                 }
                             }
-                        }.background(installButtonColor)
+                        }.foregroundColor(installButtonColor)
 
                         if let version = pluginEntry.version {
                             Text(version)
                                 .font(.footnote)
-                                .foregroundColor(.white)
                         }
                     }
                 }

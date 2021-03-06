@@ -22,7 +22,7 @@ struct PreferencesView: View {
                 .tag(Tabs.plugins)
         }
         .padding(20)
-        .frame(width: tabSelectedIndex == .plugins ? 700 : 500,
+        .frame(width: tabSelectedIndex == .plugins ? 750 : 500,
                height: tabSelectedIndex == .plugins ? 500 : 500)
     }
 }

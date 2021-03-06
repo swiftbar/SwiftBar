@@ -39,7 +39,7 @@ struct CategoryDetailScrollView: View {
                     ForEach(plugins, id: \.self) { plugin in
                         PluginEntryView(pluginEntry: plugin)
                             .padding()
-                            .shadow(radius: 20)
+                            .shadow(radius: 5)
                             .id(plugins.firstIndex(of: plugin))
                     }
                 }.padding(padding)

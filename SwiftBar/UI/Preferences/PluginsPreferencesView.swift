@@ -43,8 +43,8 @@ struct PluginsView: View {
                         }
                     )
                 }.onMove(perform: move)
-
-            }.onAppear(perform: {
+            } // .listStyle(SidebarListStyle())
+            .onAppear(perform: {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     selection = 1
                 }
