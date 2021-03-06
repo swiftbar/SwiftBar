@@ -10,6 +10,7 @@
 		3920747E25460FD000213DBE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920747D25460FD000213DBE /* AppDelegate.swift */; };
 		3920748225460FD300213DBE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
+		39224DCF25F3E6DE00BABF21 /* AppDelegate+Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224DCE25F3E6DE00BABF21 /* AppDelegate+Menu.swift */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
 		393375EC25508B320050AC28 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
 		396257262569667000341A19 /* PluginRepositoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396257252569667000341A19 /* PluginRepositoryView.swift */; };
@@ -83,6 +84,7 @@
 		3920748425460FD300213DBE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3920748925460FD300213DBE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3920748A25460FD300213DBE /* SwiftBar.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftBar.entitlements; sourceTree = "<group>"; };
+		39224DCE25F3E6DE00BABF21 /* AppDelegate+Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Menu.swift"; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		395ADA652592359E003EFA25 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 			children = (
 				398B86CD254DBF2F00DEA027 /* main.swift */,
 				3920747D25460FD000213DBE /* AppDelegate.swift */,
+				39224DCE25F3E6DE00BABF21 /* AppDelegate+Menu.swift */,
 				39AF77832547750E001D76E5 /* AppShared.swift */,
 				393375E625507ADE0050AC28 /* Log.swift */,
 				39641EAF254E163C00713DAF /* Preferences.swift */,
@@ -481,6 +484,7 @@
 				39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */,
 				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
 				FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */,
+				39224DCF25F3E6DE00BABF21 /* AppDelegate+Menu.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,

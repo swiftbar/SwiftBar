@@ -79,7 +79,7 @@ struct SplitView: View {
             List {
                 ForEach(categories, id: \.self) { category in
                     NavigationLink(
-                        destination: CategoryDetailView(category: category),
+                        destination: CategoryDetailView(category: category).frame(minWidth: 950),
                         tag: category,
                         selection: $selectedCategory
                     ) {

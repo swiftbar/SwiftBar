@@ -68,6 +68,7 @@ class AppShared: NSObject {
         }
 
         defer {
+            NSApp.setActivationPolicy(.regular)
             delegate.repositoryWindowController?.showWindow(self)
             delegate.repositoryWindowController?.window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
@@ -89,6 +90,7 @@ class AppShared: NSObject {
 
     public static func openPreferences() {
         defer {
+            NSApp.setActivationPolicy(.regular)
             delegate.preferencesWindowController?.showWindow(self)
             delegate.preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)

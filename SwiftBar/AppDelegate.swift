@@ -3,9 +3,19 @@ import os
 import Sparkle
 import UserNotifications
 
-class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate {
-    var preferencesWindowController: NSWindowController?
-    var repositoryWindowController: NSWindowController?
+class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
+    var preferencesWindowController: NSWindowController? {
+        didSet {
+            preferencesWindowController?.window?.delegate = self
+        }
+    }
+
+    var repositoryWindowController: NSWindowController? {
+        didSet {
+            repositoryWindowController?.window?.delegate = self
+        }
+    }
+
     var pluginManager: PluginManager!
     let prefs = Preferences.shared
     var softwareUpdater: SPUUpdater!
@@ -60,6 +70,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                queue: OperationQueue.main) { [weak self] _ in
             self?.pluginManager.refreshAllPlugins()
         }
+        AppShared.getPlugins()
+    }
+
+    func changePresentationType() {
+        if preferencesWindowController?.window?.isVisible != true && repositoryWindowController?.window?.isVisible != true {
+            NSApp.setActivationPolicy(.accessory)
+            return
+        }
+
+        if preferencesWindowController?.window != nil || repositoryWindowController?.window != nil {
+            NSApp.setActivationPolicy(.regular)
+            return
+        }
     }
 
     func applicationWillTerminate(_: Notification) {
@@ -101,5 +124,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
     {
         completionHandler([.alert, .sound])
+    }
+
+    func windowWillClose(_: Notification) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.changePresentationType()
+        }
     }
 }
