@@ -83,6 +83,12 @@ class StreamablePlugin: Plugin {
                                         guard str != "\n" else {
                                             return
                                         }
+                                        if self?.prefs.streamablePluginDebugOutput == true,
+                                           let str = str,
+                                           let name = self?.name
+                                        {
+                                            os_log("Streaming %{public}@: %{public}@", log: Log.plugin, name, str)
+                                        }
                                         guard let str = str else {
                                             self?.content = nil
                                             return

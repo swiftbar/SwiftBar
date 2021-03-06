@@ -399,10 +399,7 @@ extension MenubarItem {
         guard let scriptOutput = content,
               !scriptOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || plugin?.lastState == .Loading
         else {
-            // not sure if the best option, adding to address #161 for now
-            if plugin?.type == .Executable {
-                hide()
-            }
+            hide()
             return
         }
 
