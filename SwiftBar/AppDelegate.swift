@@ -1,7 +1,12 @@
 import Cocoa
 import os
-import Sparkle
 import UserNotifications
+#if MAC_APP_STORE
+    protocol SPUStandardUserDriverDelegate {}
+    protocol SPUUpdaterDelegate {}
+#else
+    import Sparkle
+#endif
 
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
     var preferencesWindowController: NSWindowController? {
@@ -20,7 +25,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     var pluginManager: PluginManager!
     let prefs = Preferences.shared
-    var softwareUpdater: SPUUpdater!
+    #if !MAC_APP_STORE
+        var softwareUpdater: SPUUpdater!
+    #endif
 
     func applicationDidFinishLaunching(_: Notification) {
         setupToolbar()

@@ -1,22 +1,25 @@
 import Foundation
 
-class DirectoryObserver {
-    private let fileDescriptor: CInt
-    private let source: DispatchSourceProtocol
-    public let url: URL
+#if !MAC_APP_STORE
 
-    deinit {
-        self.source.cancel()
-        close(fileDescriptor)
-    }
+    class DirectoryObserver {
+        private let fileDescriptor: CInt
+        private let source: DispatchSourceProtocol
+        public let url: URL
 
-    init(url: URL, block: @escaping () -> Void) {
-        self.url = url
-        fileDescriptor = open(url.path, O_EVTONLY)
-        source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fileDescriptor, eventMask: .all, queue: DispatchQueue.global())
-        source.setEventHandler {
-            block()
+        deinit {
+            self.source.cancel()
+            close(fileDescriptor)
         }
-        source.resume()
+
+        init(url: URL, block: @escaping () -> Void) {
+            self.url = url
+            fileDescriptor = open(url.path, O_EVTONLY)
+            source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fileDescriptor, eventMask: .all, queue: DispatchQueue.global())
+            source.setEventHandler {
+                block()
+            }
+            source.resume()
+        }
     }
-}
+#endif

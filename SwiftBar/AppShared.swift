@@ -1,6 +1,5 @@
 import Cocoa
 import os
-import Sparkle
 import SwiftUI
 
 class AppShared: NSObject {
