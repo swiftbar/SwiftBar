@@ -3,6 +3,8 @@ import SwiftUI
 
 struct PluginRepositoryView: View {
     @ObservedObject var pluginRepository = PluginRepository.shared
+    @State var pluginModalPresented = false
+
     var body: some View {
         if pluginRepository.repository.isEmpty {
             VStack {
@@ -33,6 +35,8 @@ struct CategoryDetailScrollView: View {
     let category: String
     private let size: CGFloat = 150
     private let padding: CGFloat = 5
+    @State var pluginModalPresented = false
+
     var body: some View {
         let plugins = PluginRepository.shared.getPlugins(for: category)
         ScrollView(showsIndicators: true) {
@@ -46,6 +50,12 @@ struct CategoryDetailScrollView: View {
                             .padding()
                             .shadow(radius: 5)
                             .id(plugins.firstIndex(of: plugin))
+                            .onTapGesture {
+                                pluginModalPresented = true
+                            }
+                            .sheet(isPresented: $pluginModalPresented, content: {
+                                PluginEntryModalView(pluginEntry: plugin)
+                            })
                     }
                 }.padding(padding)
             } else {
