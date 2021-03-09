@@ -36,6 +36,7 @@ struct CategoryDetailScrollView: View {
     private let size: CGFloat = 150
     private let padding: CGFloat = 5
     @State var pluginModalPresented = false
+    @State var index: Int = 0
 
     var body: some View {
         let plugins = PluginRepository.shared.getPlugins(for: category)
@@ -52,9 +53,10 @@ struct CategoryDetailScrollView: View {
                             .id(plugins.firstIndex(of: plugin))
                             .onTapGesture {
                                 pluginModalPresented = true
+                                index = plugins.firstIndex(of: plugin) ?? 0
                             }
                             .sheet(isPresented: $pluginModalPresented, content: {
-                                PluginEntryModalView(pluginEntry: plugin)
+                                PluginEntryModalView(modalPresented: $pluginModalPresented, pluginEntry: plugins[index])
                             })
                     }
                 }.padding(padding)
@@ -64,6 +66,13 @@ struct CategoryDetailScrollView: View {
                         .padding()
                         .shadow(radius: 20)
                         .id(plugins.firstIndex(of: plugin))
+                        .onTapGesture {
+                            pluginModalPresented = true
+                            index = plugins.firstIndex(of: plugin) ?? 0
+                        }
+                        .sheet(isPresented: $pluginModalPresented, content: {
+                            PluginEntryModalView(modalPresented: $pluginModalPresented, pluginEntry: plugins[index])
+                        })
                 }
             }
         }.frame(minWidth: 100, maxWidth: .infinity)
@@ -74,6 +83,9 @@ struct SearchlScrollView: View {
     @Binding var searchString: String
     private let size: CGFloat = 150
     private let padding: CGFloat = 5
+    @State var pluginModalPresented = false
+    @State var index: Int = 0
+
     var body: some View {
         let plugins = PluginRepository.shared.searchPlugins(with: searchString)
         if plugins.isEmpty {
@@ -91,6 +103,13 @@ struct SearchlScrollView: View {
                                 .padding()
                                 .shadow(radius: 5)
                                 .id(plugins.firstIndex(of: plugin))
+                                .onTapGesture {
+                                    pluginModalPresented = true
+                                    index = plugins.firstIndex(of: plugin) ?? 0
+                                }
+                                .sheet(isPresented: $pluginModalPresented, content: {
+                                    PluginEntryModalView(modalPresented: $pluginModalPresented, pluginEntry: plugins[index])
+                                })
                         }
                     }.padding(padding)
                 }
