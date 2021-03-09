@@ -74,7 +74,7 @@ struct PluginEntryView: View {
 }
 
 struct PluginEntryModalView: View {
-    @Environment(\.presentationMode) private var presentationMode
+    @Binding var modalPresented: Bool
     enum InstallStatus: String {
         case Install
         case Installed
@@ -139,15 +139,22 @@ struct PluginEntryModalView: View {
                         }
                     }
                     Spacer()
-                    Button(action: {
-                        self.presentationMode.wrappedValue.dismiss()
-                    }, label: {
-                        if #available(OSX 11.0, *) {
-                            Image(systemName: "xmark.circle")
-                        } else {
-                            Text("Close")
-                        }
-                    })
+                    if #available(OSX 11.0, *) {
+                        ZStack {
+                            Circle()
+                                .foregroundColor(.blue)
+                            Image(systemName: "xmark")
+                                .foregroundColor(.white)
+                        }.frame(width: 20, height: 20)
+                            .onTapGesture {
+                                modalPresented.toggle()
+                            }
+
+                    } else {
+                        Button("Close", action: {
+                            modalPresented.toggle()
+                        })
+                    }
                 }
                 VStack(alignment: .leading) {
                     HStack {
@@ -180,17 +187,24 @@ struct PluginEntryModalView: View {
                     }
                     Text("Dependencies")
                         .font(.headline)
+                    if let dep = pluginEntry.dependencies {
+                        Text(dep)
+                            .font(.body)
+                            .lineLimit(10)
+                            .padding([.bottom, .top], 1)
+                    } else {
+                        Text("No dependencies")
+                            .font(.body)
+                            .foregroundColor(Color(NSColor.secondaryLabelColor))
+                            .padding([.bottom, .top], 1)
+                    }
                 }.padding(.bottom, 5)
                 Spacer()
                 HStack(alignment: .top) {
-                    Spacer()
                     if let url = pluginSourceURL {
-                        URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url, sfSymbol: "chevron.left.slash.chevron.right")
+                        URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url)
                     }
-
-                    if let url = pluginEntry.aboutURL {
-                        URLTextView(text: Localizable.PluginRepository.AboutPlugin.localized, url: url, sfSymbol: "info.circle")
-                    }
+                    Spacer()
                     VStack {
                         Button(action: {
                             os_log("User requested to install plugin from PLugin repository", log: Log.repository)
@@ -231,7 +245,7 @@ struct PluginEntryModalView: View {
 
 struct PluginEntryView_Previews: PreviewProvider {
     static var previews: some View {
-        PluginEntryModalView(pluginEntry: RepositoryEntry.PluginEntry(
+        PluginEntryModalView(modalPresented: .constant(true), pluginEntry: RepositoryEntry.PluginEntry(
             title: "iTunes Lite",
             author: "Padraic Renaghan",
             github: "prenagha",
