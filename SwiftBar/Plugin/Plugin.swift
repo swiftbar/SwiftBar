@@ -59,15 +59,7 @@ extension Plugin {
 
     func makeScriptExecutable(file: String) {
         guard prefs.makePluginExecutable else { return }
-        let script = """
-        if [[ -x "\(file)" ]]
-        then
-            echo "File "\(file)" is executable"
-        else
-            chmod +x "\(file)"
-        fi
-        """
-        _ = try? runScript(to: script)
+        _ = try? runScript(to: "chmod", args: ["+x", "\(file.escaped())"])
     }
 
     func refreshPluginMetadata() {
