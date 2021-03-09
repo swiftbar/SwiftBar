@@ -13,27 +13,14 @@ class PluginManager {
 
     var directoryObserver: DirectoryObserver?
 
-    private var plugins: [Plugin] = [] {
+    var plugins: [Plugin] = [] {
         didSet {
             pluginsDidChange()
         }
     }
 
-    var sortedPlugins: [Plugin] {
-        plugins
-            .sorted(by: {
-                guard let first = prefs.pluginsOrder.firstIndex(of: $0.id) else {
-                    return false
-                }
-                guard let second = prefs.pluginsOrder.firstIndex(of: $1.id) else {
-                    return true
-                }
-                return first < second
-            })
-    }
-
     var enabledPlugins: [Plugin] {
-        sortedPlugins.filter { $0.enabled }
+        plugins.filter { $0.enabled }
     }
 
     var menuBarItems: [PluginID: MenubarItem] = [:]
@@ -167,10 +154,8 @@ class PluginManager {
         removedPlugins.forEach { plugin in
             menuBarItems.removeValue(forKey: plugin.id)
             plugins.removeAll(where: { $0.id == plugin.id })
-            prefs.pluginsOrder.removeAll(where: { $0 == plugin.id })
         }
 
-        prefs.pluginsOrder.append(contentsOf: newPlugins.map(\.id))
         plugins.append(contentsOf: newPlugins)
     }
 

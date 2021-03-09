@@ -5,7 +5,7 @@ struct PluginsPreferencesView: View {
 
     var body: some View {
         VStack {
-            if delegate.pluginManager.sortedPlugins.isEmpty {
+            if delegate.pluginManager.plugins.isEmpty {
                 Text(Localizable.Preferences.NoPluginsMessage.localized)
                     .font(.largeTitle)
                     .padding(.bottom, 50)
@@ -27,7 +27,7 @@ struct PluginsView: View {
     @State var showingDetail = false
     @State var selection: Int? = nil
     var plugins: [Plugin] {
-        delegate.pluginManager.sortedPlugins
+        delegate.pluginManager.plugins
     }
 
     var body: some View {
@@ -42,7 +42,7 @@ struct PluginsView: View {
                             PluginRowView(plugin: plugin)
                         }
                     )
-                }.onMove(perform: move)
+                }
             } // .listStyle(SidebarListStyle())
             .onAppear(perform: {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -50,10 +50,6 @@ struct PluginsView: View {
                 }
             })
         }
-    }
-
-    func move(from source: IndexSet, to destination: Int) {
-        preferences.pluginsOrder.move(fromOffsets: source, toOffset: destination)
     }
 }
 
