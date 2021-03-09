@@ -33,7 +33,7 @@ Runs on macOS Catalina (10.15) and up.
 SwiftBar is bundled with a Plugin Repository. You can access it at Swiftbar → Get Plugins...
 
 <p align="center">
- <img width="600" height="500" alt="A screenshot of SwiftBar’s Plugin Repository" src="Resources/Plugin Repository.jpg">
+ <img width="600" height="500" alt="A screenshot of SwiftBar’s Plugin Repository" src="https://user-images.githubusercontent.com/222100/110520713-d5058000-80dc-11eb-9b15-baa09cb445bf.png">
 </p>
 
 If you want to add\remove plugin or have other questions about repository content please refer to this [issue](https://github.com/swiftbar/swiftbar-plugins/issues/1).
@@ -183,7 +183,6 @@ SwiftBar adopts metadata format suggested by BitBar:
 # <bitbar.dependencies>python,ruby,node</bitbar.dependencies>
 # <bitbar.abouturl>http://url-to-about.com/</bitbar.abouturl>
 # <bitbar.droptypes>Supported UTI's for dropping things on menu bar</droptypes.abouturl>
-
 ```
 
 #### Hiding default items
@@ -208,6 +207,18 @@ A special tag can be used as an alternative to refresh interval defined in plugi
 <swiftbar.schedule>01,16,31,46 * * * *</swiftbar.schedule>
 ```
 
+#### Other Parameters
+
+* `<swiftbar.runInBash>false</swiftbar.runInBash>` - doesn't wrap plugins in Bash when running
+* `<swiftbar.type>streamable</swiftbar.type>` - mark plugin as Streamable
+* `<swiftbar.environment>['var1':'default value', 'var2':'default value', ... ]</swiftbar.environment>` - this variables will be passed in plugin's environment, in later release SwiftBar will provide a UI to change values for these variables.
+
+#### Metadata for Binary Plugins
+
+For binary plugins metadata can be added as an extended file attribute:
+
+`xattr -w "com.ameba.SwiftBar" "$(cat metadata.txt | base64)" <plugin_file>`
+
 ## URL Scheme
 | Endpoint | Parameter | Description | Example |
 | ------------- | ------------- |------------- | ------------- | 
@@ -217,7 +228,13 @@ A special tag can be used as an alternative to refresh interval defined in plugi
 | addplugin | `src` source URL to plugin file | Add plugin to Swiftbar from URL | `swiftbar://addplugin?src=https://coolplugin` |
 | notify | `plugin` plugin [name](#plugin-naming), notification fields `title`, `subtitle`, `body` and disable sound `silent=true` | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
 
+## Preferences aka 'defaults'
 
+List of preferences that are not exposed in SwiftBar UI:
+* `defaults write com.ameba.SwiftBar DisableBashWrapper -bool YES` - doesn't wrap plugins in Bash when running
+* `defaults write com.ameba.SwiftBar MakePluginExecutable -bool NO` - disables auto `chmod +x` all files in Plugin Directory
+* `defaults write com.ameba.SwiftBar PluginDeveloperMode -bool YES` - enables editing in Preferences -> Plugins
+* `defaults write com.ameba.SwiftBar StreamablePluginDebugOutput -bool YES` - enables debug output for Stramable plugins, Swiftbar will expose the stream data in Console.App
 
 ## Logs and Error
 
