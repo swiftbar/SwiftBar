@@ -17,7 +17,6 @@ Download from [GitHub Releases](https://github.com/swiftbar/SwiftBar/releases)
 or Install with Homebrew
 
 ```
-brew tap melonamin/formulae
 brew install swiftbar
 ```
 
