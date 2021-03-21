@@ -62,6 +62,7 @@ Plugin files must adopt the following format:
 * **ext** - File extension.
 
 Duration modifiers:
+* **ms** - milliseconds, e.g. 1ms - refresh every millisecond
 * **s** - seconds, e.g. 1s - refresh every second
 * **m** - minute, e.g. 10m - refresh every ten minutes
 * **h** - hour, e.g. 3h - refresh every three hours
