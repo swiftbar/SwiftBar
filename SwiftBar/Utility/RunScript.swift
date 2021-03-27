@@ -18,7 +18,7 @@ private let systemEnv: [EnvironmentVariables: String] = [
     .swiftBar: "1",
     .swiftBarVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "",
     .swiftBarBuild: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
-    .swiftPluginsPath: Preferences.shared.pluginDirectoryPath ?? "",
+    .swiftPluginsPath: PreferencesStore.shared.pluginDirectoryPath ?? "",
     .osVersionMajor: String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
     .osVersionMinor: String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
     .osVersionPatch: String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion),

@@ -26,13 +26,14 @@ class StreamablePlugin: Plugin {
     }
 
     var error: ShellOutError?
+    var debugInfo = PluginDebugInfo()
 
     lazy var invokeQueue: OperationQueue = {
         delegate.pluginManager.pluginInvokeQueue
     }()
 
     var procces: Process?
-    let prefs = Preferences.shared
+    let prefs = PreferencesStore.shared
 
     init?(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")

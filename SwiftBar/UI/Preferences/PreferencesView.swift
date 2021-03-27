@@ -1,39 +1,39 @@
+import Preferences
 import SwiftUI
 
-struct PreferencesView: View {
-    @EnvironmentObject var preferences: Preferences
-    enum Tabs: Hashable {
-        case general, plugins
-    }
+extension Preferences.PaneIdentifier {
+    static let general = Self("general")
+    static let plugins = Self("plugins")
 
-    @State var tabSelectedIndex: Tabs = .general
-
-    var body: some View {
-        TabView(selection: $tabSelectedIndex) {
-            GeneralPreferencesView()
-                .tabItem {
-                    Text(Localizable.Preferences.General.localized)
-                }
-                .tag(Tabs.general)
-            PluginsPreferencesView()
-                .tabItem {
-                    Text(Localizable.Preferences.Plugins.localized)
-                }
-                .tag(Tabs.plugins)
-        }
-        .padding(20)
-        .frame(width: tabSelectedIndex == .plugins ? 750 : 500,
-               height: tabSelectedIndex == .plugins ? 500 : 500)
-    }
-}
-
-struct PreferencesView_Previews: PreviewProvider {
-    static var previews: some View {
-        Group {
-            PreferencesView()
-                .environmentObject(Preferences.shared)
-            PreferencesView()
-                .environmentObject(Preferences.shared)
+    var image: NSImage {
+        switch self {
+        case .general:
+            if #available(OSX 11.0, *) {
+                return NSImage(systemSymbolName: "gear", accessibilityDescription: nil)!
+            } else {
+                return NSImage(named: "AppIcon")!
+            }
+        case .plugins:
+            if #available(OSX 11.0, *) {
+                return NSImage(systemSymbolName: "wand.and.stars", accessibilityDescription: nil)!
+            } else {
+                return NSImage(named: "AppIcon")!
+            }
+        default:
+            return NSImage(named: "AppIcon")!
         }
     }
 }
+
+let preferencePanes: [PreferencePaneConvertible] = [
+    Preferences.Pane(
+        identifier: .general,
+        title: Localizable.Preferences.General.localized,
+        toolbarIcon: Preferences.PaneIdentifier.general.image
+    ) { GeneralPreferencesView().environmentObject(PreferencesStore.shared) },
+    Preferences.Pane(
+        identifier: .plugins,
+        title: Localizable.Preferences.Plugins.localized,
+        toolbarIcon: Preferences.PaneIdentifier.plugins.image
+    ) { PluginsPreferencesView() },
+]

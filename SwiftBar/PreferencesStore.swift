@@ -1,8 +1,8 @@
 import Cocoa
 import Combine
 
-class Preferences: ObservableObject {
-    static let shared = Preferences()
+class PreferencesStore: ObservableObject {
+    static let shared = PreferencesStore()
     enum PreferencesKeys: String {
         case PluginDirectory
         case DisabledPlugins
@@ -18,7 +18,7 @@ class Preferences: ObservableObject {
 
     @Published var pluginDirectoryPath: String? {
         didSet {
-            Preferences.setValue(value: pluginDirectoryPath, key: .PluginDirectory)
+            PreferencesStore.setValue(value: pluginDirectoryPath, key: .PluginDirectory)
         }
     }
 
@@ -34,50 +34,50 @@ class Preferences: ObservableObject {
     @Published var disabledPlugins: [PluginID] {
         didSet {
             let unique = Array(Set(disabledPlugins))
-            Preferences.setValue(value: unique, key: .DisabledPlugins)
+            PreferencesStore.setValue(value: unique, key: .DisabledPlugins)
             disabledPluginsPublisher.send("")
         }
     }
 
     @Published var terminal: ShellOptions {
         didSet {
-            Preferences.setValue(value: terminal.rawValue, key: .Terminal)
+            PreferencesStore.setValue(value: terminal.rawValue, key: .Terminal)
         }
     }
 
     @Published var swiftBarIconIsHidden: Bool {
         didSet {
-            Preferences.setValue(value: swiftBarIconIsHidden, key: .HideSwiftBarIcon)
+            PreferencesStore.setValue(value: swiftBarIconIsHidden, key: .HideSwiftBarIcon)
             delegate.pluginManager.rebuildAllMenus()
         }
     }
 
     var makePluginExecutable: Bool {
-        guard let out = Preferences.getValue(key: .MakePluginExecutable) as? Bool else {
-            Preferences.setValue(value: true, key: .MakePluginExecutable)
+        guard let out = PreferencesStore.getValue(key: .MakePluginExecutable) as? Bool else {
+            PreferencesStore.setValue(value: true, key: .MakePluginExecutable)
             return true
         }
         return out
     }
 
     var pluginDeveloperMode: Bool {
-        Preferences.getValue(key: .PluginDeveloperMode) as? Bool ?? false
+        PreferencesStore.getValue(key: .PluginDeveloperMode) as? Bool ?? false
     }
 
     var disableBashWrapper: Bool {
-        Preferences.getValue(key: .DisableBashWrapper) as? Bool ?? false
+        PreferencesStore.getValue(key: .DisableBashWrapper) as? Bool ?? false
     }
 
     var streamablePluginDebugOutput: Bool {
-        Preferences.getValue(key: .StreamablePluginDebugOutput) as? Bool ?? false
+        PreferencesStore.getValue(key: .StreamablePluginDebugOutput) as? Bool ?? false
     }
 
     init() {
-        pluginDirectoryPath = Preferences.getValue(key: .PluginDirectory) as? String
-        disabledPlugins = Preferences.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
+        pluginDirectoryPath = PreferencesStore.getValue(key: .PluginDirectory) as? String
+        disabledPlugins = PreferencesStore.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
         terminal = .Terminal
-        swiftBarIconIsHidden = Preferences.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
-        if let savedTerminal = Preferences.getValue(key: .Terminal) as? String,
+        swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
+        if let savedTerminal = PreferencesStore.getValue(key: .Terminal) as? String,
            let shell = ShellOptions(rawValue: savedTerminal)
         {
             terminal = shell

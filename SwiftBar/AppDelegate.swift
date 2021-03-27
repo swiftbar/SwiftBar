@@ -1,5 +1,6 @@
 import Cocoa
 import os
+import Preferences
 import UserNotifications
 #if MAC_APP_STORE
     protocol SPUStandardUserDriverDelegate {}
@@ -9,27 +10,28 @@ import UserNotifications
 #endif
 
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
-    var preferencesWindowController: NSWindowController? {
-        didSet {
-            preferencesWindowController?.window?.delegate = self
-        }
-    }
-
+    
     var repositoryWindowController: NSWindowController? {
         didSet {
             repositoryWindowController?.window?.delegate = self
         }
     }
 
+    lazy var preferencesWindowController = PreferencesWindowController(
+        panes: preferencePanes,
+        style: .toolbarItems
+    )
+
     var repositoryToolbarSearchItem: NSToolbarItem?
 
     var pluginManager: PluginManager!
-    let prefs = Preferences.shared
+    let prefs = PreferencesStore.shared
     #if !MAC_APP_STORE
         var softwareUpdater: SPUUpdater!
     #endif
 
     func applicationDidFinishLaunching(_: Notification) {
+        preferencesWindowController.window?.delegate = self
         setupToolbar()
         let hostBundle = Bundle.main
         #if !MAC_APP_STORE
@@ -55,7 +57,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         pluginManager = PluginManager.shared
         pluginManager.loadPlugins()
 
-        while Preferences.shared.pluginDirectoryPath == nil {
+        while PreferencesStore.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
             alert.messageText = Localizable.App.ChoosePluginFolderMessage.localized
             alert.informativeText = Localizable.App.ChoosePluginFolderInfo.localized
@@ -85,12 +87,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func changePresentationType() {
-        if preferencesWindowController?.window?.isVisible != true && repositoryWindowController?.window?.isVisible != true {
+        if preferencesWindowController.window?.isVisible != true && repositoryWindowController?.window?.isVisible != true {
             NSApp.setActivationPolicy(.accessory)
             return
         }
 
-        if preferencesWindowController?.window != nil || repositoryWindowController?.window != nil {
+        if preferencesWindowController.window != nil || repositoryWindowController?.window != nil {
             NSApp.setActivationPolicy(.regular)
             return
         }

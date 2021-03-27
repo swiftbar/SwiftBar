@@ -1,4 +1,5 @@
 import LaunchAtLogin
+import Preferences
 import SwiftUI
 
 enum ShellOptions: String, CaseIterable {
@@ -7,50 +8,32 @@ enum ShellOptions: String, CaseIterable {
 }
 
 struct GeneralPreferencesView: View {
-    @EnvironmentObject var preferences: Preferences
+    @EnvironmentObject var preferences: PreferencesStore
     @State private var launchAtLogin = true
 
     var body: some View {
-        Form {
-            Section {
+        Preferences.Container(contentWidth: 500) {
+            Preferences.Section(title: "\(Localizable.Preferences.LaunchAtLogin.localized):") {
                 LaunchAtLogin.Toggle {
                     Text(Localizable.Preferences.LaunchAtLogin.localized)
                 }
-                .padding(.bottom)
             }
-            Section(header: Text(Localizable.Preferences.PluginsFolder.localized)) {
-                HStack(alignment: .top) {
-                    Text(Localizable.Preferences.Path.localized + ": ")
-                    Text(preferences.pluginDirectoryPath ?? Localizable.Preferences.PathIsNone.localized)
-                        .fixedSize(horizontal: false, vertical: true)
-                }.padding(.top)
-                HStack {
-                    Spacer()
-                    Button(Localizable.Preferences.ChangePath.localized) {
-                        AppShared.changePluginFolder()
-                    }
+            Preferences.Section(title: "\(Localizable.Preferences.PluginsFolder.localized):") {
+                Button(Localizable.Preferences.ChangePath.localized) {
+                    AppShared.changePluginFolder()
                 }
+                Text(preferences.pluginDirectoryPath ?? Localizable.Preferences.PathIsNone.localized)
+                    .preferenceDescription()
             }
-            Spacer()
-            Section(header: Text(Localizable.Preferences.Shell.localized)) {
+            Preferences.Section(title: "\(Localizable.Preferences.Shell.localized):") {
                 EnumPicker(selected: $preferences.terminal, title: "")
+                    .frame(width: 120.0)
             }
-            Section {
-                Toggle(isOn: $preferences.swiftBarIconIsHidden) {
-                    Text(Localizable.Preferences.HideSwiftBarIcon.localized)
-                }.padding(.top)
+            Preferences.Section(title: "\(Localizable.Preferences.UpdateLabel.localized):") {
+                Button(Localizable.Preferences.CheckForUpdates.localized) {
+                    AppShared.checkForUpdates()
+                }.frame(width: 140.0)
             }
-            Section {
-                HStack {
-                    Spacer()
-                    Button(Localizable.Preferences.CheckForUpdates.localized) {
-                        AppShared.checkForUpdates()
-                    }
-                }
-            }
-            Spacer()
         }
-        .padding(20)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

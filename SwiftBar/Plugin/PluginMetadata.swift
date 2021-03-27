@@ -95,7 +95,7 @@ class PluginMetadata: ObservableObject {
     }
 
     var shouldRunInBash: Bool {
-        if Preferences.shared.disableBashWrapper {
+        if PreferencesStore.shared.disableBashWrapper {
             return false
         }
         return runInBash

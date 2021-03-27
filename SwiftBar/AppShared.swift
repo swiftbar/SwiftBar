@@ -4,7 +4,7 @@ import SwiftUI
 
 class AppShared: NSObject {
     public static func openPluginFolder(path: String? = nil) {
-        NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: Preferences.shared.pluginDirectoryResolvedPath ?? "")
+        NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: PreferencesStore.shared.pluginDirectoryResolvedPath ?? "")
     }
 
     public static func changePluginFolder() {
@@ -45,12 +45,12 @@ class AppShared: NSObject {
             return
         }
 
-        Preferences.shared.pluginDirectoryPath = url.path
+        PreferencesStore.shared.pluginDirectoryPath = url.path
         delegate.pluginManager.loadPlugins()
     }
 
     public static func getPlugins() {
-        while Preferences.shared.pluginDirectoryPath == nil {
+        while PreferencesStore.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
             alert.messageText = Localizable.App.ChoosePluginFolderMessage.localized
             alert.informativeText = Localizable.App.ChoosePluginFolderInfo.localized
@@ -89,24 +89,8 @@ class AppShared: NSObject {
     }
 
     public static func openPreferences() {
-        defer {
-            NSApp.setActivationPolicy(.regular)
-            delegate.preferencesWindowController?.showWindow(self)
-            delegate.preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-        }
-        guard delegate.preferencesWindowController == nil else { return }
-        let myWindow = AnimatableWindow(
-            contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
-            styleMask: [.closable, .miniaturizable, .resizable, .titled],
-            backing: .buffered,
-            defer: false
-        )
-        myWindow.title = Localizable.Preferences.Preferences.localized
-        myWindow.center()
-
-        delegate.preferencesWindowController = NSWindowController(window: myWindow)
-        delegate.preferencesWindowController?.contentViewController = NSHostingController(rootView: PreferencesView().environmentObject(Preferences.shared))
+        NSApp.setActivationPolicy(.regular)
+        delegate.preferencesWindowController.show()
     }
 
     public static func showAbout() {
@@ -134,7 +118,7 @@ class AppShared: NSObject {
             .appending(" ")
             .appending(args.joined(separator: " "))
         var appleScript: String = ""
-        switch Preferences.shared.terminal {
+        switch PreferencesStore.shared.terminal {
         case .Terminal:
             appleScript = """
             tell application "Terminal"
@@ -187,6 +171,8 @@ class AppShared: NSObject {
     }
 
     public static func checkForUpdates() {
-        delegate.softwareUpdater.checkForUpdates()
+        #if !MAC_APP_STORE
+            delegate.softwareUpdater.checkForUpdates()
+        #endif
     }
 }

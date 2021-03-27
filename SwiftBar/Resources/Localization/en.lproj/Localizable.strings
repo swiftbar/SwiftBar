@@ -24,9 +24,10 @@
 "PR_LAUNCH_AT_LOGIN" = "Launch at Login";
 "PF_PATH" = "Path";
 "PF_PATH_IS_NONE" = "None";
-"PF_CHANGE_PATH" = "Change";
+"PF_CHANGE_PATH" = "Change...";
 "PF_SHELL" = "Shell";
 "PF_HIDE_SWIFTBAR_ICON" = "Hide SwiftBar Icon";
+"PF_CHECK_FOR_UPDATE" = "Update";
 "PF_CHECK_FOR_UPDATES" = "Check for updates";
 "PF_NO_PLUGINS_MESSAGE" = "Plugins folder is empty";
 "PF_ENABLE_ALL" = "Enable All";

@@ -1,7 +1,7 @@
+import Preferences
 import SwiftUI
-
 struct PluginsPreferencesView: View {
-    @EnvironmentObject var preferences: Preferences
+    @EnvironmentObject var preferences: PreferencesStore
 
     var body: some View {
         VStack {
@@ -11,19 +11,13 @@ struct PluginsPreferencesView: View {
                     .padding(.bottom, 50)
             } else {
                 PluginsView()
-                HStack {
-                    Text(Localizable.Preferences.PluginsFootnote.localized)
-                        .font(.footnote)
-                        .padding([.leading, .top], 5)
-                    Spacer()
-                }
             }
-        }
+        }.frame(width: 750, height: 400)
     }
 }
 
 struct PluginsView: View {
-    @EnvironmentObject var preferences: Preferences
+    @EnvironmentObject var preferences: PreferencesStore
     @State var showingDetail = false
     @State var selection: Int? = nil
     var plugins: [Plugin] {
@@ -43,18 +37,19 @@ struct PluginsView: View {
                         }
                     )
                 }
-            } // .listStyle(SidebarListStyle())
-            .onAppear(perform: {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    selection = 1
-                }
-            })
+            }.listStyle(SidebarListStyle())
+                .onAppear(perform: {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        selection = 0
+                    }
+                })
+                .frame(minWidth: 200)
         }
     }
 }
 
 struct PluginRowView: View {
-    @EnvironmentObject var preferences: Preferences
+    @EnvironmentObject var preferences: PreferencesStore
     @State private var enabled: Bool = false
     var label: String {
         guard let name = plugin.metadata?.name, !name.isEmpty else {

@@ -4,7 +4,7 @@ import os
 
 class PluginRepository: ObservableObject {
     static let shared = PluginRepository()
-    let prefs = Preferences.shared
+    let prefs = PreferencesStore.shared
 
     @Published var repository: [RepositoryEntry] {
         didSet {
@@ -76,7 +76,7 @@ class PluginRepository: ObservableObject {
     }
 
     static func parseRepositoryFile() -> [RepositoryEntry]? {
-        guard let pluginDirectoryPath = Preferences.shared.pluginDirectoryResolvedPath else { return nil }
+        guard let pluginDirectoryPath = PreferencesStore.shared.pluginDirectoryResolvedPath else { return nil }
         let url = URL(fileURLWithPath: pluginDirectoryPath).appendingPathComponent(".repository.json")
 
         guard let jsonStr = try? String(contentsOfFile: url.path),

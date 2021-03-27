@@ -24,9 +24,10 @@
 "PR_LAUNCH_AT_LOGIN" = "Opstarten bij inloggen";
 "PF_PATH" = "Pad";
 "PF_PATH_IS_NONE" = "Geen";
-"PF_CHANGE_PATH" = "Wijzig";
+"PF_CHANGE_PATH" = "Wijzig...";
 "PF_SHELL" = "Shell";
 "PF_HIDE_SWIFTBAR_ICON" = "Verberg SwiftBar Icon";
+"PF_CHECK_FOR_UPDATE" = "Update";
 "PF_CHECK_FOR_UPDATES" = "Controleer op updates";
 "PF_NO_PLUGINS_MESSAGE" = "Plug-ins folder is leeg";
 "PF_ENABLE_ALL" = "Alles inschakelen";

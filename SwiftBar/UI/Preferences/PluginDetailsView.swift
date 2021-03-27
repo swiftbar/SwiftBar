@@ -18,7 +18,7 @@ struct PluginDetailsView: View {
                             AppShared.openPluginFolder(path: plugin.file)
                         }) {
                             Image(systemName: "folder")
-                        }.padding()
+                        }.padding(.trailing)
                     }
                 }) {
                     PluginDetailsTextView(label: "Name",
@@ -50,7 +50,7 @@ struct PluginDetailsView: View {
                                               width: width * 0.2)
                     }
                 }
-
+                Divider()
                 Section(header: Text("Hide Menu Items")) {
                     HStack {
                         PluginDetailsToggleView(label: "About",
@@ -85,9 +85,10 @@ struct PluginDetailsView: View {
                     }
                 }
             }.padding()
+            Spacer()
             HStack {
                 Spacer()
-                Button("Save", action: {
+                Button("Save in Plugin File", action: {
                     PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
                 }).padding(.trailing, 5)
             }.padding()
@@ -96,7 +97,7 @@ struct PluginDetailsView: View {
 }
 
 struct PluginDetailsTextView: View {
-    @EnvironmentObject var preferences: Preferences
+    @EnvironmentObject var preferences: PreferencesStore
     let label: String
     @Binding var text: String
     let width: CGFloat
@@ -107,7 +108,7 @@ struct PluginDetailsTextView: View {
                 Text("\(label):")
             }.frame(width: width)
             TextField("", text: $text)
-                .disabled(!Preferences.shared.pluginDeveloperMode)
+                .disabled(!PreferencesStore.shared.pluginDeveloperMode)
             Spacer()
         }
     }
