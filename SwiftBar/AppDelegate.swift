@@ -32,14 +32,16 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     func applicationDidFinishLaunching(_: Notification) {
         setupToolbar()
         let hostBundle = Bundle.main
-        let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
-        softwareUpdater = SPUUpdater(hostBundle: hostBundle, applicationBundle: hostBundle, userDriver: updateDriver, delegate: self)
+        #if !MAC_APP_STORE
+            let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
+            softwareUpdater = SPUUpdater(hostBundle: hostBundle, applicationBundle: hostBundle, userDriver: updateDriver, delegate: self)
 
-        do {
-            try softwareUpdater.start()
-        } catch {
-            NSLog("Failed to start software updater with error: \(error)")
-        }
+            do {
+                try softwareUpdater.start()
+            } catch {
+                NSLog("Failed to start software updater with error: \(error)")
+            }
+        #endif
 
         // Check if plugin folder exists
         var isDir: ObjCBool = false
