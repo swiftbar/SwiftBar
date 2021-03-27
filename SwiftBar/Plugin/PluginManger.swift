@@ -6,12 +6,14 @@ import UserNotifications
 
 class PluginManager {
     static let shared = PluginManager()
-    let prefs = Preferences.shared
+    let prefs = PreferencesStore.shared
     lazy var barItem: MenubarItem = {
         MenubarItem.defaultBarItem()
     }()
 
-    var directoryObserver: DirectoryObserver?
+    #if !MAC_APP_STORE
+        var directoryObserver: DirectoryObserver?
+    #endif
 
     var plugins: [Plugin] = [] {
         didSet {
@@ -122,9 +124,11 @@ class PluginManager {
     }
 
     func loadPlugins() {
-        if directoryObserver?.url != pluginDirectoryURL {
-            configureDirectoryObserver()
-        }
+        #if !MAC_APP_STORE
+            if directoryObserver?.url != pluginDirectoryURL {
+                configureDirectoryObserver()
+            }
+        #endif
 
         let pluginFiles = getPluginList()
         guard pluginFiles.count < 50 else {
@@ -164,6 +168,9 @@ class PluginManager {
     }
 
     func refreshAllPlugins() {
+        #if MAC_APP_STORE
+            loadPlugins()
+        #endif
         os_log("Refreshing all enabled plugins.", log: Log.plugin)
         enabledPlugins.forEach { $0.refresh() }
     }
@@ -213,13 +220,15 @@ class PluginManager {
         downloadTask.resume()
     }
 
-    func configureDirectoryObserver() {
-        if let url = pluginDirectoryURL {
-            directoryObserver = DirectoryObserver(url: url, block: { [weak self] in
-                self?.directoryChanged()
-            })
+    #if !MAC_APP_STORE
+        func configureDirectoryObserver() {
+            if let url = pluginDirectoryURL {
+                directoryObserver = DirectoryObserver(url: url, block: { [weak self] in
+                    self?.directoryChanged()
+                })
+            }
         }
-    }
+    #endif
 
     func directoryChanged() {
         DispatchQueue.main.async { [weak self] in
