@@ -6,6 +6,7 @@
 "MB_ABOUT_PLUGIN" = "Over";
 "MB_RUN_IN_TERMINAL" = "Uitvoeren in Terminal";
 "MB_DISABLE_PLUGIN" = "Plug-in uitschakelen";
+"MB_DDEBUG_PLUGIN" = "Debug Plugin";
 "MB_PREFERENCES" = "Voorkeuren…";
 "MB_REFRESH_ALL" = "Alles verversen";
 "MB_ENABLE_ALL" = "Alles inschakelen";

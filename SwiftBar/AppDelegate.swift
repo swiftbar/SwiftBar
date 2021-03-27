@@ -10,7 +10,6 @@ import UserNotifications
 #endif
 
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
-    
     var repositoryWindowController: NSWindowController? {
         didSet {
             repositoryWindowController?.window?.delegate = self

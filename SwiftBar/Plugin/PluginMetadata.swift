@@ -157,7 +157,7 @@ class PluginMetadata: ObservableObject {
     }
 
     static func writeMetadata(metadata: PluginMetadata, fileURL: URL) {
-        let metadataString = metadata.generetaMetadataString()
+        let metadataString = metadata.genereteMetadataString()
         if let encodedString = metadataString.data(using: .utf8)?.base64EncodedData() {
             try? fileURL.setExtendedAttribute(data: encodedString, forName: "com.ameba.SwiftBar")
             return
@@ -168,7 +168,7 @@ class PluginMetadata: ObservableObject {
         PluginMetadata()
     }
 
-    func generetaMetadataString() -> String {
+    func genereteMetadataString() -> String {
         var result = ""
         PluginMetadataOption.allCases.forEach { option in
             var value = ""

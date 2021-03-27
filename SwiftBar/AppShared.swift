@@ -97,6 +97,23 @@ class AppShared: NSObject {
         NSApp.orderFrontStandardAboutPanel()
     }
 
+    public static func showPluginDebug(plugin: Plugin) {
+        let myWindow = AnimatableWindow(
+            contentRect: .init(origin: .zero, size: CGSize(width: 400, height: 500)),
+            styleMask: [.closable, .miniaturizable, .resizable, .titled],
+            backing: .buffered,
+            defer: false
+        )
+        myWindow.title = "Plugin Debug"
+        myWindow.center()
+
+        let windowController = NSWindowController(window: myWindow)
+        windowController.contentViewController = NSHostingController(rootView: DebugView(plugin: plugin, debugInfo: plugin.debugInfo))
+        windowController.showWindow(self)
+        windowController.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     public static func runInTerminal(script: String, args: [String] = [], runInBackground: Bool = false, env: [String: String] = [:], runInBash: Bool, completionHandler: ((() -> Void)?) = nil) {
         if runInBackground {
             DispatchQueue.global(qos: .userInitiated).async {

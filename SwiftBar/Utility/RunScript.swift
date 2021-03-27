@@ -24,7 +24,7 @@ private let systemEnv: [EnvironmentVariables: String] = [
     .osVersionPatch: String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion),
 ]
 
-private var systemEnvStr: [String: String] {
+var systemEnvStr: [String: String] {
     Dictionary(uniqueKeysWithValues:
         systemEnv.map { key, value in (key.rawValue, value) })
 }

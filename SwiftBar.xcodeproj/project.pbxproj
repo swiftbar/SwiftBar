@@ -53,7 +53,7 @@
 		39224E1025F4344600BABF21 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		39224E1125F4344600BABF21 /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		39224E1225F4344600BABF21 /* MenuBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF777B254618F6001D76E5 /* MenuBarItem.swift */; };
-		39224E1325F4344600BABF21 /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAF254E163C00713DAF /* Preferences.swift */; };
+		39224E1325F4344600BABF21 /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAF254E163C00713DAF /* PreferencesStore.swift */; };
 		39224E1525F4344600BABF21 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 39224DE425F4344600BABF21 /* LaunchAtLogin */; };
 		39224E1725F4344600BABF21 /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = 39224DE825F4344600BABF21 /* SwifCron */; };
 		39224E1825F4344600BABF21 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = 39224DE625F4344600BABF21 /* HotKey */; };
@@ -72,7 +72,7 @@
 		39641EA5254E096200713DAF /* PreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA4254E096200713DAF /* PreferencesView.swift */; };
 		39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EA8254E0E0B00713DAF /* EnumPicker.swift */; };
 		39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAC254E0E3400713DAF /* ImageLoader.swift */; };
-		39641EB0254E163C00713DAF /* Preferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAF254E163C00713DAF /* Preferences.swift */; };
+		39641EB0254E163C00713DAF /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAF254E163C00713DAF /* PreferencesStore.swift */; };
 		396E6CA9258E8C5C002C735D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 396E6CAB258E8C5C002C735D /* Localizable.strings */; };
 		396E6CB0258E8D47002C735D /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396E6CAF258E8D47002C735D /* Localizable.swift */; };
 		3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359025896DBC007CF2E8 /* RSSparkle */; };
@@ -82,6 +82,10 @@
 		398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */; };
 		398B86CE254DBF2F00DEA027 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86CD254DBF2F00DEA027 /* main.swift */; };
 		398DAE7A25537DAF00747D90 /* PluginErrorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398DAE7925537DAF00747D90 /* PluginErrorView.swift */; };
+		3990DCDA2602BB32002CDCD5 /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990DCD92602BB32002CDCD5 /* DebugView.swift */; };
+		3990DCDB2602BB32002CDCD5 /* DebugView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990DCD92602BB32002CDCD5 /* DebugView.swift */; };
+		3990DCE12602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990DCE02602BB5B002CDCD5 /* PluginDebugInfo.swift */; };
+		3990DCE22602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3990DCE02602BB5B002CDCD5 /* PluginDebugInfo.swift */; };
 		39AF776F25461277001D76E5 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF776E25461277001D76E5 /* Plugin.swift */; };
 		39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7771254612BF001D76E5 /* PluginMetadata.swift */; };
 		39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7774254613C9001D76E5 /* PluginManger.swift */; };
@@ -92,6 +96,8 @@
 		39AF7793254B5834001D76E5 /* NSColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7792254B5834001D76E5 /* NSColor.swift */; };
 		39AF7796254B6203001D76E5 /* NSImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7795254B6203001D76E5 /* NSImage.swift */; };
 		39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7798254C7796001D76E5 /* String+Emoji.swift */; };
+		39B64C29260F70D900B7FA63 /* Preferences in Frameworks */ = {isa = PBXBuildFile; productRef = 39B64C28260F70D900B7FA63 /* Preferences */; };
+		39B64C35260F740E00B7FA63 /* Preferences in Frameworks */ = {isa = PBXBuildFile; productRef = 39B64C34260F740E00B7FA63 /* Preferences */; };
 		39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A0A257C21D400FA012E /* String+Escaped.swift */; };
 		39B84A1F257D436200FA012E /* RunScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A1E257D436200FA012E /* RunScript.swift */; };
 		39B84A22257D63F700FA012E /* String+SFSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A21257D63F700FA012E /* String+SFSymbols.swift */; };
@@ -153,7 +159,7 @@
 		39641EA4254E096200713DAF /* PreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesView.swift; sourceTree = "<group>"; };
 		39641EA8254E0E0B00713DAF /* EnumPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnumPicker.swift; sourceTree = "<group>"; };
 		39641EAC254E0E3400713DAF /* ImageLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageLoader.swift; sourceTree = "<group>"; };
-		39641EAF254E163C00713DAF /* Preferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preferences.swift; sourceTree = "<group>"; };
+		39641EAF254E163C00713DAF /* PreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesStore.swift; sourceTree = "<group>"; };
 		396E6CAA258E8C5C002C735D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		396E6CAD258E8CA8002C735D /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		396E6CAF258E8D47002C735D /* Localizable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localizable.swift; sourceTree = "<group>"; };
@@ -161,6 +167,8 @@
 		398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DirectoryObserver.swift; sourceTree = "<group>"; };
 		398B86CD254DBF2F00DEA027 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		398DAE7925537DAF00747D90 /* PluginErrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginErrorView.swift; sourceTree = "<group>"; };
+		3990DCD92602BB32002CDCD5 /* DebugView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugView.swift; sourceTree = "<group>"; };
+		3990DCE02602BB5B002CDCD5 /* PluginDebugInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDebugInfo.swift; sourceTree = "<group>"; };
 		39AF776E25461277001D76E5 /* Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Plugin.swift; sourceTree = "<group>"; };
 		39AF7771254612BF001D76E5 /* PluginMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginMetadata.swift; sourceTree = "<group>"; };
 		39AF7774254613C9001D76E5 /* PluginManger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginManger.swift; sourceTree = "<group>"; };
@@ -199,6 +207,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */,
+				39B64C29260F70D900B7FA63 /* Preferences in Frameworks */,
 				3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
 				3989359E25896E29007CF2E8 /* HotKey in Frameworks */,
@@ -210,6 +219,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				39224E1525F4344600BABF21 /* LaunchAtLogin in Frameworks */,
+				39B64C35260F740E00B7FA63 /* Preferences in Frameworks */,
 				39224E1725F4344600BABF21 /* SwifCron in Frameworks */,
 				39224E1825F4344600BABF21 /* HotKey in Frameworks */,
 			);
@@ -246,7 +256,7 @@
 				39224DD125F3F19B00BABF21 /* AppDelegate+Toolbar.swift */,
 				39AF77832547750E001D76E5 /* AppShared.swift */,
 				393375E625507ADE0050AC28 /* Log.swift */,
-				39641EAF254E163C00713DAF /* Preferences.swift */,
+				39641EAF254E163C00713DAF /* PreferencesStore.swift */,
 				398B86D4254DC01800DEA027 /* MenuBar */,
 				3988C8932546116200A02B9B /* Plugin */,
 				39AF7791254B5824001D76E5 /* Utility */,
@@ -285,6 +295,7 @@
 		39641E9F254DD30C00713DAF /* UI */ = {
 			isa = PBXGroup;
 			children = (
+				3990DCD82602BB1B002CDCD5 /* Debug */,
 				FA64C9DD25CF68FC00C4E5C5 /* Preferences */,
 				39641EA7254E0DFD00713DAF /* Helpers */,
 				3962572D2569949200341A19 /* Plugin Repository */,
@@ -324,6 +335,7 @@
 				39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */,
 				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
+				3990DCE02602BB5B002CDCD5 /* PluginDebugInfo.swift */,
 			);
 			path = Plugin;
 			sourceTree = "<group>";
@@ -335,6 +347,14 @@
 				39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */,
 			);
 			path = MenuBar;
+			sourceTree = "<group>";
+		};
+		3990DCD82602BB1B002CDCD5 /* Debug */ = {
+			isa = PBXGroup;
+			children = (
+				3990DCD92602BB32002CDCD5 /* DebugView.swift */,
+			);
+			path = Debug;
 			sourceTree = "<group>";
 		};
 		39AF7791254B5824001D76E5 /* Utility */ = {
@@ -420,6 +440,7 @@
 				3989359525896DF9007CF2E8 /* LaunchAtLogin */,
 				3989359D25896E29007CF2E8 /* HotKey */,
 				FA8518F42598E786008AD21C /* SwifCron */,
+				39B64C28260F70D900B7FA63 /* Preferences */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -445,6 +466,7 @@
 				39224DE425F4344600BABF21 /* LaunchAtLogin */,
 				39224DE625F4344600BABF21 /* HotKey */,
 				39224DE825F4344600BABF21 /* SwifCron */,
+				39B64C34260F740E00B7FA63 /* Preferences */,
 			);
 			productName = SwiftBar;
 			productReference = 39224E2A25F4344600BABF21 /* SwiftBar MAS.app */;
@@ -480,6 +502,7 @@
 				3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
 				3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */,
 				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
+				39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -658,6 +681,7 @@
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
 				39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */,
 				39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */,
+				3990DCDA2602BB32002CDCD5 /* DebugView.swift in Sources */,
 				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
 				FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */,
 				39224DCF25F3E6DE00BABF21 /* AppDelegate+Menu.swift in Sources */,
@@ -685,6 +709,7 @@
 				39224E5C25F530AF00BABF21 /* EnvConfig.swift in Sources */,
 				39224DD225F3F19B00BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
+				3990DCE12602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
 				FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
@@ -692,7 +717,7 @@
 				FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */,
 				FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,
-				39641EB0254E163C00713DAF /* Preferences.swift in Sources */,
+				39641EB0254E163C00713DAF /* PreferencesStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -707,6 +732,7 @@
 				39224DEF25F4344600BABF21 /* Plugin.swift in Sources */,
 				39224DF025F4344600BABF21 /* String+Escaped.swift in Sources */,
 				39224DF125F4344600BABF21 /* ImageVIew.swift in Sources */,
+				3990DCDB2602BB32002CDCD5 /* DebugView.swift in Sources */,
 				39224DF225F4344600BABF21 /* URLTextView.swift in Sources */,
 				39224DF325F4344600BABF21 /* PluginDetailsView.swift in Sources */,
 				39224DF425F4344600BABF21 /* AppDelegate+Menu.swift in Sources */,
@@ -734,6 +760,7 @@
 				39224E5F25F5317800BABF21 /* EnvConfig.swift in Sources */,
 				39224E0A25F4344600BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				39224E0B25F4344600BABF21 /* ImageLoader.swift in Sources */,
+				3990DCE22602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
 				39224E0C25F4344600BABF21 /* StreamablePlugin.swift in Sources */,
 				39224E0D25F4344600BABF21 /* PreferencesView.swift in Sources */,
 				39224E0E25F4344600BABF21 /* PluginMetadata.swift in Sources */,
@@ -741,7 +768,7 @@
 				39224E1025F4344600BABF21 /* GeneralPreferencesView.swift in Sources */,
 				39224E1125F4344600BABF21 /* String+ANSIColor.swift in Sources */,
 				39224E1225F4344600BABF21 /* MenuBarItem.swift in Sources */,
-				39224E1325F4344600BABF21 /* Preferences.swift in Sources */,
+				39224E1325F4344600BABF21 /* PreferencesStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -953,6 +980,7 @@
 				MARKETING_VERSION = 1.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG MAC_APP_STORE";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -980,6 +1008,8 @@
 				MARKETING_VERSION = 1.2.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				"SWIFT_ACTIVE_COMPILATION_CONDITIONS[arch=*]" = MAC_APP_STORE;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -1065,6 +1095,14 @@
 				minimumVersion = 0.1.3;
 			};
 		};
+		39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/Preferences";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.2.1;
+			};
+		};
 		FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swiftbar/SwifCron";
@@ -1105,6 +1143,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */;
 			productName = HotKey;
+		};
+		39B64C28260F70D900B7FA63 /* Preferences */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */;
+			productName = Preferences;
+		};
+		39B64C34260F740E00B7FA63 /* Preferences */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */;
+			productName = Preferences;
 		};
 		FA8518F42598E786008AD21C /* SwifCron */ = {
 			isa = XCSwiftPackageProductDependency;

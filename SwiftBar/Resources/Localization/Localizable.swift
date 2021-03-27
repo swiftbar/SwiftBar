@@ -21,6 +21,7 @@ enum Localizable {
         case AboutPlugin = "MB_ABOUT_PLUGIN"
         case RunInTerminal = "MB_RUN_IN_TERMINAL"
         case DisablePlugin = "MB_DISABLE_PLUGIN"
+        case DebugPlugin = "MB_DDEBUG_PLUGIN"
         case Preferences = "MB_PREFERENCES"
         case RefreshAll = "MB_REFRESH_ALL"
         case EnableAll = "MB_ENABLE_ALL"

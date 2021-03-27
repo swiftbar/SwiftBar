@@ -30,6 +30,7 @@ protocol Plugin: AnyObject {
     var lastState: PluginState { get set }
     var content: String? { get set }
     var error: ShellOutError? { get set }
+    var debugInfo: PluginDebugInfo { get set }
     func refresh()
     func enable()
     func disable()
@@ -49,8 +50,8 @@ extension Plugin {
         """
     }
 
-    var prefs: Preferences {
-        Preferences.shared
+    var prefs: PreferencesStore {
+        PreferencesStore.shared
     }
 
     var enabled: Bool {

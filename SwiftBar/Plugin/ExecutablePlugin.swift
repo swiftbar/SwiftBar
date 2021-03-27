@@ -22,6 +22,7 @@ class ExecutablePlugin: Plugin {
     }
 
     var error: ShellOutError?
+    var debugInfo = PluginDebugInfo()
 
     lazy var invokeQueue: OperationQueue = {
         delegate.pluginManager.pluginInvokeQueue
@@ -33,7 +34,7 @@ class ExecutablePlugin: Plugin {
 
     var cancellable: Set<AnyCancellable> = []
 
-    let prefs = Preferences.shared
+    let prefs = PreferencesStore.shared
 
     init(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
@@ -110,6 +111,7 @@ class ExecutablePlugin: Plugin {
             return
         }
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
+        debugInfo.addEvent(type: .PluginRefresh, value: "Requesting manual refresh")
         disableTimer()
         // TODO: Cancel only operations from this plugin
 //        invokeQueue.cancelAllOperations()
@@ -138,6 +140,7 @@ class ExecutablePlugin: Plugin {
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
+            debugInfo.addEvent(type: .ContentUpdate, value: out)
             return out
         } catch {
             guard let error = error as? ShellOutError else { return nil }

@@ -26,6 +26,7 @@ class MenubarItem: NSObject {
     let aboutItem = NSMenuItem(title: Localizable.MenuBar.AboutSwiftBar.localized, action: #selector(showAboutPopover), keyEquivalent: "")
     let runInTerminalItem = NSMenuItem(title: Localizable.MenuBar.RunInTerminal.localized, action: #selector(runInTerminal), keyEquivalent: "")
     let disablePluginItem = NSMenuItem(title: Localizable.MenuBar.DisablePlugin.localized, action: #selector(disablePlugin), keyEquivalent: "")
+    let debugPluginItem = NSMenuItem(title: Localizable.MenuBar.DebugPlugin.localized, action: #selector(debugPlugin), keyEquivalent: "")
     let swiftBarItem = NSMenuItem(title: Localizable.MenuBar.SwiftBar.localized, action: nil, keyEquivalent: "")
     var isDefault = false
     var isOpen = false
@@ -145,7 +146,7 @@ extension MenubarItem: NSMenuDelegate {
         lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
 
         guard NSApp.currentEvent?.modifierFlags.contains(.option) == false else {
-            [lastUpdatedItem, runInTerminalItem, disablePluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
+            [lastUpdatedItem, runInTerminalItem, disablePluginItem, debugPluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
             return
         }
         lastUpdatedItem.isHidden = plugin?.metadata?.hideLastUpdated ?? false
@@ -208,7 +209,7 @@ extension MenubarItem {
         let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
         let quitItem = NSMenuItem(title: Localizable.App.Quit.localized, action: #selector(quit), keyEquivalent: "q")
         let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showErrorPopover), keyEquivalent: "")
-        [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
+        [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
         }
@@ -243,6 +244,9 @@ extension MenubarItem {
             }
             statusBarMenu.addItem(runInTerminalItem)
             statusBarMenu.addItem(disablePluginItem)
+            if PreferencesStore.shared.pluginDebugMode {
+                statusBarMenu.addItem(debugPluginItem)
+            }
             if plugin?.metadata?.isEmpty == false {
                 statusBarMenu.addItem(aboutItem)
             }
@@ -308,6 +312,11 @@ extension MenubarItem {
     @objc func disablePlugin() {
         guard let plugin = plugin else { return }
         delegate.pluginManager.disablePlugin(plugin: plugin)
+    }
+
+    @objc func debugPlugin() {
+        guard let plugin = plugin else { return }
+        AppShared.showPluginDebug(plugin: plugin)
     }
 
     @objc func showErrorPopover() {

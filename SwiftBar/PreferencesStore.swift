@@ -12,6 +12,7 @@ class PreferencesStore: ObservableObject {
         case PluginDeveloperMode
         case DisableBashWrapper
         case StreamablePluginDebugOutput
+        case PluginDebugMode
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -62,6 +63,10 @@ class PreferencesStore: ObservableObject {
 
     var pluginDeveloperMode: Bool {
         PreferencesStore.getValue(key: .PluginDeveloperMode) as? Bool ?? false
+    }
+
+    var pluginDebugMode: Bool {
+        PreferencesStore.getValue(key: .PluginDebugMode) as? Bool ?? false
     }
 
     var disableBashWrapper: Bool {
