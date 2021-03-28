@@ -152,7 +152,7 @@ echo "Line 1 \\n Line2 | size=8"
 | `bash` | Absolute file path | Executable script to run in Shell |
 | `terminal` | False | `bash` script will be run in the background, instead of launching the Terminal |
 | `params` | `param0=`,`param1=`,`param10=`... | Parameters for `bash` script |
-| `shortcut` | <kbd style="font-size:medium"><kbd style="font-size:medium">⌘</kbd>+<kbd style="font-size:medium">⌥</kbd>+<kbd style="font-size:medium">T</kbd></kbd> | Hotkey assigned to item. If item is in header, hotkey will show the menu; otherwise, hotkey will launch associated action. |
+| `shortcut` | CMD+OPTION+T | Hotkey assigned to item. If item is in header, hotkey will show the menu; otherwise, hotkey will launch associated action. |
 
 ### Environment Variables
 
