@@ -4,6 +4,7 @@ import SwifCron
 
 enum PluginMetadataType: String {
     case bitbar
+    case xbar
     case swiftbar
 }
 
@@ -27,12 +28,12 @@ enum PluginMetadataOption: String, CaseIterable {
     case environment
     case runInBash
 
-    var optionType: PluginMetadataType {
+    var optionType: [PluginMetadataType] {
         switch self {
         case .title, .version, .author, .github, .desc, .about, .image, .dependencies:
-            return .bitbar
+            return [.bitbar, .xbar]
         case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar:
-            return .swiftbar
+            return [.swiftbar]
         }
     }
 }
@@ -103,10 +104,12 @@ class PluginMetadata: ObservableObject {
 
     static func parser(script: String) -> PluginMetadata {
         func getTagValue(tag: PluginMetadataOption) -> String {
-            let prefix = tag.optionType.rawValue
-            let openTag = "<\(prefix).\(tag)>"
-            let closeTag = "</\(prefix).\(tag)>"
-            return script.slice(from: openTag, to: closeTag) ?? ""
+            let values = tag.optionType.compactMap { prefix -> String? in
+                let openTag = "<\(prefix).\(tag)>"
+                let closeTag = "</\(prefix).\(tag)>"
+                return script.slice(from: openTag, to: closeTag)
+            }
+            return values.last ?? ""
         }
 
         var imageURL: URL?
@@ -212,7 +215,7 @@ class PluginMetadata: ObservableObject {
             }
             guard !value.isEmpty else { return }
             let tag = option
-            let prefix = tag.optionType.rawValue
+            let prefix = tag.optionType.last!.rawValue
             result.append("\n<\(prefix).\(tag)>\(value)</\(prefix).\(tag)>")
         }
 
