@@ -82,6 +82,18 @@ struct MenuLineParameters {
         return NSColor.webColor(from: AppShared.isDarkTheme ? darkColor : lightColor)
     }
 
+    var sfcolors: [NSColor] {
+        var out: [NSColor?] = []
+        out.append(sfcolor)
+        for i in 1 ... 10 {
+            guard let colors = params["sfcolor\(i)"]?.components(separatedBy: ",") else { continue }
+            let lightColor = colors.first
+            let darkColor = colors.last
+            out.append(NSColor.webColor(from: AppShared.isDarkTheme ? darkColor : lightColor))
+        }
+        return out.compactMap { $0 }
+    }
+
     var font: String? {
         params["font"]
     }

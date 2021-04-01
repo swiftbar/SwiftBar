@@ -538,7 +538,7 @@ extension MenubarItem {
         var attributedTitle = NSMutableAttributedString(string: title)
 
         if params.symbolize, !params.ansi {
-            attributedTitle = title.symbolize(font: font, color: params.sfcolor)
+            attributedTitle = title.symbolize(font: font, colors: params.sfcolors)
         }
         if params.ansi {
             attributedTitle = title.colorizedWithANSIColor()

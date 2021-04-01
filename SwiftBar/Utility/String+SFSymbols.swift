@@ -1,8 +1,9 @@
 import Cocoa
 
 extension String {
-    func symbolize(font: NSFont, color: NSColor?) -> NSMutableAttributedString {
+    func symbolize(font: NSFont, colors: [NSColor]) -> NSMutableAttributedString {
         if #available(OSX 11.0, *) {
+            var colors: [NSColor] = colors
             let out = NSMutableAttributedString()
             self.components(separatedBy: .whitespaces).forEach { word in
                 out.append(NSAttributedString(string: " "))
@@ -10,8 +11,12 @@ extension String {
                     out.append(NSAttributedString(string: word))
                     return
                 }
-                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil)?.tintedImage(color: color) {
-                    out.append(NSAttributedString(attachment: NSTextAttachment.centeredImage(with: image, and: font)))
+                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil) {
+                    let tintColor = colors.first
+                    if colors.count > 1 {
+                        colors = Array(colors.dropFirst())
+                    }
+                    out.append(NSAttributedString(attachment: NSTextAttachment.centeredImage(with: image.tintedImage(color: tintColor), and: font)))
                     return
                 }
                 out.append(NSAttributedString(string: word))
