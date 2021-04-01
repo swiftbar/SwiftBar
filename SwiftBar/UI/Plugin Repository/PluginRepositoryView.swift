@@ -6,7 +6,7 @@ struct PluginRepositoryView: View {
     @State var pluginModalPresented = false
 
     var body: some View {
-        if pluginRepository.repository.isEmpty {
+        if pluginRepository.categories.isEmpty {
             VStack {
                 Text(Localizable.PluginRepository.RefreshingDataMessage.localized)
                     .font(.largeTitle)
@@ -21,10 +21,10 @@ struct PluginRepositoryView: View {
 
         } else {
             if pluginRepository.searchString.isEmpty {
-                SplitView(categories: pluginRepository.categories)
+                SplitView(categories: $pluginRepository.categories)
                     .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
             } else {
-                SearchlScrollView(searchString: $pluginRepository.searchString)
+                SearchScrollView(searchString: $pluginRepository.searchString)
                     .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
             }
         }
@@ -79,7 +79,7 @@ struct CategoryDetailScrollView: View {
     }
 }
 
-struct SearchlScrollView: View {
+struct SearchScrollView: View {
     @Binding var searchString: String
     private let size: CGFloat = 150
     private let padding: CGFloat = 5
@@ -135,7 +135,7 @@ struct CategoryDetailView: View {
 }
 
 struct SplitView: View {
-    let categories: [String]
+    @Binding var categories: [String]
     @State var selectedCategory: String?
     var body: some View {
         NavigationView {
@@ -157,6 +157,7 @@ struct SplitView: View {
                     }
                 }
             }.listStyle(SidebarListStyle())
+                .frame(minWidth: 180)
         }
     }
 }

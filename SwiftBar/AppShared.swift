@@ -88,6 +88,10 @@ class AppShared: NSObject {
         delegate.repositoryWindowController?.contentViewController = NSHostingController(rootView: PluginRepositoryView())
     }
 
+    public static func refreshRepositoryData() {
+        PluginRepository.shared.refreshRepositoryData(ignoreCache: true)
+    }
+
     public static func openPreferences() {
         NSApp.setActivationPolicy(.regular)
         delegate.preferencesWindowController.show()

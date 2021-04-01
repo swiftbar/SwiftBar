@@ -2,18 +2,10 @@ import os
 import SwiftUI
 
 struct PluginEntryView: View {
-    let pluginEntry: RepositoryEntry.PluginEntry
+    let pluginEntry: RepositoryPlugin.Plugin
     var githubURL: URL? {
         guard let name = pluginEntry.github else { return nil }
         return URL(string: "https://github.com/\(name)")
-    }
-
-    var pluginSourceURL: URL? {
-        URL(string: "https://github.com/matryer/bitbar-plugins/blob/master/\(pluginEntry.source.dropFirst(2))")
-    }
-
-    var rawPluginSourceURL: URL? {
-        URL(string: "https://raw.githubusercontent.com/matryer/bitbar-plugins/master/\(pluginEntry.source.dropFirst(2))")
     }
 
     var body: some View {
@@ -60,11 +52,11 @@ struct PluginEntryView: View {
                 Spacer()
                 HStack(alignment: .top) {
                     Spacer()
-                    if let url = pluginSourceURL {
+                    if let url = pluginEntry.gitHubURL {
                         URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url, sfSymbol: "chevron.left.slash.chevron.right")
                     }
 
-                    if let url = pluginEntry.aboutURL {
+                    if let url = URL(string: pluginEntry.aboutURL) {
                         URLTextView(text: Localizable.PluginRepository.AboutPlugin.localized, url: url, sfSymbol: "info.circle")
                     }
                 }
@@ -107,18 +99,10 @@ struct PluginEntryModalView: View {
         }
     }
 
-    let pluginEntry: RepositoryEntry.PluginEntry
+    let pluginEntry: RepositoryPlugin.Plugin
     var githubURL: URL? {
         guard let name = pluginEntry.github else { return nil }
         return URL(string: "https://github.com/\(name)")
-    }
-
-    var pluginSourceURL: URL? {
-        URL(string: "https://github.com/matryer/bitbar-plugins/blob/master/\(pluginEntry.source.dropFirst(2))")
-    }
-
-    var rawPluginSourceURL: URL? {
-        URL(string: "https://raw.githubusercontent.com/matryer/bitbar-plugins/master/\(pluginEntry.source.dropFirst(2))")
     }
 
     var body: some View {
@@ -188,7 +172,7 @@ struct PluginEntryModalView: View {
                     Text("Dependencies")
                         .font(.headline)
                     if let dep = pluginEntry.dependencies {
-                        Text(dep)
+                        Text(dep.joined(separator: ","))
                             .font(.body)
                             .lineLimit(10)
                             .padding([.bottom, .top], 1)
@@ -201,14 +185,14 @@ struct PluginEntryModalView: View {
                 }.padding(.bottom, 5)
                 Spacer()
                 HStack(alignment: .top) {
-                    if let url = pluginSourceURL {
+                    if let url = pluginEntry.gitHubURL {
                         URLTextView(text: Localizable.PluginRepository.PluginSource.localized, url: url)
                     }
                     Spacer()
                     VStack {
                         Button(action: {
                             os_log("User requested to install plugin from PLugin repository", log: Log.repository)
-                            if let url = rawPluginSourceURL {
+                            if let url = pluginEntry.sourceFileURL {
                                 installStatus = .Downloading
                                 delegate.pluginManager.importPlugin(from: url) { result in
                                     switch result {
@@ -243,17 +227,17 @@ struct PluginEntryModalView: View {
     }
 }
 
-struct PluginEntryView_Previews: PreviewProvider {
-    static var previews: some View {
-        PluginEntryModalView(modalPresented: .constant(true), pluginEntry: RepositoryEntry.PluginEntry(
-            title: "iTunes Lite",
-            author: "Padraic Renaghan",
-            github: "prenagha",
-            desc: "Display current track info from iTunes Display current track info from iTunes Display current track info from iTunes",
-            image: URL(string: "https://github.com/prenagha/bitbar-itunes/raw/master/bbitunes.png"),
-            dependencies: "iTunes Lite applescript",
-            aboutURL: URL(string: "https://github.com/prenagha/bitbar-itunes"),
-            source: "./Music/bbitunes.10s.sh", version: "v1.2.5"
-        )).previewLayout(.fixed(width: 400, height: 600))
-    }
-}
+// struct PluginEntryView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        PluginEntryModalView(modalPresented: .constant(true), pluginEntry: RepositoryEntry.PluginEntry(
+//            title: "iTunes Lite",
+//            author: "Padraic Renaghan",
+//            github: "prenagha",
+//            desc: "Display current track info from iTunes Display current track info from iTunes Display current track info from iTunes",
+//            image: URL(string: "https://github.com/prenagha/bitbar-itunes/raw/master/bbitunes.png"),
+//            dependencies: "iTunes Lite applescript",
+//            aboutURL: URL(string: "https://github.com/prenagha/bitbar-itunes"),
+//            source: "./Music/bbitunes.10s.sh", version: "v1.2.5"
+//        )).previewLayout(.fixed(width: 400, height: 600))
+//    }
+// }

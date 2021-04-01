@@ -6,28 +6,14 @@ class PluginRepository: ObservableObject {
     static let shared = PluginRepository()
     let prefs = PreferencesStore.shared
 
-    @Published var repository: [RepositoryEntry] {
-        didSet {
-            categories = Array(Set(repository.map(\.category))).sorted()
-        }
-    }
-
     @Published var searchString: String = ""
-    var cancellable: AnyCancellable?
+    var cancellables: Set<AnyCancellable> = []
 
-    var categories: [String]
+    @Published var categories: [String] = []
+    @Published var plugins: [String: [RepositoryPlugin.Plugin]] = [:]
 
     init() {
-        guard let repository = PluginRepository.parseRepositoryFile()
-        else {
-            self.repository = []
-            categories = []
-            refreshRepository()
-            return
-        }
-
-        self.repository = repository
-        categories = Array(Set(repository.map(\.category))).sorted()
+        refreshRepositoryData()
 
         if #available(OSX 11.0, *) {
             NotificationCenter.default.publisher(for: .repositoirySearchUpdate)
@@ -38,52 +24,36 @@ class PluginRepository: ObservableObject {
         }
     }
 
-    func getPlugins(for category: String) -> [RepositoryEntry.PluginEntry] {
-        repository.filter { $0.category == category }.flatMap(\.plugins).sorted(by: { $0.title > $1.title })
+    func getPlugins(for category: String) -> [RepositoryPlugin.Plugin] {
+        plugins[category]?.sorted(by: { $0.title > $1.title }) ?? []
     }
 
-    func searchPlugins(with searchString: String) -> [RepositoryEntry.PluginEntry] {
-        repository.flatMap(\.plugins)
+    func searchPlugins(with searchString: String) -> [RepositoryPlugin.Plugin] {
+        plugins.flatMap(\.value)
             .filter { $0.bagOfWords.contains(searchString.lowercased()) }
             .sorted(by: { $0.title > $1.title })
     }
 
-    func refreshRepository() {
-        guard let pluginDirectoryURL = prefs.pluginDirectoryResolvedURL else { return }
-
-        os_log("Refreshing plugin repository...", log: Log.repository)
-        let url = URL(string: "https://raw.githubusercontent.com/swiftbar/swiftbar-plugins/main/repository.json")!
-
-        let downloadTask = URLSession.shared.downloadTask(with: url) { [weak self] fileURL, _, _ in
-            guard let fileURL = fileURL else {
-                os_log("Failed to download plugin repository manifest.", log: Log.repository)
-                return
-            }
-            os_log("Plugin repository manifest downloaded!", log: Log.repository)
-            do {
-                let targetURL = pluginDirectoryURL.appendingPathComponent(".repository.json")
-                try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
-                guard let rep = PluginRepository.parseRepositoryFile() else { return }
-                self?.categories = Array(Set(rep.map(\.category))).sorted()
-                DispatchQueue.main.async {
-                    self?.repository = rep
-                }
-            } catch {
-                os_log("Failed to refresh plugin repository \n%{public}@", log: Log.repository, type: .error, error.localizedDescription)
-            }
-        }
-        downloadTask.resume()
+    func refreshRepositoryData(ignoreCache: Bool = false) {
+        XbarAPI.categories(ignoreCache: ignoreCache)
+            .map(\.categories)
+            .sink(receiveCompletion: { _ in },
+                  receiveValue: { [weak self] in
+                      let cats = $0.map(\.text)
+                      self?.categories = cats
+                      cats.forEach { self?.getPlugins(category: $0, ignoreCache: ignoreCache) }
+                  })
+            .store(in: &cancellables)
     }
 
-    static func parseRepositoryFile() -> [RepositoryEntry]? {
-        guard let pluginDirectoryPath = PreferencesStore.shared.pluginDirectoryResolvedPath else { return nil }
-        let url = URL(fileURLWithPath: pluginDirectoryPath).appendingPathComponent(".repository.json")
-
-        guard let jsonStr = try? String(contentsOfFile: url.path),
-              let data = jsonStr.data(using: .utf8),
-              let repository = try? JSONDecoder().decode([RepositoryEntry].self, from: data)
-        else { return nil }
-        return repository
+    func getPlugins(category: String, ignoreCache: Bool = false) {
+        XbarAPI.plugins(category: category, ignoreCache: ignoreCache)
+            .map(\.plugins)
+            .sink(receiveCompletion: { _ in },
+                  receiveValue: { [weak self] in
+                      self?.plugins[category] = $0
+                  })
+            .store(in: &cancellables)
     }
 
     static func categorySFImage(_ category: String) -> String {
@@ -138,32 +108,63 @@ class PluginRepository: ObservableObject {
     }
 }
 
-struct RepositoryEntry: Codable {
-    enum Category: String, Codable {
-        case Music
+struct RepositoryCategory: Codable {
+    struct Category: Codable {
+        let path: String
+        let text: String
+        let lastUpdated: String
     }
 
-    struct PluginEntry: Codable, Hashable {
-        let title: String
-        let author: String
-        let github: String?
-        let desc: String?
-        let image: URL?
-        let dependencies: String?
-        let aboutURL: URL?
-        let source: String
-        let version: String?
+    let version: String
+    let lastUpdated: String
+    let categories: [Category]
+}
 
-        enum CodingKeys: String, CodingKey {
-            case title
-            case author
-            case github = "author.github"
-            case desc
-            case image
-            case dependencies
-            case aboutURL
-            case source
-            case version
+struct RepositoryPlugin: Codable {
+    struct Plugin: Codable, Hashable {
+        struct Author: Codable, Hashable {
+            let name: String
+            let githubUsername: String?
+            let imageURL: String?
+            let bio: String?
+            let primary: Bool
+        }
+
+        let path: String
+        let filename: String
+        let dir: String
+        let docsPlugin: String
+        let docsCategory: String
+        let title: String
+        let version: String
+        let desc: String
+        let imageURL: String
+        let dependencies: [String]?
+        var authors: [Author]
+        let aboutURL: String
+
+        var image: URL? {
+            URL(string: imageURL)
+        }
+
+        var gitHubURL: URL? {
+            URL(string: "https://github.com/matryer/xbar-plugins/blob/master/\(path)")
+        }
+
+        var sourceFileURL: URL? {
+            URL(string: "https://raw.githubusercontent.com/matryer/xbar-plugins/master/\(path)")
+        }
+
+        var mainAuthor: Author? {
+            authors.first { $0.primary }
+        }
+
+        var author: String {
+            mainAuthor?.name ?? ""
+        }
+
+        var github: String? {
+            mainAuthor?.githubUsername
         }
 
         var bagOfWords: [String] {
@@ -175,6 +176,7 @@ struct RepositoryEntry: Codable {
         }
     }
 
-    let category: String
-    let plugins: [PluginEntry]
+    let version: String
+    let lastUpdated: String
+    let plugins: [Plugin]
 }

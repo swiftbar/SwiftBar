@@ -3,6 +3,7 @@ import AppKit
 extension NSToolbarItem.Identifier {
     static let sendFeedback = NSToolbarItem.Identifier(rawValue: "sendFeedback")
     static let search = NSToolbarItem.Identifier(rawValue: "search")
+    static let refresh = NSToolbarItem.Identifier(rawValue: "refresh")
 }
 
 extension NSToolbar {
@@ -24,11 +25,11 @@ extension AppDelegate: NSToolbarDelegate {
     }
 
     func toolbarDefaultItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.toggleSidebar, .flexibleSpace, .search, .sendFeedback]
+        [.toggleSidebar, .flexibleSpace, .search, .sendFeedback, .refresh]
     }
 
     func toolbarAllowedItemIdentifiers(_: NSToolbar) -> [NSToolbarItem.Identifier] {
-        [.toggleSidebar, .flexibleSpace, .search, .sendFeedback]
+        [.toggleSidebar, .flexibleSpace, .search, .sendFeedback, .refresh]
     }
 
     func toolbar(_: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar _: Bool) -> NSToolbarItem? {
@@ -45,6 +46,16 @@ extension AppDelegate: NSToolbarDelegate {
                                      paletteLabel: Localizable.MenuBar.SendFeedback.localized, toolTip: "", itemContent: button)
         case .search:
             return repositoryToolbarSearchItem
+        case .refresh:
+            var button: NSButton
+            if #available(OSX 11.0, *) {
+                button = NSButton(image: NSImage(systemSymbolName: "arrow.counterclockwise.circle", accessibilityDescription: "")!, target: nil, action: #selector(refresh))
+            } else {
+                button = NSButton(title: "Refresh", target: nil, action: #selector(refresh))
+            }
+            button.bezelStyle = .texturedRounded
+            return customToolbarItem(itemIdentifier: .refresh, label: Localizable.MenuBar.GetPlugins.localized,
+                                     paletteLabel: Localizable.MenuBar.GetPlugins.localized, toolTip: "", itemContent: button)
         default:
             return nil
         }
@@ -52,6 +63,10 @@ extension AppDelegate: NSToolbarDelegate {
 
     @objc func sendFeedback() {
         NSWorkspace.shared.open(URL(string: "https://github.com/matryer/bitbar-plugins/issues")!)
+    }
+
+    @objc func refresh() {
+        AppShared.refreshRepositoryData()
     }
 
     func customToolbarItem(

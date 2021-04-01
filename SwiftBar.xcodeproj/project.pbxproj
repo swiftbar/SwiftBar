@@ -98,6 +98,7 @@
 		39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7798254C7796001D76E5 /* String+Emoji.swift */; };
 		39B64C29260F70D900B7FA63 /* Preferences in Frameworks */ = {isa = PBXBuildFile; productRef = 39B64C28260F70D900B7FA63 /* Preferences */; };
 		39B64C35260F740E00B7FA63 /* Preferences in Frameworks */ = {isa = PBXBuildFile; productRef = 39B64C34260F740E00B7FA63 /* Preferences */; };
+		39B64C3F26152F5E00B7FA63 /* XbarAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */; };
 		39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A0A257C21D400FA012E /* String+Escaped.swift */; };
 		39B84A1F257D436200FA012E /* RunScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A1E257D436200FA012E /* RunScript.swift */; };
 		39B84A22257D63F700FA012E /* String+SFSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A21257D63F700FA012E /* String+SFSymbols.swift */; };
@@ -179,6 +180,7 @@
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
 		39AF7795254B6203001D76E5 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
 		39AF7798254C7796001D76E5 /* String+Emoji.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Emoji.swift"; sourceTree = "<group>"; };
+		39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XbarAPI.swift; sourceTree = "<group>"; };
 		39B84A0A257C21D400FA012E /* String+Escaped.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Escaped.swift"; sourceTree = "<group>"; };
 		39B84A1E257D436200FA012E /* RunScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunScript.swift; sourceTree = "<group>"; };
 		39B84A21257D63F700FA012E /* String+SFSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+SFSymbols.swift"; sourceTree = "<group>"; };
@@ -286,8 +288,9 @@
 			isa = PBXGroup;
 			children = (
 				396257252569667000341A19 /* PluginRepositoryView.swift */,
-				3962572A256967DC00341A19 /* PluginRepository.swift */,
 				FA06104525F0564400B08B6E /* PluginEntryView.swift */,
+				3962572A256967DC00341A19 /* PluginRepository.swift */,
+				39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */,
 			);
 			path = "Plugin Repository";
 			sourceTree = "<group>";
@@ -710,6 +713,7 @@
 				39224DD225F3F19B00BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
 				3990DCE12602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
+				39B64C3F26152F5E00B7FA63 /* XbarAPI.swift in Sources */,
 				FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
