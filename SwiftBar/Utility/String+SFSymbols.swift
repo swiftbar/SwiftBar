@@ -6,7 +6,9 @@ extension String {
             var colors: [NSColor] = colors
             let out = NSMutableAttributedString()
             self.components(separatedBy: .whitespaces).forEach { word in
-                out.append(NSAttributedString(string: " "))
+                if out.length != 0 {
+                    out.append(NSAttributedString(string: " "))
+                }
                 guard word.hasPrefix(":"), word.hasSuffix(":") else {
                     out.append(NSAttributedString(string: word))
                     return
