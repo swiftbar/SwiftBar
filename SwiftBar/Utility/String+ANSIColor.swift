@@ -2,44 +2,44 @@ import Cocoa
 
 private var ANSIForeground: [Int: NSColor] = [
     // foreground
-    39: NSColor.labelColor,
-    30: NSColor.black,
-    31: NSColor.red,
-    32: NSColor.green,
-    33: NSColor.yellow,
-    34: NSColor.blue,
-    35: NSColor.magenta,
-    36: NSColor.cyan,
-    37: NSColor.lightGray,
-    90: NSColor.darkGray,
-    91: NSColor.red,
-    92: NSColor.green,
-    93: NSColor.yellow,
-    94: NSColor.blue,
-    95: NSColor.magenta,
-    96: NSColor.cyan,
-    97: NSColor.white,
+    39: .labelColor,
+    30: .black,
+    31: .systemRed,
+    32: .systemGreen,
+    33: .systemYellow,
+    34: .systemBlue,
+    35: .magenta,
+    36: .cyan,
+    37: .systemGray,
+    90: .darkGray,
+    91: .red,
+    92: .green,
+    93: .yellow,
+    94: .blue,
+    95: .magenta,
+    96: .cyan,
+    97: .white,
 ]
 
 private var ANSIBackground: [Int: NSColor] = [
     // background
-    40: NSColor.black,
-    41: NSColor.red,
-    42: NSColor.green,
-    43: NSColor.yellow,
-    44: NSColor.blue,
-    45: NSColor.magenta,
-    46: NSColor.cyan,
-    47: NSColor.lightGray,
-    49: NSColor.textBackgroundColor,
-    100: NSColor.darkGray,
-    101: NSColor.red,
-    102: NSColor.green,
-    103: NSColor.yellow,
-    104: NSColor.blue,
-    105: NSColor.magenta,
-    106: NSColor.cyan,
-    107: NSColor.white,
+    40: .black,
+    41: .systemRed,
+    42: .systemGreen,
+    43: .systemYellow,
+    44: .systemBlue,
+    45: .magenta,
+    46: .cyan,
+    47: .systemGray,
+    49: .textBackgroundColor,
+    100: .darkGray,
+    101: .red,
+    102: .green,
+    103: .yellow,
+    104: .blue,
+    105: .magenta,
+    106: .cyan,
+    107: .white,
 ]
 
 extension String {
@@ -101,6 +101,12 @@ extension Dictionary where Key == NSAttributedString.Key, Value == Any {
                 self[.font] = font
                 continue
             }
+
+            if code == 1 {
+                self[.font] = NSFont.boldSystemFont(ofSize: NSFont.systemFontSize)
+                continue
+            }
+
             if code == 38 {
                 foreground = true
                 continue
