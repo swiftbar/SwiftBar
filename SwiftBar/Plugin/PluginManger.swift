@@ -238,7 +238,7 @@ class PluginManager {
 }
 
 extension PluginManager {
-    func showNotification(pluginID: PluginID, title: String?, subtitle: String?, body: String?, silent: Bool = false) {
+    func showNotification(pluginID: PluginID, title: String?, subtitle: String?, body: String?, open: String?, silent: Bool = false) {
         guard let plugin = plugins.first(where: { $0.id == pluginID }),
               plugin.enabled else { return }
 
@@ -248,6 +248,13 @@ extension PluginManager {
         content.body = body ?? ""
         content.sound = silent ? nil : .default
         content.threadIdentifier = pluginID
+
+        let urlString = open ?? ""
+        let url = URL(string: urlString)
+
+        if url?.host != nil, url?.scheme != nil {
+            content.userInfo = ["url": urlString]
+        }
 
         let uuidString = UUID().uuidString
         let request = UNNotificationRequest(identifier: uuidString,
