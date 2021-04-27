@@ -226,7 +226,7 @@ For binary plugins metadata can be added as an extended file attribute:
 | refreshplugin | `name` plugin [name](#plugin-naming) | Force refresh plugin by name | `swiftbar://refreshplugin?name=myplugin` |
 | refreshplugin | `index` plugin index in menubar, starting from `0` | Force refresh plugin by its position in menubar | `swiftbar://refreshplugin?index=1` |
 | addplugin | `src` source URL to plugin file | Add plugin to Swiftbar from URL | `swiftbar://addplugin?src=https://coolplugin` |
-| notify | `plugin` plugin [name](#plugin-naming). Notification fields: `title`, `subtitle`, `body`. `open` to open an URL on click. `silent=true` to disable sound | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
+| notify | `plugin` plugin [name](#plugin-naming). Notification fields: `title`, `subtitle`, `body`. `href` to open an URL on click (including custom URL schemes). `silent=true` to disable sound | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
 
 ## Preferences aka 'defaults'
 
