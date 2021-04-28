@@ -125,6 +125,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                title: url.queryParameters?["title"],
                                                subtitle: url.queryParameters?["subtitle"],
                                                body: url.queryParameters?["body"],
+                                               href: url.queryParameters?["href"],
                                                silent: url.queryParameters?["silent"] == "true")
             default:
                 os_log("Unsupported URL scheme \n %{public}@", log: Log.plugin, type: .error, url.absoluteString)
@@ -132,10 +133,14 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         }
     }
 
-    func userNotificationCenter(_: UNUserNotificationCenter, willPresent _: UNNotification,
-                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void)
-    {
-        completionHandler([.alert, .sound])
+    func userNotificationCenter(_: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        if let urlString = response.notification.request.content.userInfo["url"] as? String,
+           let url = URL(string: urlString)
+        {
+            NSWorkspace.shared.open(url)
+        }
+
+        completionHandler()
     }
 
     func windowWillClose(_: Notification) {
