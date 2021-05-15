@@ -13,6 +13,7 @@ class ExecutablePlugin: Plugin {
     var lastUpdated: Date?
     var lastState: PluginState
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
+    var operation: ExecutablePluginOperation?
 
     var content: String? = "..." {
         didSet {
@@ -113,8 +114,8 @@ class ExecutablePlugin: Plugin {
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         debugInfo.addEvent(type: .PluginRefresh, value: "Requesting manual refresh")
         disableTimer()
-        // TODO: Cancel only operations from this plugin
-//        invokeQueue.cancelAllOperations()
+        operation?.cancel()
+        
         refreshPluginMetadata()
 
         if invokeQueue.operationCount == invokeQueue.maxConcurrentOperationCount {
@@ -123,10 +124,8 @@ class ExecutablePlugin: Plugin {
             invokeQueue.cancelAllOperations()
         }
 
-        invokeQueue.addOperation { [weak self] in
-            self?.content = self?.invoke()
-            self?.enableTimer()
-        }
+        operation = ExecutablePluginOperation(plugin: self)
+        invokeQueue.addOperation(operation!)
     }
 
     func invoke() -> String? {
@@ -154,5 +153,20 @@ class ExecutablePlugin: Plugin {
     @objc func scheduledContentUpdate() {
         content = invoke()
         enableTimer()
+    }
+}
+
+final class ExecutablePluginOperation: Operation {
+    weak var plugin: ExecutablePlugin?
+
+    init(plugin: ExecutablePlugin) {
+        self.plugin = plugin
+        super.init()
+    }
+
+    override func main() {
+        guard !isCancelled else { return }
+        plugin?.content = plugin?.invoke()
+        plugin?.enableTimer()
     }
 }
