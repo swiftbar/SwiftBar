@@ -70,8 +70,8 @@ struct MenuLineParameters {
 
     var color: NSColor? {
         let colors = params["color"]?.components(separatedBy: ",")
-        let lightColor = colors?.first
-        let darkColor = colors?.last
+        let lightColor = colors?.first?.lowercased()
+        let darkColor = colors?.last?.lowercased()
         return NSColor.webColor(from: AppShared.isDarkTheme ? darkColor : lightColor)
     }
 
