@@ -134,6 +134,7 @@ extension MenubarItem: NSMenuDelegate {
 
         var params = MenuLineParameters(line: currentTitleLine)
         params.params["color"] = "white"
+        params.params["sfcolor"] = "white"
         if !AppShared.isReduceTransparencyEnabled {
             barItem.button?.attributedTitle = atributedTitle(with: params).title
         }
