@@ -182,7 +182,7 @@ SwiftBar adopts metadata format suggested by BitBar:
 # <bitbar.image>http://www.hosted-somewhere/pluginimage</bitbar.image>
 # <bitbar.dependencies>python,ruby,node</bitbar.dependencies>
 # <bitbar.abouturl>http://url-to-about.com/</bitbar.abouturl>
-# <bitbar.droptypes>Supported UTI's for dropping things on menu bar</droptypes.abouturl>
+# <bitbar.droptypes>Supported UTI's for dropping things on menu bar</bitbar.droptypes>
 ```
 
 #### Hiding default items
