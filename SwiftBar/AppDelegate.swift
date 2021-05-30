@@ -72,15 +72,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             }
         }
 
-        NotificationCenter.default.addObserver(forName: NSWorkspace.willSleepNotification,
-                                               object: nil,
-                                               queue: OperationQueue.main) { [weak self] _ in
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification,
+                                                          object: nil,
+                                                          queue: OperationQueue.main) { [weak self] _ in
+            os_log("Mac is going to sleep", log: Log.plugin, type: .info)
             self?.pluginManager.terminateAllPlugins()
         }
 
-        NotificationCenter.default.addObserver(forName: NSWorkspace.didWakeNotification,
-                                               object: nil,
-                                               queue: OperationQueue.main) { [weak self] _ in
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification,
+                                                          object: nil,
+                                                          queue: OperationQueue.main) { [weak self] _ in
+            os_log("Mac waked up", log: Log.plugin, type: .info)
             self?.pluginManager.refreshAllPlugins()
         }
     }
