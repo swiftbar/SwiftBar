@@ -234,7 +234,7 @@ List of preferences that are not exposed in SwiftBar UI:
 * `defaults write com.ameba.SwiftBar DisableBashWrapper -bool YES` - doesn't wrap plugins in Bash when running
 * `defaults write com.ameba.SwiftBar MakePluginExecutable -bool NO` - disables auto `chmod +x` all files in Plugin Directory
 * `defaults write com.ameba.SwiftBar PluginDeveloperMode -bool YES` - enables editing in Preferences -> Plugins
-* `defaults write com.ameba.SwiftBar StreamablePluginDebugOutput -bool YES` - enables debug output for Stramable plugins, Swiftbar will expose the stream data in Console.App
+* `defaults write com.ameba.SwiftBar StreamablePluginDebugOutput -bool YES` - enables debug output for Streamable plugins, Swiftbar will expose the stream data in Console.App
 
 ## Logs and Error
 
