@@ -73,4 +73,38 @@ extension Plugin {
             metadata = md
         }
     }
+
+    var cacheDirectory: URL? {
+        AppShared.cacheDirectory?.appendingPathComponent(id)
+    }
+
+    var cacheDirectoryPath: String {
+        cacheDirectory?.path ?? ""
+    }
+
+    var dataDirectory: URL? {
+        AppShared.dataDirectory?.appendingPathComponent(id)
+    }
+
+    var dataDirectoryPath: String {
+        dataDirectory?.path ?? ""
+    }
+
+    func createSupportDirs() {
+        if let cacheURL = cacheDirectory {
+            try? FileManager.default.createDirectory(at: cacheURL, withIntermediateDirectories: true, attributes: nil)
+        }
+        if let dataURL = dataDirectory {
+            try? FileManager.default.createDirectory(at: dataURL, withIntermediateDirectories: true, attributes: nil)
+        }
+    }
+
+    var env: [String: String] {
+        [
+            EnvironmentVariables.swiftBarPluginPath.rawValue: file,
+            EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
+            EnvironmentVariables.swiftBarPluginCachePath.rawValue: cacheDirectoryPath,
+            EnvironmentVariables.swiftBarPluginDataPath.rawValue: dataDirectoryPath,
+        ]
+    }
 }

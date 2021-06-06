@@ -191,6 +191,29 @@ class AppShared: NSObject {
         UserDefaults(suiteName: "com.apple.universalaccess.plist")?.bool(forKey: "reduceTransparency") ?? false
     }
 
+    public static var cacheDirectory: URL? {
+        guard let bundleName = Bundle.main.bundleIdentifier,
+              let url = try? FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+              .appendingPathComponent(bundleName)
+              .appendingPathComponent("Plugins")
+        else {
+            return nil
+        }
+        return url
+    }
+
+    public static var dataDirectory: URL? {
+        guard let appName = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String,
+              let url = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+              .appendingPathComponent(appName)
+              .appendingPathComponent("Plugins")
+        else {
+            return nil
+        }
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: false, attributes: nil)
+        return url
+    }
+
     public static func checkForUpdates() {
         #if !MAC_APP_STORE
             delegate.softwareUpdater.checkForUpdates()

@@ -45,6 +45,7 @@ class StreamablePlugin: Plugin {
         refreshPluginMetadata()
         guard metadata?.type == .Streamable else { return nil }
         guard enabled else { return }
+        createSupportDirs()
         os_log("Initialized streamable plugin\n%{public}@", log: Log.plugin, description)
         invokeQueue.addOperation { [weak self] in self?.invoke() }
     }
@@ -75,10 +76,7 @@ class StreamablePlugin: Plugin {
             procces = Process()
             guard let procces = procces else { return nil }
             let out = try runScript(to: file, process: procces,
-                                    env: [
-                                        EnvironmentVariables.swiftPluginPath.rawValue: file,
-                                        EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-                                    ],
+                                    env: env,
                                     runInBash: metadata?.shouldRunInBash ?? true,
                                     onOutputUpdate: { [weak self] str in
                                         guard str != "\n" else {

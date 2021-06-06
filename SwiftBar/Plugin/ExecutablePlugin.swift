@@ -65,7 +65,7 @@ class ExecutablePlugin: Plugin {
                 updateInterval = interval * 60 * 60 * 24
             }
         }
-
+        createSupportDirs()
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh()
     }
@@ -115,7 +115,7 @@ class ExecutablePlugin: Plugin {
         debugInfo.addEvent(type: .PluginRefresh, value: "Requesting manual refresh")
         disableTimer()
         operation?.cancel()
-        
+
         refreshPluginMetadata()
 
         if invokeQueue.operationCount == invokeQueue.maxConcurrentOperationCount {
@@ -131,11 +131,8 @@ class ExecutablePlugin: Plugin {
     func invoke() -> String? {
         lastUpdated = Date()
         do {
-            let out = try runScript(to: file, env: [
-                EnvironmentVariables.swiftPluginPath.rawValue: file,
-                EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-            ],
-            runInBash: metadata?.shouldRunInBash ?? true)
+            let out = try runScript(to: file, env: env,
+                                    runInBash: metadata?.shouldRunInBash ?? true)
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)

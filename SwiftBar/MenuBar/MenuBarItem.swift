@@ -293,10 +293,7 @@ extension MenubarItem {
 
     @objc func runInTerminal() {
         guard let scriptPath = plugin?.file else { return }
-        AppShared.runInTerminal(script: scriptPath, env: [
-            EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
-            EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-        ], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
+        AppShared.runInTerminal(script: scriptPath, env: plugin?.env ?? [:], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
     }
 
     func startPopupMonitor() {
@@ -614,10 +611,8 @@ extension MenubarItem {
         }
 
         if let bash = params.bash {
-            AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal, env: [
-                EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
-                EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-            ], runInBash: plugin?.metadata?.shouldRunInBash ?? true) { [weak self] in
+            AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
+                                    env: plugin?.env ?? [:], runInBash: plugin?.metadata?.shouldRunInBash ?? true) { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
                 }
@@ -644,10 +639,7 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
     }
 
     func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
-        var env: [String: String] = [
-            EnvironmentVariables.swiftPluginPath.rawValue: plugin?.file ?? "",
-            EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-        ]
+        var env: [String: String] = plugin?.env ?? [:]
         var files: [String] = []
         let supportedClasses = [
             NSFilePromiseReceiver.self,
