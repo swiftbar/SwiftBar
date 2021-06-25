@@ -48,7 +48,7 @@ struct MenuLineParameters {
     }
 
     var bash: String? {
-        params["bash"]
+        params["bash"] ?? params["shell"]
     }
 
     var bashParams: [String] {
