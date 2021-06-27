@@ -113,7 +113,7 @@ Where:
 
 #### Two-lines Title
 
-Title line in `Header` section supports multiline, use `\\n` to sepparate lines, i.e.: 
+Title line in `Header` section supports multiline, use `\\n` to separate lines, i.e.: 
 ```bash
 echo "Line 1 \\n Line2 | size=8"
 ```
