@@ -252,6 +252,9 @@ SwiftBar uses these open source libraries:
 
 To freeze and secure dependencies these libraries are forked to SwiftBar organization.
 
+## Translation/Localization
+SwiftBar can be translated [here](https://github.com/swiftbar/SwiftBar/tree/main/SwiftBar/Resources/Localization).
+
 ## More Apps
 
 If you enjoy SwiftBar you may like these as well:
