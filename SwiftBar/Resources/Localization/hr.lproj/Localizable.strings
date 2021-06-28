@@ -1,0 +1,60 @@
+//Menubar strings
+"MB_SWIFT_BAR" = "SwiftBar";
+"MB_UPDATING_MENU" = "Aktualiziranje …";
+"MB_LAST_UPDATED" = "Aktualizirano";
+"MB_ABOUT_SWIFT_BAR" = "Informacije";
+"MB_ABOUT_PLUGIN" = "Informacije";
+"MB_RUN_IN_TERMINAL" = "Pokreni u Terminalu …";
+"MB_DISABLE_PLUGIN" = "Deaktiviraj dodatak";
+"MB_DDEBUG_PLUGIN" = "Otklanjanje grešaka dodatka";
+"MB_PREFERENCES" = "Postavke …";
+"MB_REFRESH_ALL" = "Osvježi sve";
+"MB_ENABLE_ALL" = "Aktiviraj sve";
+"MB_DISABLE_ALL" = "Dektiviraj sve";
+"MB_OPEN_PLUGINS_FOLDER" = "Otvori mapu dodataka …";
+"MB_CHANGE_PLUGINS_FOLDER" = "Promijeni mapu dodataka …";
+"MB_GET_PLUGINS" = "Preuzmi dodatak …";
+"MB_SEND_FEEDBACK" = "Pošalji povratne informacije …";
+"MB_SHOW_ERROR" = "Prikaži grešku";
+
+//Preferences strings
+"PF_PREFERENCES" = "Postavke";
+"PF_GENERAL" = "Opće";
+"PF_PLUGINS" = "Dodatci";
+"PF_PLUGINS_FOLDER" = "Mapa dodataka";
+"PR_LAUNCH_AT_LOGIN" = "Pokreni nakon prijave";
+"PF_PATH" = "Staza";
+"PF_PATH_IS_NONE" = "Ništa";
+"PF_CHANGE_PATH" = "Promijeni …";
+"PF_SHELL" = "Naredbeni redak";
+"PF_HIDE_SWIFTBAR_ICON" = "Sakrij ikonu SwiftBara";
+"PF_CHECK_FOR_UPDATE" = "Aktualiziraj";
+"PF_CHECK_FOR_UPDATES" = "Traži nove verzije";
+"PF_NO_PLUGINS_MESSAGE" = "Mapa dodataka je prazna";
+"PF_ENABLE_ALL" = "Aktiviraj sve";
+"PF_PLUGINS_FOOTNOTE" = "Aktivirani dodaci će se pojaviti u traci izbornika.";
+
+//Plugin Repository strings
+"PR_CATEGORY" = "Kategorija";
+"PR_PLUGIN_REPOSITORY" = "Repozitorij dodataka";
+"PR_REFRESHING_DATA_MESSAGE" = "Aktualiziranje podataka repozitorija …";
+"PR_DEPENDENCIES" = "Ovisnosti";
+"PR_PLUGIN_SOURCE" = "Izvor";
+"PR_ABOUT_PLUGIN" = "Informacije";
+"PR_AUTORH_PREPOSITION" = "od";
+"PR_INSTALL_STATUS_INSTALL" = "Instaliraj";
+"PR_INSTALL_STATUS_INSTALLED" = "Instalirano";
+"PR_INSTALL_STATUS_FAILED" = "Neuspjelo";
+"PR_INSTALL_STATUS_DOWNLOADING" = "Preuzimanje";
+
+
+//App strings
+"APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "Odaberi mapu dodataka";
+"APP_FOLDER_NOT_ALLOWED_MESSAGE" = "Ova se mapa ne može koristiti kao mjesto za SwiftBar dodatke";
+"APP_FOLDER_NOT_ALLOWED_ACTION" = "Odaberi novo mjesto";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "AJME! Odabrao/la si mapu s PUNO DATOTEKA. Odaberi jednu drugu mapu. Ako imaš mapu node_modules koja ti treba za dodatak, sakrij ju.";
+"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Odredi mjesto za SwiftBar dodatke";
+"APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Odaberi mapu za spremanje repozitorija dodataka";
+"APP_QUIT" = "Zatvori SwiftBar";
+"OK" = "U redu";
+"CANCEL" = "Odustani";
