@@ -1,5 +1,5 @@
 <p align="center">
- <img width="155" height="150" alt="SwiftBar Logo" src="Resources/logo.png">
+ <img width="155" alt="SwiftBar Logo" src="Resources/logo.png">
 </p>
 
 # SwiftBar
@@ -32,7 +32,7 @@ Runs on macOS Catalina (10.15) and up.
 SwiftBar is bundled with a Plugin Repository. You can access it at Swiftbar → Get Plugins...
 
 <p align="center">
- <img width="600" height="500" alt="A screenshot of SwiftBar’s Plugin Repository" src="https://user-images.githubusercontent.com/222100/110520713-d5058000-80dc-11eb-9b15-baa09cb445bf.png">
+ <img width="600" alt="A screenshot of SwiftBar’s Plugin Repository" src="https://user-images.githubusercontent.com/222100/110520713-d5058000-80dc-11eb-9b15-baa09cb445bf.png">
 </p>
 
 If you want to add\remove plugin or have other questions about repository content please refer to this [issue](https://github.com/swiftbar/swiftbar-plugins/issues/1).
