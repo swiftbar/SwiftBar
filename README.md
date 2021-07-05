@@ -219,6 +219,43 @@ For binary plugins metadata can be added as an extended file attribute:
 
 `xattr -w "com.ameba.SwiftBar" "$(cat metadata.txt | base64)" <plugin_file>`
 
+## Plugin Types
+### Standard (default)
+
+For Standard type of plugins, SwidtBar expects that plugin execution is finite, i.e., plugin runs and exits with output to stdout:
+
+- exit with code 0 and non-empty stdout - menu bar is built from the output
+- exit with code 0 and empty stdout - nothing in the menu bar
+- exit with code 1 - error shown in the menu bar
+
+Optionally, a standard plugin can be run on a repeatable schedule, configured in the plugin's file name or `schedule` metadata property.
+
+### Streamable
+
+Swiftbar launches a separate process for each Streamable plugin, which runs indefinitely until SwiftBar is closed or a failure.
+You should use Stremable plugins only when dealing with a stream of incoming events; an example could be financial market info read from a websocket or CPU load information for a remote computer.
+
+To let SwiftBar know when to update the menu bar item, Streamable plugins must use a special line separator `~~~`. SwiftBar will reset the menu item on each occurrence of this separator. 
+
+In the example below, SwiftBar will show "Test 1" in the menu bar for 3 seconds, then nothing for 5 seconds, and "Test 2" indefinitely.
+
+```
+#!/bin/bash
+#<swiftbar.type>streamable</swiftbar.type>
+
+echo "Test 1"
+echo "---"
+echo "Test 2"
+echo "Test 3"
+sleep 3
+echo "~~~"
+sleep 5
+echo "~~~"
+echo "Test 2"
+```
+
+You can mark a plugin as streamable with a special metadata property `<swiftbar.type>streamable</swiftbar.type>`
+
 ## URL Scheme
 | Endpoint | Parameter | Description | Example |
 | ------------- | ------------- |------------- | ------------- | 
