@@ -57,3 +57,27 @@
 "APP_QUIT" = "Quite SwiftBar";
 "OK" = "Ok";
 "CANCEL" = "Cancel";
+
+// Plugin Repository Categories
+"CAT_AWS" = "AWS";
+"CAT_CRYPTOCURRENCY" = "Cryptocurrency";
+"CAT_DEV" = "Dev";
+"CAT_E-COMMERCE" = "E-Commerce";
+"CAT_EMAIL" = "Email";
+"CAT_ENVIRONMENT" = "Environment";
+"CAT_FINANCE" = "Finance";
+"CAT_GAMES" = "Games";
+"CAT_LIFESTYLE" = "Lifestyle";
+"CAT_MESSENGER" = "Messenger";
+"CAT_MUSIC" = "Music";
+"CAT_NETWORK" = "Network";
+"CAT_POLITICS" = "Politics";
+"CAT_SCIENCE" = "Science";
+"CAT_SPORTS" = "Sports";
+"CAT_SYSTEM" = "System";
+"CAT_TIME" = "Time";
+"CAT_TOOLS" = "Tools";
+"CAT_TRAVEL" = "Travel";
+"CAT_TUTORIAL" = "Tutorial";
+"CAT_WEATHER" = "Weather";
+"CAT_WEB" = "Web";

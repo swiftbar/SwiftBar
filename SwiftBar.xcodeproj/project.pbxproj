@@ -151,6 +151,7 @@
 		39224E3225F4351300BABF21 /* SwiftBarMAS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SwiftBarMAS.xcconfig; sourceTree = "<group>"; };
 		39224E5625F52F7400BABF21 /* SwiftBar MAS.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "SwiftBar MAS.entitlements"; sourceTree = "<group>"; };
 		39224E5B25F530AF00BABF21 /* EnvConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvConfig.swift; sourceTree = "<group>"; };
+		39294CD526934EDD00C6BB29 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = hr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
 		395ADA652592359E003EFA25 /* nl */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = nl; path = nl.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -498,6 +499,7 @@
 				Base,
 				de,
 				nl,
+				hr,
 			);
 			mainGroup = 3920747125460FD000213DBE;
 			packageReferences = (
@@ -785,6 +787,7 @@
 				396E6CAA258E8C5C002C735D /* en */,
 				396E6CAD258E8CA8002C735D /* de */,
 				395ADA652592359E003EFA25 /* nl */,
+				39294CD526934EDD00C6BB29 /* hr */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

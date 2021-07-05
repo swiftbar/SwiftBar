@@ -64,6 +64,31 @@ enum Localizable {
         case InstallStatusFailed = "PR_INSTALL_STATUS_FAILED"
         case InstallStatusDownloading = "PR_INSTALL_STATUS_DOWNLOADING"
     }
+
+    enum Categories: String {
+        case aws = "CAT_AWS"
+        case cryptocurrency = "CAT_CRYPTOCURRENCY"
+        case dev = "CAT_DEV"
+        case ecommerce = "CAT_E-COMMERCE"
+        case email = "CAT_EMAIL"
+        case environment = "CAT_ENVIRONMENT"
+        case finance = "CAT_FINANCE"
+        case games = "CAT_GAMES"
+        case lifestyle = "CAT_LIFESTYLE"
+        case messenger = "CAT_MESSENGER"
+        case music = "CAT_MUSIC"
+        case network = "CAT_NETWORK"
+        case politics = "CAT_POLITICS"
+        case science = "CAT_SCIENCE"
+        case sports = "CAT_SPORTS"
+        case system = "CAT_SYSTEM"
+        case time = "CAT_TIME"
+        case tools = "CAT_TOOLS"
+        case travel = "CAT_TRAVEL"
+        case tutorial = "CAT_TUTORIAL"
+        case weather = "CAT_WEATHER"
+        case web = "CAT_WEB"
+    }
 }
 
 extension RawRepresentable where RawValue == String {
