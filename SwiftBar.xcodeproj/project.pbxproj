@@ -61,7 +61,6 @@
 		39224E2025F4344600BABF21 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 396E6CAB258E8C5C002C735D /* Localizable.strings */; };
 		39224E2125F4344600BABF21 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
 		39224E2225F4344600BABF21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
-		39224E3325F4351600BABF21 /* SwiftBarMAS.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 39224E3225F4351300BABF21 /* SwiftBarMAS.xcconfig */; };
 		39224E5C25F530AF00BABF21 /* EnvConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* EnvConfig.swift */; };
 		39224E5F25F5317800BABF21 /* EnvConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* EnvConfig.swift */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
@@ -108,6 +107,9 @@
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
 		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
+		FA6FBEDA267FEDAA009335CB /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FA6FBED9267FEDAA009335CB /* Intents.intentdefinition */; };
+		FA6FBEDC267FEEDF009335CB /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6FBEDB267FEEDF009335CB /* AppDelegate+Intents.swift */; };
+		FA6FBEDF267FEF30009335CB /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6FBEDE267FEF30009335CB /* GetPluginsIntentHandler.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
 		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -192,6 +194,9 @@
 		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
+		FA6FBED9267FEDAA009335CB /* Intents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = Intents.intentdefinition; sourceTree = "<group>"; };
+		FA6FBEDB267FEEDF009335CB /* AppDelegate+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Intents.swift"; sourceTree = "<group>"; };
+		FA6FBEDE267FEF30009335CB /* GetPluginsIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPluginsIntentHandler.swift; sourceTree = "<group>"; };
 		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
 		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
@@ -254,11 +259,12 @@
 			children = (
 				398B86CD254DBF2F00DEA027 /* main.swift */,
 				3920747D25460FD000213DBE /* AppDelegate.swift */,
+				FA6FBEDB267FEEDF009335CB /* AppDelegate+Intents.swift */,
 				39224DCE25F3E6DE00BABF21 /* AppDelegate+Menu.swift */,
 				39224DD125F3F19B00BABF21 /* AppDelegate+Toolbar.swift */,
 				39AF77832547750E001D76E5 /* AppShared.swift */,
-				393375E625507ADE0050AC28 /* Log.swift */,
 				39641EAF254E163C00713DAF /* PreferencesStore.swift */,
+				FA6FBEDD267FEF0C009335CB /* Intents */,
 				398B86D4254DC01800DEA027 /* MenuBar */,
 				3988C8932546116200A02B9B /* Plugin */,
 				39AF7791254B5824001D76E5 /* Utility */,
@@ -363,6 +369,7 @@
 		39AF7791254B5824001D76E5 /* Utility */ = {
 			isa = PBXGroup;
 			children = (
+				393375E625507ADE0050AC28 /* Log.swift */,
 				39AF7792254B5834001D76E5 /* NSColor.swift */,
 				39AF7795254B6203001D76E5 /* NSImage.swift */,
 				39AF7798254C7796001D76E5 /* String+Emoji.swift */,
@@ -399,6 +406,14 @@
 			path = Preferences;
 			sourceTree = "<group>";
 		};
+		FA6FBEDD267FEF0C009335CB /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				FA6FBEDE267FEF30009335CB /* GetPluginsIntentHandler.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		FAD14BE42583249B00CB7BBE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -408,6 +423,7 @@
 				FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */,
 				FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */,
 				3920748125460FD300213DBE /* Assets.xcassets */,
+				FA6FBED9267FEDAA009335CB /* Intents.intentdefinition */,
 				39224E5625F52F7400BABF21 /* SwiftBar MAS.entitlements */,
 				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
 				3920748925460FD300213DBE /* Info.plist */,
@@ -482,7 +498,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1200;
-				LastUpgradeCheck = 1210;
+				LastUpgradeCheck = 1300;
 				TargetAttributes = {
 					3920747925460FD000213DBE = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -533,7 +549,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				39224E3325F4351600BABF21 /* SwiftBarMAS.xcconfig in Resources */,
 				39224E1F25F4344600BABF21 /* Preview Assets.xcassets in Resources */,
 				39224E2025F4344600BABF21 /* Localizable.strings in Resources */,
 				39224E2125F4344600BABF21 /* Credits.rtf in Resources */,
@@ -699,12 +714,15 @@
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
 				39AF77842547750E001D76E5 /* AppShared.swift in Sources */,
+				FA6FBEDA267FEDAA009335CB /* Intents.intentdefinition in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
+				FA6FBEDF267FEF30009335CB /* GetPluginsIntentHandler.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
+				FA6FBEDC267FEEDF009335CB /* AppDelegate+Intents.swift in Sources */,
 				398B86CE254DBF2F00DEA027 /* main.swift in Sources */,
 				ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */,
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
@@ -928,7 +946,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.2.3;
+				MARKETING_VERSION = 1.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -954,7 +972,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.2.3;
+				MARKETING_VERSION = 1.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
