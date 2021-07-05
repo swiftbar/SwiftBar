@@ -151,7 +151,7 @@ struct SplitView: View {
                                 Image(systemName: PluginRepository.categorySFImage(category))
                                     .frame(width: 20)
                             }
-                            Text(category)
+                            Text(Localizable.Categories(rawValue: "CAT_\(category.uppercased())")?.localized ?? category)
                                 .font(.headline)
                         }
                     }
