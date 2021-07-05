@@ -47,7 +47,7 @@ With the first launch, Swiftbar will ask you to set the `Plugin Folder`. SwiftBa
 
 **Important**:
 * hidden folders are ignored
-* nested folders are traversed by SwiftBar
+* nested folders are traversed by SwiftBar, including symlinks
 
 ### Plugin Naming
 
