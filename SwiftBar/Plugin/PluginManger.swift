@@ -157,6 +157,7 @@ class PluginManager {
 
         removedPlugins.forEach { plugin in
             menuBarItems.removeValue(forKey: plugin.id)
+            prefs.disabledPlugins.removeAll(where: { $0 == plugin.id })
             plugins.removeAll(where: { $0.id == plugin.id })
         }
 
