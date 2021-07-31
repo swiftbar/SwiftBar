@@ -100,11 +100,15 @@ extension Plugin {
     }
 
     var env: [String: String] {
-        [
+        var pluginEnv = [
             EnvironmentVariables.swiftBarPluginPath.rawValue: file,
             EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
             EnvironmentVariables.swiftBarPluginCachePath.rawValue: cacheDirectoryPath,
             EnvironmentVariables.swiftBarPluginDataPath.rawValue: dataDirectoryPath,
         ]
+        metadata?.environment.forEach { k, v in
+            pluginEnv[k] = v
+        }
+        return pluginEnv
     }
 }
