@@ -53,8 +53,12 @@ struct MenuLineParameters {
 
     var bashParams: [String] {
         var out: [String] = []
-        for i in 0 ... 10 {
-            guard let param = params["param\(i)"] else { continue }
+
+        let sortedParams = params.keys
+            .filter { $0.hasPrefix("param") }
+            .sorted { (s1, s2) -> Bool in s1.localizedStandardCompare(s2) == .orderedAscending }
+        for key in sortedParams {
+            guard let param = params[key] else { continue }
             out.append(param.escaped())
         }
         return out
