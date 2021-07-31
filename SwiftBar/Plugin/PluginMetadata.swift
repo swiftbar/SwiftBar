@@ -122,11 +122,14 @@ class PluginMetadata: ObservableObject {
         }
         var environment: [String: String] = [:]
         if !getTagValue(tag: .environment).isEmpty {
-            getTagValue(tag: .environment).split(separator: ",").forEach { str in
-                let pair = str.split(separator: ":").map { $0.trimmingCharacters(in: .whitespaces) }
-                guard pair.count == 2 else { return }
-                environment[pair[0]] = pair[1]
-            }
+            getTagValue(tag: .environment)
+                .dropFirst()
+                .dropLast()
+                .split(separator: ",").forEach { str in
+                    let pair = str.split(separator: ":").map { $0.trimmingCharacters(in: .whitespaces) }
+                    guard pair.count == 2 else { return }
+                    environment[pair[0]] = pair[1]
+                }
         }
 
         return PluginMetadata(name: getTagValue(tag: .title),
