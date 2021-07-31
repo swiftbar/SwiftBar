@@ -14,7 +14,7 @@ class MenubarItem: NSObject {
 
     var barItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        item.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
         return item
     }()
 
