@@ -12,7 +12,7 @@ enum PluginMetadataOption: String, CaseIterable {
     case title
     case version
     case author
-    case github
+    case github = "author.github"
     case desc
     case about
     case image
@@ -105,8 +105,8 @@ class PluginMetadata: ObservableObject {
     static func parser(script: String) -> PluginMetadata {
         func getTagValue(tag: PluginMetadataOption) -> String {
             let values = tag.optionType.compactMap { prefix -> String? in
-                let openTag = "<\(prefix).\(tag)>"
-                let closeTag = "</\(prefix).\(tag)>"
+                let openTag = "<\(prefix).\(tag.rawValue)>"
+                let closeTag = "</\(prefix).\(tag.rawValue)>"
                 return script.slice(from: openTag, to: closeTag)
             }
             return values.last ?? ""
