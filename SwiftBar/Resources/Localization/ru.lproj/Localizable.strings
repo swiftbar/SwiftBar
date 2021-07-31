@@ -1,0 +1,84 @@
+//Menubar strings
+"MB_SWIFT_BAR" = "SwiftBar";
+"MB_UPDATING_MENU" = "Обновление…";
+"MB_LAST_UPDATED" = "Обновлено";
+"MB_ABOUT_SWIFT_BAR" = "О программе";
+"MB_ABOUT_PLUGIN" = "О плагине";
+"MB_RUN_IN_TERMINAL" = "Запустить в терминале…";
+"MB_DISABLE_PLUGIN" = "Отключить плагин";
+"MB_DDEBUG_PLUGIN" = "Отладка плагина";
+"MB_PREFERENCES" = "Настройки…";
+"MB_REFRESH_ALL" = "Обновить все";
+"MB_ENABLE_ALL" = "Включить все";
+"MB_DISABLE_ALL" = "Отключить все";
+"MB_OPEN_PLUGINS_FOLDER" = "Открыть папку с плагином…";
+"MB_CHANGE_PLUGINS_FOLDER" = "Изменить папку плагина…";
+"MB_GET_PLUGINS" = "Загрузить плагины...";
+"MB_SEND_FEEDBACK" = "Отправить фидбек...";
+"MB_SHOW_ERROR" = "Показать ошибку";
+
+//Preferences strings
+"PF_PREFERENCES" = "Настройки";
+"PF_GENERAL" = "Общие";
+"PF_PLUGINS" = "Плагины";
+"PF_PLUGINS_FOLDER" = "Папка с плагином";
+"PR_LAUNCH_AT_LOGIN" = "Запускать при входе в систеу";
+"PF_PATH" = "Путь";
+"PF_PATH_IS_NONE" = "Путь не указан";
+"PF_CHANGE_PATH" = "Изменить...";
+"PF_SHELL" = "Шелл";
+"PF_HIDE_SWIFTBAR_ICON" = "Скрыть иконку SwiftBar";
+"PF_CHECK_FOR_UPDATE" = "Обновить";
+"PF_CHECK_FOR_UPDATES" = "Проверить обновления";
+"PF_NO_PLUGINS_MESSAGE" = "Папка плагина пуста";
+"PF_ENABLE_ALL" = "Включить все";
+"PF_PLUGINS_FOOTNOTE" = "Включенные плагины видны в панели меню.";
+
+//Plugin Repository strings
+"PR_CATEGORY" = "Категория";
+"PR_PLUGIN_REPOSITORY" = "Репозиторий плагина";
+"PR_REFRESHING_DATA_MESSAGE" = "Данные репозитория обновляются…";
+"PR_DEPENDENCIES" = "Зависимости";
+"PR_PLUGIN_SOURCE" = "Источник";
+"PR_ABOUT_PLUGIN" = "О плагине";
+"PR_AUTORH_PREPOSITION" = "автор:";
+"PR_INSTALL_STATUS_INSTALL" = "Установить";
+"PR_INSTALL_STATUS_INSTALLED" = "Установлен";
+"PR_INSTALL_STATUS_FAILED" = "Ошибка";
+"PR_INSTALL_STATUS_DOWNLOADING" = "Загружеается";
+
+
+//App strings
+"APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "Выбрать папку с плагинами";
+"APP_FOLDER_NOT_ALLOWED_MESSAGE" = "Эту папку нельзя использовать как папку с плагинами";
+"APP_FOLDER_NOT_ALLOWED_ACTION" = "Выбрать другую папку";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "Ого! В этой папке реально дофига файлов! Если вам реально нужна папка node_modules в папке с плагином, скройте ее.";
+"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Установить папку с плагинами SwiftBar";
+"APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Выбрать папку для хранения репозитория с плагинами";
+"APP_QUIT" = "Выход";
+"OK" = "OK";
+"CANCEL" = "Отмена";
+
+// Plugin Repository Categories
+"CAT_AWS" = "AWS";
+"CAT_CRYPTOCURRENCY" = "Криптовалюты";
+"CAT_DEV" = "Разработка";
+"CAT_E-COMMERCE" = "Электронная коммерция";
+"CAT_EMAIL" = "Email";
+"CAT_ENVIRONMENT" = "Окружающая среда";
+"CAT_FINANCE" = "Финансы";
+"CAT_GAMES" = "Игры";
+"CAT_LIFESTYLE" = "Лайфстайл";
+"CAT_MESSENGER" = "Мессенджеры";
+"CAT_MUSIC" = "Музыка";
+"CAT_NETWORK" = "Сети";
+"CAT_POLITICS" = "Политика";
+"CAT_SCIENCE" = "Наука";
+"CAT_SPORTS" = "Спорт";
+"CAT_SYSTEM" = "Система";
+"CAT_TIME" = "Время";
+"CAT_TOOLS" = "Инструменты";
+"CAT_TRAVEL" = "Путешествия";
+"CAT_TUTORIAL" = "Туториалы";
+"CAT_WEATHER" = "Погода";
+"CAT_WEB" = "Web";
