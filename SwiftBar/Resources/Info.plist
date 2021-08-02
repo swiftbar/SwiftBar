@@ -30,7 +30,14 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>162</string>
+	<string>333</string>
+	<key>INIntentsSupported</key>
+	<array>
+		<string>GetPluginsIntent</string>
+		<string>EnablePluginIntent</string>
+		<string>DisablePluginIntent</string>
+		<string>ReloadPluginIntent</string>
+	</array>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>LSMinimumSystemVersion</key>
@@ -44,13 +51,20 @@
 	</dict>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Allow SwiftBar to run plugin in Terminal</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Allow SwiftBar to access your Calendar. This is required by one of your plugins.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright ©2020-2021 Ameba Labs. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>DisablePluginIntent</string>
+		<string>EnablePluginIntent</string>
+		<string>GetPluginsIntent</string>
+		<string>ReloadPluginIntent</string>
+	</array>
 	<key>SUFeedURL</key>
 	<string>https://swiftbar.app/release.xml</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Allow SwiftBar to access your Calendar. This is required by one of your plugins.</string>
 </dict>
 </plist>

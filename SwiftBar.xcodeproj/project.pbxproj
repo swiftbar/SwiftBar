@@ -105,6 +105,9 @@
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
+		FA54BDC226B867ED006845C4 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54BDC126B867ED006845C4 /* EnablePluginIntentHandler.swift */; };
+		FA54BDC426B869A7006845C4 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54BDC326B869A7006845C4 /* DisablePluginIntentHandler.swift */; };
+		FA54BDC626B869B4006845C4 /* ReloadPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA54BDC526B869B4006845C4 /* ReloadPluginIntentHandler.swift */; };
 		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
 		FA6FBEDA267FEDAA009335CB /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FA6FBED9267FEDAA009335CB /* Intents.intentdefinition */; };
@@ -193,6 +196,9 @@
 		FA06104525F0564400B08B6E /* PluginEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginEntryView.swift; sourceTree = "<group>"; };
 		FA3864EB2589AB05000C6C97 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
+		FA54BDC126B867ED006845C4 /* EnablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnablePluginIntentHandler.swift; sourceTree = "<group>"; };
+		FA54BDC326B869A7006845C4 /* DisablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisablePluginIntentHandler.swift; sourceTree = "<group>"; };
+		FA54BDC526B869B4006845C4 /* ReloadPluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReloadPluginIntentHandler.swift; sourceTree = "<group>"; };
 		FA60506726B593FA001A939A /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
@@ -412,6 +418,9 @@
 			isa = PBXGroup;
 			children = (
 				FA6FBEDE267FEF30009335CB /* GetPluginsIntentHandler.swift */,
+				FA54BDC126B867ED006845C4 /* EnablePluginIntentHandler.swift */,
+				FA54BDC326B869A7006845C4 /* DisablePluginIntentHandler.swift */,
+				FA54BDC526B869B4006845C4 /* ReloadPluginIntentHandler.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -696,6 +705,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA54BDC626B869B4006845C4 /* ReloadPluginIntentHandler.swift in Sources */,
 				FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */,
 				39224DD525F414F500BABF21 /* Notification+Extension.swift in Sources */,
 				FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */,
@@ -712,6 +722,7 @@
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
 				39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */,
 				FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */,
+				FA54BDC226B867ED006845C4 /* EnablePluginIntentHandler.swift in Sources */,
 				39AF7775254613C9001D76E5 /* PluginManger.swift in Sources */,
 				398DAE7A25537DAF00747D90 /* PluginErrorView.swift in Sources */,
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
@@ -723,6 +734,7 @@
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				FA6FBEDF267FEF30009335CB /* GetPluginsIntentHandler.swift in Sources */,
+				FA54BDC426B869A7006845C4 /* DisablePluginIntentHandler.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
