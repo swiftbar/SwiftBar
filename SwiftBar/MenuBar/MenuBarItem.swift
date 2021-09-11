@@ -622,6 +622,7 @@ extension MenubarItem {
 
         if params.refresh {
             plugin?.refresh()
+            updateMenu(content: plugin?.content) //dumb fix for #221, ideally come up with something better...
             return true
         }
         return false
