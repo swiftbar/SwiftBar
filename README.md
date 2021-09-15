@@ -99,7 +99,7 @@ If you provide multiple titles, the provided titles will be cycled in the menu b
 echo "This is a primary Menu Title"
 echo "This is a secondary Menu Title"
 echo "This is a n-th Menu Title"
----
+echo "---"
 echo "This is not a Menu Title, this will be showed in the drop-down menu only"
 ```
 
