@@ -136,7 +136,7 @@ extension MenubarItem: NSMenuDelegate {
         params.params["color"] = "white"
         params.params["sfcolor"] = "white"
         if !AppShared.isReduceTransparencyEnabled {
-            barItem.button?.attributedTitle = atributedTitle(with: params).title
+            barItem.button?.attributedTitle = atributedTitle(with: params, pad: true).title
         }
 
         hotKeys.forEach { $0.isPaused = true }
@@ -500,7 +500,7 @@ extension MenubarItem {
             barItem.button?.image = image
             barItem.button?.imagePosition = .imageLeft
         }
-        barItem.button?.attributedTitle = atributedTitle(with: params).title
+        barItem.button?.attributedTitle = atributedTitle(with: params, pad: true).title
     }
 
     func cycleThroughTitles() {
@@ -511,7 +511,7 @@ extension MenubarItem {
         setMenuTitle(title: titleLines[currentTitleLineIndex])
     }
 
-    func atributedTitle(with params: MenuLineParameters) -> (title: NSAttributedString, tooltip: String) {
+    func atributedTitle(with params: MenuLineParameters, pad: Bool = false) -> (title: NSAttributedString, tooltip: String) {
         var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces) : params.title
         guard !title.isEmpty else { return (NSAttributedString(), "") }
 
@@ -541,6 +541,11 @@ extension MenubarItem {
         if params.ansi {
             attributedTitle = title.colorizedWithANSIColor()
         }
+
+        if attributedTitle.length > 0, pad {
+            attributedTitle.insert(NSAttributedString(string: " "), at: 0)
+        }
+
         if !params.ansi {
             attributedTitle.addAttributes([.foregroundColor: color],
                                           range: NSRange(0 ..< attributedTitle.length))
