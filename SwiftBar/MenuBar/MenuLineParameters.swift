@@ -106,6 +106,11 @@ struct MenuLineParameters {
         guard let sizeStr = params["size"], let pSize = Int(sizeStr) else { return nil }
         return CGFloat(pSize)
     }
+    
+    var sfsize: CGFloat? {
+        guard let sizeStr = params["sfsize"], let pSize = Int(sizeStr) else { return nil }
+        return CGFloat(pSize)
+    }
 
     var dropdown: Bool {
         params["dropdown"] != "false"

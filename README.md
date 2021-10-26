@@ -127,6 +127,7 @@ echo "Line 1 \\n Line2 | size=8"
 | `sfcolor` | CSS color or HEX, `light_color,dark_color` | Sets SF Symbol color. If only one color is provided, it is used for both light and dark appearance. |
 | `font` | macOS font name | Sets font name to use in item text |
 | `size` | Number | Sets item text size |
+| `sfsize` | Number | Sets size for SF Symbol image embedded in text|
 | `length`| Number | Trims item text to a provided number of characters. The full title will be displayed in a tooltip. |
 | `trim` | True | Trims whitespace characters |
 | `ansi` | True | Enables support of ANSI color codes. **Conflicts with:** `symbolize` |

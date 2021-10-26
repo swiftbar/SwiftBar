@@ -1,7 +1,7 @@
 import Cocoa
 
 extension String {
-    func symbolize(font: NSFont, colors: [NSColor]) -> NSMutableAttributedString {
+    func symbolize(font: NSFont, colors: [NSColor], sfsize: CGFloat?) -> NSMutableAttributedString {
         if #available(OSX 11.0, *) {
             var colors: [NSColor] = colors
             let out = NSMutableAttributedString()
@@ -13,7 +13,7 @@ extension String {
                     out.append(NSAttributedString(string: word))
                     return
                 }
-                let imageConfig = NSImage.SymbolConfiguration(pointSize: font.pointSize, weight: .regular)
+                let imageConfig = NSImage.SymbolConfiguration(pointSize: sfsize ?? font.pointSize, weight: .regular)
                 if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil)?.withSymbolConfiguration(imageConfig) {
                     let tintColor = colors.first
                     if colors.count > 1 {
