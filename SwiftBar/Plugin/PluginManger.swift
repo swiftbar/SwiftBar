@@ -70,7 +70,8 @@ class PluginManager {
             guard !enabledPlugins.contains(where: { $0.id == pluginID }) else { return }
             menuBarItems.removeValue(forKey: pluginID)
         }
-        enabledPlugins.isEmpty ? barItem.show() : barItem.hide()
+        
+        enabledPlugins.isEmpty && !prefs.stealthMode ? barItem.show() : barItem.hide()
     }
 
     func disablePlugin(plugin: Plugin) {

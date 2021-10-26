@@ -110,6 +110,12 @@
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
+		FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
+		FAA14A112728C6E90052FDB8 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
+		FAA14A132728C6F20052FDB8 /* ReloadPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */; };
+		FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
+		FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
+		FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */; };
 		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -195,6 +201,12 @@
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
 		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
+		FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = Intents.intentdefinition; sourceTree = "<group>"; };
+		FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnablePluginIntentHandler.swift; sourceTree = "<group>"; };
+		FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReloadPluginIntentHandler.swift; sourceTree = "<group>"; };
+		FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisablePluginIntentHandler.swift; sourceTree = "<group>"; };
+		FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPluginsIntentHandler.swift; sourceTree = "<group>"; };
+		FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Intents.swift"; sourceTree = "<group>"; };
 		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
 		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
 		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
@@ -258,6 +270,7 @@
 				3920747D25460FD000213DBE /* AppDelegate.swift */,
 				39224DCE25F3E6DE00BABF21 /* AppDelegate+Menu.swift */,
 				39224DD125F3F19B00BABF21 /* AppDelegate+Toolbar.swift */,
+				FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */,
 				39AF77832547750E001D76E5 /* AppShared.swift */,
 				393375E625507ADE0050AC28 /* Log.swift */,
 				39641EAF254E163C00713DAF /* PreferencesStore.swift */,
@@ -265,6 +278,7 @@
 				3988C8932546116200A02B9B /* Plugin */,
 				39AF7791254B5824001D76E5 /* Utility */,
 				39641E9F254DD30C00713DAF /* UI */,
+				FAA14A0F2728C6BE0052FDB8 /* Intents */,
 				FAD14BE42583249B00CB7BBE /* Resources */,
 				3920748325460FD300213DBE /* Preview Content */,
 			);
@@ -401,6 +415,17 @@
 			path = Preferences;
 			sourceTree = "<group>";
 		};
+		FAA14A0F2728C6BE0052FDB8 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */,
+				FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */,
+				FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */,
+				FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		FAD14BE42583249B00CB7BBE /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -415,6 +440,7 @@
 				3920748925460FD300213DBE /* Info.plist */,
 				393375EB25508B320050AC28 /* Credits.rtf */,
 				39224E3225F4351300BABF21 /* SwiftBarMAS.xcconfig */,
+				FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -654,7 +680,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd BuildTools\nSDKROOT=macosx\n#swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\nswift run -c release swiftformat --swiftversion 5.3.2 \"$SRCROOT\"\n";
+			shellScript = "cd BuildTools\nSDKROOT=macosx\n#swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\n#swift run -c release swiftformat --swiftversion 5.3.2 \"$SRCROOT\"\n";
 		};
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -681,6 +707,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FAA14A132728C6F20052FDB8 /* ReloadPluginIntentHandler.swift in Sources */,
 				FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */,
 				39224DD525F414F500BABF21 /* Notification+Extension.swift in Sources */,
 				FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */,
@@ -694,6 +721,7 @@
 				39224DCF25F3E6DE00BABF21 /* AppDelegate+Menu.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
+				FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
 				39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */,
 				FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */,
@@ -703,9 +731,11 @@
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
 				39AF77842547750E001D76E5 /* AppShared.swift in Sources */,
+				FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
+				FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
@@ -714,6 +744,7 @@
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
 				39B84A22257D63F700FA012E /* String+SFSymbols.swift in Sources */,
 				39224E5C25F530AF00BABF21 /* EnvConfig.swift in Sources */,
+				FAA14A112728C6E90052FDB8 /* EnablePluginIntentHandler.swift in Sources */,
 				39224DD225F3F19B00BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
 				3990DCE12602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
@@ -722,6 +753,7 @@
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39B84A1F257D436200FA012E /* RunScript.swift in Sources */,
+				FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */,
 				FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */,
 				FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */,
 				39AF777C254618F6001D76E5 /* MenuBarItem.swift in Sources */,

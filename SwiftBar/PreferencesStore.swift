@@ -33,6 +33,7 @@ class PreferencesStore: ObservableObject {
         case DisableBashWrapper
         case StreamablePluginDebugOutput
         case PluginDebugMode
+        case StealthMode
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -103,6 +104,10 @@ class PreferencesStore: ObservableObject {
         PreferencesStore.getValue(key: .StreamablePluginDebugOutput) as? Bool ?? false
     }
 
+    var stealthMode: Bool {
+        PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
+    }
+    
     init() {
         pluginDirectoryPath = PreferencesStore.getValue(key: .PluginDirectory) as? String
         disabledPlugins = PreferencesStore.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
