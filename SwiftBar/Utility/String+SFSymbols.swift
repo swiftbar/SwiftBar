@@ -13,7 +13,8 @@ extension String {
                     out.append(NSAttributedString(string: word))
                     return
                 }
-                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil) {
+                let imageConfig = NSImage.SymbolConfiguration(pointSize: font.pointSize, weight: .regular)
+                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil)?.withSymbolConfiguration(imageConfig) {
                     let tintColor = colors.first
                     if colors.count > 1 {
                         colors = Array(colors.dropFirst())
