@@ -269,6 +269,7 @@ You can mark a plugin as streamable with a special metadata property `<swiftbar.
 ## Preferences aka 'defaults'
 
 List of preferences that are not exposed in SwiftBar UI:
+* `defaults write com.ameba.SwiftBar StealthMode -bool YES` - hides SwiftBar menu item when all plugins are disabled 
 * `defaults write com.ameba.SwiftBar DisableBashWrapper -bool YES` - doesn't wrap plugins in Bash when running
 * `defaults write com.ameba.SwiftBar MakePluginExecutable -bool NO` - disables auto `chmod +x` all files in Plugin Directory
 * `defaults write com.ameba.SwiftBar PluginDeveloperMode -bool YES` - enables editing in Preferences -> Plugins
