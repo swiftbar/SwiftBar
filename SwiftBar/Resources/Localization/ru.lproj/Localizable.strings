@@ -27,6 +27,7 @@
 "PF_PATH_IS_NONE" = "Путь не указан";
 "PF_CHANGE_PATH" = "Изменить...";
 "PF_SHELL" = "Шелл";
+"PF_TERMINAL" = "Терминал";
 "PF_HIDE_SWIFTBAR_ICON" = "Скрыть иконку SwiftBar";
 "PF_CHECK_FOR_UPDATE" = "Обновить";
 "PF_CHECK_FOR_UPDATES" = "Проверить обновления";

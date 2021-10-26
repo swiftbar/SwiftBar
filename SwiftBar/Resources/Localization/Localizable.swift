@@ -41,6 +41,7 @@ enum Localizable {
         case Path = "PF_PATH"
         case PathIsNone = "PF_PATH_IS_NONE"
         case ChangePath = "PF_CHANGE_PATH"
+        case Terminal = "PF_TERMINAL"
         case Shell = "PF_SHELL"
         case LaunchAtLogin = "PR_LAUNCH_AT_LOGIN"
         case HideSwiftBarIcon = "PF_HIDE_SWIFTBAR_ICON"

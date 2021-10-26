@@ -27,6 +27,7 @@
 "PF_PATH_IS_NONE" = "None";
 "PF_CHANGE_PATH" = "Change...";
 "PF_SHELL" = "Shell";
+"PF_TERMINAL" = "Terminal";
 "PF_HIDE_SWIFTBAR_ICON" = "Hide SwiftBar Icon";
 "PF_CHECK_FOR_UPDATE" = "Update";
 "PF_CHECK_FOR_UPDATES" = "Check for updates";

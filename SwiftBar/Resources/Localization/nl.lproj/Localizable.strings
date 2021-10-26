@@ -26,7 +26,8 @@
 "PF_PATH" = "Pad";
 "PF_PATH_IS_NONE" = "Geen";
 "PF_CHANGE_PATH" = "Wijzig…";
-"PF_SHELL" = "Shell-applicatie";
+"PF_SHELL" = "Shell";
+"PF_TERMINAL" = "Shell-applicatie";
 "PF_HIDE_SWIFTBAR_ICON" = "Verberg SwiftBar-icoon";
 "PF_CHECK_FOR_UPDATE" = "Updates";
 "PF_CHECK_FOR_UPDATES" = "Controleer op updates…";

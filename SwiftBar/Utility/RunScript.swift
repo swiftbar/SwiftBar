@@ -72,7 +72,7 @@ private extension Process {
             executableURL = URL(fileURLWithPath: script)
             arguments = args
         } else {
-            executableURL = URL(fileURLWithPath: "/bin/bash")
+            executableURL = URL(fileURLWithPath: delegate.prefs.shell.path)
             arguments = ["-c", "-l", "\(script.escaped()) \(args.joined(separator: " "))"]
         }
 

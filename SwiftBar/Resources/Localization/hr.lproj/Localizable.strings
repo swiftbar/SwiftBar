@@ -27,6 +27,7 @@
 "PF_PATH_IS_NONE" = "Ništa";
 "PF_CHANGE_PATH" = "Promijeni …";
 "PF_SHELL" = "Naredbeni redak";
+"PF_TERMINAL" = "Terminal";
 "PF_HIDE_SWIFTBAR_ICON" = "Sakrij ikonu SwiftBara";
 "PF_CHECK_FOR_UPDATE" = "Aktualiziraj";
 "PF_CHECK_FOR_UPDATES" = "Traži nove verzije";

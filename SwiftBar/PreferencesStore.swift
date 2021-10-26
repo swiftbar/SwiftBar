@@ -1,12 +1,32 @@
 import Cocoa
 import Combine
 
+enum TerminalOptions: String, CaseIterable {
+    case Terminal
+    case iTerm
+}
+
+enum ShellOptions: String, CaseIterable {
+    case Bash
+    case Zsh
+    
+    var path: String {
+        switch self {
+        case .Bash:
+            return "/bin/bash"
+        case .Zsh:
+            return "/bin/zsh"
+        }
+    }
+}
+
 class PreferencesStore: ObservableObject {
     static let shared = PreferencesStore()
     enum PreferencesKeys: String {
         case PluginDirectory
         case DisabledPlugins
         case Terminal
+        case Shell
         case HideSwiftBarIcon
         case MakePluginExecutable
         case PluginDeveloperMode
@@ -40,7 +60,13 @@ class PreferencesStore: ObservableObject {
         }
     }
 
-    @Published var terminal: ShellOptions {
+    @Published var terminal: TerminalOptions {
+        didSet {
+            PreferencesStore.setValue(value: terminal.rawValue, key: .Terminal)
+        }
+    }
+    
+    @Published var shell: ShellOptions {
         didSet {
             PreferencesStore.setValue(value: terminal.rawValue, key: .Terminal)
         }
@@ -81,11 +107,17 @@ class PreferencesStore: ObservableObject {
         pluginDirectoryPath = PreferencesStore.getValue(key: .PluginDirectory) as? String
         disabledPlugins = PreferencesStore.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
         terminal = .Terminal
+        shell = .Bash
         swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         if let savedTerminal = PreferencesStore.getValue(key: .Terminal) as? String,
-           let shell = ShellOptions(rawValue: savedTerminal)
+           let value = TerminalOptions(rawValue: savedTerminal)
         {
-            terminal = shell
+            terminal = value
+        }
+        if let savedShell = PreferencesStore.getValue(key: .Shell) as? String,
+           let value = ShellOptions(rawValue: savedShell)
+        {
+            shell = value
         }
     }
 
