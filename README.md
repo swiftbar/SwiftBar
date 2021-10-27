@@ -285,8 +285,8 @@ Use macOS `Console.app` to view SwiftBar logs.
 SwiftBar uses these open source libraries:
 * [HotKey](https://github.com/soffes/HotKey)
 * [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin)
+* [Preferences](https://github.com/sindresorhus/Preferences)
 * [Sparkle](https://github.com/sparkle-project/Sparkle)
-* [ShellOut](https://github.com/JohnSundell/ShellOut)
 * [SwiftCron](https://github.com/MihaelIsaev/SwifCron)
 
 To freeze and secure dependencies these libraries are forked to SwiftBar organization.
