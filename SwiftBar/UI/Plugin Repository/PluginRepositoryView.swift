@@ -1,6 +1,10 @@
 import os
 import SwiftUI
 
+fileprivate let minWindowWidth: CGFloat = 1024
+fileprivate let minWindowHeight: CGFloat = 700
+fileprivate let minSidebarWidth: CGFloat = 180
+
 struct PluginRepositoryView: View {
     @ObservedObject var pluginRepository = PluginRepository.shared
     @State var pluginModalPresented = false
@@ -22,10 +26,10 @@ struct PluginRepositoryView: View {
         } else {
             if pluginRepository.searchString.isEmpty {
                 SplitView(categories: $pluginRepository.categories)
-                    .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
+                    .frame(minWidth: minWindowWidth, maxWidth: .infinity, minHeight: minWindowHeight, maxHeight: .infinity)
             } else {
                 SearchScrollView(searchString: $pluginRepository.searchString)
-                    .frame(minWidth: 1150, maxWidth: .infinity, minHeight: 700, maxHeight: .infinity)
+                    .frame(minWidth: minWindowWidth, maxWidth: .infinity, minHeight: minWindowHeight, maxHeight: .infinity)
             }
         }
     }
@@ -142,7 +146,7 @@ struct SplitView: View {
             List {
                 ForEach(categories, id: \.self) { category in
                     NavigationLink(
-                        destination: CategoryDetailView(category: category).frame(minWidth: 950),
+                        destination: CategoryDetailView(category: category).frame(minWidth: minWindowWidth - minSidebarWidth),
                         tag: category,
                         selection: $selectedCategory
                     ) {
@@ -157,7 +161,7 @@ struct SplitView: View {
                     }
                 }
             }.listStyle(SidebarListStyle())
-                .frame(minWidth: 180)
+                .frame(minWidth: minSidebarWidth)
         }
     }
 }
