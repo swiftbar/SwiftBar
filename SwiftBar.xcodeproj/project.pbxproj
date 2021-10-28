@@ -106,6 +106,12 @@
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
+		FA57F2A4272A307900817A79 /* XbarAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */; };
+		FA57F2A5272A308F00817A79 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
+		FA57F2A6272A308F00817A79 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
+		FA57F2A7272A308F00817A79 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
+		FA57F2A8272A308F00817A79 /* ReloadPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */; };
+		FA57F2A9272A309600817A79 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
 		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
@@ -626,7 +632,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd BuildTools\nSDKROOT=macosx\n#swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\nswift run -c release swiftformat --swiftversion 5.3.2 \"$SRCROOT\"\n";
+			shellScript = "cd BuildTools\nSDKROOT=macosx\n#swift package update #Uncomment this line temporarily to update the version used to the latest matching your BuildTools/Package.swift file\n#swift run -c release swiftformat --swiftversion 5.3.2 \"$SRCROOT\"\n";
 		};
 		398DAE2F2550A86300747D90 /* Version Number */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -785,11 +791,14 @@
 				39224DFB25F4344600BABF21 /* PluginErrorView.swift in Sources */,
 				39224DFC25F4344600BABF21 /* PluginRepositoryView.swift in Sources */,
 				39224DFD25F4344600BABF21 /* ExecutablePlugin.swift in Sources */,
+				FA57F2A8272A308F00817A79 /* ReloadPluginIntentHandler.swift in Sources */,
+				FA57F2A5272A308F00817A79 /* DisablePluginIntentHandler.swift in Sources */,
 				39224DFE25F4344600BABF21 /* Localizable.swift in Sources */,
 				39224DFF25F4344600BABF21 /* AppShared.swift in Sources */,
 				39224E0025F4344600BABF21 /* AboutPluginView.swift in Sources */,
 				39224E0125F4344600BABF21 /* NSColor.swift in Sources */,
 				39224E0225F4344600BABF21 /* URL+Extension.swift in Sources */,
+				FA57F2A7272A308F00817A79 /* GetPluginsIntentHandler.swift in Sources */,
 				39224E0325F4344600BABF21 /* MenuLineParameters.swift in Sources */,
 				39224E0425F4344600BABF21 /* AnimatableWindow.swift in Sources */,
 				39224E0525F4344600BABF21 /* NSImage.swift in Sources */,
@@ -798,9 +807,12 @@
 				39224E0825F4344600BABF21 /* DirectoryObserver.swift in Sources */,
 				39224E0925F4344600BABF21 /* String+SFSymbols.swift in Sources */,
 				39224E5F25F5317800BABF21 /* EnvConfig.swift in Sources */,
+				FA57F2A6272A308F00817A79 /* EnablePluginIntentHandler.swift in Sources */,
 				39224E0A25F4344600BABF21 /* AppDelegate+Toolbar.swift in Sources */,
+				FA57F2A9272A309600817A79 /* Intents.intentdefinition in Sources */,
 				39224E0B25F4344600BABF21 /* ImageLoader.swift in Sources */,
 				3990DCE22602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
+				FA57F2A4272A307900817A79 /* XbarAPI.swift in Sources */,
 				39224E0C25F4344600BABF21 /* StreamablePlugin.swift in Sources */,
 				39224E0D25F4344600BABF21 /* PreferencesView.swift in Sources */,
 				39224E0E25F4344600BABF21 /* PluginMetadata.swift in Sources */,
