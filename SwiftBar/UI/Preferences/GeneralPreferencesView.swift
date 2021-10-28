@@ -7,7 +7,7 @@ struct GeneralPreferencesView: View {
     @State private var launchAtLogin = true
 
     var body: some View {
-        Preferences.Container(contentWidth: 500) {
+        Preferences.Container(contentWidth: 350) {
             Preferences.Section(title: "\(Localizable.Preferences.LaunchAtLogin.localized):") {
                 LaunchAtLogin.Toggle {
                     Text(Localizable.Preferences.LaunchAtLogin.localized)

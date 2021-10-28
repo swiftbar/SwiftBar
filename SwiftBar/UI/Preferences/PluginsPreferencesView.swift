@@ -1,55 +1,63 @@
 import Preferences
 import SwiftUI
 struct PluginsPreferencesView: View {
-    @EnvironmentObject var preferences: PreferencesStore
-
+    var plugins: [Plugin] {
+        delegate.pluginManager.plugins
+    }
     var body: some View {
         VStack {
-            if delegate.pluginManager.plugins.isEmpty {
+            if plugins.isEmpty {
                 Text(Localizable.Preferences.NoPluginsMessage.localized)
                     .font(.largeTitle)
                     .padding(.bottom, 50)
             } else {
-                PluginsView()
+                PluginsView(plugin: plugins.first!)
             }
         }.frame(width: 750, height: 400)
     }
 }
 
+
 struct PluginsView: View {
-    @EnvironmentObject var preferences: PreferencesStore
-    @State var showingDetail = false
-    @State var selection: Int? = nil
+    @State var plugin: Plugin
+    
     var plugins: [Plugin] {
         delegate.pluginManager.plugins
     }
-
+    
     var body: some View {
-        NavigationView {
-            List {
-                ForEach(plugins, id: \.id) { plugin in
-                    NavigationLink(
-                        destination: PluginDetailsView(md: plugin.metadata ?? .empty(), plugin: plugin),
-                        tag: plugins.firstIndex(where: { $0.id == plugin.id }) ?? 0,
-                        selection: $selection,
-                        label: {
-                            PluginRowView(plugin: plugin)
-                        }
-                    )
-                }
-            }.listStyle(SidebarListStyle())
-                .onAppear(perform: {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        selection = 0
-                    }
-                })
-                .frame(minWidth: 200)
-        }
+        PluginPreferencesSplitView(master: {
+            SidebarView(plugins: plugins, selectedPlugin: $plugin)
+        }, detail: {
+            PluginDetailsView(md: plugin.metadata ?? .empty(), plugin: plugin)
+        })
     }
 }
 
+struct SidebarView: View {
+    var plugins: [Plugin]
+    @Binding var selectedPlugin: Plugin
+    var body: some View {
+        List {
+            ForEach(plugins, id: \.id) { plugin in
+                PluginRowView(plugin: plugin, selected: self.selectedPlugin.id == plugin.id)
+                    .onTapGesture {
+                        self.selectedPlugin = plugin
+                        print(plugin.id)
+                    }
+                    .listRowBackground(Group {
+                        if self.selectedPlugin.id == plugin.id {
+                            Color(NSColor.selectedContentBackgroundColor).mask(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        } else { Color.clear }
+                    })
+            }
+        }.listStyle(SidebarListStyle())
+        .frame(minWidth: 200)
+    }
+}
+
+
 struct PluginRowView: View {
-    @EnvironmentObject var preferences: PreferencesStore
     @State private var enabled: Bool = false
     var label: String {
         guard let name = plugin.metadata?.name, !name.isEmpty else {
@@ -57,19 +65,57 @@ struct PluginRowView: View {
         }
         return name
     }
-
+    
     let plugin: Plugin
+    var selected: Bool = false
     var body: some View {
         HStack(alignment: .center) {
             Toggle("", isOn: $enabled.onUpdate(updatePluginStatus))
-            Text(label)
+            
+            if selected {
+                Text(label)
+                    .foregroundColor(Color.white)
+            } else {
+                Text(label)
+            }
         }.onAppear {
             enabled = plugin.enabled
-        }
+        }.padding(5)
     }
-
+    
     private func updatePluginStatus() {
         enabled ? delegate.pluginManager.enablePlugin(plugin: plugin) :
-            delegate.pluginManager.disablePlugin(plugin: plugin)
+        delegate.pluginManager.disablePlugin(plugin: plugin)
+    }
+}
+
+
+
+struct PluginPreferencesSplitView<Master: View, Detail: View>: View {
+    var master: Master
+    var detail: Detail
+    
+    init(@ViewBuilder master: () -> Master, @ViewBuilder detail: () -> Detail) {
+        self.master = master()
+        self.detail = detail()
+    }
+    
+    var body: some View {
+        let viewControllers = [NSHostingController(rootView: master), NSHostingController(rootView: detail)]
+        return SplitViewController(viewControllers: viewControllers)
+    }
+}
+
+struct SplitViewController: NSViewControllerRepresentable {
+    typealias NSViewControllerType = NSSplitViewController
+    
+    var viewControllers: [NSViewController]
+    
+    func makeNSViewController(context: Context) -> NSSplitViewController {
+        return NSSplitViewController()
+    }
+    
+    func updateNSViewController(_ splitController: NSSplitViewController, context: Context) {
+        splitController.children = viewControllers
     }
 }
