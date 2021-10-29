@@ -223,7 +223,7 @@ For binary plugins metadata can be added as an extended file attribute:
 ## Plugin Types
 ### Standard (default)
 
-For Standard type of plugins, SwidtBar expects that plugin execution is finite, i.e., plugin runs and exits with output to stdout:
+For Standard type of plugins, SwiftBar expects that plugin execution is finite, i.e., plugin runs and exits with output to stdout:
 
 - exit with code 0 and non-empty stdout - menu bar is built from the output
 - exit with code 0 and empty stdout - nothing in the menu bar
