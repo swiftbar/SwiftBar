@@ -3,8 +3,9 @@ import Combine
 import Foundation
 import os
 import UserNotifications
+import SwiftUI
 
-class PluginManager {
+class PluginManager: ObservableObject {
     static let shared = PluginManager()
     let prefs = PreferencesStore.shared
     lazy var barItem: MenubarItem = {
@@ -15,7 +16,7 @@ class PluginManager {
         var directoryObserver: DirectoryObserver?
     #endif
 
-    var plugins: [Plugin] = [] {
+    @Published var plugins: [Plugin] = [] {
         didSet {
             pluginsDidChange()
         }

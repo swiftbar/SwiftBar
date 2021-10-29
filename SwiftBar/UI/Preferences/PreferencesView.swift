@@ -35,5 +35,5 @@ let preferencePanes: [PreferencePaneConvertible] = [
         identifier: .plugins,
         title: Localizable.Preferences.Plugins.localized,
         toolbarIcon: Preferences.PaneIdentifier.plugins.image
-    ) { PluginsPreferencesView().environmentObject(PreferencesStore.shared) },
+    ) { PluginsPreferencesView(pluginManager: PluginManager.shared).environmentObject(PreferencesStore.shared) },
 ]

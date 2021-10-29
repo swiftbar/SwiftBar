@@ -1,17 +1,16 @@
 import Preferences
 import SwiftUI
 struct PluginsPreferencesView: View {
-    var plugins: [Plugin] {
-        delegate.pluginManager.plugins
-    }
+    @ObservedObject var pluginManager: PluginManager
+
     var body: some View {
         VStack {
-            if plugins.isEmpty {
+            if pluginManager.plugins.isEmpty {
                 Text(Localizable.Preferences.NoPluginsMessage.localized)
                     .font(.largeTitle)
                     .padding(.bottom, 50)
             } else {
-                PluginsView(plugin: plugins.first!)
+                PluginsView(plugin: pluginManager.plugins.first!, plugins: pluginManager.plugins)
             }
         }.frame(width: 750, height: 400)
     }
@@ -21,9 +20,7 @@ struct PluginsPreferencesView: View {
 struct PluginsView: View {
     @State var plugin: Plugin
     
-    var plugins: [Plugin] {
-        delegate.pluginManager.plugins
-    }
+    var plugins: [Plugin]
     
     var body: some View {
         PluginPreferencesSplitView(master: {
