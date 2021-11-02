@@ -54,8 +54,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
         // Instance of Plugin Manager must be created after app launch
         pluginManager = PluginManager.shared
-        pluginManager.loadPlugins()
 
+        #if !MAC_APP_STORE
         while PreferencesStore.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
             alert.messageText = Localizable.App.ChoosePluginFolderMessage.localized
@@ -71,6 +71,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 NSApplication.shared.terminate(self)
             }
         }
+        #endif
+        
+        #if MAC_APP_STORE
+        prefs.pluginDirectoryPath = AppShared.appStorePluginsDirectory?.path
+        #endif
+        
+        pluginManager.loadPlugins()
 
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification,
                                                           object: nil,
