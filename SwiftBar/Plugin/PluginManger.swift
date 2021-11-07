@@ -151,7 +151,6 @@ class PluginManager: ObservableObject {
         let newPluginsFiles = pluginFiles.filter { file in
             !plugins.contains(where: { $0.file == file.path })
         }
-        let newPlugins = newPluginsFiles.map { loadPlugin(fileURL: $0) }
 
         let removedPlugins = plugins.filter { plugin in
             !pluginFiles.contains(where: { $0.path == plugin.file })
@@ -163,7 +162,7 @@ class PluginManager: ObservableObject {
             plugins.removeAll(where: { $0.id == plugin.id })
         }
 
-        plugins.append(contentsOf: newPlugins)
+        plugins.append(contentsOf: newPluginsFiles.map { loadPlugin(fileURL: $0) })
     }
 
     func loadPlugin(fileURL: URL) -> Plugin {
