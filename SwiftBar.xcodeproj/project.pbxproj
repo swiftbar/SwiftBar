@@ -130,6 +130,7 @@
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
 		FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD571A225A0071700623B57 /* StreamablePlugin.swift */; };
+		FAFF1285273837EA00B3993B /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = FAFF1284273837EA00B3993B /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -221,6 +222,7 @@
 		FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailsView.swift; sourceTree = "<group>"; };
 		FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatableWindow.swift; sourceTree = "<group>"; };
 		FAD571A225A0071700623B57 /* StreamablePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamablePlugin.swift; sourceTree = "<group>"; };
+		FAFF1284273837EA00B3993B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -253,6 +255,7 @@
 		3920747125460FD000213DBE = {
 			isa = PBXGroup;
 			children = (
+				FAFF1284273837EA00B3993B /* README.md */,
 				FA3864EA2589AAF2000C6C97 /* BuildTools */,
 				3920747C25460FD000213DBE /* SwiftBar */,
 				3920747B25460FD000213DBE /* Products */,
@@ -560,6 +563,7 @@
 			files = (
 				3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */,
 				396E6CA9258E8C5C002C735D /* Localizable.strings in Resources */,
+				FAFF1285273837EA00B3993B /* README.md in Resources */,
 				393375EC25508B320050AC28 /* Credits.rtf in Resources */,
 				3920748225460FD300213DBE /* Assets.xcassets in Resources */,
 			);

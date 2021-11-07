@@ -263,6 +263,9 @@ You can mark a plugin as streamable with a special metadata property `<swiftbar.
 | refreshallplugins | none | Force refresh all loaded plugins | `swiftbar://refreshallplugins` |
 | refreshplugin | `name` plugin [name](#plugin-naming) | Force refresh plugin by name | `swiftbar://refreshplugin?name=myplugin` |
 | refreshplugin | `index` plugin index in menubar, starting from `0` | Force refresh plugin by its position in menubar | `swiftbar://refreshplugin?index=1` |
+| enableplugin | `name` plugin [name](#plugin-naming) | Enable plugin by name | `swiftbar://enableplugin?name=myplugin` |
+| disableplugin | `name` plugin [name](#plugin-naming) | Disable plugin by name | `swiftbar://disableplugin?name=myplugin` |
+| toggleplugin | `name` plugin [name](#plugin-naming) | Toggle(enable\disable) plugin by name | `swiftbar://toggleplugin?name=myplugin` |
 | addplugin | `src` source URL to plugin file | Add plugin to Swiftbar from URL | `swiftbar://addplugin?src=https://coolplugin` |
 | notify | `plugin` plugin [name](#plugin-naming). Notification fields: `title`, `subtitle`, `body`. `href` to open an URL on click (including custom URL schemes). `silent=true` to disable sound | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
 

@@ -79,10 +79,25 @@ class PluginManager: ObservableObject {
         os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
         plugin.disable()
     }
+    
+    func disablePlugin(named name: String) {
+        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
+        disablePlugin(plugin: plugin)
+    }
 
     func enablePlugin(plugin: Plugin) {
         os_log("Enabling plugin \n%{public}@", log: Log.plugin, plugin.description)
         plugin.enable()
+    }
+    
+    func enablePlugin(named name: String) {
+        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
+        enablePlugin(plugin: plugin)
+    }
+    
+    func togglePlugin(named name: String) {
+        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
+        plugin.enabled ? disablePlugin(plugin: plugin):enablePlugin(plugin: plugin)
     }
 
     func disableAllPlugins() {
@@ -197,6 +212,7 @@ class PluginManager: ObservableObject {
         guard plugins.indices.contains(index) else { return }
         plugins[index].refresh()
     }
+    
 
     enum ImportPluginError: Error {
         case badURL

@@ -117,6 +117,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                     pluginManager.refreshPlugin(with: index)
                     return
                 }
+            case "disableplugin":
+                if let name = url.queryParameters?["name"] {
+                    pluginManager.disablePlugin(named: name)
+                }
+            case "enableplugin":
+                if let name = url.queryParameters?["name"] {
+                    pluginManager.enablePlugin(named: name)
+                }
+            case "toggleplugin":
+                if let name = url.queryParameters?["name"] {
+                    pluginManager.togglePlugin(named: name)
+                }
             case "addplugin":
                 if let src = url.queryParameters?["src"], let url = URL(string: src) {
                     pluginManager.importPlugin(from: url)
