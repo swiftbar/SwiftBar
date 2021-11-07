@@ -205,6 +205,7 @@ extension MenubarItem {
         let preferencesItem = NSMenuItem(title: Localizable.MenuBar.Preferences.localized, action: #selector(openPreferences), keyEquivalent: ",")
         let openPluginFolderItem = NSMenuItem(title: Localizable.MenuBar.OpenPluginsFolder.localized, action: #selector(openPluginFolder), keyEquivalent: "")
         let changePluginFolderItem = NSMenuItem(title: Localizable.MenuBar.ChangePluginsFolder.localized, action: #selector(changePluginFolder), keyEquivalent: "")
+        let scanPluginsFolder = NSMenuItem(title: Localizable.MenuBar.ChangePluginsFolder.localized, action: #selector(changePluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: Localizable.MenuBar.GetPlugins.localized, action: #selector(getPlugins), keyEquivalent: "")
         let sendFeedbackItem = NSMenuItem(title: Localizable.MenuBar.SendFeedback.localized, action: #selector(sendFeedback), keyEquivalent: "")
         let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
@@ -220,7 +221,11 @@ extension MenubarItem {
         menu.addItem(disableAllItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(openPluginFolderItem)
+        #if MAC_APP_STORE
         menu.addItem(changePluginFolderItem)
+        #else
+        menu.addItem(changePluginFolderItem)
+        #endif
         menu.addItem(getPluginsItem)
         menu.addItem(NSMenuItem.separator())
         menu.addItem(aboutSwiftbarItem)

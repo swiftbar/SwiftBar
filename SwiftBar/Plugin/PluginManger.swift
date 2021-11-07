@@ -215,6 +215,10 @@ class PluginManager: ObservableObject {
                 let targetURL = pluginDirectoryURL.appendingPathComponent(url.lastPathComponent)
                 try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
                 try runScript(to: "chmod", args: ["+x", "\(targetURL.path.escaped())"])
+                try targetURL.removeExtendedAttribute(forName: "com.apple.quarantine") //this doesn't work, deleting this attr is not allowed from a sandboxed app. This attr is a dealbreaker.
+                #if MAC_APP_STORE
+                self.directoryChanged()
+                #endif
                 completionHandler?(.success(true))
             } catch {
                 completionHandler?(.failure(.importFail))
