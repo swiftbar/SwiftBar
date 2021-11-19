@@ -148,8 +148,7 @@ class ExecutablePlugin: Plugin {
     }
 
     @objc func scheduledContentUpdate() {
-        content = invoke()
-        enableTimer()
+        refresh()
     }
 }
 

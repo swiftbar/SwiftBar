@@ -92,7 +92,7 @@ class MenubarItem: NSObject {
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] content in
-                guard self?.isOpen == false else {
+                guard self?.isOpen == false, plugin?.metadata?.refreshOnOpen == true else {
                     self?.refreshOnClose = true
                     return
                 }
@@ -605,8 +605,30 @@ extension MenubarItem {
     }
 
     func showMenu() {
+        if plugin?.metadata?.refreshOnOpen == true,  plugin?.type == .Executable {
+            refreshAndShowMenu()
+            return
+        }
         barItem.menu = statusBarMenu
         barItem.button?.performClick(nil)
+    }
+    
+    func refreshAndShowMenu() {
+        if #available(macOS 11.0, *) {
+            barItem.button?.image = NSImage(systemSymbolName: "hourglass", accessibilityDescription: nil)
+            barItem.button?.imagePosition = .imageLeft
+        } else {
+            barItem.button?.image = nil
+            barItem.button?.title = "..."
+        }
+        DispatchQueue.main.async { [weak self] in
+            self?.barItem.button?.image = nil
+            self?.barItem.button?.title.removeAll()
+            self?.plugin?.refresh()
+            self?.updateMenu(content: self?.plugin?.content)
+            self?.barItem.menu = self?.statusBarMenu
+            self?.barItem.button?.performClick(nil)
+        }
     }
 
     @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {
