@@ -592,7 +592,7 @@ extension MenubarItem {
     @objc func barItemClicked() {
         guard let eventType = NSApp.currentEvent?.type else { return }
 
-        if eventType == .rightMouseUp {
+        if eventType == .rightMouseDown {
             showMenu()
             return
         }
