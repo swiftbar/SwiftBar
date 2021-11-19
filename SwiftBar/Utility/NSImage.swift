@@ -24,7 +24,7 @@ extension NSImage {
         guard let data = newImage.tiffRepresentation,
               let result = NSImage(data: data)
         else { return NSImage() }
-
+        result.isTemplate = isTemplate
         return result
     }
 

@@ -137,20 +137,25 @@ struct MenuLineParameters {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
                 let config = NSImage.SymbolConfiguration(scale: .large)
-                return NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                let image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                image?.isTemplate = true
+                return resizedImageIfRequested(image)
             }
         }
 
         let image = NSImage.createImage(from: params["image"] ?? params["templateimage"], isTemplate: params["templateimage"] != nil)
-        if let widthStr = params["width"], let width = Float(widthStr),
-           let heightStr = params["height"], let height = Float(heightStr)
-        {
-            return image?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
-        }
 
-        return image
+        return resizedImageIfRequested(image)
     }
 
+    private func resizedImageIfRequested(_ image: NSImage?) -> NSImage? {
+        guard let widthStr = params["width"], let width = Float(widthStr),
+              let heightStr = params["height"], let height = Float(heightStr) else {
+                  return image
+        }
+        return image?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
+    }
+    
     var emojize: Bool {
         params["emojize"] != "false"
     }
