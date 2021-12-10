@@ -53,6 +53,10 @@ class StreamablePlugin: Plugin {
     func refresh() {
         os_log("Manual refresh is not available for Streamable plugin\n%{public}@", log: Log.plugin, description)
     }
+    
+    func start() {
+        invokeQueue.addOperation { [weak self] in self?.invoke() }
+    }
 
     func disable() {
         lastState = .Disabled

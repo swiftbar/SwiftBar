@@ -83,7 +83,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                           object: nil,
                                                           queue: OperationQueue.main) { [weak self] _ in
             os_log("Mac waked up", log: Log.plugin, type: .info)
-            self?.pluginManager.refreshAllPlugins()
+            self?.pluginManager.startAllPlugins()
         }
     }
 

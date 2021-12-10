@@ -193,6 +193,12 @@ class PluginManager: ObservableObject {
         enabledPlugins.forEach { $0.refresh() }
     }
 
+    func startAllPlugins() {
+        os_log("Starting all enabled plugins.", log: Log.plugin)
+        pluginInvokeQueue.cancelAllOperations() // clean up the update queue to avoid duplication
+        enabledPlugins.forEach { $0.start() }
+    }
+    
     func terminateAllPlugins() {
         os_log("Stoping all enabled plugins.", log: Log.plugin)
         enabledPlugins.forEach { $0.terminate() }
