@@ -2,6 +2,7 @@ import Cocoa
 import Combine
 import HotKey
 import SwiftUI
+import os
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
@@ -92,7 +93,11 @@ class MenubarItem: NSObject {
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] content in
-                guard self?.isOpen == false, plugin?.metadata?.refreshOnOpen == true else {
+                guard plugin?.metadata?.refreshOnOpen == false else {
+                    os_log("Skipping refresh for refreshOnOpen plugin", log: Log.plugin, type: .info)
+                    return
+                }
+                guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
                 }
