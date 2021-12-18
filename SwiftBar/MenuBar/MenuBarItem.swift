@@ -505,6 +505,7 @@ extension MenubarItem {
             barItem.button?.image = image
             barItem.button?.imagePosition = .imageLeft
         }
+        let attrTitle = atributedTitle(with: params, pad: true).title
         barItem.button?.attributedTitle = atributedTitle(with: params, pad: true).title
     }
 
@@ -530,7 +531,7 @@ extension MenubarItem {
         title = title.replacingOccurrences(of: "\\n", with: "\n")
 
         let fontSize = params.size ?? 0
-        let color = params.color ?? NSColor.labelColor
+        let color = params.color ?? NSColor.controlTextColor
         let font = NSFont(name: params.font ?? "", size: fontSize) ??
             NSFont.menuBarFont(ofSize: fontSize)
         let offset = font.menuBarOffset
