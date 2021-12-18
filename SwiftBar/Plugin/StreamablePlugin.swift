@@ -53,7 +53,7 @@ class StreamablePlugin: Plugin {
     func refresh() {
         os_log("Manual refresh is not available for Streamable plugin\n%{public}@", log: Log.plugin, description)
     }
-    
+
     func start() {
         invokeQueue.addOperation { [weak self] in self?.invoke() }
     }
@@ -82,6 +82,7 @@ class StreamablePlugin: Plugin {
             let out = try runScript(to: file, process: procces,
                                     env: env,
                                     runInBash: metadata?.shouldRunInBash ?? true,
+                                    streamOutput: true,
                                     onOutputUpdate: { [weak self] str in
                                         guard str != "\n" else {
                                             return
