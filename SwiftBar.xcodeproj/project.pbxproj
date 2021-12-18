@@ -202,8 +202,6 @@
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA06104525F0564400B08B6E /* PluginEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginEntryView.swift; sourceTree = "<group>"; };
-		FA3864EB2589AB05000C6C97 /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
-		FA3864EF2589AB28000C6C97 /* Empty.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
 		FA60506726B593FA001A939A /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
@@ -256,7 +254,6 @@
 			isa = PBXGroup;
 			children = (
 				FAFF1284273837EA00B3993B /* README.md */,
-				FA3864EA2589AAF2000C6C97 /* BuildTools */,
 				3920747C25460FD000213DBE /* SwiftBar */,
 				3920747B25460FD000213DBE /* Products */,
 				39224E4F25F43B6B00BABF21 /* Frameworks */,
@@ -402,15 +399,6 @@
 				39224E5B25F530AF00BABF21 /* EnvConfig.swift */,
 			);
 			path = Utility;
-			sourceTree = "<group>";
-		};
-		FA3864EA2589AAF2000C6C97 /* BuildTools */ = {
-			isa = PBXGroup;
-			children = (
-				FA3864EB2589AB05000C6C97 /* Package.swift */,
-				FA3864EF2589AB28000C6C97 /* Empty.swift */,
-			);
-			path = BuildTools;
 			sourceTree = "<group>";
 		};
 		FA64C9DD25CF68FC00C4E5C5 /* Preferences */ = {
