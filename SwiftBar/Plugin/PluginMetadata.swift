@@ -112,9 +112,6 @@ class PluginMetadata: ObservableObject {
                 let closeTag = "</\(prefix).\(tag.rawValue)>"
                 return script.slice(from: openTag, to: closeTag)
             }
-            if tag == .refreshOnOpen {
-                print(values)
-            }
             return values.last ?? ""
         }
 
@@ -156,8 +153,7 @@ class PluginMetadata: ObservableObject {
                               hideSwiftBar: getTagValue(tag: .hideSwiftBar) == "true",
                               environment: environment,
                               runInBash: getTagValue(tag: .runInBash) == "false" ? false : true,
-                              refreshOnOpen: getTagValue(tag: .refreshOnOpen) == "true" ? true: false
-        )
+                              refreshOnOpen: getTagValue(tag: .refreshOnOpen) == "true" ? true : false)
     }
 
     static func parser(fileURL: URL) -> PluginMetadata? {
