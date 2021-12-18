@@ -7,7 +7,7 @@ extension String {
         }
         var colors: [NSColor] = colors
         let out = NSMutableAttributedString()
-        //TODO: This could mess up the string(refer to #237), ideally replace with regexp match + substring replace or something like that
+        // TODO: This could mess up the string(refer to #237), ideally replace with regexp match + substring replace or something like that
         components(separatedBy: .whitespaces).forEach { word in
             if out.length != 0 {
                 out.append(NSAttributedString(string: " "))
