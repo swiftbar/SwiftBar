@@ -2,8 +2,8 @@ import Cocoa
 import Combine
 import Foundation
 import os
-import UserNotifications
 import SwiftUI
+import UserNotifications
 
 class PluginManager: ObservableObject {
     static let shared = PluginManager()
@@ -37,14 +37,14 @@ class PluginManager: ObservableObject {
     let pluginInvokeQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInitiated
-        queue.maxConcurrentOperationCount = 20
+        queue.maxConcurrentOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
         return queue
     }()
 
     let menuUpdateQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInteractive
-        queue.maxConcurrentOperationCount = 5
+        queue.maxConcurrentOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
         return queue
     }()
 
@@ -71,7 +71,7 @@ class PluginManager: ObservableObject {
             guard !enabledPlugins.contains(where: { $0.id == pluginID }) else { return }
             menuBarItems.removeValue(forKey: pluginID)
         }
-        
+
         enabledPlugins.isEmpty && !prefs.stealthMode ? barItem.show() : barItem.hide()
     }
 
@@ -79,7 +79,7 @@ class PluginManager: ObservableObject {
         os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
         plugin.disable()
     }
-    
+
     func disablePlugin(named name: String) {
         guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
         disablePlugin(plugin: plugin)
@@ -89,15 +89,15 @@ class PluginManager: ObservableObject {
         os_log("Enabling plugin \n%{public}@", log: Log.plugin, plugin.description)
         plugin.enable()
     }
-    
+
     func enablePlugin(named name: String) {
         guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
         enablePlugin(plugin: plugin)
     }
-    
+
     func togglePlugin(named name: String) {
         guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
-        plugin.enabled ? disablePlugin(plugin: plugin):enablePlugin(plugin: plugin)
+        plugin.enabled ? disablePlugin(plugin: plugin) : enablePlugin(plugin: plugin)
     }
 
     func disableAllPlugins() {
@@ -198,7 +198,7 @@ class PluginManager: ObservableObject {
         pluginInvokeQueue.cancelAllOperations() // clean up the update queue to avoid duplication
         enabledPlugins.forEach { $0.start() }
     }
-    
+
     func terminateAllPlugins() {
         os_log("Stoping all enabled plugins.", log: Log.plugin)
         enabledPlugins.forEach { $0.terminate() }
@@ -218,7 +218,6 @@ class PluginManager: ObservableObject {
         guard plugins.indices.contains(index) else { return }
         plugins[index].refresh()
     }
-    
 
     enum ImportPluginError: Error {
         case badURL

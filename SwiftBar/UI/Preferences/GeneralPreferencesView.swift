@@ -28,9 +28,9 @@ struct GeneralPreferencesView: View {
                 EnumPicker(selected: $preferences.shell, title: "")
                     .frame(width: 120.0)
             }
-        
+
             Preferences.Section(title: "\(Localizable.Preferences.UpdateLabel.localized):", verticalAlignment: .top) {
-                HStack{
+                HStack {
                     Button(Localizable.Preferences.CheckForUpdates.localized) {
                         AppShared.checkForUpdates()
                     }

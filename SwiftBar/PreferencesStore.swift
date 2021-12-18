@@ -9,7 +9,7 @@ enum TerminalOptions: String, CaseIterable {
 enum ShellOptions: String, CaseIterable {
     case Bash
     case Zsh
-    
+
     var path: String {
         switch self {
         case .Bash:
@@ -66,7 +66,7 @@ class PreferencesStore: ObservableObject {
             PreferencesStore.setValue(value: terminal.rawValue, key: .Terminal)
         }
     }
-    
+
     @Published var shell: ShellOptions {
         didSet {
             PreferencesStore.setValue(value: terminal.rawValue, key: .Terminal)
@@ -107,7 +107,7 @@ class PreferencesStore: ObservableObject {
     var stealthMode: Bool {
         PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
     }
-    
+
     init() {
         pluginDirectoryPath = PreferencesStore.getValue(key: .PluginDirectory) as? String
         disabledPlugins = PreferencesStore.getValue(key: .DisabledPlugins) as? [PluginID] ?? []

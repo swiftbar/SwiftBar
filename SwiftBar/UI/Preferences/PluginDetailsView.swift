@@ -1,5 +1,5 @@
-import SwiftUI
 import Preferences
+import SwiftUI
 
 struct PluginDetailsView: View {
     @ObservedObject var md: PluginMetadata
@@ -11,7 +11,7 @@ struct PluginDetailsView: View {
     var body: some View {
         Preferences.Container(contentWidth: 500) {
             Preferences.Section(label: {
-                HStack{
+                HStack {
                     Text("About Plugin")
                     if #available(OSX 11.0, *) {
                         Button(action: {
@@ -22,8 +22,7 @@ struct PluginDetailsView: View {
                     }
                     Spacer()
                 }
-            }, content: {
-            })
+            }, content: {})
             Preferences.Section(label: {
                 PluginDetailsTextView(label: "Name",
                                       text: $md.name,
@@ -63,12 +62,11 @@ struct PluginDetailsView: View {
                 }
             }, content: {})
             Preferences.Section(label: {
-                HStack{
+                HStack {
                     Text("Hide Menu Items:")
                     Spacer()
                 }
-            }, content: {
-            })
+            }, content: {})
             Preferences.Section(label: {
                 HStack {
                     PluginDetailsToggleView(label: "About",
@@ -82,24 +80,24 @@ struct PluginDetailsView: View {
                                             width: width * screenProportion)
                 }
             }, content: {})
-            
+
             Preferences.Section(bottomDivider: true, label: {
                 HStack {
                     PluginDetailsToggleView(label: "SwiftBar",
                                             state: $md.hideSwiftBar,
                                             width: width * screenProportion)
-                    
+
                     PluginDetailsToggleView(label: "Disable Plugin",
                                             state: $md.hideDisablePlugin,
                                             width: width * screenProportion)
                 }
             }, content: {})
-            
+
             Preferences.Section(title: "", content: {})
             Preferences.Section(label: {
-                    Button("Save in Plugin File", action: {
-                        PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
-                    })
+                Button("Save in Plugin File", action: {
+                    PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
+                })
             }, content: {})
         }
     }

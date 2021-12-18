@@ -106,7 +106,7 @@ struct MenuLineParameters {
         guard let sizeStr = params["size"], let pSize = Int(sizeStr) else { return nil }
         return CGFloat(pSize)
     }
-    
+
     var sfsize: CGFloat? {
         guard let sizeStr = params["sfsize"], let pSize = Int(sizeStr) else { return nil }
         return CGFloat(pSize)
@@ -150,12 +150,13 @@ struct MenuLineParameters {
 
     private func resizedImageIfRequested(_ image: NSImage?) -> NSImage? {
         guard let widthStr = params["width"], let width = Float(widthStr),
-              let heightStr = params["height"], let height = Float(heightStr) else {
-                  return image
+              let heightStr = params["height"], let height = Float(heightStr)
+        else {
+            return image
         }
         return image?.resizedCopy(w: CGFloat(width), h: CGFloat(height))
     }
-    
+
     var emojize: Bool {
         params["emojize"] != "false"
     }

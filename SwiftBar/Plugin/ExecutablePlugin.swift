@@ -109,7 +109,7 @@ class ExecutablePlugin: Plugin {
     func start() {
         refresh()
     }
-    
+
     func refresh() {
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)

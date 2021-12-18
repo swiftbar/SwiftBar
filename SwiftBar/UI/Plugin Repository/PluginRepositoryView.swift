@@ -1,9 +1,9 @@
 import os
 import SwiftUI
 
-fileprivate let minWindowWidth: CGFloat = 1024
-fileprivate let minWindowHeight: CGFloat = 700
-fileprivate let minSidebarWidth: CGFloat = 180
+private let minWindowWidth: CGFloat = 1024
+private let minWindowHeight: CGFloat = 700
+private let minSidebarWidth: CGFloat = 180
 
 struct PluginRepositoryView: View {
     @ObservedObject var pluginRepository = PluginRepository.shared

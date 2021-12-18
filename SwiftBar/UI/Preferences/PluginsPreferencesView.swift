@@ -16,12 +16,11 @@ struct PluginsPreferencesView: View {
     }
 }
 
-
 struct PluginsView: View {
     @State var plugin: Plugin
-    
+
     var plugins: [Plugin]
-    
+
     var body: some View {
         PluginPreferencesSplitView(master: {
             SidebarView(plugins: plugins, selectedPlugin: $plugin)
@@ -49,10 +48,9 @@ struct SidebarView: View {
                     })
             }
         }.listStyle(SidebarListStyle())
-        .frame(minWidth: 200)
+            .frame(minWidth: 200)
     }
 }
-
 
 struct PluginRowView: View {
     @State private var enabled: Bool = false
@@ -62,13 +60,13 @@ struct PluginRowView: View {
         }
         return name
     }
-    
+
     let plugin: Plugin
     var selected: Bool = false
     var body: some View {
         HStack(alignment: .center) {
             Toggle("", isOn: $enabled.onUpdate(updatePluginStatus))
-            
+
             if selected {
                 Text(label)
                     .foregroundColor(Color.white)
@@ -79,24 +77,22 @@ struct PluginRowView: View {
             enabled = plugin.enabled
         }.padding(5)
     }
-    
+
     private func updatePluginStatus() {
         enabled ? delegate.pluginManager.enablePlugin(plugin: plugin) :
-        delegate.pluginManager.disablePlugin(plugin: plugin)
+            delegate.pluginManager.disablePlugin(plugin: plugin)
     }
 }
-
-
 
 struct PluginPreferencesSplitView<Master: View, Detail: View>: View {
     var master: Master
     var detail: Detail
-    
+
     init(@ViewBuilder master: () -> Master, @ViewBuilder detail: () -> Detail) {
         self.master = master()
         self.detail = detail()
     }
-    
+
     var body: some View {
         let viewControllers = [NSHostingController(rootView: master), NSHostingController(rootView: detail)]
         return SplitViewController(viewControllers: viewControllers)
@@ -105,14 +101,14 @@ struct PluginPreferencesSplitView<Master: View, Detail: View>: View {
 
 struct SplitViewController: NSViewControllerRepresentable {
     typealias NSViewControllerType = NSSplitViewController
-    
+
     var viewControllers: [NSViewController]
-    
-    func makeNSViewController(context: Context) -> NSSplitViewController {
-        return NSSplitViewController()
+
+    func makeNSViewController(context _: Context) -> NSSplitViewController {
+        NSSplitViewController()
     }
-    
-    func updateNSViewController(_ splitController: NSSplitViewController, context: Context) {
+
+    func updateNSViewController(_ splitController: NSSplitViewController, context _: Context) {
         splitController.children = viewControllers
     }
 }

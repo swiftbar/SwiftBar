@@ -1,8 +1,8 @@
 import Cocoa
 import Combine
 import HotKey
-import SwiftUI
 import os
+import SwiftUI
 
 class MenubarItem: NSObject {
     var plugin: Plugin?
@@ -610,14 +610,14 @@ extension MenubarItem {
     }
 
     func showMenu() {
-        if plugin?.metadata?.refreshOnOpen == true,  plugin?.type == .Executable {
+        if plugin?.metadata?.refreshOnOpen == true, plugin?.type == .Executable {
             refreshAndShowMenu()
             return
         }
         barItem.menu = statusBarMenu
         barItem.button?.performClick(nil)
     }
-    
+
     func refreshAndShowMenu() {
         if #available(macOS 11.0, *) {
             barItem.button?.image = NSImage(systemSymbolName: "hourglass", accessibilityDescription: nil)
@@ -642,7 +642,7 @@ extension MenubarItem {
                 updateMenu(content: plugin?.content) // dumb fix for #221, ideally come up with something better...
             }
         }
-        
+
         if let href = params.href, let url = URL(string: href) {
             NSWorkspace.shared.open(url)
             return true
