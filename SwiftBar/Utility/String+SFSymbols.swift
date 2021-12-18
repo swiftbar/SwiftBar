@@ -2,31 +2,32 @@ import Cocoa
 
 extension String {
     func symbolize(font: NSFont, colors: [NSColor], sfsize: CGFloat?) -> NSMutableAttributedString {
-        if #available(OSX 11.0, *) {
-            var colors: [NSColor] = colors
-            let out = NSMutableAttributedString()
-            self.components(separatedBy: .whitespaces).forEach { word in
-                if out.length != 0 {
-                    out.append(NSAttributedString(string: " "))
-                }
-                guard word.hasPrefix(":"), word.hasSuffix(":") else {
-                    out.append(NSAttributedString(string: word))
-                    return
-                }
-                let imageConfig = NSImage.SymbolConfiguration(pointSize: sfsize ?? font.pointSize, weight: .regular)
-                if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil)?.withSymbolConfiguration(imageConfig) {
-                    let tintColor = colors.first
-                    if colors.count > 1 {
-                        colors = Array(colors.dropFirst())
-                    }
-                    out.append(NSAttributedString(attachment: NSTextAttachment.centeredImage(with: image.tintedImage(color: tintColor), and: font)))
-                    return
-                }
-                out.append(NSAttributedString(string: word))
-            }
-            return out
+        guard #available(OSX 11.0, *), contains(":") else {
+            return NSMutableAttributedString(string: self)
         }
-        return NSMutableAttributedString(string: self)
+        var colors: [NSColor] = colors
+        let out = NSMutableAttributedString()
+        //TODO: This could mess up the string(refer to #237), ideally replace with regexp match + substring replace or something like that
+        components(separatedBy: .whitespaces).forEach { word in
+            if out.length != 0 {
+                out.append(NSAttributedString(string: " "))
+            }
+            guard word.hasPrefix(":"), word.hasSuffix(":") else {
+                out.append(NSAttributedString(string: word))
+                return
+            }
+            let imageConfig = NSImage.SymbolConfiguration(pointSize: sfsize ?? font.pointSize, weight: .regular)
+            if let image = NSImage(systemSymbolName: String(word.dropFirst().dropLast()), accessibilityDescription: nil)?.withSymbolConfiguration(imageConfig) {
+                let tintColor = colors.first
+                if colors.count > 1 {
+                    colors = Array(colors.dropFirst())
+                }
+                out.append(NSAttributedString(attachment: NSTextAttachment.centeredImage(with: image.tintedImage(color: tintColor), and: font)))
+                return
+            }
+            out.append(NSAttributedString(string: word))
+        }
+        return out
     }
 }
 
