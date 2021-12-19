@@ -10,7 +10,7 @@ private var ANSIForeground: [Int: NSColor] = [
     34: .systemBlue,
     35: .magenta,
     36: .cyan,
-    37: .systemGray,
+    37: .white,
     90: .darkGray,
     91: .red,
     92: .green,
