@@ -505,7 +505,6 @@ extension MenubarItem {
             barItem.button?.image = image
             barItem.button?.imagePosition = .imageLeft
         }
-        let attrTitle = atributedTitle(with: params, pad: true).title
         barItem.button?.attributedTitle = atributedTitle(with: params, pad: true).title
     }
 
@@ -540,9 +539,12 @@ extension MenubarItem {
         style.alignment = .left
 
         var attributedTitle = NSMutableAttributedString(string: title)
+        if #available(macOS 12, *), let parsedMD = try? NSAttributedString(markdown: title) {
+            attributedTitle = NSMutableAttributedString(attributedString: parsedMD)
+        }
 
         if params.symbolize, !params.ansi {
-            attributedTitle = title.symbolize(font: font, colors: params.sfcolors, sfsize: params.sfsize)
+            attributedTitle.symbolize(font: font, colors: params.sfcolors, sfsize: params.sfsize)
         }
         if params.ansi {
             attributedTitle = title.colorizedWithANSIColor()
