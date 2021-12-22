@@ -102,6 +102,10 @@ struct MenuLineParameters {
         params["font"]
     }
 
+    var md: Bool {
+        params["md"] == "true"
+    }
+
     var size: CGFloat? {
         guard let sizeStr = params["size"], let pSize = Int(sizeStr) else { return nil }
         return CGFloat(pSize)

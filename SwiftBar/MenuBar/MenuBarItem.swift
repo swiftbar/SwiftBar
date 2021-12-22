@@ -539,7 +539,7 @@ extension MenubarItem {
         style.alignment = .left
 
         var attributedTitle = NSMutableAttributedString(string: title)
-        if #available(macOS 12, *), let parsedMD = try? NSAttributedString(markdown: title) {
+        if #available(macOS 12, *), params.md, let parsedMD = try? NSAttributedString(markdown: title) {
             attributedTitle = NSMutableAttributedString(attributedString: parsedMD)
         }
 
