@@ -84,11 +84,10 @@ private extension Process {
         guard streamOutput else { // horrible hack, code below this guard doesn't work reliably and I can't fugire out why.
             let pipe = Pipe()
             standardOutput = pipe
-            standardError = pipe
             launch()
             waitUntilExit()
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? "HUI: FUCK"
+            let output = String(data: data, encoding: .utf8) ?? ""
             return output
         }
 
