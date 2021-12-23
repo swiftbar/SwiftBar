@@ -5,7 +5,7 @@ extension NSMutableAttributedString {
         guard #available(OSX 11.0, *) else {
             return
         }
-        let regex = ":[a-z,.]*:"
+        let regex = ":[a-z,0-9,.]*:"
         var resultRanges = [NSRange]()
         let currentString = string
         do {
