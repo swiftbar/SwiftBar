@@ -66,6 +66,7 @@ class StreamablePlugin: Plugin {
     }
 
     func terminate() {
+        lastState = .Disabled
         procces?.terminate()
     }
 
@@ -104,7 +105,7 @@ class StreamablePlugin: Plugin {
                                         self?.content?.append(str)
                                     })
             error = nil
-            lastState = .Success
+            lastState = .Streaming
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             return out
         } catch {
