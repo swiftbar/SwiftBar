@@ -640,15 +640,18 @@ extension MenubarItem {
     }
 
     @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {
+        var out = false
+
         defer {
-            if params.color != nil {
+            if params.color != nil, out {
                 updateMenu(content: plugin?.content) // dumb fix for #221, ideally come up with something better...
             }
         }
 
         if let href = params.href, let url = URL(string: href) {
             NSWorkspace.shared.open(url)
-            return true
+            out = true
+            return out
         }
 
         if let bash = params.bash {
@@ -658,14 +661,17 @@ extension MenubarItem {
                     self?.plugin?.refresh()
                 }
             }
-            return true
+            out = true
+            return out
         }
 
         if params.refresh {
             plugin?.refresh()
-            return true
+            out = true
+            return out
         }
-        return false
+        out = false
+        return out
     }
 
     @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
