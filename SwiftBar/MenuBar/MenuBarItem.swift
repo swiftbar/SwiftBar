@@ -516,6 +516,31 @@ extension MenubarItem {
         setMenuTitle(title: titleLines[currentTitleLineIndex])
     }
 
+    // do the following conversion:
+    // \\ -> \
+    // \n -> LF
+    // \c -> c  any char else
+    func unescape(_ str: String) -> String {
+        var newstr = ""
+        var backslash = false
+        for c in str {
+            if backslash {
+                backslash = false
+                if c == "n" {
+                    newstr += "\n"
+                    continue
+                }
+            } else {
+                if c == "\\" {
+                    backslash = true
+                    continue
+                }
+            }
+            newstr += String(c)
+        }
+        return newstr
+    }
+
     func atributedTitle(with params: MenuLineParameters, pad: Bool = false) -> (title: NSAttributedString, tooltip: String) {
         var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces) : params.title
         guard !title.isEmpty else { return (NSAttributedString(), "") }
@@ -527,7 +552,9 @@ extension MenubarItem {
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
-        title = title.replacingOccurrences(of: "\\n", with: "\n")
+        os_log("title:%{public}@", log: Log.plugin, type: .info, title)
+
+        title = unescape(title)
 
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.controlTextColor
