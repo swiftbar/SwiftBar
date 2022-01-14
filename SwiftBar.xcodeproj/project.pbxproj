@@ -114,6 +114,7 @@
 		FA57F2A9272A309600817A79 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
 		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
+		FA69F5BC2791145E00D6DDC6 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA69F5BB2791145E00D6DDC6 /* WebView.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
 		FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
@@ -205,6 +206,7 @@
 		FA60506726B593FA001A939A /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
+		FA69F5BB2791145E00D6DDC6 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
 		FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = Intents.intentdefinition; sourceTree = "<group>"; };
 		FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnablePluginIntentHandler.swift; sourceTree = "<group>"; };
@@ -326,6 +328,7 @@
 				3962572D2569949200341A19 /* Plugin Repository */,
 				39641EA0254DD32100713DAF /* AboutPluginView.swift */,
 				398DAE7925537DAF00747D90 /* PluginErrorView.swift */,
+				FA69F5BB2791145E00D6DDC6 /* WebView.swift */,
 			);
 			path = UI;
 			sourceTree = "<group>";
@@ -746,6 +749,7 @@
 				39224DD225F3F19B00BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
 				3990DCE12602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
+				FA69F5BC2791145E00D6DDC6 /* WebView.swift in Sources */,
 				39B64C3F26152F5E00B7FA63 /* XbarAPI.swift in Sources */,
 				FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,

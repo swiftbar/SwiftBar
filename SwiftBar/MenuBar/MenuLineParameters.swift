@@ -180,6 +180,20 @@ struct MenuLineParameters {
         params["tooltip"]
     }
 
+    var webView: Bool {
+        params["webview"] == "true"
+    }
+
+    var webViewHeight: CGFloat {
+        guard let sizeStr = params["webviewh"], let pSize = Int(sizeStr) else { return 400 }
+        return CGFloat(pSize)
+    }
+
+    var webViewWidth: CGFloat {
+        guard let sizeStr = params["webvieww"], let pSize = Int(sizeStr) else { return 500 }
+        return CGFloat(pSize)
+    }
+
     var shortcut: KeyCombo? {
         guard let shortcut = params["shortcut"] else { return nil }
         var modifiers: NSEvent.ModifierFlags = []

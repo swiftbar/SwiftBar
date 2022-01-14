@@ -36,6 +36,7 @@ class MenubarItem: NSObject {
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
+    private var webPopover = NSPopover()
     private var popoverDismissMonitor: Any?
     private let popoverDismissEventMask: NSEvent.EventTypeMask = [.leftMouseDown, .rightMouseDown]
 
@@ -350,6 +351,21 @@ extension MenubarItem {
         stopPopupMonitor()
     }
 
+    func showWebPopover(url: URL, widht: CGFloat, height: CGFloat) {
+        let urlRequest = URLRequest(url: url)
+        webPopover.behavior = .transient
+        webPopover.contentViewController = NSHostingController(rootView: WebPanelView(request: urlRequest))
+        webPopover.contentSize = NSSize(width: widht, height: height)
+        webPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+        webPopover.contentViewController?.view.window?.becomeKey()
+        startPopupMonitor()
+    }
+
+    func hideWebPopover(_ sender: AnyObject?) {
+        webPopover.performClose(sender)
+        stopPopupMonitor()
+    }
+
     func popoverHideHandler(_ event: NSEvent?) {
         if aboutPopover.isShown {
             hideAboutPopover(event)
@@ -357,6 +373,10 @@ extension MenubarItem {
 
         if errorPopover.isShown {
             hideErrorPopover(event)
+        }
+
+        if webPopover.isShown {
+            hideWebPopover(event)
         }
     }
 
@@ -676,7 +696,12 @@ extension MenubarItem {
         }
 
         if let href = params.href, let url = URL(string: href) {
-            NSWorkspace.shared.open(url)
+            if params.webView {
+                showWebPopover(url: url, widht: params.webViewWidth, height: params.webViewHeight)
+            } else {
+                NSWorkspace.shared.open(url)
+            }
+
             out = true
             return out
         }
