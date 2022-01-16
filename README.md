@@ -166,6 +166,8 @@ When running a plugin, SwiftBar sets the following environment variables:
 | `SWIFTBAR_BUILD` | The running SwiftBar build number (`CFBundleVersion`) |
 | `SWIFTBAR_PLUGINS_PATH` | The path to the `Plugin Folder` |
 | `SWIFTBAR_PLUGIN_PATH` | The path to the running plugin |
+| `SWIFTBAR_PLUGIN_CACHE_PATH` | The cache to data folder, individual per plugin |
+| `SWIFTBAR_PLUGIN_DATA_PATH` | The path to data folder, individual per plugin |
 | `OS_APPEARANCE` | Current macOS appearance (`Light` or `Dark`) |
 | `OS_VERSION_MAJOR` | The first part of the macOS version (e.g., `11` for macOS 11.0.1). |
 | `OS_VERSION_MINOR` | The second part of the macOS version (e.g., `0` for macOS 11.0.1). |
