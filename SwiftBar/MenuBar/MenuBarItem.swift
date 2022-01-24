@@ -73,6 +73,11 @@ class MenubarItem: NSObject {
         delegate.pluginManager.menuUpdateQueue
     }()
 
+    var refreshOnOpen: Bool {
+        guard let refreshOnOpen = plugin?.metadata?.refreshOnOpen else { return false }
+        return refreshOnOpen
+    }
+
     init(title: String, plugin: Plugin? = nil) {
         super.init()
         barItem.button?.action = #selector(barItemClicked)
@@ -94,7 +99,7 @@ class MenubarItem: NSObject {
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] content in
-                guard plugin?.metadata?.refreshOnOpen == false else {
+                guard self?.refreshOnOpen == false else {
                     os_log("Skipping refresh for refreshOnOpen plugin", log: Log.plugin, type: .info)
                     return
                 }
@@ -660,7 +665,7 @@ extension MenubarItem {
     }
 
     func showMenu() {
-        if plugin?.metadata?.refreshOnOpen == true, plugin?.type == .Executable {
+        if refreshOnOpen == true, plugin?.type == .Executable {
             refreshAndShowMenu()
             return
         }
