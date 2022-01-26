@@ -69,7 +69,7 @@ class PreferencesStore: ObservableObject {
 
     @Published var shell: ShellOptions {
         didSet {
-            PreferencesStore.setValue(value: terminal.rawValue, key: .Terminal)
+            PreferencesStore.setValue(value: shell.rawValue, key: .Shell)
         }
     }
 
