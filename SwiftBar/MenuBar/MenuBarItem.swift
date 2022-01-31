@@ -78,6 +78,8 @@ class MenubarItem: NSObject {
         return refreshOnOpen
     }
 
+    var refreshOnOpenRebuildMenu: Bool = false
+
     init(title: String, plugin: Plugin? = nil) {
         super.init()
         barItem.button?.action = #selector(barItemClicked)
@@ -99,10 +101,17 @@ class MenubarItem: NSObject {
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] content in
-                guard self?.refreshOnOpen == false else {
-                    os_log("Skipping refresh for refreshOnOpen plugin", log: Log.plugin, type: .info)
+                if self?.refreshOnOpenRebuildMenu == true {
+                    os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
+                    self?.refreshOnOpenRebuildMenu = false
+                    DispatchQueue.main.async { [weak self] in
+                        self?._updateMenu(content: content)
+                        self?.barItem.menu = self?.statusBarMenu
+                        self?.barItem.button?.performClick(nil)
+                    }
                     return
                 }
+
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
@@ -665,7 +674,7 @@ extension MenubarItem {
     }
 
     func showMenu() {
-        if refreshOnOpen == true, plugin?.type == .Executable {
+        if refreshOnOpenRebuildMenu == false, refreshOnOpen == true, plugin?.type == .Executable {
             refreshAndShowMenu()
             return
         }
@@ -677,18 +686,13 @@ extension MenubarItem {
         if #available(macOS 11.0, *) {
             barItem.button?.image = NSImage(systemSymbolName: "hourglass", accessibilityDescription: nil)
             barItem.button?.imagePosition = .imageLeft
+            barItem.button?.title = "..."
         } else {
             barItem.button?.image = nil
             barItem.button?.title = "..."
         }
-        DispatchQueue.main.async { [weak self] in
-            self?.barItem.button?.image = nil
-            self?.barItem.button?.title.removeAll()
-            self?.plugin?.refresh()
-            self?.updateMenu(content: self?.plugin?.content)
-            self?.barItem.menu = self?.statusBarMenu
-            self?.barItem.button?.performClick(nil)
-        }
+        refreshOnOpenRebuildMenu = true
+        plugin?.refresh()
     }
 
     @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {
