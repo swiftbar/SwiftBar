@@ -17,6 +17,7 @@ class StreamablePlugin: Plugin {
 
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
 
+    var streamInProgressContent: String = ""
     var content: String? = "" {
         didSet {
             guard content != oldValue else { return }
@@ -95,14 +96,32 @@ class StreamablePlugin: Plugin {
                                             os_log("Streaming %{public}@: %{public}@", log: Log.plugin, name, str)
                                         }
                                         guard let str = str else {
+                                            self?.streamInProgressContent.removeAll()
                                             self?.content = nil
                                             return
                                         }
-                                        if str.contains(streamSeparator) {
-                                            self?.content = str.components(separatedBy: streamSeparator).last
+                                        guard self?.metadata?.useTrailingStreamSeparator == true else {
+                                            // Process leading separator
+                                            if str.contains(streamSeparator) {
+                                                self?.content = str.components(separatedBy: streamSeparator).last
+                                                return
+                                            }
+                                            self?.content?.append(str)
                                             return
                                         }
-                                        self?.content?.append(str)
+                                        // Process trailing separator
+                                        if str.contains(streamSeparator) {
+                                            str.components(separatedBy: .whitespacesAndNewlines).forEach { s in
+                                                if s == streamSeparator {
+                                                    self?.content = self?.streamInProgressContent
+                                                    self?.streamInProgressContent.removeAll()
+                                                    return
+                                                }
+                                                self?.streamInProgressContent.append(s)
+                                            }
+                                            return
+                                        }
+                                        self?.streamInProgressContent.append(str)
                                     })
             error = nil
             lastState = .Streaming
