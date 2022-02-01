@@ -82,7 +82,7 @@ class ExecutablePlugin: Plugin {
             .autoconnect()
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
-                self?.content = self?.invoke()
+                self?.invokeQueue.addOperation(ExecutablePluginOperation(plugin: self!))
             }).store(in: &cancellable)
     }
 
@@ -121,13 +121,6 @@ class ExecutablePlugin: Plugin {
         operation?.cancel()
 
         refreshPluginMetadata()
-
-        if invokeQueue.operationCount == invokeQueue.maxConcurrentOperationCount {
-            os_log("Failed to schedule refresh of script\n%{public}@\n%{public}@. Execution queue is full!", log: Log.plugin, type: .error, file)
-            os_log("Cancelling all scheduled plugin updates, to free the queue", log: Log.plugin, type: .error)
-            invokeQueue.cancelAllOperations()
-        }
-
         operation = ExecutablePluginOperation(plugin: self)
         invokeQueue.addOperation(operation!)
     }

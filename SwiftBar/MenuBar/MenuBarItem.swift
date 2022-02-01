@@ -73,13 +73,6 @@ class MenubarItem: NSObject {
         delegate.pluginManager.menuUpdateQueue
     }()
 
-    var refreshOnOpen: Bool {
-        guard let refreshOnOpen = plugin?.metadata?.refreshOnOpen else { return false }
-        return refreshOnOpen
-    }
-
-    var refreshOnOpenRebuildMenu: Bool = false
-
     init(title: String, plugin: Plugin? = nil) {
         super.init()
         barItem.button?.action = #selector(barItemClicked)
@@ -101,17 +94,6 @@ class MenubarItem: NSObject {
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] content in
-                if self?.refreshOnOpenRebuildMenu == true {
-                    os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
-                    self?.refreshOnOpenRebuildMenu = false
-                    DispatchQueue.main.async { [weak self] in
-                        self?._updateMenu(content: content)
-                        self?.barItem.menu = self?.statusBarMenu
-                        self?.barItem.button?.performClick(nil)
-                    }
-                    return
-                }
-
                 guard self?.isOpen == false else {
                     self?.refreshOnClose = true
                     return
@@ -586,7 +568,7 @@ extension MenubarItem {
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
-        os_log("title:%{public}@", log: Log.plugin, type: .info, title)
+//        os_log("title:%{public}@", log: Log.plugin, type: .info, title)
 
         title = unescape(title)
 
@@ -674,7 +656,7 @@ extension MenubarItem {
     }
 
     func showMenu() {
-        if refreshOnOpenRebuildMenu == false, refreshOnOpen == true, plugin?.type == .Executable {
+        if plugin?.metadata?.refreshOnOpen == true, plugin?.type == .Executable {
             refreshAndShowMenu()
             return
         }
@@ -683,16 +665,11 @@ extension MenubarItem {
     }
 
     func refreshAndShowMenu() {
-        if #available(macOS 11.0, *) {
-            barItem.button?.image = NSImage(systemSymbolName: "hourglass", accessibilityDescription: nil)
-            barItem.button?.imagePosition = .imageLeft
-            barItem.button?.title = "..."
-        } else {
-            barItem.button?.image = nil
-            barItem.button?.title = "..."
-        }
-        refreshOnOpenRebuildMenu = true
-        plugin?.refresh()
+        os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
+        let content = plugin?.invoke()
+        _updateMenu(content: content)
+        barItem.menu = statusBarMenu
+        barItem.button?.performClick(nil)
     }
 
     @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {

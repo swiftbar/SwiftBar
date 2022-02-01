@@ -37,14 +37,14 @@ class PluginManager: ObservableObject {
     let pluginInvokeQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInitiated
-        queue.maxConcurrentOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
+        queue.maxConcurrentOperationCount = 20
         return queue
     }()
 
     let menuUpdateQueue: OperationQueue = {
         let queue = OperationQueue()
         queue.qualityOfService = .userInteractive
-        queue.maxConcurrentOperationCount = OperationQueue.defaultMaxConcurrentOperationCount
+        queue.maxConcurrentOperationCount = 10
         return queue
     }()
 
