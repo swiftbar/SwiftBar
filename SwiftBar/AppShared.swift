@@ -46,6 +46,7 @@ class AppShared: NSObject {
         }
 
         PreferencesStore.shared.pluginDirectoryPath = url.path
+        delegate.pluginManager.terminateAllPlugins()
         delegate.pluginManager.loadPlugins()
     }
 
