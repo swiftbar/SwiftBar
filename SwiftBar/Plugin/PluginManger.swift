@@ -273,16 +273,16 @@ extension PluginManager {
         content.sound = silent ? nil : .default
         content.threadIdentifier = pluginID
 
-        content.userInfo[SystemNotificationName.pluginID.rawValue] = pluginID
+        content.userInfo[SystemNotificationName.pluginID] = pluginID
 
         if let urlString = href,
            let url = URL(string: urlString), url.host != nil, url.scheme != nil
         {
-            content.userInfo[SystemNotificationName.url.rawValue] = urlString
+            content.userInfo[SystemNotificationName.url] = urlString
         }
 
         if let commandParams = commandParams {
-            content.userInfo[SystemNotificationName.command.rawValue] = commandParams
+            content.userInfo[SystemNotificationName.command] = commandParams
         }
 
         let uuidString = UUID().uuidString

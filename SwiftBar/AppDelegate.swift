@@ -152,17 +152,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     func userNotificationCenter(_: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
         let payload = response.notification.request.content.userInfo
 
-        guard let pluginID = payload[SystemNotificationName.pluginID.rawValue] as? String,
+        guard let pluginID = payload[SystemNotificationName.pluginID] as? String,
               let plugin = pluginManager.plugins.first(where: { $0.id == pluginID }),
               plugin.enabled else { return }
 
-        if let urlString = payload[SystemNotificationName.url.rawValue] as? String,
+        if let urlString = payload[SystemNotificationName.url] as? String,
            let url = URL(string: urlString)
         {
             NSWorkspace.shared.open(url)
         }
 
-        if let commandString = payload[SystemNotificationName.command.rawValue] as? String,
+        if let commandString = payload[SystemNotificationName.command] as? String,
            let json = commandString.data(using: .utf8), let params = MenuLineParameters(json: json),
            let bash = params.bash
         {
