@@ -1,7 +1,7 @@
 import Cocoa
 import HotKey
 
-struct MenuLineParameters {
+struct MenuLineParameters: Codable {
     let title: String
     var params: [String: String]
 
@@ -13,6 +13,19 @@ struct MenuLineParameters {
         }
         title = String(line[...index.lowerBound].dropLast())
         params = MenuLineParameters.getParams(from: String(line[index.upperBound...]).trimmingCharacters(in: .whitespaces))
+    }
+
+    var json: String? {
+        guard let jsonData = try? JSONEncoder().encode(self),
+              let jsonString = String(data: jsonData, encoding: .utf8)
+        else { return nil }
+        return jsonString
+    }
+
+    init?(json: Data) {
+        guard let item = try? JSONDecoder().decode(MenuLineParameters.self, from: json) else { return nil }
+        title = item.title
+        params = item.params
     }
 
     static func getParams(from line: String) -> [String: String] {

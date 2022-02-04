@@ -262,7 +262,7 @@ class PluginManager: ObservableObject {
 }
 
 extension PluginManager {
-    func showNotification(pluginID: PluginID, title: String?, subtitle: String?, body: String?, href: String?, silent: Bool = false) {
+    func showNotification(pluginID: PluginID, title: String?, subtitle: String?, body: String?, href: String?, commandParams: String?, silent: Bool = false) {
         guard let plugin = plugins.first(where: { $0.id == pluginID }),
               plugin.enabled else { return }
 
@@ -273,10 +273,16 @@ extension PluginManager {
         content.sound = silent ? nil : .default
         content.threadIdentifier = pluginID
 
+        content.userInfo[SystemNotificationName.pluginID.rawValue] = pluginID
+
         if let urlString = href,
            let url = URL(string: urlString), url.host != nil, url.scheme != nil
         {
-            content.userInfo = ["url": urlString]
+            content.userInfo[SystemNotificationName.url.rawValue] = urlString
+        }
+
+        if let commandParams = commandParams {
+            content.userInfo[SystemNotificationName.command.rawValue] = commandParams
         }
 
         let uuidString = UUID().uuidString

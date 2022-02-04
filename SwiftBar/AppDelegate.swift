@@ -135,11 +135,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 }
             case "notify":
                 guard let pluginID = url.queryParameters?["plugin"] else { return }
+                let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value)" }.joined(separator: " ") ?? ""
                 pluginManager.showNotification(pluginID: pluginID,
                                                title: url.queryParameters?["title"],
                                                subtitle: url.queryParameters?["subtitle"],
                                                body: url.queryParameters?["body"],
                                                href: url.queryParameters?["href"],
+                                               commandParams: MenuLineParameters(line: "|\(paramsString)").json,
                                                silent: url.queryParameters?["silent"] == "true")
             default:
                 os_log("Unsupported URL scheme \n %{public}@", log: Log.plugin, type: .error, url.absoluteString)
@@ -148,10 +150,28 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func userNotificationCenter(_: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        if let urlString = response.notification.request.content.userInfo["url"] as? String,
+        let payload = response.notification.request.content.userInfo
+
+        guard let pluginID = payload[SystemNotificationName.pluginID.rawValue] as? String,
+              let plugin = pluginManager.plugins.first(where: { $0.id == pluginID }),
+              plugin.enabled else { return }
+
+        if let urlString = payload[SystemNotificationName.url.rawValue] as? String,
            let url = URL(string: urlString)
         {
             NSWorkspace.shared.open(url)
+        }
+
+        if let commandString = payload[SystemNotificationName.command.rawValue] as? String,
+           let json = commandString.data(using: .utf8), let params = MenuLineParameters(json: json),
+           let bash = params.bash
+        {
+            AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
+                                    env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true) {
+                if params.refresh {
+                    plugin.refresh()
+                }
+            }
         }
 
         completionHandler()

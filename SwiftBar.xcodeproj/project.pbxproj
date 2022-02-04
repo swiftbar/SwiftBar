@@ -112,6 +112,7 @@
 		FA57F2A7272A308F00817A79 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
 		FA57F2A8272A308F00817A79 /* ReloadPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */; };
 		FA57F2A9272A309600817A79 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
+		FA58E39A27AD855D0034837F /* SystemNotificationName.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA58E39927AD855D0034837F /* SystemNotificationName.swift */; };
 		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
 		FA69F5BC2791145E00D6DDC6 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA69F5BB2791145E00D6DDC6 /* WebView.swift */; };
@@ -203,6 +204,7 @@
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA06104525F0564400B08B6E /* PluginEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginEntryView.swift; sourceTree = "<group>"; };
+		FA58E39927AD855D0034837F /* SystemNotificationName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNotificationName.swift; sourceTree = "<group>"; };
 		FA60506726B593FA001A939A /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
@@ -400,6 +402,7 @@
 				ABF91B7C2589C7920020590A /* NSFont+Offset.swift */,
 				39224DD425F414F500BABF21 /* Notification+Extension.swift */,
 				39224E5B25F530AF00BABF21 /* EnvConfig.swift */,
+				FA58E39927AD855D0034837F /* SystemNotificationName.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -731,6 +734,7 @@
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
+				FA58E39A27AD855D0034837F /* SystemNotificationName.swift in Sources */,
 				39AF77842547750E001D76E5 /* AppShared.swift in Sources */,
 				FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
@@ -964,7 +968,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 367;
+				CURRENT_PROJECT_VERSION = 394;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -975,7 +979,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.4.1;
+				MARKETING_VERSION = 1.4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -991,7 +995,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 367;
+				CURRENT_PROJECT_VERSION = 394;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1002,7 +1006,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.4.1;
+				MARKETING_VERSION = 1.4.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
