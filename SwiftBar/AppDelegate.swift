@@ -135,7 +135,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 }
             case "notify":
                 guard let pluginID = url.queryParameters?["plugin"] else { return }
-                let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value)" }.joined(separator: " ") ?? ""
+                let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value.escaped())" }.joined(separator: " ") ?? ""
                 pluginManager.showNotification(pluginID: pluginID,
                                                title: url.queryParameters?["title"],
                                                subtitle: url.queryParameters?["subtitle"],
