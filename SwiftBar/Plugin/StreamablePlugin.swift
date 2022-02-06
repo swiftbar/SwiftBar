@@ -111,13 +111,15 @@ class StreamablePlugin: Plugin {
                                         }
                                         // Process trailing separator
                                         if str.contains(streamSeparator) {
-                                            str.components(separatedBy: .whitespacesAndNewlines).forEach { s in
+                                            // we expect streamSeparator on a separate line
+                                            str.components(separatedBy: .newlines).forEach { s in
                                                 if s == streamSeparator {
                                                     self?.content = self?.streamInProgressContent
                                                     self?.streamInProgressContent.removeAll()
                                                     return
                                                 }
                                                 self?.streamInProgressContent.append(s)
+                                                self?.streamInProgressContent.append("\n")
                                             }
                                             return
                                         }
