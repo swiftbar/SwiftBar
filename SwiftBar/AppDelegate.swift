@@ -103,14 +103,19 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         pluginManager.terminateAllPlugins()
     }
 
+    func getPluginFromURL(url: URL) -> Plugin? {
+        guard let identifier = url.queryParameters?["plugin"] ?? url.queryParameters?["name"] else { return nil }
+        return pluginManager.getPluginByNameOrID(identifier: identifier)
+    }
+
     func application(_: NSApplication, open urls: [URL]) {
         for url in urls {
             switch url.host?.lowercased() {
             case "refreshallplugins":
                 pluginManager.refreshAllPlugins()
             case "refreshplugin":
-                if let name = url.queryParameters?["name"] {
-                    pluginManager.refreshPlugin(named: name)
+                if let plugin = getPluginFromURL(url: url) {
+                    plugin.refresh()
                     return
                 }
                 if let indexStr = url.queryParameters?["index"], let index = Int(indexStr) {
@@ -118,25 +123,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                     return
                 }
             case "disableplugin":
-                if let name = url.queryParameters?["name"] {
-                    pluginManager.disablePlugin(named: name)
+                if let plugin = getPluginFromURL(url: url) {
+                    pluginManager.disablePlugin(plugin: plugin)
                 }
             case "enableplugin":
-                if let name = url.queryParameters?["name"] {
-                    pluginManager.enablePlugin(named: name)
+                if let plugin = getPluginFromURL(url: url) {
+                    pluginManager.enablePlugin(plugin: plugin)
                 }
             case "toggleplugin":
-                if let name = url.queryParameters?["name"] {
-                    pluginManager.togglePlugin(named: name)
+                if let plugin = getPluginFromURL(url: url) {
+                    pluginManager.togglePlugin(plugin: plugin)
                 }
             case "addplugin":
                 if let src = url.queryParameters?["src"], let url = URL(string: src) {
                     pluginManager.importPlugin(from: url)
                 }
             case "notify":
-                guard let pluginID = url.queryParameters?["plugin"] else { return }
+                guard let plugin = getPluginFromURL(url: url) else { return }
                 let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value.escaped())" }.joined(separator: " ") ?? ""
-                pluginManager.showNotification(pluginID: pluginID,
+                pluginManager.showNotification(plugin: plugin,
                                                title: url.queryParameters?["title"],
                                                subtitle: url.queryParameters?["subtitle"],
                                                body: url.queryParameters?["body"],

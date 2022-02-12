@@ -75,14 +75,14 @@ class PluginManager: ObservableObject {
         enabledPlugins.isEmpty && !prefs.stealthMode ? barItem.show() : barItem.hide()
     }
 
+    func getPluginByNameOrID(identifier: String) -> Plugin? {
+        plugins.first(where: { $0.id.lowercased() == identifier.lowercased() }) ??
+            plugins.first(where: { $0.name.lowercased() == identifier.lowercased() })
+    }
+
     func disablePlugin(plugin: Plugin) {
         os_log("Disabling plugin \n%{public}@", log: Log.plugin, plugin.description)
         plugin.disable()
-    }
-
-    func disablePlugin(named name: String) {
-        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
-        disablePlugin(plugin: plugin)
     }
 
     func enablePlugin(plugin: Plugin) {
@@ -90,13 +90,7 @@ class PluginManager: ObservableObject {
         plugin.enable()
     }
 
-    func enablePlugin(named name: String) {
-        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
-        enablePlugin(plugin: plugin)
-    }
-
-    func togglePlugin(named name: String) {
-        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
+    func togglePlugin(plugin: Plugin) {
         plugin.enabled ? disablePlugin(plugin: plugin) : enablePlugin(plugin: plugin)
     }
 
@@ -209,11 +203,6 @@ class PluginManager: ObservableObject {
         menuBarItems.values.forEach { $0.updateMenu(content: $0.plugin?.content) }
     }
 
-    func refreshPlugin(named name: String) {
-        guard let plugin = plugins.first(where: { $0.name.lowercased() == name.lowercased() }) else { return }
-        plugin.refresh()
-    }
-
     func refreshPlugin(with index: Int) {
         guard plugins.indices.contains(index) else { return }
         plugins[index].refresh()
@@ -262,18 +251,15 @@ class PluginManager: ObservableObject {
 }
 
 extension PluginManager {
-    func showNotification(pluginID: PluginID, title: String?, subtitle: String?, body: String?, href: String?, commandParams: String?, silent: Bool = false) {
-        guard let plugin = plugins.first(where: { $0.id == pluginID }),
-              plugin.enabled else { return }
-
+    func showNotification(plugin: Plugin, title: String?, subtitle: String?, body: String?, href: String?, commandParams: String?, silent: Bool = false) {
         let content = UNMutableNotificationContent()
         content.title = title ?? ""
         content.subtitle = subtitle ?? ""
         content.body = body ?? ""
         content.sound = silent ? nil : .default
-        content.threadIdentifier = pluginID
+        content.threadIdentifier = plugin.id
 
-        content.userInfo[SystemNotificationName.pluginID] = pluginID
+        content.userInfo[SystemNotificationName.pluginID] = plugin.id
 
         if let urlString = href,
            let url = URL(string: urlString), url.host != nil, url.scheme != nil
