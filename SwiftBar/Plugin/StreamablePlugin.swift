@@ -88,9 +88,6 @@ class StreamablePlugin: Plugin {
                                     runInBash: metadata?.shouldRunInBash ?? true,
                                     streamOutput: true,
                                     onOutputUpdate: { [weak self] str in
-                                        guard str != "\n" else {
-                                            return
-                                        }
                                         if self?.prefs.streamablePluginDebugOutput == true,
                                            let str = str,
                                            let name = self?.name
@@ -102,6 +99,11 @@ class StreamablePlugin: Plugin {
                                             self?.content = nil
                                             return
                                         }
+                                        guard str.contains("\n") else {
+                                            self?.streamInProgressContent.append(contentsOf: str)
+                                            return
+                                        }
+
                                         guard self?.metadata?.useTrailingStreamSeparator == true else {
                                             // Process leading separator
                                             if str.contains(streamSeparator) {
@@ -114,13 +116,19 @@ class StreamablePlugin: Plugin {
                                         // Process trailing separator
                                         if str.contains(streamSeparator) {
                                             // we expect streamSeparator on a separate line
-                                            str.components(separatedBy: .newlines).forEach { s in
+                                            let lines = str.components(separatedBy: .newlines)
+                                            let linesCount = lines.count
+                                            let endsOnNewLine = str.last == "\n"
+                                            for (i, s) in lines.enumerated() {
                                                 if s == streamSeparator {
                                                     self?.content = self?.streamInProgressContent
                                                     self?.streamInProgressContent.removeAll()
-                                                    return
+                                                    continue
                                                 }
                                                 self?.streamInProgressContent.append(s)
+                                                if !endsOnNewLine, i == linesCount - 1 {
+                                                    continue
+                                                }
                                                 self?.streamInProgressContent.append("\n")
                                             }
                                             return
