@@ -2,37 +2,10 @@ import Dispatch
 import Foundation
 import os
 
-enum EnvironmentVariables: String {
-    case swiftBar = "SWIFTBAR"
-    case swiftBarVersion = "SWIFTBAR_VERSION"
-    case swiftBarBuild = "SWIFTBAR_BUILD"
-    case swiftBarPluginsPath = "SWIFTBAR_PLUGINS_PATH"
-    case swiftBarPluginPath = "SWIFTBAR_PLUGIN_PATH"
-    case swiftBarPluginCachePath = "SWIFTBAR_PLUGIN_CACHE_PATH"
-    case swiftBarPluginDataPath = "SWIFTBAR_PLUGIN_DATA_PATH"
-    case osVersionMajor = "OS_VERSION_MAJOR"
-    case osVersionMinor = "OS_VERSION_MINOR"
-    case osVersionPatch = "OS_VERSION_PATCH"
-    case osAppearance = "OS_APPEARANCE"
-}
-
-private let systemEnv: [EnvironmentVariables: String] = [
-    .swiftBar: "1",
-    .swiftBarVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "",
-    .swiftBarBuild: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "",
-    .swiftBarPluginsPath: PreferencesStore.shared.pluginDirectoryPath ?? "",
-    .osVersionMajor: String(ProcessInfo.processInfo.operatingSystemVersion.majorVersion),
-    .osVersionMinor: String(ProcessInfo.processInfo.operatingSystemVersion.minorVersion),
-    .osVersionPatch: String(ProcessInfo.processInfo.operatingSystemVersion.patchVersion),
-]
-
-var systemEnvStr: [String: String] {
-    Dictionary(uniqueKeysWithValues:
-        systemEnv.map { key, value in (key.rawValue, value) })
-}
+let sharedEnv = Environment.shared
 
 func getEnvExportString(env: [String: String]) -> String {
-    let dict = systemEnvStr.merging(env) { current, _ in current }
+    let dict = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
     return "export \(dict.map { "\($0.key)='\($0.value)'" }.joined(separator: " "))"
 }
 
@@ -44,7 +17,7 @@ func getEnvExportString(env: [String: String]) -> String {
                                   streamOutput: Bool = false,
                                   onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> String
 {
-    let swiftbarEnv = systemEnvStr.merging(env) { current, _ in current }
+    let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
     process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
     return try process.launchScript(with: command, args: args, runInBash: runInBash, streamOutput: streamOutput, onOutputUpdate: onOutputUpdate)
 }

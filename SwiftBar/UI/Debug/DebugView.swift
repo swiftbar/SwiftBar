@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DebugView: View {
     let plugin: Plugin
+    let sharedEnv = Environment.shared
     @ObservedObject var debugInfo: PluginDebugInfo
     var debugText: String {
         String(debugInfo.events.sorted(by: { $0.key < $1.key }).map { "\n🕐 \($0.key) \($0.value.eventString)" }
@@ -51,7 +52,7 @@ struct DebugView: View {
 
                 Button("Print SwiftBar ENV", action: {
                     let envs = plugin.env
-                    let swiftbarEnv = systemEnvStr.merging(envs) { current, _ in current }
+                    let swiftbarEnv = sharedEnv.systemEnvStr.merging(envs) { current, _ in current }
                     let debugString = swiftbarEnv.map { "\($0.key) = \($0.value)" }.sorted().joined(separator: "\n")
                     debugInfo.addEvent(type: .Environment, value: "\n\(debugString)")
                 })

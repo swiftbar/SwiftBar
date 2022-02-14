@@ -25,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     var pluginManager: PluginManager!
     let prefs = PreferencesStore.shared
+    let sharedEnv = Environment.shared
     #if !MAC_APP_STORE
         var softwareUpdater: SPUUpdater!
     #endif
@@ -76,6 +77,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                           object: nil,
                                                           queue: OperationQueue.main) { [weak self] _ in
             os_log("Mac is going to sleep", log: Log.plugin, type: .info)
+            self?.sharedEnv.updateSleepTime(date: NSDate.now)
             self?.pluginManager.terminateAllPlugins()
         }
 
@@ -83,6 +85,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                           object: nil,
                                                           queue: OperationQueue.main) { [weak self] _ in
             os_log("Mac waked up", log: Log.plugin, type: .info)
+            self?.sharedEnv.updateWakeTime(date: NSDate.now)
             self?.pluginManager.startAllPlugins()
         }
     }

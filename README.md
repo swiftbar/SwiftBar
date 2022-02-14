@@ -168,10 +168,13 @@ When running a plugin, SwiftBar sets the following environment variables:
 | `SWIFTBAR_PLUGIN_PATH` | The path to the running plugin |
 | `SWIFTBAR_PLUGIN_CACHE_PATH` | The cache to data folder, individual per plugin |
 | `SWIFTBAR_PLUGIN_DATA_PATH` | The path to data folder, individual per plugin |
+| `SWIFTBAR_LAUNCH_TIME` | SwiftBar launch date and time, ISO8601 |
 | `OS_APPEARANCE` | Current macOS appearance (`Light` or `Dark`) |
-| `OS_VERSION_MAJOR` | The first part of the macOS version (e.g., `11` for macOS 11.0.1). |
-| `OS_VERSION_MINOR` | The second part of the macOS version (e.g., `0` for macOS 11.0.1). |
-| `OS_VERSION_PATCH` | The third part of the macOS version (e.g., `1` for macOS 11.0.1). |
+| `OS_VERSION_MAJOR` | The first part of the macOS version (e.g., `11` for macOS 11.0.1) |
+| `OS_VERSION_MINOR` | The second part of the macOS version (e.g., `0` for macOS 11.0.1) |
+| `OS_VERSION_PATCH` | The third part of the macOS version (e.g., `1` for macOS 11.0.1) |
+| `OS_LAST_SLEEP_TIME` | Last OS sleep date and time, ISO8601. Empty if OS didn't sleep since SwiftBar launch. |
+| `OS_LAST_WAKE_TIME` | Last OS wake from sleep date and time, ISO8601. Empty if OS didn't sleep since SwiftBar launch. |
 
 ### Script Metadata
 

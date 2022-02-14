@@ -102,10 +102,10 @@ extension Plugin {
 
     var env: [String: String] {
         var pluginEnv = [
-            EnvironmentVariables.swiftBarPluginPath.rawValue: file,
-            EnvironmentVariables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
-            EnvironmentVariables.swiftBarPluginCachePath.rawValue: cacheDirectoryPath,
-            EnvironmentVariables.swiftBarPluginDataPath.rawValue: dataDirectoryPath,
+            Environment.Variables.swiftBarPluginPath.rawValue: file,
+            Environment.Variables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
+            Environment.Variables.swiftBarPluginCachePath.rawValue: cacheDirectoryPath,
+            Environment.Variables.swiftBarPluginDataPath.rawValue: dataDirectoryPath,
         ]
         metadata?.environment.forEach { k, v in
             pluginEnv[k] = v

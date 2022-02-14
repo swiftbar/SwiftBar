@@ -62,8 +62,8 @@
 		39224E2125F4344600BABF21 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
 		39224E2225F4344600BABF21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		39224E3325F4351600BABF21 /* SwiftBarMAS.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 39224E3225F4351300BABF21 /* SwiftBarMAS.xcconfig */; };
-		39224E5C25F530AF00BABF21 /* EnvConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* EnvConfig.swift */; };
-		39224E5F25F5317800BABF21 /* EnvConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* EnvConfig.swift */; };
+		39224E5C25F530AF00BABF21 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* Environment.swift */; };
+		39224E5F25F5317800BABF21 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* Environment.swift */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
 		393375EC25508B320050AC28 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
 		396257262569667000341A19 /* PluginRepositoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396257252569667000341A19 /* PluginRepositoryView.swift */; };
@@ -165,7 +165,7 @@
 		39224E2A25F4344600BABF21 /* SwiftBar MAS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SwiftBar MAS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		39224E3225F4351300BABF21 /* SwiftBarMAS.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = SwiftBarMAS.xcconfig; sourceTree = "<group>"; };
 		39224E5625F52F7400BABF21 /* SwiftBar MAS.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = "SwiftBar MAS.entitlements"; sourceTree = "<group>"; };
-		39224E5B25F530AF00BABF21 /* EnvConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnvConfig.swift; sourceTree = "<group>"; };
+		39224E5B25F530AF00BABF21 /* Environment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Environment.swift; sourceTree = "<group>"; };
 		39294CD526934EDD00C6BB29 /* hr */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = hr; path = hr.lproj/Localizable.strings; sourceTree = "<group>"; };
 		393375E625507ADE0050AC28 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 		393375EB25508B320050AC28 /* Credits.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = Credits.rtf; sourceTree = "<group>"; };
@@ -401,7 +401,7 @@
 				39B84A1E257D436200FA012E /* RunScript.swift */,
 				ABF91B7C2589C7920020590A /* NSFont+Offset.swift */,
 				39224DD425F414F500BABF21 /* Notification+Extension.swift */,
-				39224E5B25F530AF00BABF21 /* EnvConfig.swift */,
+				39224E5B25F530AF00BABF21 /* Environment.swift */,
 				FA58E39927AD855D0034837F /* SystemNotificationName.swift */,
 			);
 			path = Utility;
@@ -748,7 +748,7 @@
 				ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */,
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
 				39B84A22257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift in Sources */,
-				39224E5C25F530AF00BABF21 /* EnvConfig.swift in Sources */,
+				39224E5C25F530AF00BABF21 /* Environment.swift in Sources */,
 				FAA14A112728C6E90052FDB8 /* EnablePluginIntentHandler.swift in Sources */,
 				39224DD225F3F19B00BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
@@ -806,7 +806,7 @@
 				39224E0725F4344600BABF21 /* NSFont+Offset.swift in Sources */,
 				39224E0825F4344600BABF21 /* DirectoryObserver.swift in Sources */,
 				39224E0925F4344600BABF21 /* NSMutableAttributedString+SFSymbols.swift in Sources */,
-				39224E5F25F5317800BABF21 /* EnvConfig.swift in Sources */,
+				39224E5F25F5317800BABF21 /* Environment.swift in Sources */,
 				FA57F2A6272A308F00817A79 /* EnablePluginIntentHandler.swift in Sources */,
 				39224E0A25F4344600BABF21 /* AppDelegate+Toolbar.swift in Sources */,
 				FA57F2A9272A309600817A79 /* Intents.intentdefinition in Sources */,
