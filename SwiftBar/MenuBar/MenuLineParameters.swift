@@ -78,11 +78,11 @@ struct MenuLineParameters: Codable {
     }
 
     var terminal: Bool {
-        params["terminal"] != "false"
+        params["terminal"]?.lowercased() != "false"
     }
 
     var refresh: Bool {
-        params["refresh"] == "true"
+        params["refresh"]?.lowercased() == "true"
     }
 
     var color: NSColor? {
@@ -116,7 +116,7 @@ struct MenuLineParameters: Codable {
     }
 
     var md: Bool {
-        params["md"] == "true"
+        params["md"]?.lowercased() == "true"
     }
 
     var size: CGFloat? {
@@ -130,15 +130,15 @@ struct MenuLineParameters: Codable {
     }
 
     var dropdown: Bool {
-        params["dropdown"] != "false"
+        params["dropdown"]?.lowercased() != "false"
     }
 
     var trim: Bool {
-        params["trim"] != "false"
+        params["trim"]?.lowercased() != "false"
     }
 
     var checked: Bool {
-        params["checked"] == "true"
+        params["checked"]?.lowercased() == "true"
     }
 
     var length: Int? {
@@ -147,7 +147,7 @@ struct MenuLineParameters: Codable {
     }
 
     var alternate: Bool {
-        params["alternate"] == "true"
+        params["alternate"]?.lowercased() == "true"
     }
 
     var image: NSImage? {
@@ -175,18 +175,18 @@ struct MenuLineParameters: Codable {
     }
 
     var emojize: Bool {
-        params["emojize"] != "false"
+        params["emojize"]?.lowercased() != "false"
     }
 
     var symbolize: Bool {
         if #available(OSX 11.0, *) {
-            return params["symbolize"] != "false"
+            return params["symbolize"]?.lowercased() != "false"
         }
         return false
     }
 
     var ansi: Bool {
-        params["ansi"] == "true"
+        params["ansi"]?.lowercased() == "true"
     }
 
     var tooltip: String? {
@@ -194,7 +194,7 @@ struct MenuLineParameters: Codable {
     }
 
     var webView: Bool {
-        params["webview"] == "true"
+        params["webview"]?.lowercased() == "true"
     }
 
     var webViewHeight: CGFloat {
