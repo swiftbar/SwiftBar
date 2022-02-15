@@ -6,7 +6,7 @@
 >
   <channel>
     <title>SwiftBar Releases</title>
-    <description>Most recent SwiftBar releases (not test builds).</description>
+    <description>Most recent SwiftBar releases.</description>
     <language>en</language>
     {% for release in site.github.releases %} {% unless release.draft %} {%
     unless release.prerelease and page.release_only %}
@@ -31,7 +31,7 @@
         endif
         %}
         length="{{ asset.size }}"
-        type="application/octet-stream"
+        type="application/zip"
       />
       {% endfor %}
     </item>
