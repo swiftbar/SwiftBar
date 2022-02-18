@@ -31,6 +31,7 @@
 "PF_HIDE_SWIFTBAR_ICON" = "Verberg SwiftBar-icoon";
 "PF_CHECK_FOR_UPDATE" = "Updates";
 "PF_CHECK_FOR_UPDATES" = "Controleer op updates…";
+"PR_INCLUDE_BETA_UPDATES" = "Pre-releaseversies Opnemen";
 "PF_NO_PLUGINS_MESSAGE" = "Plug-insmap is leeg";
 "PF_ENABLE_ALL" = "Alle plug-ins inschakelen";
 "PF_PLUGINS_FOOTNOTE" = "Ingeschakelde plug-ins verschijnen in de menubalk.";

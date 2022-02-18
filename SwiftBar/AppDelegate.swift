@@ -111,6 +111,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         return pluginManager.getPluginByNameOrID(identifier: identifier)
     }
 
+    func feedURLString(for _: SPUUpdater) -> String? {
+        if prefs.includeBetaUpdates {
+            return "https://swiftbar.github.io/SwiftBar/appcast-beta.xml"
+        }
+        return "https://swiftbar.github.io/SwiftBar/appcast.xml"
+    }
+
     func application(_: NSApplication, open urls: [URL]) {
         for url in urls {
             switch url.host?.lowercased() {

@@ -34,6 +34,7 @@ class PreferencesStore: ObservableObject {
         case StreamablePluginDebugOutput
         case PluginDebugMode
         case StealthMode
+        case IncludeBetaUpdates
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -80,6 +81,12 @@ class PreferencesStore: ObservableObject {
         }
     }
 
+    @Published var includeBetaUpdates: Bool {
+        didSet {
+            PreferencesStore.setValue(value: includeBetaUpdates, key: .IncludeBetaUpdates)
+        }
+    }
+
     var makePluginExecutable: Bool {
         guard let out = PreferencesStore.getValue(key: .MakePluginExecutable) as? Bool else {
             PreferencesStore.setValue(value: true, key: .MakePluginExecutable)
@@ -114,6 +121,7 @@ class PreferencesStore: ObservableObject {
         terminal = .Terminal
         shell = .Bash
         swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
+        includeBetaUpdates = PreferencesStore.getValue(key: .IncludeBetaUpdates) as? Bool ?? false
         if let savedTerminal = PreferencesStore.getValue(key: .Terminal) as? String,
            let value = TerminalOptions(rawValue: savedTerminal)
         {

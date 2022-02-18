@@ -30,7 +30,7 @@
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
-	<string>358</string>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>INIntentsSupported</key>
 	<array>
 		<string>GetPluginsIntent</string>
@@ -57,7 +57,5 @@
 	<string>Copyright ©2020-2021 Ameba Labs. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
-	<key>SUFeedURL</key>
-	<string>https://swiftbar.app/release.xml</string>
 </dict>
 </plist>

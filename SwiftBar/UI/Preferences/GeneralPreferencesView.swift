@@ -35,6 +35,8 @@ struct GeneralPreferencesView: View {
                         AppShared.checkForUpdates()
                     }
                 }
+                Toggle(Localizable.Preferences.IncludeBetaUpdates.localized, isOn: $preferences.includeBetaUpdates)
+                Spacer()
             }
         }
     }

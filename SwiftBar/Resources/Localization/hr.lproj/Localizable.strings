@@ -31,6 +31,7 @@
 "PF_HIDE_SWIFTBAR_ICON" = "Sakrij ikonu SwiftBara";
 "PF_CHECK_FOR_UPDATE" = "Aktualiziraj";
 "PF_CHECK_FOR_UPDATES" = "Traži nove verzije";
+"PR_INCLUDE_BETA_UPDATES" = "Uključuju Verzije Prije Izdanja";
 "PF_NO_PLUGINS_MESSAGE" = "Mapa dodataka je prazna";
 "PF_ENABLE_ALL" = "Aktiviraj sve";
 "PF_PLUGINS_FOOTNOTE" = "Aktivirani dodaci će se pojaviti u traci izbornika.";
