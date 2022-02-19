@@ -55,12 +55,26 @@ private extension Process {
         }
 
         guard streamOutput else { // horrible hack, code below this guard doesn't work reliably and I can't fugire out why.
-            let pipe = Pipe()
-            standardOutput = pipe
-            launch()
+            let outputPipe = Pipe()
+            let errorPipe = Pipe()
+            standardOutput = outputPipe
+            standardError = errorPipe
+            do {
+                try run()
+            } catch {
+                os_log("Failed to launch plugin", log: Log.plugin, type: .error)
+                let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+                throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: data)
+            }
             waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+
+            let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
+            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
             let output = String(data: data, encoding: .utf8) ?? ""
+            guard errorData.isEmpty else {
+                throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: data)
+            }
             return output
         }
 
