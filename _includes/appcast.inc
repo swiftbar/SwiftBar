@@ -6,6 +6,8 @@
 >
   <channel>
     <title>SwiftBar Releases</title>
+    {% if page.release_only %} {% assign url = "https://swiftbar.github.io/SwiftBar/appcast.xml" %} {% else %} {% assign url = "https://swiftbar.github.io/SwiftBar/appcast-beta.xml" %} {% endif %}
+    <link>{{url}}</link>
     <description>Most recent SwiftBar releases.</description>
     <language>en</language>
     {% for release in site.github.releases %} {% unless release.draft %} {%
