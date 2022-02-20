@@ -133,12 +133,18 @@ class ExecutablePlugin: Plugin {
             error = nil
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
-            debugInfo.addEvent(type: .ContentUpdate, value: out)
-            return out
+            debugInfo.addEvent(type: .ContentUpdate, value: out.out)
+            if let err = out.err {
+                debugInfo.addEvent(type: .ContentUpdateError, value: err)
+                os_log("Error output from the script \n%{public}@:", log: Log.plugin, err)
+            }
+            return out.out
         } catch {
             guard let error = error as? ShellOutError else { return nil }
             os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type: .error, file, error.message)
+            os_log("Error output from the script \n%{public}@:", log: Log.plugin, error.message)
             self.error = error
+            debugInfo.addEvent(type: .ContentUpdateError, value: error.message)
             lastState = .Failed
         }
         return nil

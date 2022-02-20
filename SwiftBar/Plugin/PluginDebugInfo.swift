@@ -3,6 +3,7 @@ import Foundation
 class PluginDebugInfo: ObservableObject {
     enum EventType: String {
         case ContentUpdate
+        case ContentUpdateError
         case PluginRefresh
         case Environment
         case PluginMetadata

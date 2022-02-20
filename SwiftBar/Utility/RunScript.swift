@@ -15,7 +15,7 @@ func getEnvExportString(env: [String: String]) -> String {
                                   env: [String: String] = [:],
                                   runInBash: Bool = true,
                                   streamOutput: Bool = false,
-                                  onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> String
+                                  onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> (out: String, err: String?)
 {
     let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
     process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
@@ -41,7 +41,7 @@ public struct ShellOutError: Swift.Error {
 // MARK: - Private
 
 private extension Process {
-    @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, onOutputUpdate: @escaping (String?) -> Void) throws -> String {
+    @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, onOutputUpdate: @escaping (String?) -> Void) throws -> (out: String, err: String?) {
         if !runInBash {
             executableURL = URL(fileURLWithPath: script)
             arguments = args
@@ -51,14 +51,19 @@ private extension Process {
         }
 
         guard let executableURL = executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {
-            return ""
+            return (out: "", err: nil)
         }
 
+        var outputData = Data()
+        var errorData = Data()
+
+        let outputPipe = Pipe()
+        standardOutput = outputPipe
+
+        let errorPipe = Pipe()
+        standardError = errorPipe
+
         guard streamOutput else { // horrible hack, code below this guard doesn't work reliably and I can't fugire out why.
-            let outputPipe = Pipe()
-            let errorPipe = Pipe()
-            standardOutput = outputPipe
-            standardError = errorPipe
             do {
                 try run()
             } catch {
@@ -69,25 +74,22 @@ private extension Process {
             }
             waitUntilExit()
 
-            let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-            let output = String(data: data, encoding: .utf8) ?? ""
-            guard errorData.isEmpty else {
-                throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: data)
+            outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+            errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+
+            if terminationStatus != 0 {
+                throw ShellOutError(
+                    terminationStatus: terminationStatus,
+                    errorData: errorData,
+                    outputData: outputData
+                )
             }
-            return output
+            let output = String(data: outputData, encoding: .utf8) ?? ""
+            let err = String(data: errorData, encoding: .utf8)
+            return (out: output, err: err)
         }
 
         let outputQueue = DispatchQueue(label: "bash-output-queue")
-
-        var outputData = Data()
-        var errorData = Data()
-
-        let outputPipe = Pipe()
-        standardOutput = outputPipe
-
-        let errorPipe = Pipe()
-        standardError = errorPipe
 
         outputPipe.fileHandleForReading.readabilityHandler = { handler in
             let data = handler.availableData
@@ -124,8 +126,10 @@ private extension Process {
                     outputData: outputData
                 )
             }
-
-            return outputData.shellOutput()
+            let output = String(data: outputData, encoding: .utf8) ?? ""
+            let err = String(data: errorData, encoding: .utf8)
+            return (out: output, err: err)
+//            return outputData.shellOutput()
         }
     }
 }
