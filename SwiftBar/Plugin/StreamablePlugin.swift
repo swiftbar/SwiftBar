@@ -140,7 +140,7 @@ class StreamablePlugin: Plugin {
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             if let err = out.err {
                 debugInfo.addEvent(type: .ContentUpdateError, value: err)
-                os_log("Error output from the script \n%{public}@:", log: Log.plugin, err)
+                os_log("Error output from the script: \n%{public}@", log: Log.plugin, err)
             }
             return out.out
         } catch {
