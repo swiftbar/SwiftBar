@@ -75,7 +75,7 @@ class PluginRepository: ObservableObject {
         case "games":
             return "gamecontroller"
         case "lifestyle":
-            return "face.smiling.fill"
+            return "face.smiling"
         case "messenger":
             return "message"
         case "music":
