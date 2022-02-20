@@ -32,7 +32,7 @@
         {%
         endif
         %}
-        length="{{ asset.size }}"
+        length="6583350"
         type="application/zip"
       />
       {% endfor %}
