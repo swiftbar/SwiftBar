@@ -33,6 +33,7 @@
         endif
         %}
         length="{{asset.size}}"
+        sparkle:edSignature="nrD8OV6ilZwijFNrFZ9ozblAh46TC3B13GRtzUZS7H/WWJx3FRc7eAX10S1UIrBZB5LGt+qKjH/sIEJ5ZKi/AA=="
         type="application/zip"
       />
       {% endfor %}
