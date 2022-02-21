@@ -54,7 +54,7 @@
 	<key>NSCalendarsUsageDescription</key>
 	<string>Allow SwiftBar to access your Calendar. This is required by one of your plugins.</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright ©2020-2021 Ameba Labs. All rights reserved.</string>
+	<string>Copyright ©2020-2022 Ameba Labs. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>
