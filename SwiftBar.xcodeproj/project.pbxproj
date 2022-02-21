@@ -75,7 +75,6 @@
 		39641EB0254E163C00713DAF /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAF254E163C00713DAF /* PreferencesStore.swift */; };
 		396E6CA9258E8C5C002C735D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 396E6CAB258E8C5C002C735D /* Localizable.strings */; };
 		396E6CB0258E8D47002C735D /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396E6CAF258E8D47002C735D /* Localizable.swift */; };
-		3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359025896DBC007CF2E8 /* RSSparkle */; };
 		3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359525896DF9007CF2E8 /* LaunchAtLogin */; };
 		3989359E25896E29007CF2E8 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359D25896E29007CF2E8 /* HotKey */; };
 		398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C3254DA85300DEA027 /* URL+Extension.swift */; };
@@ -118,16 +117,13 @@
 		FA69F5BC2791145E00D6DDC6 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA69F5BB2791145E00D6DDC6 /* WebView.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
+		FA90185927C318A700D72E63 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FA90185827C318A700D72E63 /* Sparkle */; };
 		FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
 		FAA14A112728C6E90052FDB8 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
 		FAA14A132728C6F20052FDB8 /* ReloadPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */; };
 		FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
 		FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */; };
-		FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */ = {isa = PBXBuildFile; fileRef = FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
@@ -142,10 +138,6 @@
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
 			dstSubfolderSpec = 16;
 			files = (
-				FAD14BEE2583251300CB7BBE /* org.sparkle-project.Downloader.xpc in Embed XPC Services */,
-				FAD14BEF2583251300CB7BBE /* org.sparkle-project.InstallerConnection.xpc in Embed XPC Services */,
-				FAD14BF02583251300CB7BBE /* org.sparkle-project.InstallerLauncher.xpc in Embed XPC Services */,
-				FAD14BF12583251300CB7BBE /* org.sparkle-project.InstallerStatus.xpc in Embed XPC Services */,
 			);
 			name = "Embed XPC Services";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -216,10 +208,6 @@
 		FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisablePluginIntentHandler.swift; sourceTree = "<group>"; };
 		FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPluginsIntentHandler.swift; sourceTree = "<group>"; };
 		FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Intents.swift"; sourceTree = "<group>"; };
-		FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerStatus.xpc"; sourceTree = "<group>"; };
-		FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerLauncher.xpc"; sourceTree = "<group>"; };
-		FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.Downloader.xpc"; sourceTree = "<group>"; };
-		FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.xpc-service"; path = "org.sparkle-project.InstallerConnection.xpc"; sourceTree = "<group>"; };
 		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
 		FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailsView.swift; sourceTree = "<group>"; };
 		FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatableWindow.swift; sourceTree = "<group>"; };
@@ -232,9 +220,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA90185927C318A700D72E63 /* Sparkle in Frameworks */,
 				3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */,
 				39B64C29260F70D900B7FA63 /* Preferences in Frameworks */,
-				3989359125896DBC007CF2E8 /* RSSparkle in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
 				3989359E25896E29007CF2E8 /* HotKey in Frameworks */,
 			);
@@ -433,10 +421,6 @@
 			isa = PBXGroup;
 			children = (
 				396E6CB3258E9EA7002C735D /* Localization */,
-				FAD14BE72583250600CB7BBE /* org.sparkle-project.Downloader.xpc */,
-				FAD14BE82583250600CB7BBE /* org.sparkle-project.InstallerConnection.xpc */,
-				FAD14BE62583250600CB7BBE /* org.sparkle-project.InstallerLauncher.xpc */,
-				FAD14BE52583250600CB7BBE /* org.sparkle-project.InstallerStatus.xpc */,
 				3920748125460FD300213DBE /* Assets.xcassets */,
 				39224E5625F52F7400BABF21 /* SwiftBar MAS.entitlements */,
 				3920748A25460FD300213DBE /* SwiftBar.entitlements */,
@@ -470,11 +454,11 @@
 			);
 			name = SwiftBar;
 			packageProductDependencies = (
-				3989359025896DBC007CF2E8 /* RSSparkle */,
 				3989359525896DF9007CF2E8 /* LaunchAtLogin */,
 				3989359D25896E29007CF2E8 /* HotKey */,
 				FA8518F42598E786008AD21C /* SwifCron */,
 				39B64C28260F70D900B7FA63 /* Preferences */,
+				FA90185827C318A700D72E63 /* Sparkle */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -534,11 +518,11 @@
 			);
 			mainGroup = 3920747125460FD000213DBE;
 			packageReferences = (
-				3989358F25896DBC007CF2E8 /* XCRemoteSwiftPackageReference "Sparkle-Binary" */,
 				3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
 				3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */,
 				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
 				39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */,
+				FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -648,7 +632,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nbuildNumber=$(git rev-list --count HEAD)\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"$PRODUCT_SETTINGS_PATH\"\n\nversion=\"$MARKETING_VERSION\"\nrx='^([0-9]+\\.){2}(\\*|[0-9]+)(-.*)?$'\nif [[ $version =~ $rx ]]; then\n echo \"INFO:<-->Version $version\"\nelse\n echo \"ERROR:<->Unable to validate app version: '$version'\"\n exit 1\nfi\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nbuildNumber=$(git rev-list --count HEAD)\n#/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"$PRODUCT_SETTINGS_PATH\"\n\nversion=\"$MARKETING_VERSION\"\nrx='^([0-9]+\\.){2}(\\*|[0-9]+)(-.*)?$'\nif [[ $version =~ $rx ]]; then\n echo \"INFO:<-->Version $version\"\nelse\n echo \"ERROR:<->Unable to validate app version: '$version'\"\n exit 1\nfi\n";
 		};
 		398DAE76255373B700747D90 /* Launch At Login */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -702,7 +686,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Remove unused Sparkle components\nSPARKLE_DIR=\"${CODESIGNING_FOLDER_PATH}/Contents/Frameworks/Sparkle.framework\"\nfind \"${SPARKLE_DIR}\" -name Updater.app -execdir rm -rf {} \\;\nfind \"${SPARKLE_DIR}\" -name Autoupdate -execdir rm -rf {} \\;\n\nPLUGINS_DIR=\"${CODESIGNING_FOLDER_PATH}/Contents/Plugins\"\nXPC_DIR=\"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices\"\nfind \"${PLUGINS_DIR}\" -name Sparkle* -execdir rm -rf {} \\;\nfind \"${XPC_DIR}\" -name Sparkle* -execdir rm -rf {} \\;\n\n# Sign XPC Helpers and their internal binaries\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/Updater.app\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerLauncher.xpc/Contents/MacOS/Autoupdate\"\ncodesign --verbose --entitlements \"${PROJECT_DIR}/submodules/Sparkle/Downloader/org.sparkle-project.Downloader.entitlements\" --force -o runtime --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.Downloader.xpc\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerLauncher.xpc\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerConnection.xpc\"\ncodesign --verbose --force -o runtime --preserve-metadata=entitlements --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \"${CODESIGNING_FOLDER_PATH}/Contents/XPCServices/org.sparkle-project.InstallerStatus.xpc\"\n";
+			shellScript = "
+";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -968,7 +953,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 394;
+				CURRENT_PROJECT_VERSION = 400;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -995,7 +980,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 394;
+				CURRENT_PROJECT_VERSION = 400;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1127,14 +1112,6 @@
 				minimumVersion = 1.3.1;
 			};
 		};
-		3989358F25896DBC007CF2E8 /* XCRemoteSwiftPackageReference "Sparkle-Binary" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swiftbar/Sparkle-Binary";
-			requirement = {
-				branch = main;
-				kind = branch;
-			};
-		};
 		3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swiftbar/LaunchAtLogin";
@@ -1167,6 +1144,14 @@
 				minimumVersion = 1.3.1;
 			};
 		};
+		FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1184,11 +1169,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 39224DE925F4344600BABF21 /* XCRemoteSwiftPackageReference "SwifCron" */;
 			productName = SwifCron;
-		};
-		3989359025896DBC007CF2E8 /* RSSparkle */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3989358F25896DBC007CF2E8 /* XCRemoteSwiftPackageReference "Sparkle-Binary" */;
-			productName = RSSparkle;
 		};
 		3989359525896DF9007CF2E8 /* LaunchAtLogin */ = {
 			isa = XCSwiftPackageProductDependency;
@@ -1214,6 +1194,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */;
 			productName = SwifCron;
+		};
+		FA90185827C318A700D72E63 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
