@@ -70,6 +70,8 @@ Duration modifiers:
 
 Example filename: `date.1m.sh`
 
+Whether you are using a plugin from the plugin repository, or creating your own, plugins will initially appear in the menu bar in no pre-determined order. However, you can reorder how they appear by holding down <kbd>Cmd</kbd> and dragging them (this process can sometimes also be used on some other non-SwiftBar icons in the menu bar too). Plugin position will be remembered unless you change the name of the plugin file, in which case they'll need to be re-positioned again.
+
 ## Plugin API
 
 Plugin is an executable script in the language of your choice. When SwiftBar detects a new file in `Plugin Folder` it makes this file executable if needed and runs it. 
