@@ -1,0 +1,86 @@
+//Menubar strings
+"MB_SWIFT_BAR" = "SwiftBar";
+"MB_UPDATING_MENU" = "Actualizando…";
+"MB_LAST_UPDATED" = "Actualizado";
+"MB_ABOUT_SWIFT_BAR" = "Acerca";
+"MB_ABOUT_PLUGIN" = "Acerca";
+"MB_RUN_IN_TERMINAL" = "Ejecutar en la Terminal…";
+"MB_DISABLE_PLUGIN" = "Deshabilitar complemento";
+"MB_DDEBUG_PLUGIN" = "Depurar complemento";
+"MB_PREFERENCES" = "Preferencias…";
+"MB_REFRESH_ALL" = "Actualizar todo";
+"MB_ENABLE_ALL" = "Habilitar todo";
+"MB_DISABLE_ALL" = "Deshabilitar todo";
+"MB_OPEN_PLUGINS_FOLDER" = "Abrir carpeta de complementos…";
+"MB_CHANGE_PLUGINS_FOLDER" = "Cambiar carpeta de complementos…";
+"MB_GET_PLUGINS" = "Obtener complementos...";
+"MB_SEND_FEEDBACK" = "Enviar comentarios...";
+"MB_SHOW_ERROR" = "Mostrar error";
+
+//Preferences strings
+"PF_PREFERENCES" = "Preferencias";
+"PF_GENERAL" = "General";
+"PF_PLUGINS" = "Complementos";
+"PF_PLUGINS_FOLDER" = "Carpeta de complementos";
+"PR_LAUNCH_AT_LOGIN" = "Lanzar al iniciar sesión";
+"PF_PATH" = "Ruta";
+"PF_PATH_IS_NONE" = "Ninguno";
+"PF_CHANGE_PATH" = "Cambiar...";
+"PF_SHELL" = "Shell";
+"PF_TERMINAL" = "Terminal";
+"PF_HIDE_SWIFTBAR_ICON" = "Ocultar ícono SwiftBar";
+"PF_CHECK_FOR_UPDATE" = "Actualizar";
+"PF_CHECK_FOR_UPDATES" = "Verificar si hay actualizaciones";
+"PR_INCLUDE_BETA_UPDATES" = "Incluir versiones beta";
+"PF_NO_PLUGINS_MESSAGE" = "La carpeta de los complementos está vacía";
+"PF_ENABLE_ALL" = "Habilitar todo";
+"PF_PLUGINS_FOOTNOTE" = "Los complementos habilitados aparecen en la barra de menú.";
+
+//Plugin Repository strings
+"PR_CATEGORY" = "Categoría";
+"PR_PLUGIN_REPOSITORY" = "Repositorio del complemento";
+"PR_REFRESHING_DATA_MESSAGE" = "Actualizando datos del repositorio…";
+"PR_DEPENDENCIES" = "Dependencias";
+"PR_PLUGIN_SOURCE" = "Fuente";
+"PR_ABOUT_PLUGIN" = "Acerca";
+"PR_AUTORH_PREPOSITION" = "por";
+"PR_INSTALL_STATUS_INSTALL" = "Instalar";
+"PR_INSTALL_STATUS_INSTALLED" = "Instalado";
+"PR_INSTALL_STATUS_FAILED" = "Falló";
+"PR_INSTALL_STATUS_DOWNLOADING" = "Descargando";
+
+
+//App strings
+"APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "Elegir carpeta de complementos";
+"APP_FOLDER_NOT_ALLOWED_MESSAGE" = "No se puede usar esta carpeta como ubicación de los complementos de SwiftBar";
+"APP_FOLDER_NOT_ALLOWED_ACTION" = "Elegir nueva ubicación";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "GUAU! Tal parece que la carpeta elegida posee DEMASIADO ARCHIVOS, por favor elegir otra. Si un complemento necesita de una carpeta node_modules, hágala oculta.";
+"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Establecer la ubicación de los complementos de SwiftBar";
+"APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Seleccionar una carpeta para guardar los repositorios de los complementos";
+"APP_QUIT" = "Salir de SwiftBar";
+"OK" = "OK";
+"CANCEL" = "Cancelar";
+
+// Plugin Repository Categories
+"CAT_AWS" = "AWS";
+"CAT_CRYPTOCURRENCY" = "Criptomonedas";
+"CAT_DEV" = "Dev";
+"CAT_E-COMMERCE" = "Comercio electrónico";
+"CAT_EMAIL" = "Correo electrónico";
+"CAT_ENVIRONMENT" = "Medioambiente";
+"CAT_FINANCE" = "Finanzas";
+"CAT_GAMES" = "Juegos";
+"CAT_LIFESTYLE" = "Estilo de vida";
+"CAT_MESSENGER" = "Messenger";
+"CAT_MUSIC" = "Música";
+"CAT_NETWORK" = "Red";
+"CAT_POLITICS" = "Política";
+"CAT_SCIENCE" = "Ciencias";
+"CAT_SPORTS" = "Deportes";
+"CAT_SYSTEM" = "System";
+"CAT_TIME" = "Time";
+"CAT_TOOLS" = "Herramientas";
+"CAT_TRAVEL" = "Viajes";
+"CAT_TUTORIAL" = "Tutorial";
+"CAT_WEATHER" = "Clima";
+"CAT_WEB" = "Web";
