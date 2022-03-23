@@ -56,7 +56,7 @@
 "APP_FOLDER_NOT_ALLOWED_ACTION" = "Choose New Location";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Set SwiftBar Plugins Location";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Select a folder to store the plugins repository";
-"APP_QUIT" = "Quite SwiftBar";
+"APP_QUIT" = "Quit SwiftBar";
 "OK" = "Ok";
 "CANCEL" = "Cancel";
 
