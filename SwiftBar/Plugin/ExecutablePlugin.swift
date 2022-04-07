@@ -134,7 +134,7 @@ class ExecutablePlugin: Plugin {
             lastState = .Success
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
             debugInfo.addEvent(type: .ContentUpdate, value: out.out)
-            if let err = out.err {
+            if let err = out.err, err != "" {
                 debugInfo.addEvent(type: .ContentUpdateError, value: err)
                 os_log("Error output from the script: \n%{public}@:", log: Log.plugin, err)
             }

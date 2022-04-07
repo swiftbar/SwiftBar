@@ -138,7 +138,7 @@ class StreamablePlugin: Plugin {
             error = nil
             lastState = .Streaming
             os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
-            if let err = out.err {
+            if let err = out.err, err != "" {
                 debugInfo.addEvent(type: .ContentUpdateError, value: err)
                 os_log("Error output from the script: \n%{public}@", log: Log.plugin, err)
             }
