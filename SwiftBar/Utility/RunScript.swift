@@ -46,8 +46,15 @@ private extension Process {
             executableURL = URL(fileURLWithPath: script)
             arguments = args
         } else {
-            executableURL = URL(fileURLWithPath: delegate.prefs.shell.path)
-            arguments = ["-c", "-l", "\(script.escaped()) \(args.joined(separator: " "))"]
+            let shell = delegate.prefs.shell
+            switch shell {
+            case .Bash, .Zsh:
+                executableURL = URL(fileURLWithPath: shell.path)
+                arguments = ["-c", "-l", "\(script.escaped()) \(args.joined(separator: " "))"]
+            case .BashEnv, .ZshEnv:
+                executableURL = URL(fileURLWithPath: shell.envPath)
+                arguments = [shell.path, "-c", "-l", "\(script.escaped()) \(args.joined(separator: " "))"]
+            }
         }
 
         guard let executableURL = executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {

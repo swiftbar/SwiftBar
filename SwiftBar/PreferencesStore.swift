@@ -7,8 +7,14 @@ enum TerminalOptions: String, CaseIterable {
 }
 
 enum ShellOptions: String, CaseIterable {
-    case Bash
-    case Zsh
+    case Bash = "bash"
+    case Zsh = "zsh"
+    case BashEnv = "bash(env)"
+    case ZshEnv = "zsh(env)"
+
+    var envPath: String {
+        "/usr/bin/env"
+    }
 
     var path: String {
         switch self {
@@ -16,6 +22,10 @@ enum ShellOptions: String, CaseIterable {
             return "/bin/bash"
         case .Zsh:
             return "/bin/zsh"
+        case .BashEnv:
+            return "bash"
+        case .ZshEnv:
+            return "zsh"
         }
     }
 }
