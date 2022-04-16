@@ -683,7 +683,7 @@ extension MenubarItem {
             }
         }
 
-        if let href = params.href, case let url = URL(string: href) ?? URL(fileURLWithPath: href), url.absoluteString != "." {
+        if let url = params.href?.getURL(), url.absoluteString != "." {
             if params.webView {
                 showWebPopover(url: url, widht: params.webViewWidth, height: params.webViewHeight)
             } else {
