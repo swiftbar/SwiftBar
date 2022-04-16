@@ -314,3 +314,4 @@ SwiftBar can be translated [here](https://github.com/swiftbar/SwiftBar/tree/main
 If you enjoy SwiftBar you may like these as well:
 * [TRex](https://github.com/amebalabs/TRex) - Easy to use text extraction tool for macOS
 * [Esse](https://github.com/amebalabs/Esse) - Swiss army knife of text transformation for iOS and macOS
+
