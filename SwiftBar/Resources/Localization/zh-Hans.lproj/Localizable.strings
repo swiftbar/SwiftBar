@@ -1,0 +1,86 @@
+//Menubar strings
+"MB_SWIFT_BAR" = "SwiftBar";
+"MB_UPDATING_MENU" = "更新中…";
+"MB_LAST_UPDATED" = "上一次更新";
+"MB_ABOUT_SWIFT_BAR" = "关于";
+"MB_ABOUT_PLUGIN" = "关于";
+"MB_RUN_IN_TERMINAL" = "从命令行运行…";
+"MB_DISABLE_PLUGIN" = "停用插件";
+"MB_DDEBUG_PLUGIN" = "调试插件";
+"MB_PREFERENCES" = "偏好设置…";
+"MB_REFRESH_ALL" = "刷新全部插件";
+"MB_ENABLE_ALL" = "开启全部插件";
+"MB_DISABLE_ALL" = "停用全部插件";
+"MB_OPEN_PLUGINS_FOLDER" = "打开插件目录…";
+"MB_CHANGE_PLUGINS_FOLDER" = "修改插件目录…";
+"MB_GET_PLUGINS" = "获取插件...";
+"MB_SEND_FEEDBACK" = "发送反馈...";
+"MB_SHOW_ERROR" = "展示错误信息";
+
+//Preferences strings
+"PF_PREFERENCES" = "偏好设置";
+"PF_GENERAL" = "通用";
+"PF_PLUGINS" = "插件";
+"PF_PLUGINS_FOLDER" = "插件目录";
+"PR_LAUNCH_AT_LOGIN" = "登录时启动";
+"PF_PATH" = "路径";
+"PF_PATH_IS_NONE" = "None";
+"PF_CHANGE_PATH" = "修改...";
+"PF_SHELL" = "命令行解释器";
+"PF_TERMINAL" = "终端";
+"PF_HIDE_SWIFTBAR_ICON" = "隐藏 SwiftBar 图标";
+"PF_CHECK_FOR_UPDATE" = "更新";
+"PF_CHECK_FOR_UPDATES" = "检查更新";
+"PR_INCLUDE_BETA_UPDATES" = "包括预发布版本";
+"PF_NO_PLUGINS_MESSAGE" = "插件目录是空的";
+"PF_ENABLE_ALL" = "开启所有";
+"PF_PLUGINS_FOOTNOTE" = "菜单栏中会显示已启用的插件。";
+
+//Plugin Repository strings
+"PR_CATEGORY" = "类别";
+"PR_PLUGIN_REPOSITORY" = "插件仓库";
+"PR_REFRESHING_DATA_MESSAGE" = "正在刷新数据…";
+"PR_DEPENDENCIES" = "依赖";
+"PR_PLUGIN_SOURCE" = "源码";
+"PR_ABOUT_PLUGIN" = "关于";
+"PR_AUTORH_PREPOSITION" = "by";
+"PR_INSTALL_STATUS_INSTALL" = "安装";
+"PR_INSTALL_STATUS_INSTALLED" = "已安装";
+"PR_INSTALL_STATUS_FAILED" = "失败";
+"PR_INSTALL_STATUS_DOWNLOADING" = "下载中…";
+
+
+//App strings
+"APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "选择插件目录";
+"APP_FOLDER_NOT_ALLOWED_MESSAGE" = "不能使用此目录作为 SwiftBar 的插件目录";
+"APP_FOLDER_NOT_ALLOWED_ACTION" = "选择另一个位置";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "哇！看起来你选择了一个包含很多文件的文件夹，请选择另一个。如果有插件依赖的node_modules文件夹，请将其隐藏。";
+"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "设置 SwiftBar 插件位置";
+"APP_CHOOSE_PLUGIN_FOLDER_INFO" = "选择一个目录来储存插件仓库";
+"APP_QUIT" = "退出 SwiftBar";
+"OK" = "确定";
+"CANCEL" = "取消";
+
+// Plugin Repository Categories
+"CAT_AWS" = "AWS";
+"CAT_CRYPTOCURRENCY" = "加密货币";
+"CAT_DEV" = "开发";
+"CAT_E-COMMERCE" = "网购";
+"CAT_EMAIL" = "邮箱";
+"CAT_ENVIRONMENT" = "环境";
+"CAT_FINANCE" = "金融";
+"CAT_GAMES" = "游戏";
+"CAT_LIFESTYLE" = "生活";
+"CAT_MESSENGER" = "信息";
+"CAT_MUSIC" = "音乐";
+"CAT_NETWORK" = "网络";
+"CAT_POLITICS" = "政治";
+"CAT_SCIENCE" = "科学";
+"CAT_SPORTS" = "体育";
+"CAT_SYSTEM" = "系统";
+"CAT_TIME" = "时间";
+"CAT_TOOLS" = "工具";
+"CAT_TRAVEL" = "旅行";
+"CAT_TUTORIAL" = "指南";
+"CAT_WEATHER" = "天气";
+"CAT_WEB" = "第三方";
