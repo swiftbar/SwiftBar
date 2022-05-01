@@ -79,10 +79,11 @@ private extension Process {
                 let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
                 throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: data)
             }
-            waitUntilExit()
 
             outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
             errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
+
+            waitUntilExit()
 
             if terminationStatus != 0 {
                 throw ShellOutError(
