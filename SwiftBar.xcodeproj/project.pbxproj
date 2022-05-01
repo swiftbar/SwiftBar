@@ -196,6 +196,8 @@
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA06104525F0564400B08B6E /* PluginEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginEntryView.swift; sourceTree = "<group>"; };
+		FA3C3793281EB2760003DEDE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
+		FA3C3794281EB27B0003DEDE /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		FA58E39927AD855D0034837F /* SystemNotificationName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNotificationName.swift; sourceTree = "<group>"; };
 		FA60506726B593FA001A939A /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
@@ -515,6 +517,8 @@
 				nl,
 				hr,
 				ru,
+				es,
+				"zh-Hans",
 			);
 			mainGroup = 3920747125460FD000213DBE;
 			packageReferences = (
@@ -820,6 +824,8 @@
 				395ADA652592359E003EFA25 /* nl */,
 				39294CD526934EDD00C6BB29 /* hr */,
 				FA60506726B593FA001A939A /* ru */,
+				FA3C3793281EB2760003DEDE /* es */,
+				FA3C3794281EB27B0003DEDE /* zh-Hans */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";
