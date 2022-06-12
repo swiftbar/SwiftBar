@@ -113,12 +113,6 @@ Where:
 - **"Item Title"** can be any string, this will be used as a menu item title.
 - **[param = ...]** is an optional set of parameters\modificators. Each parameter is a key-value separated by `=`. Use `|` to separate parameters from the title.
 
-#### Two-lines Title
-
-Title line in `Header` section supports multiline, use `\\n` to separate lines, i.e.: 
-```bash
-echo "Line 1 \\n Line2 | size=8"
-```
 
 #### Parameters
 
