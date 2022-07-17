@@ -132,7 +132,7 @@ class PluginMetadata: ObservableObject {
                 .dropFirst()
                 .dropLast()
                 .split(separator: ",").forEach { str in
-                    let pair = str.split(separator: ":").map { $0.trimmingCharacters(in: .whitespaces) }
+                    let pair = str.split(separator: "=").map { $0.trimmingCharacters(in: .whitespaces) }
                     guard pair.count == 2 else { return }
                     environment[pair[0]] = pair[1]
                 }
