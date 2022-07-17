@@ -152,9 +152,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 guard let plugin = getPluginFromURL(url: url) else { return }
                 let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value.escaped())" }.joined(separator: " ") ?? ""
                 pluginManager.showNotification(plugin: plugin,
-                                               title: url.queryParameters?["title"],
-                                               subtitle: url.queryParameters?["subtitle"],
-                                               body: url.queryParameters?["body"],
+                                               title: url.queryParameters?["title"]?.replacingOccurrences(of: "+", with: " "),
+                                               subtitle: url.queryParameters?["subtitle"]?.replacingOccurrences(of: "+", with: " "),
+                                               body: url.queryParameters?["body"]?.replacingOccurrences(of: "+", with: " "),
                                                href: url.queryParameters?["href"],
                                                commandParams: MenuLineParameters(line: "|\(paramsString)").json,
                                                silent: url.queryParameters?["silent"] == "true")
