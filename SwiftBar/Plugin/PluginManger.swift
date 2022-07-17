@@ -8,9 +8,7 @@ import UserNotifications
 class PluginManager: ObservableObject {
     static let shared = PluginManager()
     let prefs = PreferencesStore.shared
-    lazy var barItem: MenubarItem = {
-        MenubarItem.defaultBarItem()
-    }()
+    lazy var barItem: MenubarItem = .defaultBarItem()
 
     #if !MAC_APP_STORE
         var directoryObserver: DirectoryObserver?
@@ -23,7 +21,7 @@ class PluginManager: ObservableObject {
     }
 
     var enabledPlugins: [Plugin] {
-        plugins.filter { $0.enabled }
+        plugins.filter(\.enabled)
     }
 
     var menuBarItems: [PluginID: MenubarItem] = [:]

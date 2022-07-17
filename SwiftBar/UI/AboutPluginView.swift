@@ -51,7 +51,7 @@ struct AboutPluginView: View {
 struct LabelView: View {
     let label: String
     let value: String
-    var url: URL? = nil
+    var url: URL?
     var body: some View {
         HStack {
             Text(label)

@@ -3,7 +3,7 @@ import SwiftUI
 struct URLTextView: View {
     var text: String
     var url: URL
-    var sfSymbol: String? = nil
+    var sfSymbol: String?
     var body: some View {
         if #available(OSX 11.0, *), let sfSymbol = sfSymbol {
             Image(systemName: sfSymbol)

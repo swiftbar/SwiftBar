@@ -75,7 +75,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification,
                                                           object: nil,
-                                                          queue: OperationQueue.main) { [weak self] _ in
+                                                          queue: OperationQueue.main)
+        { [weak self] _ in
             os_log("Mac is going to sleep", log: Log.plugin, type: .info)
             self?.sharedEnv.updateSleepTime(date: NSDate.now)
             self?.pluginManager.terminateAllPlugins()
@@ -83,7 +84,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
         NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification,
                                                           object: nil,
-                                                          queue: OperationQueue.main) { [weak self] _ in
+                                                          queue: OperationQueue.main)
+        { [weak self] _ in
             os_log("Mac waked up", log: Log.plugin, type: .info)
             self?.sharedEnv.updateWakeTime(date: NSDate.now)
             self?.pluginManager.startAllPlugins()
@@ -182,7 +184,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
            let bash = params.bash
         {
             AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
-                                    env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true) {
+                                    env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true)
+            {
                 if params.refresh {
                     plugin.refresh()
                 }

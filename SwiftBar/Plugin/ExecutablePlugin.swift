@@ -24,9 +24,7 @@ class ExecutablePlugin: Plugin {
     var error: ShellOutError?
     var debugInfo = PluginDebugInfo()
 
-    lazy var invokeQueue: OperationQueue = {
-        delegate.pluginManager.pluginInvokeQueue
-    }()
+    lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
 
     var updateTimerPublisher: Timer.TimerPublisher {
         Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)

@@ -29,9 +29,7 @@ class StreamablePlugin: Plugin {
     var error: ShellOutError?
     var debugInfo = PluginDebugInfo()
 
-    lazy var invokeQueue: OperationQueue = {
-        delegate.pluginManager.pluginInvokeQueue
-    }()
+    lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
 
     var procces: Process?
     let prefs = PreferencesStore.shared

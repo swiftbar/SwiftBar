@@ -119,7 +119,7 @@ class AppShared: NSObject {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    public static func runInTerminal(script: String, args: [String] = [], runInBackground: Bool = false, env: [String: String] = [:], runInBash: Bool, completionHandler: ((() -> Void)?) = nil) {
+    public static func runInTerminal(script: String, args: [String] = [], runInBackground: Bool = false, env: [String: String] = [:], runInBash: Bool, completionHandler: (() -> Void)? = nil) {
         if runInBackground {
             DispatchQueue.global(qos: .userInitiated).async {
                 os_log("Executing script in background... \n%{public}@", log: Log.plugin, script)
@@ -139,7 +139,7 @@ class AppShared: NSObject {
             .appending(script.escaped())
             .appending(" ")
             .appending(args.joined(separator: " "))
-        var appleScript: String = ""
+        var appleScript = ""
         switch PreferencesStore.shared.terminal {
         case .Terminal:
             appleScript = """

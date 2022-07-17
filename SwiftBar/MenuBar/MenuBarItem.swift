@@ -69,9 +69,7 @@ class MenubarItem: NSObject {
         Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
     }
 
-    lazy var menuUpdateQueue: OperationQueue = {
-        delegate.pluginManager.menuUpdateQueue
-    }()
+    lazy var menuUpdateQueue: OperationQueue = delegate.pluginManager.menuUpdateQueue
 
     init(title: String, plugin: Plugin? = nil) {
         super.init()
@@ -701,7 +699,8 @@ extension MenubarItem {
 
         if let bash = params.bash {
             AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
-                                    env: plugin?.env ?? [:], runInBash: plugin?.metadata?.shouldRunInBash ?? true) { [weak self] in
+                                    env: plugin?.env ?? [:], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
+            { [weak self] in
                 if params.refresh {
                     self?.plugin?.refresh()
                 }

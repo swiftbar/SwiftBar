@@ -74,7 +74,7 @@ extension String {
 extension Dictionary where Key == NSAttributedString.Key, Value == Any {
     mutating func attributesForANSICodes(codes: String) {
         var color256 = false
-        var foreground: Bool = false
+        var foreground = false
         let font = self[.font]
 
         for codeString in codes.components(separatedBy: ";") {
