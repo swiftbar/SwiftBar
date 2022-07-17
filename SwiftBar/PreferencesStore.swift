@@ -45,6 +45,7 @@ class PreferencesStore: ObservableObject {
         case PluginDebugMode
         case StealthMode
         case IncludeBetaUpdates
+        case DimOnManualRefresh
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -97,6 +98,12 @@ class PreferencesStore: ObservableObject {
         }
     }
 
+    @Published var dimOnManualRefresh: Bool {
+        didSet {
+            PreferencesStore.setValue(value: dimOnManualRefresh, key: .DimOnManualRefresh)
+        }
+    }
+
     var makePluginExecutable: Bool {
         guard let out = PreferencesStore.getValue(key: .MakePluginExecutable) as? Bool else {
             PreferencesStore.setValue(value: true, key: .MakePluginExecutable)
@@ -132,6 +139,7 @@ class PreferencesStore: ObservableObject {
         shell = .Bash
         swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         includeBetaUpdates = PreferencesStore.getValue(key: .IncludeBetaUpdates) as? Bool ?? false
+        dimOnManualRefresh = PreferencesStore.getValue(key: .DimOnManualRefresh) as? Bool ?? true
         if let savedTerminal = PreferencesStore.getValue(key: .Terminal) as? String,
            let value = TerminalOptions(rawValue: savedTerminal)
         {

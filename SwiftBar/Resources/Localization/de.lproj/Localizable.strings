@@ -35,6 +35,9 @@
 "PF_NO_PLUGINS_MESSAGE" = "Plugins folder is empty";
 "PF_ENABLE_ALL" = "Enable All";
 "PF_PLUGINS_FOOTNOTE" = "Enabled plugins appear in the menu bar.";
+"PF_MENUBAR_ITEM" = "Menu Bar Item";
+"PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
+
 
 //Plugin Repository strings
 "PR_CATEGORY" = "Category";

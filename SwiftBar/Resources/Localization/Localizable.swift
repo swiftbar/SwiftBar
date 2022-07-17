@@ -51,6 +51,8 @@ enum Localizable {
         case NoPluginsMessage = "PF_NO_PLUGINS_MESSAGE"
         case EnableAll = "PF_ENABLE_ALL"
         case PluginsFootnote = "PF_PLUGINS_FOOTNOTE"
+        case MenuBarItem = "PF_MENUBAR_ITEM"
+        case DimOnManualRefresh = "PF_DIM_ON_MANUAL_REFRESH"
     }
 
     enum PluginRepository: String {

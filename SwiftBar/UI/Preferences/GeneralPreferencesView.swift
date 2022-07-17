@@ -13,6 +13,10 @@ struct GeneralPreferencesView: View {
                     Text(Localizable.Preferences.LaunchAtLogin.localized)
                 }
             }
+            Preferences.Section(title: "\(Localizable.Preferences.MenuBarItem.localized):", verticalAlignment: .top) {
+                Toggle(Localizable.Preferences.DimOnManualRefresh.localized, isOn: $preferences.dimOnManualRefresh)
+            }
+
             Preferences.Section(title: "\(Localizable.Preferences.PluginsFolder.localized):", verticalAlignment: .top) {
                 Button(Localizable.Preferences.ChangePath.localized) {
                     AppShared.changePluginFolder()
@@ -20,6 +24,7 @@ struct GeneralPreferencesView: View {
                 Text(preferences.pluginDirectoryPath ?? Localizable.Preferences.PathIsNone.localized)
                     .preferenceDescription()
             }
+
             Preferences.Section(title: "\(Localizable.Preferences.Terminal.localized):", verticalAlignment: .top) {
                 EnumPicker(selected: $preferences.terminal, title: "")
                     .frame(width: 120.0)

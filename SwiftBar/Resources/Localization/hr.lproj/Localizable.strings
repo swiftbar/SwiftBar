@@ -35,6 +35,8 @@
 "PF_NO_PLUGINS_MESSAGE" = "Mapa dodataka je prazna";
 "PF_ENABLE_ALL" = "Aktiviraj sve";
 "PF_PLUGINS_FOOTNOTE" = "Aktivirani dodaci će se pojaviti u traci izbornika.";
+"PF_MENUBAR_ITEM" = "Menu Bar Item";
+"PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "Kategorija";

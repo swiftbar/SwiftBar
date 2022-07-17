@@ -35,6 +35,8 @@
 "PF_NO_PLUGINS_MESSAGE" = "Plug-insmap is leeg";
 "PF_ENABLE_ALL" = "Alle plug-ins inschakelen";
 "PF_PLUGINS_FOOTNOTE" = "Ingeschakelde plug-ins verschijnen in de menubalk.";
+"PF_MENUBAR_ITEM" = "Menu Bar Item";
+"PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "Categorie";

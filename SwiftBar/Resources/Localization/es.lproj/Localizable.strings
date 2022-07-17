@@ -35,6 +35,8 @@
 "PF_NO_PLUGINS_MESSAGE" = "La carpeta de los complementos está vacía";
 "PF_ENABLE_ALL" = "Habilitar todo";
 "PF_PLUGINS_FOOTNOTE" = "Los complementos habilitados aparecen en la barra de menú.";
+"PF_MENUBAR_ITEM" = "Menu Bar Item";
+"PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "Categoría";

@@ -416,6 +416,7 @@ extension MenubarItem {
     }
 
     func _updateMenu(content: String?) {
+        barItem.button?.appearsDisabled = false
         statusBarMenu.removeAllItems()
         show()
 
@@ -570,7 +571,6 @@ extension MenubarItem {
         if let length = params.length, length < title.count {
             title = String(title.prefix(length)).appending("...")
         }
-//        os_log("title:%{public}@", log: Log.plugin, type: .info, title)
 
         title = unescape(title)
 
@@ -674,6 +674,11 @@ extension MenubarItem {
         barItem.button?.performClick(nil)
     }
 
+    func dimOnManualRefresh() {
+        guard delegate.prefs.dimOnManualRefresh else { return }
+        barItem.button?.appearsDisabled = true
+    }
+
     @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {
         var out = false
 
@@ -706,6 +711,7 @@ extension MenubarItem {
         }
 
         if params.refresh {
+            dimOnManualRefresh()
             plugin?.refresh()
             out = true
             return out

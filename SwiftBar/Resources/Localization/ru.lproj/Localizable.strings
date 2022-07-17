@@ -35,6 +35,8 @@
 "PF_NO_PLUGINS_MESSAGE" = "Папка плагина пуста";
 "PF_ENABLE_ALL" = "Включить все";
 "PF_PLUGINS_FOOTNOTE" = "Включенные плагины видны в панели меню.";
+"PF_MENUBAR_ITEM" = "Menu Bar Item";
+"PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "Категория";

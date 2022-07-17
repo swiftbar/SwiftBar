@@ -183,6 +183,7 @@ class PluginManager: ObservableObject {
             loadPlugins()
         #endif
         os_log("Refreshing all enabled plugins.", log: Log.plugin)
+        menuBarItems.values.forEach { $0.dimOnManualRefresh() }
         pluginInvokeQueue.cancelAllOperations() // clean up the update queue to avoid duplication
         enabledPlugins.forEach { $0.refresh() }
     }
