@@ -84,7 +84,7 @@ class MenubarItem: NSObject {
         barItem.autosaveName = plugin?.id
         statusBarMenu.delegate = self
         if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
-            barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL])
+            barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL])
             barItem.button?.window?.registerForDraggedTypes(NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) })
             barItem.button?.window?.delegate = self
         }
@@ -732,37 +732,33 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
 
     func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
         var env: [String: String] = plugin?.env ?? [:]
-        var files: [String] = []
-        let supportedClasses = [
-            NSFilePromiseReceiver.self,
-            NSURL.self,
-        ]
+        var filesURL: [URL] = []
+        var url: URL?
 
-        let searchOptions: [NSPasteboard.ReadingOptionKey: Any] = [
-            .urlReadingFileURLsOnly: true,
-            .urlReadingContentsConformToTypes: plugin?.metadata?.dropTypes ?? [],
-        ]
+        let pasteBoard = sender.draggingPasteboard
 
-        let destinationURL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Drops")
-        try? FileManager.default.createDirectory(at: destinationURL, withIntermediateDirectories: true, attributes: nil)
-
-        sender.enumerateDraggingItems(options: [], for: nil, classes: supportedClasses, searchOptions: searchOptions) { draggingItem, _, _ in
-            switch draggingItem.item {
-            case let filePromiseReceiver as NSFilePromiseReceiver:
-                filePromiseReceiver.receivePromisedFiles(atDestination: destinationURL, options: [:], operationQueue: self.workQueue) { fileURL, error in
-                    if error == nil {
-                        files.append(fileURL.path)
-                    }
-                }
-            case let fileURL as URL:
-                files.append(fileURL.path)
-            default: break
+        if let urls = pasteBoard.readObjects(forClasses: [NSURL.self]) as? [URL] {
+            // process URL drop
+            if urls.count == 1, let droppedURL = urls.first, !droppedURL.isFileURL {
+                url = droppedURL
+            } else {
+                filesURL = urls
             }
         }
 
-        env["DROPPED_FILES"] = files.joined(separator: ",")
-        guard let scriptPath = plugin?.file else { return false }
-        AppShared.runInTerminal(script: scriptPath, env: env, runInBash: plugin?.metadata?.shouldRunInBash ?? true)
+        if !filesURL.isEmpty {
+            env["DROPPED_FILES"] = filesURL.map(\.absoluteString).joined(separator: ",")
+        }
+
+        if let url = url {
+            env["DROPPED_URL"] = url.absoluteString
+        }
+
+        guard let scriptPath = plugin?.file,
+              env.keys.contains("DROPPED_FILES") || env.keys.contains("DROPPED_URL")
+        else { return false }
+        env["LAUNCHED_FROM_DROP_ACTION"] = "TRUE"
+        AppShared.runInTerminal(script: scriptPath, runInBackground: true, env: env, runInBash: plugin?.metadata?.shouldRunInBash ?? true)
         return true
     }
 }
