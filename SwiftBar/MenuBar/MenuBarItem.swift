@@ -419,8 +419,8 @@ extension MenubarItem {
         show()
 
         if plugin?.lastState == .Failed {
-            titleLines = ["⚠️"]
-            barItem.button?.title = "⚠️"
+            titleLines = ["􀇾"]
+            barItem.button?.title = "􀇾"
             buildStandardMenu()
             return
         }
@@ -505,7 +505,7 @@ extension MenubarItem {
     }
 
     func updateMenuTitle(titleLines: [String]) {
-        setMenuTitle(title: titleLines.first ?? "⚠️")
+        setMenuTitle(title: titleLines.first ?? "􀇾")
         guard titleLines.count > 1 else { return }
 
         titleLines.forEach { line in
