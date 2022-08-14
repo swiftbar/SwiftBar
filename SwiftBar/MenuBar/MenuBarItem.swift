@@ -747,7 +747,9 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
         }
 
         if !filesURL.isEmpty {
-            env["DROPPED_FILES"] = filesURL.map(\.absoluteString).joined(separator: ",")
+            // swiftformat:disable all
+            env["DROPPED_FILES"] = filesURL.compactMap{$0.absoluteString.URLEncoded}.joined(separator: ",")
+            // swiftformat:enable all
         }
 
         if let url = url {

@@ -22,3 +22,12 @@ extension String {
         return nil
     }
 }
+
+extension String {
+    var URLEncoded: String {
+        let unreservedChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/:"
+        let unreservedCharsSet = CharacterSet(charactersIn: unreservedChars)
+        let encodedString = addingPercentEncoding(withAllowedCharacters: unreservedCharsSet)!
+        return encodedString
+    }
+}
