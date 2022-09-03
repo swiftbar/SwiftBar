@@ -124,6 +124,7 @@
 		FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
 		FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */; };
+		FABE059728C4035200093A83 /* AppCenterCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = FABE059628C4035200093A83 /* AppCenterCrashes */; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
@@ -223,6 +224,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA90185927C318A700D72E63 /* Sparkle in Frameworks */,
+				FABE059728C4035200093A83 /* AppCenterCrashes in Frameworks */,
 				3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */,
 				39B64C29260F70D900B7FA63 /* Preferences in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
@@ -461,6 +463,7 @@
 				FA8518F42598E786008AD21C /* SwifCron */,
 				39B64C28260F70D900B7FA63 /* Preferences */,
 				FA90185827C318A700D72E63 /* Sparkle */,
+				FABE059628C4035200093A83 /* AppCenterCrashes */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -527,6 +530,7 @@
 				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
 				39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */,
 				FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */,
+				FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -959,7 +963,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 400;
+				CURRENT_PROJECT_VERSION = 445;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -970,7 +974,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.4.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -986,7 +990,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 400;
+				CURRENT_PROJECT_VERSION = 445;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -997,7 +1001,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.4.3;
+				MARKETING_VERSION = 1.4.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1158,6 +1162,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/microsoft/appcenter-sdk-apple.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1205,6 +1217,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		FABE059628C4035200093A83 /* AppCenterCrashes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */;
+			productName = AppCenterCrashes;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

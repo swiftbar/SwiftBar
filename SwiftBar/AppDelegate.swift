@@ -8,6 +8,8 @@ import UserNotifications
 #else
     import Sparkle
 #endif
+import AppCenter
+import AppCenterCrashes
 
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
     var repositoryWindowController: NSWindowController? {
@@ -31,6 +33,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     #endif
 
     func applicationDidFinishLaunching(_: Notification) {
+        // Not cool to have the KEY here, but since this is for crash reporting I don't care
+        AppCenter.start(withAppSecret: "40e6c2fa-2383-40a7-bfbd-75662a7d92a9", services: [
+            Crashes.self,
+        ])
         preferencesWindowController.window?.delegate = self
         setupToolbar()
         let hostBundle = Bundle.main
