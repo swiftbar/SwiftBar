@@ -49,6 +49,8 @@ With the first launch, Swiftbar will ask you to set the `Plugin Folder`. SwiftBa
 * hidden folders are ignored
 * nested folders are traversed by SwiftBar, including symlinks
 
+You can hide a folder by prepending `.` or using this command `chflags hidden <folder name>`.
+
 ### Plugin Naming
 
 Plugin files must adopt the following format:
