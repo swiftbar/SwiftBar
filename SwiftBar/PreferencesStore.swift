@@ -46,6 +46,7 @@ class PreferencesStore: ObservableObject {
         case StealthMode
         case IncludeBetaUpdates
         case DimOnManualRefresh
+        case CollectCrashReports
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -130,6 +131,10 @@ class PreferencesStore: ObservableObject {
 
     var stealthMode: Bool {
         PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
+    }
+    
+    var collectCrashReports: Bool {
+        PreferencesStore.getValue(key: .CollectCrashReports) as? Bool ?? false
     }
 
     init() {
