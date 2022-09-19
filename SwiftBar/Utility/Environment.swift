@@ -26,6 +26,8 @@ class Environment {
         return formatter
     }()
 
+    var userLoginShell = "/bin/zsh"
+
     private var systemEnv: [Variables: String] = [
         .swiftBar: "1",
         .swiftBarVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "",

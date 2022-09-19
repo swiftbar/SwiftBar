@@ -53,6 +53,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             }
         #endif
 
+        setDefaultShelf()
         // Check if plugin folder exists
         var isDir: ObjCBool = false
         if let pluginDirectoryPath = prefs.pluginDirectoryResolvedPath,
@@ -97,6 +98,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             os_log("Mac waked up", log: Log.plugin, type: .info)
             self?.sharedEnv.updateWakeTime(date: NSDate.now)
             self?.pluginManager.startAllPlugins()
+        }
+    }
+
+    func setDefaultShelf() {
+        let out = try? runScript(to: "dscl", args: [".", "-read", "~/", "UserShell", "|", "awk", "'{print $2}'"])
+        if let shell = out?.out, shell != "" {
+            sharedEnv.userLoginShell = shell
         }
     }
 

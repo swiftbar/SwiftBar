@@ -9,12 +9,7 @@ enum TerminalOptions: String, CaseIterable {
 enum ShellOptions: String, CaseIterable {
     case Bash = "bash"
     case Zsh = "zsh"
-    case BashEnv = "bash(env)"
-    case ZshEnv = "zsh(env)"
-
-    var envPath: String {
-        "/usr/bin/env"
-    }
+    case Default = "default"
 
     var path: String {
         switch self {
@@ -22,10 +17,8 @@ enum ShellOptions: String, CaseIterable {
             return "/bin/bash"
         case .Zsh:
             return "/bin/zsh"
-        case .BashEnv:
-            return "bash"
-        case .ZshEnv:
-            return "zsh"
+        case .Default:
+            return Environment.shared.userLoginShell
         }
     }
 }
@@ -132,7 +125,7 @@ class PreferencesStore: ObservableObject {
     var stealthMode: Bool {
         PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
     }
-    
+
     var collectCrashReports: Bool {
         PreferencesStore.getValue(key: .CollectCrashReports) as? Bool ?? false
     }
