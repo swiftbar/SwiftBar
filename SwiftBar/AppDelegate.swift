@@ -102,9 +102,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func setDefaultShelf() {
-        let out = try? runScript(to: "dscl", args: [".", "-read", "~/", "UserShell", "|", "awk", "'{print $2}'"])
+//        let out = try? runScript(to: "dscl", args: [".", "-read", "~/", "UserShell", "|", "awk", "'{print $2}'"])
+        let out = try? runScript(to: "echo", args: ["$SHELL"])
         if let shell = out?.out, shell != "" {
-            sharedEnv.userLoginShell = shell
+            sharedEnv.userLoginShell = shell.trimmingCharacters(in: .newlines)
         }
     }
 

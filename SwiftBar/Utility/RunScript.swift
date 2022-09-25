@@ -48,7 +48,10 @@ private extension Process {
         } else {
             let shell = delegate.prefs.shell
             executableURL = URL(fileURLWithPath: shell.path)
-            arguments = ["-c", "-l", "\(script.escaped()) \(args.joined(separator: " "))"]
+            arguments = ["-c", "\(script.escaped()) \(args.joined(separator: " "))"]
+            if shell.path.hasSuffix("bash") || shell.path.hasSuffix("zsh") {
+                arguments?.insert("-l", at: 1)
+            }
         }
 
         guard let executableURL = executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {
