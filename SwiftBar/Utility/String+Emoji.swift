@@ -715,6 +715,7 @@ let emoji: [String: String] = [
     ":gabon:": "🇬🇦",
     ":gb:": "🇬🇧",
     ":uk:": "🇬🇧",
+    ":england:": "🇬🇧",
     ":grenada:": "🇬🇩",
     ":georgia:": "🇬🇪",
     ":french_guiana:": "🇬🇫",
