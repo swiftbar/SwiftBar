@@ -239,7 +239,7 @@ Optionally, a standard plugin can be run on a repeatable schedule, configured in
 ### Streamable
 
 Swiftbar launches a separate process for each Streamable plugin, which runs indefinitely until SwiftBar is closed or a failure.
-You should use Stremable plugins only when dealing with a stream of incoming events; an example could be financial market info read from a websocket or CPU load information for a remote computer.
+You should use Streamable plugins only when dealing with a stream of incoming events; an example could be financial market info read from a websocket or CPU load information for a remote computer.
 
 To let SwiftBar know when to update the menu bar item, Streamable plugins must use a special line separator `~~~`. SwiftBar will reset the menu item on each occurrence of this separator. 
 
