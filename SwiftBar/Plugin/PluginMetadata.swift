@@ -74,8 +74,8 @@ class PluginMetadata: ObservableObject {
     }
 
     var nextDate: Date? {
-        guard let cron = try? SwifCron(schedule) else { return nil }
-        return try? cron.next()
+        // parse schedule string and return the minimum date
+        schedule.components(separatedBy: "|").compactMap { try? SwifCron($0).next() }.reduce(Date.distantFuture, min)
     }
 
     init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:], runInBash: Bool = true, refreshOnOpen: Bool = false, useTrailingStreamSeparator: Bool = false) {

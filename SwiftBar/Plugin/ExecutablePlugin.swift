@@ -30,6 +30,8 @@ class ExecutablePlugin: Plugin {
         Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
     }
 
+    var cronTimer: Timer?
+
     var cancellable: Set<AnyCancellable> = []
 
     let prefs = PreferencesStore.shared
@@ -67,11 +69,16 @@ class ExecutablePlugin: Plugin {
         refresh()
     }
 
+    // this function called each time plugin updated(manual or scheduled)
     func enableTimer() {
         // handle cron scheduled plugins
         if let nextDate = metadata?.nextDate {
-            let timer = Timer(fireAt: nextDate, interval: 0, target: self, selector: #selector(scheduledContentUpdate), userInfo: nil, repeats: false)
-            RunLoop.main.add(timer, forMode: .common)
+            print("Time: \(nextDate)")
+            cronTimer?.invalidate()
+            cronTimer = Timer(fireAt: nextDate, interval: 0, target: self, selector: #selector(scheduledContentUpdate), userInfo: nil, repeats: false)
+            if let cronTimer {
+                RunLoop.main.add(cronTimer, forMode: .common)
+            }
             return
         }
         guard cancellable.isEmpty else { return }

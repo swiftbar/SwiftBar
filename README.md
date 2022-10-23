@@ -212,6 +212,13 @@ A special tag can be used as an alternative to refresh interval defined in plugi
 <swiftbar.schedule>01,16,31,46 * * * *</swiftbar.schedule>
 ```
 
+You can configure multiple schedules, using the sepparator `|`:
+
+```
+<swiftbar.schedule>1 * * * *|2 * * * *</swiftbar.schedule>
+```
+
+
 #### Other Parameters
 
 * `#<swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>` - refreshes plugin on click, before presenting the menu
