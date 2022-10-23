@@ -4,6 +4,8 @@
 <dict>
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
+	<key>com.apple.security.personal-information.calendars</key>
+	<true/>
 	<key>com.apple.security.temporary-exception.apple-events:before:10.8</key>
 	<string>com.apple.Terminal</string>
 </dict>
