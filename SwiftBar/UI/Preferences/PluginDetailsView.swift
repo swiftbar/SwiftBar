@@ -95,9 +95,24 @@ struct PluginDetailsView: View {
 
             Preferences.Section(title: "", content: {})
             Preferences.Section(label: {
-                Button("Save in Plugin File", action: {
-                    PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
-                })
+                HStack {
+                    if #available(macOS 11.0, *) {
+                        Button(action: {
+                            NSWorkspace.shared.open(URL(string: "https://github.com/swiftbar/SwiftBar#metadata-for-binary-plugins")!)
+                        }, label: {
+                            Image(systemName: "questionmark.circle")
+                        })
+                    }
+                    Spacer()
+                    Button("Reset", action: {
+                        PluginMetadata.cleanMetadata(fileURL: URL(fileURLWithPath: plugin.file))
+                        plugin.refreshPluginMetadata()
+                    })
+                    Button("Save in Plugin File", action: {
+                        PluginMetadata.writeMetadata(metadata: md, fileURL: URL(fileURLWithPath: plugin.file))
+                    })
+                }
+
             }, content: {})
         }
     }

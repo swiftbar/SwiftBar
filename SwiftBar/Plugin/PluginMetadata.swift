@@ -179,6 +179,10 @@ class PluginMetadata: ObservableObject {
         }
     }
 
+    static func cleanMetadata(fileURL: URL) {
+        try? fileURL.removeExtendedAttribute(forName: "com.ameba.SwiftBar")
+    }
+
     static func empty() -> PluginMetadata {
         PluginMetadata()
     }
