@@ -47,7 +47,7 @@ class ExecutablePlugin: Plugin {
         refreshPluginMetadata()
 
         if metadata?.nextDate == nil, nameComponents.count > 2 {
-            updateInterval = nameComponents.compactMap { parseRefreshInterval(intervalStr: $0) }.reduce(updateInterval, min)
+            updateInterval = nameComponents.dropFirst().compactMap { parseRefreshInterval(intervalStr: $0) }.reduce(updateInterval, min)
         }
         createSupportDirs()
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
