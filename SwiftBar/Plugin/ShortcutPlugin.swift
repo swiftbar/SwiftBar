@@ -118,6 +118,7 @@ class ShortcutPlugin: Plugin, Identifiable {
     }
 
     func invoke() -> String? {
+        lastUpdated = Date()
         do {
             let out = try shortcutsManager.runShortcut(shortcut: shortcut)
             error = nil
