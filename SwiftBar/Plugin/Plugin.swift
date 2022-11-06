@@ -5,6 +5,7 @@ import os
 enum PluginType: String {
     case Executable
     case Streamable
+    case Shortcut
 }
 
 enum PluginState {

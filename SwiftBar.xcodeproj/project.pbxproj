@@ -115,6 +115,8 @@
 		FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */; };
 		FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */; };
 		FA69F5BC2791145E00D6DDC6 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA69F5BB2791145E00D6DDC6 /* WebView.swift */; };
+		FA6E13862915B70E00BA4594 /* ShortcutPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6E13852915B70E00BA4594 /* ShortcutPlugin.swift */; };
+		FA6E13882915B81400BA4594 /* ShortcutsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA6E13872915B81400BA4594 /* ShortcutsManager.swift */; };
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
 		FA90185927C318A700D72E63 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FA90185827C318A700D72E63 /* Sparkle */; };
@@ -124,7 +126,8 @@
 		FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
 		FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */; };
-		FABE059728C4035200093A83 /* AppCenterCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = FABE059628C4035200093A83 /* AppCenterCrashes */; };
+		FAC3F2ED2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */; };
+		FAC3F2F12916A61800D8F346 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
@@ -204,6 +207,8 @@
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
 		FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginsPreferencesView.swift; sourceTree = "<group>"; };
 		FA69F5BB2791145E00D6DDC6 /* WebView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
+		FA6E13852915B70E00BA4594 /* ShortcutPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutPlugin.swift; sourceTree = "<group>"; };
+		FA6E13872915B81400BA4594 /* ShortcutsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutsManager.swift; sourceTree = "<group>"; };
 		FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Binding+Extension.swift"; sourceTree = "<group>"; };
 		FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */ = {isa = PBXFileReference; lastKnownFileType = file.intentdefinition; path = Intents.intentdefinition; sourceTree = "<group>"; };
 		FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnablePluginIntentHandler.swift; sourceTree = "<group>"; };
@@ -211,6 +216,8 @@
 		FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisablePluginIntentHandler.swift; sourceTree = "<group>"; };
 		FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPluginsIntentHandler.swift; sourceTree = "<group>"; };
 		FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Intents.swift"; sourceTree = "<group>"; };
+		FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutPluginsPreferencesView.swift; sourceTree = "<group>"; };
+		FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
 		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
 		FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailsView.swift; sourceTree = "<group>"; };
 		FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatableWindow.swift; sourceTree = "<group>"; };
@@ -224,7 +231,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				FA90185927C318A700D72E63 /* Sparkle in Frameworks */,
-				FABE059728C4035200093A83 /* AppCenterCrashes in Frameworks */,
 				3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */,
 				39B64C29260F70D900B7FA63 /* Preferences in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
@@ -358,6 +364,7 @@
 				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
 				3990DCE02602BB5B002CDCD5 /* PluginDebugInfo.swift */,
+				FA6E13852915B70E00BA4594 /* ShortcutPlugin.swift */,
 			);
 			path = Plugin;
 			sourceTree = "<group>";
@@ -395,6 +402,7 @@
 				39224DD425F414F500BABF21 /* Notification+Extension.swift */,
 				39224E5B25F530AF00BABF21 /* Environment.swift */,
 				FA58E39927AD855D0034837F /* SystemNotificationName.swift */,
+				FA6E13872915B81400BA4594 /* ShortcutsManager.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -406,6 +414,8 @@
 				FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */,
 				FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */,
 				FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */,
+				FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */,
+				FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -463,7 +473,6 @@
 				FA8518F42598E786008AD21C /* SwifCron */,
 				39B64C28260F70D900B7FA63 /* Preferences */,
 				FA90185827C318A700D72E63 /* Sparkle */,
-				FABE059628C4035200093A83 /* AppCenterCrashes */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -715,6 +724,8 @@
 				3990DCDA2602BB32002CDCD5 /* DebugView.swift in Sources */,
 				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
 				FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */,
+				FAC3F2ED2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift in Sources */,
+				FAC3F2F12916A61800D8F346 /* AboutSettingsView.swift in Sources */,
 				39224DCF25F3E6DE00BABF21 /* AppDelegate+Menu.swift in Sources */,
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
@@ -726,6 +737,7 @@
 				398DAE7A25537DAF00747D90 /* PluginErrorView.swift in Sources */,
 				396257262569667000341A19 /* PluginRepositoryView.swift in Sources */,
 				39AF7778254613FB001D76E5 /* ExecutablePlugin.swift in Sources */,
+				FA6E13862915B70E00BA4594 /* ShortcutPlugin.swift in Sources */,
 				396E6CB0258E8D47002C735D /* Localizable.swift in Sources */,
 				FA58E39A27AD855D0034837F /* SystemNotificationName.swift in Sources */,
 				39AF77842547750E001D76E5 /* AppShared.swift in Sources */,
@@ -741,6 +753,7 @@
 				ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */,
 				398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */,
 				39B84A22257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift in Sources */,
+				FA6E13882915B81400BA4594 /* ShortcutsManager.swift in Sources */,
 				39224E5C25F530AF00BABF21 /* Environment.swift in Sources */,
 				FAA14A112728C6E90052FDB8 /* EnablePluginIntentHandler.swift in Sources */,
 				39224DD225F3F19B00BABF21 /* AppDelegate+Toolbar.swift in Sources */,
@@ -963,7 +976,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 445;
+				CURRENT_PROJECT_VERSION = 461;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -974,7 +987,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.4.4;
+				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -990,7 +1003,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 445;
+				CURRENT_PROJECT_VERSION = 461;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1001,7 +1014,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.4.4;
+				MARKETING_VERSION = 1.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1217,11 +1230,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
-		};
-		FABE059628C4035200093A83 /* AppCenterCrashes */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */;
-			productName = AppCenterCrashes;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

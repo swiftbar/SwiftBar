@@ -21,6 +21,8 @@
 "PF_PREFERENCES" = "Preferences";
 "PF_GENERAL" = "General";
 "PF_PLUGINS" = "Plugins";
+"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
+"PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "Plugin Folder";
 "PR_LAUNCH_AT_LOGIN" = "Launch at Login";
 "PF_PATH" = "Path";

@@ -21,6 +21,8 @@
 "PF_PREFERENCES" = "Preferencias";
 "PF_GENERAL" = "General";
 "PF_PLUGINS" = "Complementos";
+"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
+"PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "Carpeta de Complementos";
 "PR_LAUNCH_AT_LOGIN" = "Lanzar al Iniciar Sesión";
 "PF_PATH" = "Ruta";

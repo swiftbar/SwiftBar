@@ -21,6 +21,8 @@
 "PF_PREFERENCES" = "偏好设置";
 "PF_GENERAL" = "通用";
 "PF_PLUGINS" = "插件";
+"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
+"PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "插件目录";
 "PR_LAUNCH_AT_LOGIN" = "登录时启动";
 "PF_PATH" = "路径";

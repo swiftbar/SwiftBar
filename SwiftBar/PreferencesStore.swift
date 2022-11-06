@@ -40,6 +40,8 @@ class PreferencesStore: ObservableObject {
         case IncludeBetaUpdates
         case DimOnManualRefresh
         case CollectCrashReports
+        case DebugLoggingEnabled
+        case ShortcutPlugins
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -98,6 +100,12 @@ class PreferencesStore: ObservableObject {
         }
     }
 
+    @Published var shortcutsPlugins: [PersistentShortcutPlugin] {
+        didSet {
+            PreferencesStore.setValue(value: try? PropertyListEncoder().encode(shortcutsPlugins), key: .ShortcutPlugins)
+        }
+    }
+
     var makePluginExecutable: Bool {
         guard let out = PreferencesStore.getValue(key: .MakePluginExecutable) as? Bool else {
             PreferencesStore.setValue(value: true, key: .MakePluginExecutable)
@@ -130,6 +138,10 @@ class PreferencesStore: ObservableObject {
         PreferencesStore.getValue(key: .CollectCrashReports) as? Bool ?? false
     }
 
+    var debugLoggingEnabled: Bool {
+        PreferencesStore.getValue(key: .DebugLoggingEnabled) as? Bool ?? false
+    }
+
     init() {
         pluginDirectoryPath = PreferencesStore.getValue(key: .PluginDirectory) as? String
         disabledPlugins = PreferencesStore.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
@@ -138,6 +150,11 @@ class PreferencesStore: ObservableObject {
         swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         includeBetaUpdates = PreferencesStore.getValue(key: .IncludeBetaUpdates) as? Bool ?? false
         dimOnManualRefresh = PreferencesStore.getValue(key: .DimOnManualRefresh) as? Bool ?? true
+        shortcutsPlugins = {
+            guard let data = PreferencesStore.getValue(key: .ShortcutPlugins) as? Data,
+                  let plugins = try? PropertyListDecoder().decode([PersistentShortcutPlugin].self, from: data) else { return [] }
+            return plugins
+        }()
         if let savedTerminal = PreferencesStore.getValue(key: .Terminal) as? String,
            let value = TerminalOptions(rawValue: savedTerminal)
         {

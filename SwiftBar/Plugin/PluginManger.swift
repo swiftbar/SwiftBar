@@ -24,6 +24,10 @@ class PluginManager: ObservableObject {
         plugins.filter(\.enabled)
     }
 
+    var shortcutPlugins: [ShortcutPlugin] {
+        plugins.filter { $0.type == .Shortcut }.compactMap { $0 as? ShortcutPlugin }
+    }
+
     var menuBarItems: [PluginID: MenubarItem] = [:]
     var pluginDirectoryURL: URL? {
         prefs.pluginDirectoryResolvedURL
@@ -132,13 +136,17 @@ class PluginManager: ObservableObject {
         return Array(Set(files))
     }
 
+    func loadShortcutPlugins() -> [ShortcutPlugin] {
+        prefs.shortcutsPlugins.map { ShortcutPlugin($0) }
+    }
+
     func loadPlugins() {
         #if !MAC_APP_STORE
             if directoryObserver?.url != pluginDirectoryURL {
                 configureDirectoryObserver()
             }
         #endif
-
+        let shortcutPlugins = loadShortcutPlugins()
         let pluginFiles = getPluginList()
         guard pluginFiles.count < 50 else {
             let alert = NSAlert()
@@ -148,7 +156,7 @@ class PluginManager: ObservableObject {
             AppShared.changePluginFolder()
             return
         }
-        guard !pluginFiles.isEmpty else {
+        guard !pluginFiles.isEmpty || !shortcutPlugins.isEmpty else {
             plugins.removeAll()
             menuBarItems.removeAll()
             barItem.show()
@@ -169,7 +177,7 @@ class PluginManager: ObservableObject {
             plugins.removeAll(where: { $0.id == plugin.id })
         }
 
-        plugins.append(contentsOf: newPluginsFiles.map { loadPlugin(fileURL: $0) })
+        plugins.append(contentsOf: newPluginsFiles.map { loadPlugin(fileURL: $0) } + loadShortcutPlugins())
     }
 
     func loadPlugin(fileURL: URL) -> Plugin {
@@ -205,6 +213,14 @@ class PluginManager: ObservableObject {
     func refreshPlugin(with index: Int) {
         guard plugins.indices.contains(index) else { return }
         plugins[index].refresh()
+    }
+
+    func addShortcutPlugin(plugin: PersistentShortcutPlugin) {
+        prefs.shortcutsPlugins.append(plugin)
+    }
+
+    func removeShortcutPlugin(plugin: PersistentShortcutPlugin) {
+        prefs.shortcutsPlugins.removeAll(where: { $0.id == plugin.id })
     }
 
     enum ImportPluginError: Error {

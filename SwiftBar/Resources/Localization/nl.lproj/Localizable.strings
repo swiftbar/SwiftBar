@@ -21,6 +21,8 @@
 "PF_PREFERENCES" = "Voorkeuren";
 "PF_GENERAL" = "Algemeen";
 "PF_PLUGINS" = "Plug-ins";
+"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
+"PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "Map voor plug-ins";
 "PR_LAUNCH_AT_LOGIN" = "Opstarten bij inloggen";
 "PF_PATH" = "Pad";

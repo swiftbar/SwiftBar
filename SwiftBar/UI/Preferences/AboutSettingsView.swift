@@ -34,7 +34,14 @@ struct AboutSettingsView: View {
                 })
             }.padding(.top, 10)
                 .padding(.bottom, 10)
-        }.padding(10)
+        }.padding(.trailing, 20)
+            .padding(.bottom, 10)
             .frame(width: 410, height: 160)
+    }
+}
+
+struct AboutSettingsView_Previews: PreviewProvider {
+    static var previews: some View {
+        AboutSettingsView()
     }
 }
