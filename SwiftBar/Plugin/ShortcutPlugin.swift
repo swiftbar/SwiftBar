@@ -25,14 +25,14 @@ class ShortcutPlugin: Plugin, Identifiable {
     var file: String = "none"
     var metadata: PluginMetadata?
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
-    var updateInterval: Double = 0
+    var updateInterval: Double = 60 * 60 * 24 * 100
     var lastUpdated: Date?
     var lastState: PluginState
     var shortcut: String
     var repeatString: String
     var cronString: String
 
-    var operation: ShortcutPluginOperation?
+    var operation: RunPluginOperation<ShortcutPlugin>?
 
     var content: String? = "..." {
         didSet {
@@ -40,10 +40,16 @@ class ShortcutPlugin: Plugin, Identifiable {
         }
     }
 
-    var error: ShellOutError?
+    var error: Error?
     var debugInfo = PluginDebugInfo()
 
     lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
+
+    var updateTimerPublisher: Timer.TimerPublisher {
+        Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
+    }
+
+    var cancellable: Set<AnyCancellable> = []
 
     let shortcutsManager = ShortcutsManager.shared
 
@@ -58,13 +64,25 @@ class ShortcutPlugin: Plugin, Identifiable {
         repeatString = persistentItem.repeatString
         cronString = persistentItem.cronString
         lastState = .Loading
-
+        updateInterval = parseRefreshInterval(intervalStr: repeatString, baseUpdateinterval: updateInterval) ?? updateInterval
         os_log("Initialized Shortcut plugin\n%{public}@", log: Log.plugin, description)
         refresh()
     }
 
-    func enableTimer() {}
-    func disableTimer() {}
+    func enableTimer() {
+        guard cancellable.isEmpty else { return }
+        updateTimerPublisher
+            .autoconnect()
+            .receive(on: invokeQueue)
+            .sink(receiveValue: { [weak self] _ in
+                self?.invokeQueue.addOperation(RunPluginOperation<ShortcutPlugin>(plugin: self!))
+            }).store(in: &cancellable)
+    }
+
+    func disableTimer() {
+        cancellable.forEach { $0.cancel() }
+        cancellable.removeAll()
+    }
 
     func refresh() {
         guard enabled else {
@@ -76,34 +94,44 @@ class ShortcutPlugin: Plugin, Identifiable {
         disableTimer()
         operation?.cancel()
 
-        operation = ShortcutPluginOperation(plugin: self)
+        operation = RunPluginOperation<ShortcutPlugin>(plugin: self)
         invokeQueue.addOperation(operation!)
     }
 
-    func enable() {}
+    func enable() {
+        prefs.disabledPlugins.removeAll(where: { $0 == id })
+        refresh()
+    }
 
-    func disable() {}
+    func disable() {
+        lastState = .Disabled
+        disableTimer()
+        prefs.disabledPlugins.append(id)
+    }
 
-    func start() {}
+    func start() {
+        refresh()
+    }
 
-    func terminate() {}
+    func terminate() {
+        disableTimer()
+    }
 
     func invoke() -> String? {
-        shortcutsManager.runShortcut(shortcut: shortcut)
-    }
-}
-
-final class ShortcutPluginOperation: Operation {
-    weak var plugin: ShortcutPlugin?
-
-    init(plugin: ShortcutPlugin) {
-        self.plugin = plugin
-        super.init()
-    }
-
-    override func main() {
-        guard !isCancelled else { return }
-        plugin?.content = plugin?.invoke()
-        plugin?.enableTimer()
+        do {
+            let out = try shortcutsManager.runShortcut(shortcut: shortcut)
+            error = nil
+            lastState = .Success
+            os_log("Successfully executed Shortcut plugin: %{public}@", log: Log.plugin, "\(name)(\(shortcut))")
+            debugInfo.addEvent(type: .ContentUpdate, value: out)
+            return out
+        } catch {
+            guard let error = error as? RunShortcutError else { return nil }
+            os_log("Failed to execute Shortcut plugin: %{public}@\n%{public}@", log: Log.plugin, type: .error, "\(name)(\(shortcut))", error.message)
+            self.error = error
+            debugInfo.addEvent(type: .ContentUpdateError, value: error.message)
+            lastState = .Failed
+        }
+        return nil
     }
 }

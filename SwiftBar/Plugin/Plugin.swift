@@ -30,7 +30,7 @@ protocol Plugin: AnyObject {
     var lastUpdated: Date? { get set }
     var lastState: PluginState { get set }
     var content: String? { get set }
-    var error: ShellOutError? { get set }
+    var error: Error? { get set }
     var debugInfo: PluginDebugInfo { get set }
     func refresh()
     func enable()

@@ -2,6 +2,18 @@ import AppKit
 import Foundation
 import ScriptingBridge
 
+public struct RunShortcutError: Swift.Error {
+    public enum FailReason {
+        case NoPermissions
+        case ShortcutNotFound
+        case NoShortcutOutput
+        case CantParseShortcutOutput
+    }
+
+    public let errorReason: FailReason
+    public var message: String
+}
+
 @objc protocol ShortcutsEvents {
     @objc optional var shortcuts: SBElementArray { get }
 }
@@ -48,15 +60,23 @@ public class ShortcutsManager: ObservableObject {
         shortcuts = output.components(separatedBy: .newlines).sorted()
     }
 
-    public func runShortcut(shortcut: String, input: Any? = nil) -> String? {
+    public func runShortcut(shortcut: String, input: Any? = nil) throws -> String {
         guard let app: ShortcutsEvents? = SBApplication(bundleIdentifier: "com.apple.shortcuts.events") else {
-            return "Can't access Shortcuts app"
+            throw RunShortcutError(errorReason: .NoPermissions, message: "Can't access Shortcuts.app, please verify the permissions")
         }
         guard let shortcut = app?.shortcuts?.object(withName: shortcut) as? Shortcut else {
-            return "Shortcut doesn't exist"
+            throw RunShortcutError(errorReason: .ShortcutNotFound, message: "Can't find shortcut named \(shortcut).")
         }
-        let x = shortcut.run?(withInput: input)
-        return (x as? [String])?.first
+
+        let res = shortcut.run?(withInput: input)
+        guard let res else {
+            throw RunShortcutError(errorReason: .NoShortcutOutput, message: "Shortcut \(shortcut) didn't produced output.")
+        }
+        guard let out = (res as? [String])?.first else {
+            throw RunShortcutError(errorReason: .CantParseShortcutOutput, message: "Shortcut \(shortcut) produced unparsable result - \(res)")
+        }
+
+        return out
     }
 
     public func viewCurrentShortcut(shortcut: String) {

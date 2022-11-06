@@ -105,6 +105,7 @@
 		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
+		FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA136A532917EE0700A7D712 /* PluginUtilities.swift */; };
 		FA57F2A4272A307900817A79 /* XbarAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */; };
 		FA57F2A5272A308F00817A79 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FA57F2A6272A308F00817A79 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
@@ -200,6 +201,7 @@
 		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA06104525F0564400B08B6E /* PluginEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginEntryView.swift; sourceTree = "<group>"; };
+		FA136A532917EE0700A7D712 /* PluginUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginUtilities.swift; sourceTree = "<group>"; };
 		FA3C3793281EB2760003DEDE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA3C3794281EB27B0003DEDE /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		FA58E39927AD855D0034837F /* SystemNotificationName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNotificationName.swift; sourceTree = "<group>"; };
@@ -403,6 +405,7 @@
 				39224E5B25F530AF00BABF21 /* Environment.swift */,
 				FA58E39927AD855D0034837F /* SystemNotificationName.swift */,
 				FA6E13872915B81400BA4594 /* ShortcutsManager.swift */,
+				FA136A532917EE0700A7D712 /* PluginUtilities.swift */,
 			);
 			path = Utility;
 			sourceTree = "<group>";
@@ -744,6 +747,7 @@
 				FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */,
 				39641EA1254DD32100713DAF /* AboutPluginView.swift in Sources */,
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
+				FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,

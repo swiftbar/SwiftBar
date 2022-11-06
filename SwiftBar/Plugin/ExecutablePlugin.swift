@@ -13,7 +13,7 @@ class ExecutablePlugin: Plugin {
     var lastUpdated: Date?
     var lastState: PluginState
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
-    var operation: ExecutablePluginOperation?
+    var operation: RunPluginOperation<ExecutablePlugin>?
 
     var content: String? = "..." {
         didSet {
@@ -21,7 +21,7 @@ class ExecutablePlugin: Plugin {
         }
     }
 
-    var error: ShellOutError?
+    var error: Error?
     var debugInfo = PluginDebugInfo()
 
     lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
@@ -47,34 +47,11 @@ class ExecutablePlugin: Plugin {
         refreshPluginMetadata()
 
         if metadata?.nextDate == nil, nameComponents.count > 2 {
-            updateInterval = nameComponents.dropFirst().compactMap { parseRefreshInterval(intervalStr: $0) }.reduce(updateInterval, min)
+            updateInterval = nameComponents.dropFirst().compactMap { parseRefreshInterval(intervalStr: $0, baseUpdateinterval: updateInterval) }.reduce(updateInterval, min)
         }
         createSupportDirs()
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh()
-    }
-
-    func parseRefreshInterval(intervalStr: String) -> Double? {
-        guard let interval = Double(intervalStr.filter("0123456789.".contains)) else { return nil }
-        var updateInterval: Double = self.updateInterval
-
-        if intervalStr.hasSuffix("s") {
-            updateInterval = interval
-            if intervalStr.hasSuffix("ms") {
-                updateInterval = interval / 1000
-            }
-        }
-        if intervalStr.hasSuffix("m") {
-            updateInterval = interval * 60
-        }
-        if intervalStr.hasSuffix("h") {
-            updateInterval = interval * 60 * 60
-        }
-        if intervalStr.hasSuffix("d") {
-            updateInterval = interval * 60 * 60 * 24
-        }
-
-        return updateInterval
     }
 
     // this function called each time plugin updated(manual or scheduled)
@@ -93,7 +70,7 @@ class ExecutablePlugin: Plugin {
             .autoconnect()
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
-                self?.invokeQueue.addOperation(ExecutablePluginOperation(plugin: self!))
+                self?.invokeQueue.addOperation(RunPluginOperation<ExecutablePlugin>(plugin: self!))
             }).store(in: &cancellable)
     }
 
@@ -132,7 +109,7 @@ class ExecutablePlugin: Plugin {
         operation?.cancel()
 
         refreshPluginMetadata()
-        operation = ExecutablePluginOperation(plugin: self)
+        operation = RunPluginOperation<ExecutablePlugin>(plugin: self)
         invokeQueue.addOperation(operation!)
     }
 
@@ -163,20 +140,5 @@ class ExecutablePlugin: Plugin {
 
     @objc func scheduledContentUpdate() {
         refresh()
-    }
-}
-
-final class ExecutablePluginOperation: Operation {
-    weak var plugin: ExecutablePlugin?
-
-    init(plugin: ExecutablePlugin) {
-        self.plugin = plugin
-        super.init()
-    }
-
-    override func main() {
-        guard !isCancelled else { return }
-        plugin?.content = plugin?.invoke()
-        plugin?.enableTimer()
     }
 }
