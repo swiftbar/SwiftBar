@@ -17,6 +17,7 @@ class PluginManager: ObservableObject {
     @Published var plugins: [Plugin] = [] {
         didSet {
             pluginsDidChange()
+            shortcutPlugins = plugins.filter { $0.type == .Shortcut }.compactMap { $0 as? ShortcutPlugin }
         }
     }
 
@@ -24,9 +25,7 @@ class PluginManager: ObservableObject {
         plugins.filter(\.enabled)
     }
 
-    var shortcutPlugins: [ShortcutPlugin] {
-        plugins.filter { $0.type == .Shortcut }.compactMap { $0 as? ShortcutPlugin }
-    }
+    @Published var shortcutPlugins: [ShortcutPlugin] = []
 
     var menuBarItems: [PluginID: MenubarItem] = [:]
     var pluginDirectoryURL: URL? {
@@ -217,10 +216,12 @@ class PluginManager: ObservableObject {
 
     func addShortcutPlugin(plugin: PersistentShortcutPlugin) {
         prefs.shortcutsPlugins.append(plugin)
+        shortcutPlugins = loadShortcutPlugins()
     }
 
     func removeShortcutPlugin(plugin: PersistentShortcutPlugin) {
         prefs.shortcutsPlugins.removeAll(where: { $0.id == plugin.id })
+        shortcutPlugins = loadShortcutPlugins()
     }
 
     enum ImportPluginError: Error {

@@ -1,3 +1,4 @@
+import Combine
 import Preferences
 import SwiftUI
 
@@ -28,7 +29,7 @@ struct ShortcutPluginsPreferencesView: View {
                         Text("\(plugin.repeatString)").font(.title2)
                     }
                 }
-//                .onChange(of: sorting) { items.sort(using: $0) }
+                .onChange(of: sorting) { pluginManager.shortcutPlugins.sort(using: $0) }
                 .font(.title)
                 Spacer()
             }.padding(8)
@@ -71,6 +72,7 @@ struct AddShortcutPluginView: View {
     @State var selectedShortcut: String = ""
     @State var name: String = ""
     @State var refreshValue: String = "1"
+
     @State var refreshUnit: String = "s"
     var shortcutsManager: ShortcutsManager
     var plugin: ShortcutPlugin? = nil
@@ -102,16 +104,16 @@ struct AddShortcutPluginView: View {
                         if !selectedShortcut.isEmpty {
                             if isEditing {
                                 Button(action: {
-                                    shortcutsManager.runShortcut(shortcut: selectedShortcut)
+                                    plugin?.refresh()
                                 }, label: {
                                     Image(systemName: "play.fill")
-                                })
+                                }).help("Refresh Plugin")
                             }
                             Button(action: {
                                 shortcutsManager.viewCurrentShortcut(shortcut: selectedShortcut)
                             }, label: {
                                 Image(systemName: "slider.horizontal.3")
-                            })
+                            }).help("Open in Shortcuts.app")
                         }
 
                         Button(action: {
@@ -150,7 +152,7 @@ struct AddShortcutPluginView: View {
                     isPresented = false
                     let plugin = PersistentShortcutPlugin(id: UUID().uuidString, name: name, shortcut: selectedShortcut, repeatString: refreshValue + refreshUnit, cronString: "")
                     pluginManager.addShortcutPlugin(plugin: plugin)
-                }.disabled(selectedShortcut.isEmpty || name.isEmpty || refreshValue.isEmpty)
+                }.disabled(selectedShortcut.isEmpty || name.isEmpty || refreshValue.isEmpty || refreshValue.contains(where: { !$0.isNumber }))
             }.padding(8)
         }.onAppear { shortcutsManager.getShortcuts() }
     }
