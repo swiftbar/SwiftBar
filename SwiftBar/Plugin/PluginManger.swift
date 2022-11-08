@@ -16,8 +16,15 @@ class PluginManager: ObservableObject {
 
     @Published var plugins: [Plugin] = [] {
         didSet {
+            shortcutPlugins = plugins.filter { $0.type == .Shortcut }.compactMap { $0 as? ShortcutPlugin }
             pluginsDidChange()
         }
+    }
+
+    @Published var shortcutPlugins: [ShortcutPlugin] = []
+
+    var filePlugins: [Plugin] {
+        plugins.filter { $0.type == .Streamable || $0.type == .Executable }
     }
 
     var enabledPlugins: [Plugin] {
@@ -132,15 +139,19 @@ class PluginManager: ObservableObject {
         return Array(Set(files))
     }
 
+    func loadShortcutPlugins() -> [ShortcutPlugin] {
+        prefs.shortcutsPlugins.map { ShortcutPlugin($0) }
+    }
+
     func loadPlugins() {
         #if !MAC_APP_STORE
             if directoryObserver?.url != pluginDirectoryURL {
                 configureDirectoryObserver()
             }
         #endif
-
-        let pluginFiles = getPluginList()
-        guard pluginFiles.count < 50 else {
+        let freshShortcutPlugins = loadShortcutPlugins()
+        let freshFilePlugins = getPluginList()
+        guard freshFilePlugins.count < 50 else {
             let alert = NSAlert()
             alert.messageText = Localizable.App.FolderHasToManyFilesMessage.localized
             alert.runModal()
@@ -148,28 +159,37 @@ class PluginManager: ObservableObject {
             AppShared.changePluginFolder()
             return
         }
-        guard !pluginFiles.isEmpty else {
+        guard !freshFilePlugins.isEmpty || !freshShortcutPlugins.isEmpty else {
             plugins.removeAll()
+            shortcutPlugins.removeAll()
             menuBarItems.removeAll()
             barItem.show()
             return
         }
 
-        let newPluginsFiles = pluginFiles.filter { file in
-            !plugins.contains(where: { $0.file == file.path })
+        let newPluginsFiles = freshFilePlugins.filter { file in
+            !filePlugins.contains(where: { $0.file == file.path })
         }
 
-        let removedPlugins = plugins.filter { plugin in
-            !pluginFiles.contains(where: { $0.path == plugin.file })
+        let newShortcutPlugins = freshShortcutPlugins.filter { plugin in
+            !plugins.contains(where: { $0.id == plugin.id })
         }
 
-        removedPlugins.forEach { plugin in
+        let removedShortcutPlugins = shortcutPlugins.filter { plugin in
+            !freshShortcutPlugins.contains(where: { $0.id == plugin.id })
+        }
+
+        let removedPlugins = filePlugins.filter { plugin in
+            !freshFilePlugins.contains(where: { $0.path == plugin.file })
+        }
+
+        (removedPlugins + removedShortcutPlugins).forEach { plugin in
             menuBarItems.removeValue(forKey: plugin.id)
             prefs.disabledPlugins.removeAll(where: { $0 == plugin.id })
             plugins.removeAll(where: { $0.id == plugin.id })
         }
 
-        plugins.append(contentsOf: newPluginsFiles.map { loadPlugin(fileURL: $0) })
+        plugins.append(contentsOf: newPluginsFiles.map { loadPlugin(fileURL: $0) } + newShortcutPlugins)
     }
 
     func loadPlugin(fileURL: URL) -> Plugin {
@@ -205,6 +225,16 @@ class PluginManager: ObservableObject {
     func refreshPlugin(with index: Int) {
         guard plugins.indices.contains(index) else { return }
         plugins[index].refresh()
+    }
+
+    func addShortcutPlugin(plugin: PersistentShortcutPlugin) {
+        prefs.shortcutsPlugins.append(plugin)
+        loadPlugins()
+    }
+
+    func removeShortcutPlugin(plugin: PersistentShortcutPlugin) {
+        prefs.shortcutsPlugins.removeAll(where: { $0.id == plugin.id })
+        loadPlugins()
     }
 
     enum ImportPluginError: Error {

@@ -8,8 +8,8 @@ import UserNotifications
 #else
     import Sparkle
 #endif
-import AppCenter
-import AppCenterCrashes
+// import AppCenter
+// import AppCenterCrashes
 
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
     var repositoryWindowController: NSWindowController? {
@@ -35,9 +35,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     func applicationDidFinishLaunching(_: Notification) {
         if prefs.collectCrashReports {
             // Not cool to have the KEY here, but since this is for crash reporting I don't care
-            AppCenter.start(withAppSecret: "40e6c2fa-2383-40a7-bfbd-75662a7d92a9", services: [
-                Crashes.self,
-            ])
+//            AppCenter.start(withAppSecret: "40e6c2fa-2383-40a7-bfbd-75662a7d92a9", services: [
+//                Crashes.self,
+//            ])
         }
         preferencesWindowController.window?.delegate = self
         setupToolbar()
@@ -102,7 +102,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func setDefaultShelf() {
-//        let out = try? runScript(to: "dscl", args: [".", "-read", "~/", "UserShell", "|", "awk", "'{print $2}'"])
         let out = try? runScript(to: "echo", args: ["$SHELL"])
         if let shell = out?.out, shell != "" {
             sharedEnv.userLoginShell = shell.trimmingCharacters(in: .newlines)
@@ -144,6 +143,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 pluginManager.refreshAllPlugins()
             case "refreshplugin":
                 if let plugin = getPluginFromURL(url: url) {
+                    pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
                     plugin.refresh()
                     return
                 }

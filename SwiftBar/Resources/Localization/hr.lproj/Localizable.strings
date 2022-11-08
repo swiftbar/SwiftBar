@@ -21,6 +21,8 @@
 "PF_PREFERENCES" = "Postavke";
 "PF_GENERAL" = "Opće";
 "PF_PLUGINS" = "Dodatci";
+"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
+"PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "Mapa dodataka";
 "PR_LAUNCH_AT_LOGIN" = "Pokreni nakon prijave";
 "PF_PATH" = "Staza";

@@ -26,7 +26,7 @@ class StreamablePlugin: Plugin {
         }
     }
 
-    var error: ShellOutError?
+    var error: Error?
     var debugInfo = PluginDebugInfo()
 
     lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue

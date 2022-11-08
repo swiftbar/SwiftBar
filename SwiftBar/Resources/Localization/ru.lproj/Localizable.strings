@@ -21,6 +21,8 @@
 "PF_PREFERENCES" = "Настройки";
 "PF_GENERAL" = "Общие";
 "PF_PLUGINS" = "Плагины";
+"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
+"PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "Папка с плагином";
 "PR_LAUNCH_AT_LOGIN" = "Запускать при входе в систеу";
 "PF_PATH" = "Путь";

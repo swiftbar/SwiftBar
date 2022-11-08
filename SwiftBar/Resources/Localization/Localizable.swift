@@ -37,6 +37,8 @@ enum Localizable {
         case Preferences = "PF_PREFERENCES"
         case General = "PF_GENERAL"
         case Plugins = "PF_PLUGINS"
+        case ShortcutPlugins = "PF_SHORTCUT_PLUGINS"
+        case About = "PF_ABOUT"
         case PluginsFolder = "PF_PLUGINS_FOLDER"
         case Path = "PF_PATH"
         case PathIsNone = "PF_PATH_IS_NONE"

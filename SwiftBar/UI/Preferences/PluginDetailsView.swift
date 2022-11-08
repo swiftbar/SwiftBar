@@ -101,7 +101,7 @@ struct PluginDetailsView: View {
                             NSWorkspace.shared.open(URL(string: "https://github.com/swiftbar/SwiftBar#metadata-for-binary-plugins")!)
                         }, label: {
                             Image(systemName: "questionmark.circle")
-                        })
+                        }).buttonStyle(LinkButtonStyle())
                     }
                     Spacer()
                     Button("Reset", action: {

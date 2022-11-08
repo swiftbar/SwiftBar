@@ -16,10 +16,28 @@ struct PluginErrorView: View {
                 LabelView(label: "Plugin:", value: plugin.name)
                 LabelView(label: "File:", value: plugin.file)
                 LabelView(label: "Runned at:", value: lastUpdateDate)
-                LabelView(label: "Error:", value: plugin.error?.message ?? "none")
-                LabelView(label: "Script Output:", value: plugin.error?.output ?? "none")
+                LabelView(label: "Error:", value: errorMessage())
+                LabelView(label: "Script Output:", value: errorOutput())
             }.padding()
                 .frame(width: 500)
+        }
+    }
+
+    func errorMessage() -> String {
+        switch plugin.type {
+        case .Executable, .Streamable:
+            return (plugin.error as? ShellOutError)?.message ?? "none"
+        case .Shortcut:
+            return (plugin.error as? RunShortcutError)?.message ?? "none"
+        }
+    }
+
+    func errorOutput() -> String {
+        switch plugin.type {
+        case .Executable, .Streamable:
+            return (plugin.error as? ShellOutError)?.output ?? "none"
+        case .Shortcut:
+            return "none"
         }
     }
 }
