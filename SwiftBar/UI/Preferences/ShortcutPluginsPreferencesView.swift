@@ -19,15 +19,36 @@ struct ShortcutPluginsPreferencesView: View {
         VStack {
             HStack {
                 Table(pluginManager.shortcutPlugins, selection: $selecting, sortOrder: $sorting) {
+                    TableColumn("") { plugin in
+                        VStack {
+                            Spacer()
+                            Button(action: {
+                                pluginManager.togglePlugin(plugin: plugin)
+                            }, label: {
+                                Circle()
+                                    .foregroundColor(plugin.enabled ? .green : .red)
+                            }).help("Enable/Disable menu bar item")
+                            Spacer()
+                        }
+                    }.width(15)
                     TableColumn("Name", value: \.name) { plugin in
                         Text(plugin.name).font(.title2)
                     }
                     TableColumn("Shortcut", value: \.shortcut) { plugin in
                         Text("\(plugin.shortcut)").font(.title2)
                     }
-                    TableColumn("Repeat", value: \.shortcut) { plugin in
+                    TableColumn("Repeat") { plugin in
                         Text("\(plugin.repeatString)").font(.title2)
-                    }
+                    }.width(60)
+
+                    TableColumn("") { plugin in
+                        Button(action: {
+                            plugin.refresh()
+                        }, label: {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                        }).buttonStyle(.link)
+                            .help("Refresh menu bar item")
+                    }.width(40)
                 }
                 .onChange(of: sorting) { pluginManager.shortcutPlugins.sort(using: $0) }
                 .font(.title)
@@ -53,12 +74,6 @@ struct ShortcutPluginsPreferencesView: View {
                 .sheet(isPresented: $showingSheet) {
                     AddShortcutPluginView(pluginManager: pluginManager, isPresented: $showingSheet, shortcutsManager: ShortcutsManager.shared)
                 }
-                Button("Edit") {
-                    showingSheet.toggle()
-                }
-                .sheet(isPresented: $showingSheet) {
-                    AddShortcutPluginView(pluginManager: pluginManager, isPresented: $showingSheet, shortcutsManager: ShortcutsManager.shared)
-                }
             }.padding([.trailing, .leading], 20)
                 .padding(.bottom, 10)
         }.frame(width: 750, height: 400)
@@ -75,14 +90,10 @@ struct AddShortcutPluginView: View {
 
     @State var refreshUnit: String = "s"
     var shortcutsManager: ShortcutsManager
-    var plugin: ShortcutPlugin? = nil
-    var isEditing: Bool {
-        plugin != nil
-    }
 
     var body: some View {
         VStack {
-            Text(isEditing ? "Edit Plugin" : "Add Plugin")
+            Text("Add Plugin")
                 .font(.headline)
             Group {
                 HStack {
@@ -102,13 +113,6 @@ struct AddShortcutPluginView: View {
                         }).help("Refresh Shortcuts List")
 
                         if !selectedShortcut.isEmpty {
-                            if isEditing {
-                                Button(action: {
-                                    plugin?.refresh()
-                                }, label: {
-                                    Image(systemName: "play.fill")
-                                }).help("Refresh Plugin")
-                            }
                             Button(action: {
                                 shortcutsManager.viewCurrentShortcut(shortcut: selectedShortcut)
                             }, label: {
