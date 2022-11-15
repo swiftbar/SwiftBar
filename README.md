@@ -270,6 +270,12 @@ echo "Test 2"
 You can mark a plugin as streamable with a special metadata property `<swiftbar.type>streamable</swiftbar.type>`
 
 ## URL Scheme
+
+Some notes:
+
+* Instead of the plugin [name](#plugin-naming), you can (and probably should) use the plugin file name. This considered a unique plugin ID, whereas `name` can be the same between multiple plugins. If your plugin's filepath is `~/Documents/SwiftBar/myplugin.1m.sh`, then the name is `myplugin` and the ID `myplugin.1m.sh`
+* When using `open(1)` to trigger scheme URLs, use `-g` to prevent the command from stealing focus from your active app.
+
 | Endpoint | Parameter | Description | Example |
 | ------------- | ------------- |------------- | ------------- | 
 | refreshallplugins | none | Force refresh all loaded plugins | `swiftbar://refreshallplugins` |
@@ -280,8 +286,6 @@ You can mark a plugin as streamable with a special metadata property `<swiftbar.
 | toggleplugin | `name` or `plugin` plugin [name](#plugin-naming) | Toggle(enable\disable) plugin by name | `swiftbar://toggleplugin?name=myplugin` |
 | addplugin | `src` source URL to plugin file | Add plugin to Swiftbar from URL | `swiftbar://addplugin?src=https://coolplugin` |
 | notify | `name` or `plugin` plugin [name](#plugin-naming). Notification fields: `title`, `subtitle`, `body`. `href` to open an URL on click (including custom URL schemes). `silent=true` to disable sound | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
-
-LTP: instead of plugin [name](#plugin-naming) you can(and probably should) use plugin file name, this considered a unique plugin ID where name can be the same between multiple plugins. If your plugin's filepath is `~/Documents/SwiftBar/myplugin.1m.sh` then name is `myplugin` and ID `myplugin.1m.sh`
 
 ## Preferences aka 'defaults'
 
