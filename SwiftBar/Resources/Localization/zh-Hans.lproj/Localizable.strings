@@ -21,12 +21,12 @@
 "PF_PREFERENCES" = "偏好设置";
 "PF_GENERAL" = "通用";
 "PF_PLUGINS" = "插件";
-"PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
-"PF_ABOUT" = "About";
+"PF_SHORTCUT_PLUGINS" = "快捷指令插件";
+"PF_ABOUT" = "关于";
 "PF_PLUGINS_FOLDER" = "插件目录";
 "PR_LAUNCH_AT_LOGIN" = "登录时启动";
 "PF_PATH" = "路径";
-"PF_PATH_IS_NONE" = "None";
+"PF_PATH_IS_NONE" = "无";
 "PF_CHANGE_PATH" = "修改...";
 "PF_SHELL" = "命令行解释器";
 "PF_TERMINAL" = "终端";
@@ -37,8 +37,8 @@
 "PF_NO_PLUGINS_MESSAGE" = "插件目录是空的";
 "PF_ENABLE_ALL" = "开启所有";
 "PF_PLUGINS_FOOTNOTE" = "菜单栏中会显示已启用的插件。";
-"PF_MENUBAR_ITEM" = "Menu Bar Item";
-"PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
+"PF_MENUBAR_ITEM" = "菜单栏项目";
+"PF_DIM_ON_MANUAL_REFRESH" = "手动刷新时变暗";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "类别";
@@ -47,7 +47,7 @@
 "PR_DEPENDENCIES" = "依赖";
 "PR_PLUGIN_SOURCE" = "源码";
 "PR_ABOUT_PLUGIN" = "关于";
-"PR_AUTORH_PREPOSITION" = "by";
+"PR_AUTORH_PREPOSITION" = "作者";
 "PR_INSTALL_STATUS_INSTALL" = "安装";
 "PR_INSTALL_STATUS_INSTALLED" = "已安装";
 "PR_INSTALL_STATUS_FAILED" = "失败";
@@ -66,7 +66,7 @@
 "CANCEL" = "取消";
 
 // Plugin Repository Categories
-"CAT_AWS" = "AWS";
+"CAT_AWS" = "亚马逊云服务(AWS)";
 "CAT_CRYPTOCURRENCY" = "加密货币";
 "CAT_DEV" = "开发";
 "CAT_E-COMMERCE" = "网购";
