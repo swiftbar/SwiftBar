@@ -27,6 +27,7 @@ class PreferencesStore: ObservableObject {
     static let shared = PreferencesStore()
     enum PreferencesKeys: String {
         case PluginDirectory
+        case ShortcutsFolder
         case DisabledPlugins
         case Terminal
         case Shell
@@ -49,6 +50,12 @@ class PreferencesStore: ObservableObject {
     @Published var pluginDirectoryPath: String? {
         didSet {
             PreferencesStore.setValue(value: pluginDirectoryPath, key: .PluginDirectory)
+        }
+    }
+
+    @Published var shortcutsFolder: String {
+        didSet {
+            PreferencesStore.setValue(value: shortcutsFolder, key: .ShortcutsFolder)
         }
     }
 
@@ -144,6 +151,7 @@ class PreferencesStore: ObservableObject {
 
     init() {
         pluginDirectoryPath = PreferencesStore.getValue(key: .PluginDirectory) as? String
+        shortcutsFolder = PreferencesStore.getValue(key: .ShortcutsFolder) as? String ?? ""
         disabledPlugins = PreferencesStore.getValue(key: .DisabledPlugins) as? [PluginID] ?? []
         terminal = .Terminal
         shell = .Bash

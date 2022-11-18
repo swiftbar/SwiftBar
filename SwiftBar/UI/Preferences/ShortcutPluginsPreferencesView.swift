@@ -73,7 +73,7 @@ struct ShortcutPluginsPreferencesView: View {
                     showingSheet.toggle()
                 }
                 .sheet(isPresented: $showingSheet) {
-                    AddShortcutPluginView(pluginManager: pluginManager, isPresented: $showingSheet, shortcutsManager: ShortcutsManager.shared)
+                    AddShortcutPluginView(pluginManager: pluginManager, isPresented: $showingSheet)
                 }
             }.padding([.trailing, .leading], 20)
                 .padding(.bottom, 10)
@@ -90,42 +90,52 @@ struct AddShortcutPluginView: View {
     @State var refreshValue: String = "1"
 
     @State var refreshUnit: String = "s"
-    var shortcutsManager: ShortcutsManager
+    @ObservedObject var shortcutsManager = ShortcutsManager.shared
+    @ObservedObject var prefs = PreferencesStore.shared
 
     var body: some View {
         VStack {
             Text("Add Plugin")
                 .font(.headline)
             Group {
-                HStack {
-                    Text("Name:")
-                    TextField("Unique Plugin Name...", text: $name)
-                        .frame(width: 150)
-                    Picker("Shortcut:", selection: $selectedShortcut, content: {
-                        ForEach(shortcutsManager.shortcuts, id: \.self) { shortcut in
-                            Text(shortcut)
-                        }
-                    })
-                    HStack(spacing: 0) {
-                        Button(action: {
-                            shortcutsManager.getShortcuts()
-                        }, label: {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                        }).help("Refresh Shortcuts List")
-
-                        if !selectedShortcut.isEmpty {
+                VStack {
+                    HStack {
+                        Text("Name:")
+                        TextField("Unique Plugin Name...", text: $name)
+                        Spacer()
+                    }
+                    HStack {
+                        Picker("Folder:", selection: $prefs.shortcutsFolder, content: {
+                            ForEach(shortcutsManager.folders, id: \.self) { shortcut in
+                                Text(shortcut)
+                            }
+                        })
+                        Picker("Shortcut:", selection: $selectedShortcut, content: {
+                            ForEach(shortcutsManager.shortcuts, id: \.self) { shortcut in
+                                Text(shortcut)
+                            }
+                        })
+                        HStack(spacing: 0) {
                             Button(action: {
-                                shortcutsManager.viewCurrentShortcut(shortcut: selectedShortcut)
+                                shortcutsManager.refresh()
                             }, label: {
-                                Image(systemName: "slider.horizontal.3")
-                            }).help("Open in Shortcuts.app")
-                        }
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                            }).help("Refresh Shortcuts List")
 
-                        Button(action: {
-                            shortcutsManager.createShortcut()
-                        }, label: {
-                            Image(systemName: "plus")
-                        }).help("Create New Shortcut")
+                            if !selectedShortcut.isEmpty {
+                                Button(action: {
+                                    shortcutsManager.viewCurrentShortcut(shortcut: selectedShortcut)
+                                }, label: {
+                                    Image(systemName: "slider.horizontal.3")
+                                }).help("Open in Shortcuts.app")
+                            }
+
+                            Button(action: {
+                                shortcutsManager.createShortcut()
+                            }, label: {
+                                Image(systemName: "plus")
+                            }).help("Create New Shortcut")
+                        }
                     }
                 }
                 HStack {
@@ -169,7 +179,7 @@ struct ShortcutPluginsPreferencesView_Previews: PreviewProvider {
     static var previews: some View {
         Group {
             ShortcutPluginsPreferencesView(pluginManager: PluginManager.shared)
-            AddShortcutPluginView(pluginManager: PluginManager.shared, isPresented: $isPresented, shortcutsManager: ShortcutsManager.shared)
+            AddShortcutPluginView(pluginManager: PluginManager.shared, isPresented: $isPresented)
         }
     }
 }

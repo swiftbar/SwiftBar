@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 import ScriptingBridge
 
@@ -31,8 +32,11 @@ public class ShortcutsManager: ObservableObject {
     var task: Process?
     var shortcutsURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
     var shellURL = URL(fileURLWithPath: "/bin/zsh")
+    var prefs = PreferencesStore.shared
+    var cancellable: AnyCancellable?
 
     @Published public var shortcuts: [String] = []
+    @Published public var folders: [String] = []
 
     lazy var shortcutInputPath: URL = {
         let directory = NSTemporaryDirectory()
@@ -41,14 +45,18 @@ public class ShortcutsManager: ObservableObject {
 
     public init() {
         if #available(macOS 12, *) {
+            getShortcutsFolders()
             getShortcuts()
+            cancellable = prefs.$shortcutsFolder.receive(on: RunLoop.main).sink { [weak self] folder in
+                self?.getShortcuts(folder: folder)
+            }
         }
     }
 
-    public func getShortcuts() {
+    public func getShortcuts(folder: String? = nil) {
         task = Process()
         task?.executableURL = shortcutsURL
-        task?.arguments = ["list"]
+        task?.arguments = ["list", "-f", "\(folder ?? prefs.shortcutsFolder)"]
 
         let pipe = Pipe()
         task?.standardOutput = pipe
@@ -58,6 +66,20 @@ public class ShortcutsManager: ObservableObject {
         let output = String(data: data, encoding: .utf8) ?? ""
 
         shortcuts = output.components(separatedBy: .newlines).sorted()
+    }
+
+    public func getShortcutsFolders() {
+        task = Process()
+        task?.executableURL = shortcutsURL
+        task?.arguments = ["list", "--folders"]
+
+        let pipe = Pipe()
+        task?.standardOutput = pipe
+        task?.launch()
+        task?.waitUntilExit()
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        folders = output.components(separatedBy: .newlines).sorted()
     }
 
     public func runShortcut(shortcut: String, input: Any? = nil) throws -> String {
@@ -90,5 +112,10 @@ public class ShortcutsManager: ObservableObject {
 
     public func createShortcut() {
         NSWorkspace.shared.open(URL(string: "shortcuts://create-shortcut")!)
+    }
+
+    public func refresh() {
+        getShortcutsFolders()
+        getShortcuts()
     }
 }
