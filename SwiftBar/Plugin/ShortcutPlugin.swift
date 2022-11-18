@@ -18,7 +18,7 @@ class PersistentShortcutPlugin: Codable, Identifiable {
     }
 }
 
-class ShortcutPlugin: Plugin, Identifiable {
+class ShortcutPlugin: Plugin, Identifiable, ObservableObject {
     var id: PluginID
     var type: PluginType = .Shortcut
     var name: String
@@ -32,7 +32,7 @@ class ShortcutPlugin: Plugin, Identifiable {
     var shortcut: String
     var repeatString: String
     var cronString: String
-
+    @Published var enabled: Bool = true
     var operation: RunPluginOperation<ShortcutPlugin>?
 
     var content: String? = "..." {
@@ -66,6 +66,7 @@ class ShortcutPlugin: Plugin, Identifiable {
         cronString = persistentItem.cronString
         lastState = .Loading
         updateInterval = parseRefreshInterval(intervalStr: repeatString, baseUpdateinterval: updateInterval) ?? updateInterval
+        enabled = !prefs.disabledPlugins.contains(id)
         os_log("Initialized Shortcut plugin\n%{public}@", log: Log.plugin, description)
         refresh(reason: .FirstLaunch)
     }

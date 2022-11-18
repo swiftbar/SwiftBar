@@ -20,16 +20,7 @@ struct ShortcutPluginsPreferencesView: View {
             HStack {
                 Table(pluginManager.shortcutPlugins, selection: $selecting, sortOrder: $sorting) {
                     TableColumn("") { plugin in
-                        VStack {
-                            Spacer()
-                            Button(action: {
-                                pluginManager.togglePlugin(plugin: plugin)
-                            }, label: {
-                                Circle()
-                                    .foregroundColor(plugin.enabled ? .green : .red)
-                            }).help("Enable/Disable menu bar item")
-                            Spacer()
-                        }
+                        PluginStateView(plugin: plugin, pluginManager: pluginManager)
                     }.width(15)
                     TableColumn("Name", value: \.name) { plugin in
                         Text(plugin.name).font(.title2)
@@ -42,13 +33,7 @@ struct ShortcutPluginsPreferencesView: View {
                     }.width(60)
 
                     TableColumn("") { plugin in
-                        Button(action: {
-                            pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
-                            plugin.refresh(reason: .PluginSettings)
-                        }, label: {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                        }).buttonStyle(.link)
-                            .help("Refresh menu bar item")
+                        PluginStateRefreshView(plugin: plugin, pluginManager: pluginManager)
                     }.width(40)
                 }
                 .onChange(of: sorting) { pluginManager.shortcutPlugins.sort(using: $0) }
@@ -82,6 +67,41 @@ struct ShortcutPluginsPreferencesView: View {
 }
 
 @available(macOS 12.0, *)
+struct PluginStateView: View {
+    @ObservedObject var plugin: ShortcutPlugin
+    var pluginManager: PluginManager
+    var body: some View {
+        VStack {
+            Spacer()
+            Button(action: {
+                pluginManager.togglePlugin(plugin: plugin)
+                plugin.enabled.toggle()
+            }, label: {
+                Circle()
+                    .foregroundColor($plugin.enabled.wrappedValue ? .green : .red)
+            }).help("Enable/Disable menu bar item")
+            Spacer()
+        }
+    }
+}
+
+@available(macOS 12.0, *)
+struct PluginStateRefreshView: View {
+    @ObservedObject var plugin: ShortcutPlugin
+    var pluginManager: PluginManager
+    var body: some View {
+        Button(action: {
+            pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
+            plugin.refresh(reason: .PluginSettings)
+        }, label: {
+            Image(systemName: "arrow.triangle.2.circlepath")
+        }).buttonStyle(.link)
+            .disabled(!$plugin.enabled.wrappedValue)
+            .help("Refresh menu bar item")
+    }
+}
+
+@available(macOS 12.0, *)
 struct AddShortcutPluginView: View {
     @ObservedObject var pluginManager: PluginManager
     @Binding var isPresented: Bool
@@ -100,9 +120,8 @@ struct AddShortcutPluginView: View {
             Group {
                 VStack {
                     HStack {
-                        Text("Name:")
+                        Text("Name: ")
                         TextField("Unique Plugin Name...", text: $name)
-                        Spacer()
                     }
                     HStack {
                         Picker("Folder:", selection: $prefs.shortcutsFolder, content: {
