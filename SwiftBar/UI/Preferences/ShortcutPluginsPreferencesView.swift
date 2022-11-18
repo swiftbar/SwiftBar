@@ -43,7 +43,8 @@ struct ShortcutPluginsPreferencesView: View {
 
                     TableColumn("") { plugin in
                         Button(action: {
-                            plugin.refresh()
+                            pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
+                            plugin.refresh(reason: .PluginSettings)
                         }, label: {
                             Image(systemName: "arrow.triangle.2.circlepath")
                         }).buttonStyle(.link)

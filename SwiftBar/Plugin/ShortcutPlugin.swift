@@ -28,6 +28,7 @@ class ShortcutPlugin: Plugin, Identifiable {
     var updateInterval: Double = 60 * 60 * 24 * 100
     var lastUpdated: Date?
     var lastState: PluginState
+    var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var shortcut: String
     var repeatString: String
     var cronString: String
@@ -66,7 +67,7 @@ class ShortcutPlugin: Plugin, Identifiable {
         lastState = .Loading
         updateInterval = parseRefreshInterval(intervalStr: repeatString, baseUpdateinterval: updateInterval) ?? updateInterval
         os_log("Initialized Shortcut plugin\n%{public}@", log: Log.plugin, description)
-        refresh()
+        refresh(reason: .FirstLaunch)
     }
 
     func enableTimer() {
@@ -75,6 +76,7 @@ class ShortcutPlugin: Plugin, Identifiable {
             .autoconnect()
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
+                self?.lastRefreshReason = .Schedule
                 self?.invokeQueue.addOperation(RunPluginOperation<ShortcutPlugin>(plugin: self!))
             }).store(in: &cancellable)
     }
@@ -84,7 +86,7 @@ class ShortcutPlugin: Plugin, Identifiable {
         cancellable.removeAll()
     }
 
-    func refresh() {
+    func refresh(reason: PluginRefreshReason) {
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return
@@ -94,13 +96,14 @@ class ShortcutPlugin: Plugin, Identifiable {
         disableTimer()
         operation?.cancel()
 
+        lastRefreshReason = reason
         operation = RunPluginOperation<ShortcutPlugin>(plugin: self)
         invokeQueue.addOperation(operation!)
     }
 
     func enable() {
         prefs.disabledPlugins.removeAll(where: { $0 == id })
-        refresh()
+        refresh(reason: .FirstLaunch)
     }
 
     func disable() {
@@ -110,7 +113,7 @@ class ShortcutPlugin: Plugin, Identifiable {
     }
 
     func start() {
-        refresh()
+        refresh(reason: .FirstLaunch)
     }
 
     func terminate() {

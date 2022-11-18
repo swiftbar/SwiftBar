@@ -257,7 +257,7 @@ extension MenubarItem {
     }
 
     @objc func refreshAllPlugins() {
-        delegate.pluginManager.refreshAllPlugins()
+        delegate.pluginManager.refreshAllPlugins(reason: .RefreshAllMenu)
     }
 
     @objc func disableAllPlugins() {
@@ -531,6 +531,7 @@ extension MenubarItem {
             currentTitleLineIndex = 0
         }
         setMenuTitle(title: titleLines[currentTitleLineIndex])
+        print("Time \(Date()) title index: \(currentTitleLineIndex)")
     }
 
     // do the following conversion:
@@ -702,7 +703,7 @@ extension MenubarItem {
                                     env: plugin?.env ?? [:], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
             { [weak self] in
                 if params.refresh {
-                    self?.plugin?.refresh()
+                    self?.plugin?.refresh(reason: .MenuAction)
                 }
             }
             out = true
@@ -711,7 +712,7 @@ extension MenubarItem {
 
         if params.refresh {
             dimOnManualRefresh()
-            plugin?.refresh()
+            plugin?.refresh(reason: .MenuAction)
             out = true
             return out
         }

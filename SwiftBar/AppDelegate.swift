@@ -140,15 +140,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         for url in urls {
             switch url.host?.lowercased() {
             case "refreshallplugins":
-                pluginManager.refreshAllPlugins()
+                pluginManager.refreshAllPlugins(reason: .RefreshAllURLScheme)
             case "refreshplugin":
                 if let plugin = getPluginFromURL(url: url) {
                     pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
-                    plugin.refresh()
+                    plugin.refresh(reason: .URLScheme)
                     return
                 }
                 if let indexStr = url.queryParameters?["index"], let index = Int(indexStr) {
-                    pluginManager.refreshPlugin(with: index)
+                    pluginManager.refreshPlugin(with: index, reason: .URLScheme)
                     return
                 }
             case "disableplugin":
@@ -204,7 +204,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                     env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true)
             {
                 if params.refresh {
-                    plugin.refresh()
+                    plugin.refresh(reason: .NotificationAction)
                 }
             }
         }

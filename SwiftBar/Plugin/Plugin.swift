@@ -16,6 +16,32 @@ enum PluginState {
     case Disabled
 }
 
+enum PluginRefreshReason {
+    case FirstLaunch
+    case Schedule
+    case MenuAction
+    case RefreshAllMenu
+    case RefreshAllURLScheme
+    case URLScheme
+    case Shortcut
+    case DebugView
+    case NotificationAction
+    case PluginSettings
+
+    static func manualReasons() -> [Self] {
+        [
+            .MenuAction,
+            .RefreshAllMenu,
+            .RefreshAllURLScheme,
+            .URLScheme,
+            .Shortcut,
+            .NotificationAction,
+            .PluginSettings,
+            .DebugView,
+        ]
+    }
+}
+
 typealias PluginID = String
 
 protocol Plugin: AnyObject {
@@ -29,10 +55,11 @@ protocol Plugin: AnyObject {
     var updateInterval: Double { get }
     var lastUpdated: Date? { get set }
     var lastState: PluginState { get set }
+    var lastRefreshReason: PluginRefreshReason { get set }
     var content: String? { get set }
     var error: Error? { get set }
     var debugInfo: PluginDebugInfo { get set }
-    func refresh()
+    func refresh(reason: PluginRefreshReason)
     func enable()
     func disable()
     func start()

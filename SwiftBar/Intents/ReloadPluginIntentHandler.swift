@@ -9,7 +9,8 @@ public class ReloadPluginIntentHandler: NSObject, ReloadPluginIntentHandling {
             completion(ReloadPluginIntentResponse(code: .failure, userActivity: nil))
             return
         }
-        plugin.refresh()
+        delegate.pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
+        plugin.refresh(reason: .Shortcut)
         completion(ReloadPluginIntentResponse(code: .success, userActivity: nil))
     }
 

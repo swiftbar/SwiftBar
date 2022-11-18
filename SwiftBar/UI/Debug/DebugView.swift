@@ -47,7 +47,7 @@ struct DebugView: View {
             HStack {
                 Spacer()
                 Button("Refresh Plugin", action: {
-                    plugin.refresh()
+                    plugin.refresh(reason: .DebugView)
                 })
 
                 Button("Print SwiftBar ENV", action: {

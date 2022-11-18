@@ -13,6 +13,7 @@ class StreamablePlugin: Plugin {
     var metadata: PluginMetadata?
     var lastUpdated: Date?
     var lastState: PluginState
+    var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var updateInterval = 0.0
 
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
@@ -49,7 +50,7 @@ class StreamablePlugin: Plugin {
         invokeQueue.addOperation { [weak self] in self?.invoke() }
     }
 
-    func refresh() {
+    func refresh(reason _: PluginRefreshReason = .FirstLaunch) {
         os_log("Refreshing Streamable plugin\n%{public}@", log: Log.plugin, description)
         terminate()
         invokeQueue.addOperation { [weak self] in self?.invoke() }

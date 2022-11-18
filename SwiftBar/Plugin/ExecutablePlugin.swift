@@ -12,11 +12,14 @@ class ExecutablePlugin: Plugin {
     var metadata: PluginMetadata?
     var lastUpdated: Date?
     var lastState: PluginState
+    var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
     var operation: RunPluginOperation<ExecutablePlugin>?
 
     var content: String? = "..." {
         didSet {
+            // force update menu if refresh triggered manually, even if the output of the plugin didn't changed
+            guard content != oldValue || PluginRefreshReason.manualReasons().contains(lastRefreshReason) else { return }
             contentUpdatePublisher.send(content)
         }
     }
@@ -51,7 +54,7 @@ class ExecutablePlugin: Plugin {
         }
         createSupportDirs()
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
-        refresh()
+        refresh(reason: .FirstLaunch)
     }
 
     // this function called each time plugin updated(manual or scheduled)
@@ -70,6 +73,7 @@ class ExecutablePlugin: Plugin {
             .autoconnect()
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
+                self?.lastRefreshReason = .Schedule
                 self?.invokeQueue.addOperation(RunPluginOperation<ExecutablePlugin>(plugin: self!))
             }).store(in: &cancellable)
     }
@@ -91,14 +95,14 @@ class ExecutablePlugin: Plugin {
 
     func enable() {
         prefs.disabledPlugins.removeAll(where: { $0 == id })
-        refresh()
+        refresh(reason: .FirstLaunch)
     }
 
     func start() {
-        refresh()
+        refresh(reason: .FirstLaunch)
     }
 
-    func refresh() {
+    func refresh(reason: PluginRefreshReason) {
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return
@@ -109,6 +113,7 @@ class ExecutablePlugin: Plugin {
         operation?.cancel()
 
         refreshPluginMetadata()
+        lastRefreshReason = reason
         operation = RunPluginOperation<ExecutablePlugin>(plugin: self)
         invokeQueue.addOperation(operation!)
     }
@@ -139,6 +144,6 @@ class ExecutablePlugin: Plugin {
     }
 
     @objc func scheduledContentUpdate() {
-        refresh()
+        refresh(reason: .Schedule)
     }
 }

@@ -196,14 +196,14 @@ class PluginManager: ObservableObject {
         StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
     }
 
-    func refreshAllPlugins() {
+    func refreshAllPlugins(reason: PluginRefreshReason) {
         #if MAC_APP_STORE
             loadPlugins()
         #endif
         os_log("Refreshing all enabled plugins.", log: Log.plugin)
         menuBarItems.values.forEach { $0.dimOnManualRefresh() }
         pluginInvokeQueue.cancelAllOperations() // clean up the update queue to avoid duplication
-        enabledPlugins.forEach { $0.refresh() }
+        enabledPlugins.forEach { $0.refresh(reason: reason) }
     }
 
     func startAllPlugins() {
@@ -222,9 +222,9 @@ class PluginManager: ObservableObject {
         menuBarItems.values.forEach { $0.updateMenu(content: $0.plugin?.content) }
     }
 
-    func refreshPlugin(with index: Int) {
+    func refreshPlugin(with index: Int, reason: PluginRefreshReason) {
         guard plugins.indices.contains(index) else { return }
-        plugins[index].refresh()
+        plugins[index].refresh(reason: reason)
     }
 
     func addShortcutPlugin(plugin: PersistentShortcutPlugin) {
