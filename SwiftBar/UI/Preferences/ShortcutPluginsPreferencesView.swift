@@ -23,13 +23,13 @@ struct ShortcutPluginsPreferencesView: View {
                         PluginStateView(plugin: plugin, pluginManager: pluginManager)
                     }.width(15)
                     TableColumn("Name", value: \.name) { plugin in
-                        Text(plugin.name).font(.title2)
+                        Text(plugin.name).font(.body)
                     }
                     TableColumn("Shortcut", value: \.shortcut) { plugin in
-                        Text("\(plugin.shortcut)").font(.title2)
+                        Text("\(plugin.shortcut)").font(.body)
                     }
                     TableColumn("Repeat") { plugin in
-                        Text("\(plugin.repeatString)").font(.title2)
+                        Text("\(plugin.repeatString)").font(.body)
                     }.width(60)
 
                     TableColumn("") { plugin in
