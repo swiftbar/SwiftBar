@@ -43,6 +43,7 @@ class PreferencesStore: ObservableObject {
         case CollectCrashReports
         case DebugLoggingEnabled
         case ShortcutPlugins
+        case PluginRepositoryURL
     }
 
     let disabledPluginsPublisher = PassthroughSubject<Any, Never>()
@@ -147,6 +148,15 @@ class PreferencesStore: ObservableObject {
 
     var debugLoggingEnabled: Bool {
         PreferencesStore.getValue(key: .DebugLoggingEnabled) as? Bool ?? false
+    }
+
+    var pluginRepositoryURL: URL {
+        guard let str = PreferencesStore.getValue(key: .PluginRepositoryURL) as? String,
+              let url = URL(string: str)
+        else {
+            return URL(string: "https://xbarapp.com/docs/plugins/")!
+        }
+        return url
     }
 
     init() {

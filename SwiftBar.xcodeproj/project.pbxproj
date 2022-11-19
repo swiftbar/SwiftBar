@@ -97,7 +97,7 @@
 		39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF7798254C7796001D76E5 /* String+Emoji.swift */; };
 		39B64C29260F70D900B7FA63 /* Preferences in Frameworks */ = {isa = PBXBuildFile; productRef = 39B64C28260F70D900B7FA63 /* Preferences */; };
 		39B64C35260F740E00B7FA63 /* Preferences in Frameworks */ = {isa = PBXBuildFile; productRef = 39B64C34260F740E00B7FA63 /* Preferences */; };
-		39B64C3F26152F5E00B7FA63 /* XbarAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */; };
+		39B64C3F26152F5E00B7FA63 /* PluginRepositoryAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* PluginRepositoryAPI.swift */; };
 		39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A0A257C21D400FA012E /* String+Escaped.swift */; };
 		39B84A1F257D436200FA012E /* RunScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A1E257D436200FA012E /* RunScript.swift */; };
 		39B84A22257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A21257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift */; };
@@ -106,7 +106,7 @@
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
 		FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA136A532917EE0700A7D712 /* PluginUtilities.swift */; };
-		FA57F2A4272A307900817A79 /* XbarAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */; };
+		FA57F2A4272A307900817A79 /* PluginRepositoryAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* PluginRepositoryAPI.swift */; };
 		FA57F2A5272A308F00817A79 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FA57F2A6272A308F00817A79 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
 		FA57F2A7272A308F00817A79 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
@@ -193,7 +193,7 @@
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
 		39AF7795254B6203001D76E5 /* NSImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSImage.swift; sourceTree = "<group>"; };
 		39AF7798254C7796001D76E5 /* String+Emoji.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Emoji.swift"; sourceTree = "<group>"; };
-		39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XbarAPI.swift; sourceTree = "<group>"; };
+		39B64C3E26152F5E00B7FA63 /* PluginRepositoryAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginRepositoryAPI.swift; sourceTree = "<group>"; };
 		39B84A0A257C21D400FA012E /* String+Escaped.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Escaped.swift"; sourceTree = "<group>"; };
 		39B84A1E257D436200FA012E /* RunScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunScript.swift; sourceTree = "<group>"; };
 		39B84A21257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSMutableAttributedString+SFSymbols.swift"; sourceTree = "<group>"; };
@@ -316,7 +316,7 @@
 				396257252569667000341A19 /* PluginRepositoryView.swift */,
 				FA06104525F0564400B08B6E /* PluginEntryView.swift */,
 				3962572A256967DC00341A19 /* PluginRepository.swift */,
-				39B64C3E26152F5E00B7FA63 /* XbarAPI.swift */,
+				39B64C3E26152F5E00B7FA63 /* PluginRepositoryAPI.swift */,
 			);
 			path = "Plugin Repository";
 			sourceTree = "<group>";
@@ -764,7 +764,7 @@
 				39641EAD254E0E3400713DAF /* ImageLoader.swift in Sources */,
 				3990DCE12602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
 				FA69F5BC2791145E00D6DDC6 /* WebView.swift in Sources */,
-				39B64C3F26152F5E00B7FA63 /* XbarAPI.swift in Sources */,
+				39B64C3F26152F5E00B7FA63 /* PluginRepositoryAPI.swift in Sources */,
 				FAD571A325A0071700623B57 /* StreamablePlugin.swift in Sources */,
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
@@ -822,7 +822,7 @@
 				FA57F2A9272A309600817A79 /* Intents.intentdefinition in Sources */,
 				39224E0B25F4344600BABF21 /* ImageLoader.swift in Sources */,
 				3990DCE22602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
-				FA57F2A4272A307900817A79 /* XbarAPI.swift in Sources */,
+				FA57F2A4272A307900817A79 /* PluginRepositoryAPI.swift in Sources */,
 				39224E0C25F4344600BABF21 /* StreamablePlugin.swift in Sources */,
 				39224E0D25F4344600BABF21 /* PreferencesView.swift in Sources */,
 				39224E0E25F4344600BABF21 /* PluginMetadata.swift in Sources */,

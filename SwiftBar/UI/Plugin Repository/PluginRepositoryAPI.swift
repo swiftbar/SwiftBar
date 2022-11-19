@@ -34,19 +34,21 @@ struct Agent {
     }
 }
 
-enum XbarAPI {
+enum PluginRepositoryAPI {
     static let agent = Agent()
-    static let base = URL(string: "https://xbarapp.com/docs/plugins/")!
+    static func base() -> URL {
+        PreferencesStore.shared.pluginRepositoryURL
+    }
 }
 
-extension XbarAPI {
+extension PluginRepositoryAPI {
     static func categories(ignoreCache: Bool = false) -> AnyPublisher<RepositoryCategory, Error> {
-        run(URLRequest(url: base.appendingPathComponent("categories.json"),
+        run(URLRequest(url: base().appendingPathComponent("categories.json"),
                        cachePolicy: ignoreCache ? .reloadIgnoringCacheData : .returnCacheDataElseLoad))
     }
 
     static func plugins(category: String, ignoreCache: Bool = false) -> AnyPublisher<RepositoryPlugin, Error> {
-        run(URLRequest(url: base.appendingPathComponent("\(category)/plugins.json"),
+        run(URLRequest(url: base().appendingPathComponent("\(category)/plugins.json"),
                        cachePolicy: ignoreCache ? .reloadIgnoringCacheData : .returnCacheDataElseLoad))
     }
 

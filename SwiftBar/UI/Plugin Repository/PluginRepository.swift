@@ -35,7 +35,7 @@ class PluginRepository: ObservableObject {
     }
 
     func refreshRepositoryData(ignoreCache: Bool = false) {
-        XbarAPI.categories(ignoreCache: ignoreCache)
+        PluginRepositoryAPI.categories(ignoreCache: ignoreCache)
             .map(\.categories)
             .sink(receiveCompletion: { _ in },
                   receiveValue: { [weak self] in
@@ -47,7 +47,7 @@ class PluginRepository: ObservableObject {
     }
 
     func getPlugins(category: String, ignoreCache: Bool = false) {
-        XbarAPI.plugins(category: category, ignoreCache: ignoreCache)
+        PluginRepositoryAPI.plugins(category: category, ignoreCache: ignoreCache)
             .map(\.plugins)
             .sink(receiveCompletion: { _ in },
                   receiveValue: { [weak self] in
@@ -152,7 +152,12 @@ struct RepositoryPlugin: Codable {
         }
 
         var sourceFileURL: URL? {
-            URL(string: "https://raw.githubusercontent.com/matryer/xbar-plugins/master/\(path)")
+            let url = PreferencesStore.shared.pluginRepositoryURL
+            if url.absoluteString.hasPrefix("https://xbarapp.com/") {
+                return URL(string: "https://raw.githubusercontent.com/matryer/xbar-plugins/master/\(path)")
+            }
+
+            return url.appendingPathComponent(path)
         }
 
         var mainAuthor: Author? {
