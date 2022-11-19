@@ -531,7 +531,6 @@ extension MenubarItem {
             currentTitleLineIndex = 0
         }
         setMenuTitle(title: titleLines[currentTitleLineIndex])
-        print("Time \(Date()) title index: \(currentTitleLineIndex)")
     }
 
     // do the following conversion:
