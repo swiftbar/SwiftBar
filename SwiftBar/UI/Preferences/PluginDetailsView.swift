@@ -72,7 +72,7 @@ struct PluginDetailsView: View {
                     PluginDetailsToggleView(label: "About",
                                             state: $md.hideAbout,
                                             width: width * screenProportion)
-                    PluginDetailsToggleView(label: "Run In Terminal",
+                    PluginDetailsToggleView(label: "Run in Terminal",
                                             state: $md.hideRunInTerminal,
                                             width: width * screenProportion)
                     PluginDetailsToggleView(label: "Last Updated",
