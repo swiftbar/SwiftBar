@@ -1,0 +1,90 @@
+//Menubar strings
+"MB_SWIFT_BAR" = "SwiftBar";
+"MB_UPDATING_MENU" = "Atualizando…";
+"MB_LAST_UPDATED" = "Atualizado";
+"MB_ABOUT_SWIFT_BAR" = "Sobre";
+"MB_ABOUT_PLUGIN" = "Sobre";
+"MB_RUN_IN_TERMINAL" = "Executar no Terminal…";
+"MB_DISABLE_PLUGIN" = "Desabilitar Plugin";
+"MB_DDEBUG_PLUGIN" = "Depurar Plugin";
+"MB_PREFERENCES" = "Preferências…";
+"MB_REFRESH_ALL" = "Atualizar Tudo";
+"MB_ENABLE_ALL" = "Habilitar Tudo";
+"MB_DISABLE_ALL" = "Desabilitar Tudo";
+"MB_OPEN_PLUGINS_FOLDER" = "Abrir Pasta de Plugins…";
+"MB_CHANGE_PLUGINS_FOLDER" = "Alterar Pasta de Plugins…";
+"MB_GET_PLUGINS" = "Obter Plugins...";
+"MB_SEND_FEEDBACK" = "Enviar Feedback...";
+"MB_SHOW_ERROR" = "Exibir Erro";
+
+//Preferences strings
+"PF_PREFERENCES" = "Preferências";
+"PF_GENERAL" = "Geral";
+"PF_PLUGINS" = "Plugins de Código";
+"PF_SHORTCUT_PLUGINS" = "Plugins de Atalhos";
+"PF_ABOUT" = "Sobre";
+"PF_PLUGINS_FOLDER" = "Pasta de Plugins";
+"PR_LAUNCH_AT_LOGIN" = "Iniciar no Login";
+"PF_PATH" = "Caminho";
+"PF_PATH_IS_NONE" = "Nenhum";
+"PF_CHANGE_PATH" = "Alterar...";
+"PF_SHELL" = "Shell";
+"PF_TERMINAL" = "Terminal";
+"PF_HIDE_SWIFTBAR_ICON" = "Ocultar Ícone do SwiftBar";
+"PF_CHECK_FOR_UPDATE" = "Atualizar";
+"PF_CHECK_FOR_UPDATES" = "Verificar Atualizações";
+"PR_INCLUDE_BETA_UPDATES" = "Incluir Versões de Pré-Lançamento";
+"PF_NO_PLUGINS_MESSAGE" = "A pasta de plugins está vazia";
+"PF_ENABLE_ALL" = "Habilitar Tudo";
+"PF_PLUGINS_FOOTNOTE" = "Os plugins habilitados aparecem na barra de menus.";
+"PF_MENUBAR_ITEM" = "Item da Barra de Menus";
+"PF_DIM_ON_MANUAL_REFRESH" = "Ofuscar ao Atualizar Manualmente";
+
+//Plugin Repository strings
+"PR_CATEGORY" = "Categoria";
+"PR_PLUGIN_REPOSITORY" = "Repositório de Plugins";
+"PR_REFRESHING_DATA_MESSAGE" = "Atualizar dados do repositório…";
+"PR_DEPENDENCIES" = "Dependências";
+"PR_PLUGIN_SOURCE" = "Fonte";
+"PR_ABOUT_PLUGIN" = "Sobre";
+"PR_AUTORH_PREPOSITION" = "por";
+"PR_INSTALL_STATUS_INSTALL" = "Instalar";
+"PR_INSTALL_STATUS_INSTALLED" = "Instalado";
+"PR_INSTALL_STATUS_FAILED" = "Falhou";
+"PR_INSTALL_STATUS_DOWNLOADING" = "Baixando";
+
+
+//App strings
+"APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "Escolha a pasta de plugins";
+"APP_FOLDER_NOT_ALLOWED_MESSAGE" = "Não é possível usar esta pasta como local para os plugins do SwiftBar";
+"APP_FOLDER_NOT_ALLOWED_ACTION" = "Escolha novo local";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "Uau! Parece que você escolheu uma pasta com MUITOS arquivos, por favor escolha outra. Se você tiver uma pasta node_modules que você precise para um plugin, por favor oculte-a.";
+"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Defina local dos plugins do SwiftBar";
+"APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Selecione uma pasta para armazenar o repositório de plugins";
+"APP_QUIT" = "Encerrar SwiftBar";
+"OK" = "OK";
+"CANCEL" = "Cancelar";
+
+// Plugin Repository Categories
+"CAT_AWS" = "AWS";
+"CAT_CRYPTOCURRENCY" = "Criptomoedas";
+"CAT_DEV" = "Dev";
+"CAT_E-COMMERCE" = "E-Commerce";
+"CAT_EMAIL" = "Email";
+"CAT_ENVIRONMENT" = "Ambiente";
+"CAT_FINANCE" = "Finanças";
+"CAT_GAMES" = "Jogos";
+"CAT_LIFESTYLE" = "Estilo de Vida";
+"CAT_MESSENGER" = "Mensagens";
+"CAT_MUSIC" = "Música";
+"CAT_NETWORK" = "Rede";
+"CAT_POLITICS" = "Política";
+"CAT_SCIENCE" = "Ciência";
+"CAT_SPORTS" = "Esportes";
+"CAT_SYSTEM" = "Sistema";
+"CAT_TIME" = "Hora";
+"CAT_TOOLS" = "Ferramentas";
+"CAT_TRAVEL" = "Viagem";
+"CAT_TUTORIAL" = "Tutorial";
+"CAT_WEATHER" = "Tempo";
+"CAT_WEB" = "Web";
