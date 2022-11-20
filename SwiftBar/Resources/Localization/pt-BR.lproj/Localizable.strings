@@ -59,7 +59,7 @@
 "APP_FOLDER_NOT_ALLOWED_MESSAGE" = "Não é possível usar esta pasta como local para os plugins do SwiftBar";
 "APP_FOLDER_NOT_ALLOWED_ACTION" = "Escolha novo local";
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "Uau! Parece que você escolheu uma pasta com MUITOS arquivos, por favor escolha outra. Se você tiver uma pasta node_modules que você precise para um plugin, por favor oculte-a.";
-"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Defina local dos plugins do SwiftBar";
+"APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Defina a localização dos plugins do SwiftBar";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Selecione uma pasta para armazenar o repositório de plugins";
 "APP_QUIT" = "Encerrar SwiftBar";
 "OK" = "OK";
