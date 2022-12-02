@@ -102,12 +102,15 @@ public class ShortcutsManager: ObservableObject {
     }
 
     public func viewCurrentShortcut(shortcut: String) {
-        task = Process()
-        task?.executableURL = shellURL
-        task?.arguments = ["-c", "-l", "shortcuts view '\(shortcut)'"]
-
-        task?.launch()
-        task?.waitUntilExit()
+        var components = URLComponents()
+        components.scheme = "shortcuts"
+        components.host = "open-shortcut"
+        components.queryItems = [
+            URLQueryItem(name: "name", value: shortcut),
+        ]
+        if let url = components.url {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     public func createShortcut() {
