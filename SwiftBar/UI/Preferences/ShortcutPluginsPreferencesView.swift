@@ -21,14 +21,14 @@ struct ShortcutPluginsPreferencesView: View {
                 Table(pluginManager.shortcutPlugins, selection: $selecting, sortOrder: $sorting) {
                     TableColumn("") { plugin in
                         PluginStateView(plugin: plugin, pluginManager: pluginManager)
-                    }.width(15)
-                    TableColumn("Name", value: \.name) { plugin in
+                    }.width(10)
+                    TableColumn(Localizable.Preferences.ShortcutsColumnName.localized, value: \.name) { plugin in
                         Text(plugin.name).font(.body)
                     }
-                    TableColumn("Shortcut", value: \.shortcut) { plugin in
+                    TableColumn(Localizable.Preferences.ShortcutsColumnShortcut.localized, value: \.shortcut) { plugin in
                         Text("\(plugin.shortcut)").font(.body)
                     }
-                    TableColumn("Repeat") { plugin in
+                    TableColumn(Localizable.Preferences.ShortcutsColumnRepeat.localized) { plugin in
                         Text("\(plugin.repeatString)").font(.body)
                     }.width(60)
 
@@ -43,18 +43,18 @@ struct ShortcutPluginsPreferencesView: View {
             Divider()
 
             HStack {
-                Button("Delete", role: .destructive) {
+                Button(Localizable.Preferences.ShortcutsDeleteButton.localized, role: .destructive) {
                     isPresentingConfirm.toggle()
-                }.confirmationDialog("Deleting \("selectedPlugin"). Are you sure?",
+                }.confirmationDialog(Localizable.Preferences.ShortcutsDeleteConfirmation.localized.replacingOccurrences(of: "<selectedPlugin>", with: "\(selectedPlugin?.name ?? "")"),
                                      isPresented: $isPresentingConfirm) {
-                    Button("Delete", role: .destructive) {
+                    Button(Localizable.Preferences.ShortcutsDeleteButton.localized, role: .destructive) {
                         guard let selectedPlugin else { return }
                         pluginManager.removeShortcutPlugin(plugin: selectedPlugin.persistentPlugin)
                     }
                 }.disabled(selecting == nil)
 
                 Spacer()
-                Button("Add") {
+                Button(Localizable.Preferences.ShortcutsAddButton.localized) {
                     showingSheet.toggle()
                 }
                 .sheet(isPresented: $showingSheet) {
@@ -79,7 +79,7 @@ struct PluginStateView: View {
             }, label: {
                 Circle()
                     .foregroundColor($plugin.enabled.wrappedValue ? .green : .red)
-            }).help("Enable/Disable menu bar item")
+            }).help(Localizable.Preferences.ShortcutsColumnToggleHelp.localized)
             Spacer()
         }
     }
@@ -97,7 +97,7 @@ struct PluginStateRefreshView: View {
             Image(systemName: "arrow.triangle.2.circlepath")
         }).buttonStyle(.link)
             .disabled(!$plugin.enabled.wrappedValue)
-            .help("Refresh menu bar item")
+            .help(Localizable.Preferences.ShortcutsColumnRefreshHelp.localized)
     }
 }
 
@@ -115,21 +115,21 @@ struct AddShortcutPluginView: View {
 
     var body: some View {
         VStack {
-            Text("Add Plugin")
+            Text(Localizable.Preferences.AddShortcutPluginHeader.localized)
                 .font(.headline)
             Group {
                 VStack {
                     HStack {
-                        Text("Name: ")
-                        TextField("Unique Plugin Name...", text: $name)
+                        Text(Localizable.Preferences.AddShortcutPluginName.localized)
+                        TextField("", text: $name)
                     }
                     HStack {
-                        Picker("Folder:", selection: $prefs.shortcutsFolder, content: {
+                        Picker(Localizable.Preferences.AddShortcutPluginFolder.localized, selection: $prefs.shortcutsFolder, content: {
                             ForEach(shortcutsManager.folders, id: \.self) { shortcut in
                                 Text(shortcut)
                             }
                         })
-                        Picker("Shortcut:", selection: $selectedShortcut, content: {
+                        Picker(Localizable.Preferences.AddShortcutPluginShortcut.localized, selection: $selectedShortcut, content: {
                             ForEach(shortcutsManager.shortcuts, id: \.self) { shortcut in
                                 Text(shortcut)
                             }
@@ -139,26 +139,26 @@ struct AddShortcutPluginView: View {
                                 shortcutsManager.refresh()
                             }, label: {
                                 Image(systemName: "arrow.triangle.2.circlepath")
-                            }).help("Refresh Shortcuts List")
+                            }).help(Localizable.Preferences.AddShortcutPluginRefreshHelp.localized)
 
                             if !selectedShortcut.isEmpty {
                                 Button(action: {
                                     shortcutsManager.viewCurrentShortcut(shortcut: selectedShortcut)
                                 }, label: {
                                     Image(systemName: "slider.horizontal.3")
-                                }).help("Open in Shortcuts.app")
+                                }).help(Localizable.Preferences.AddShortcutPluginOpenHelp.localized)
                             }
 
                             Button(action: {
                                 shortcutsManager.createShortcut()
                             }, label: {
                                 Image(systemName: "plus")
-                            }).help("Create New Shortcut")
+                            }).help(Localizable.Preferences.AddShortcutPluginNewHelp.localized)
                         }
                     }
                 }
                 HStack {
-                    Text("Refresh every:")
+                    Text(Localizable.Preferences.AddShortcutPluginRefreshInterval.localized)
                     HStack(spacing: 0) {
                         TextField("1", text: $refreshValue)
                             .frame(width: 40)
@@ -175,7 +175,7 @@ struct AddShortcutPluginView: View {
 
             Divider()
             HStack {
-                Button("Get Plugins...") {
+                Button(Localizable.MenuBar.GetPlugins.localized) {
                     AppShared.getPlugins()
                 }
                 Spacer()

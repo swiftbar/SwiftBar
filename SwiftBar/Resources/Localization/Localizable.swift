@@ -55,6 +55,22 @@ enum Localizable {
         case PluginsFootnote = "PF_PLUGINS_FOOTNOTE"
         case MenuBarItem = "PF_MENUBAR_ITEM"
         case DimOnManualRefresh = "PF_DIM_ON_MANUAL_REFRESH"
+        case ShortcutsColumnName = "PF_SHORTCUTS_COLUMN_NAME"
+        case ShortcutsColumnShortcut = "PF_SHORTCUTS_COLUMN_SHORTCUT"
+        case ShortcutsColumnRepeat = "PF_SHORTCUTS_COLUMN_REPEAT"
+        case ShortcutsDeleteButton = "PF_SHORTCUTS_DELETE_BUTTON"
+        case ShortcutsDeleteConfirmation = "PF_SHORTCUTS_DELETE_CONFIRMATION"
+        case ShortcutsAddButton = "PF_SHORTCUTS_ADD_BUTTON"
+        case ShortcutsColumnToggleHelp = "PF_SHORTCUTS_COLUMN_TOGGLE_HELP"
+        case ShortcutsColumnRefreshHelp = "PF_SHORTCUTS_COLUMN_REFRESH_HELP"
+        case AddShortcutPluginHeader = "PF_ADD_SHORTCUT_PLUGIN_HEADER"
+        case AddShortcutPluginName = "PF_ADD_SHORTCUT_PLUGIN_NAME"
+        case AddShortcutPluginFolder = "PF_ADD_SHORTCUT_PLUGIN_FOLDER"
+        case AddShortcutPluginShortcut = "PF_ADD_SHORTCUT_PLUGIN_SHORTCUT"
+        case AddShortcutPluginRefreshHelp = "PF_ADD_SHORTCUT_PLUGIN_REFRESH_HELP"
+        case AddShortcutPluginOpenHelp = "PF_ADD_SHORTCUT_PLUGIN_OPEN_HELP"
+        case AddShortcutPluginNewHelp = "PF_ADD_SHORTCUT_PLUGIN_NEW_HELP"
+        case AddShortcutPluginRefreshInterval = "PF_ADD_SHORTCUT_PLUGIN_REFRESH_INTERVAL"
     }
 
     enum PluginRepository: String {

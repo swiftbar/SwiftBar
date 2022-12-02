@@ -39,6 +39,22 @@
 "PF_PLUGINS_FOOTNOTE" = "Включенные плагины видны в панели меню.";
 "PF_MENUBAR_ITEM" = "Menu Bar Item";
 "PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
+"PF_SHORTCUTS_COLUMN_NAME" = "Name";
+"PF_SHORTCUTS_COLUMN_SHORTCUT" = "Shortcut";
+"PF_SHORTCUTS_COLUMN_REPEAT" = "Repeat";
+"PF_SHORTCUTS_DELETE_BUTTON" = "Delete";
+"PF_SHORTCUTS_DELETE_CONFIRMATION" = "Are you sure you want to delete '<selectedPlugin>'?";
+"PF_SHORTCUTS_ADD_BUTTON" = "Cancel";
+"PF_SHORTCUTS_COLUMN_TOGGLE_HELP" = "Enable\Disable menu bar item";
+"PF_SHORTCUTS_COLUMN_REFRESH_HELP" = "Refresh menu bar item";
+"PF_ADD_SHORTCUT_PLUGIN_HEADER" = "Add Shortcut Plugin";
+"PF_ADD_SHORTCUT_PLUGIN_NAME" = "Name";
+"PF_ADD_SHORTCUT_PLUGIN_FOLDER" = "Folder";
+"PF_ADD_SHORTCUT_PLUGIN_SHORTCUT" = "Shortcut";
+"PF_ADD_SHORTCUT_PLUGIN_REFRESH_HELP" = "Refresh Shortcuts list";
+"PF_ADD_SHORTCUT_PLUGIN_OPEN_HELP" = "Open in Shortcuts.app";
+"PF_ADD_SHORTCUT_PLUGIN_NEW_HELP" = "Create new Shortcut";
+"PF_ADD_SHORTCUT_PLUGIN_REFRESH_INTERVAL" = "Refresh Interval";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "Категория";
