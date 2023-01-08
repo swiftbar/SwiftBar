@@ -1,3 +1,8 @@
+[![GitHub license](https://img.shields.io/github/license/swiftbar/SwiftBar.svg)](https://github.com/swiftbar/SwiftBar/blob/master/LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/swiftbar/SwiftBar)](https://github.com/swiftbar/SwiftBar/releases/latest)
+[![Github all releases](https://img.shields.io/github/downloads/swiftbar/SwiftBar/total.svg)](https://github.com/swiftbar/SwiftBar/releases/)
+
+
 <p align="center">
  <img width="155" alt="SwiftBar Logo" src="Resources/logo.png">
 </p>
