@@ -135,7 +135,7 @@ Where:
 | `length`| Number | Trims item text to a provided number of characters. The full title will be displayed in a tooltip. |
 | `trim` | True | Trims whitespace characters |
 | `ansi` | True | Enables support of ANSI color codes. **Conflicts with:** `symbolize` |
-| `emojize` | False | Disables parsing of GitHub style Emojis (e.g., `:mushroom:` into 🍄). **Requires:** `symbolize=false`. |
+| `emojize` | False | Disables parsing of GitHub style Emojis (e.g., `:mushroom:` into 🍄). **Requires:** `symbolize=false` when setting to true. |
 | `symbolize` | False | Disables parsing of [SF Symbols](https://developer.apple.com/sf-symbols/) (e.g., `"SF Symbols Test :sun.max: :cloud.fill: :gamecontroller.fill: :bookmark: :sun.dust:"` → <img width="218" alt="Screenshot of SF Symbols" src="https://user-images.githubusercontent.com/222100/102021898-2d80e780-3d51-11eb-9e99-c71e92d14837.png">). Always `False` on Catalina. |
 
 **Visuals**:
