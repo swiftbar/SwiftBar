@@ -148,7 +148,8 @@ struct RepositoryPlugin: Codable {
         }
 
         var gitHubURL: URL? {
-            URL(string: "https://github.com/matryer/xbar-plugins/blob/master/\(path)")
+            let url = PreferencesStore.shared.pluginSourceCodeURL
+            return url.appendingPathComponent(path)
         }
 
         var sourceFileURL: URL? {
