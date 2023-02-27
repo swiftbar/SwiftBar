@@ -229,7 +229,7 @@ You can configure multiple schedules, using the sepparator `|`:
 * `#<swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>` - refreshes plugin on click, before presenting the menu
 * `<swiftbar.runInBash>false</swiftbar.runInBash>` - doesn't wrap plugins in Bash when running
 * `<swiftbar.type>streamable</swiftbar.type>` - mark plugin as Streamable
-* `<swiftbar.environment>[var1:default value, var2:default value, ... ]</swiftbar.environment>` - this variables will be passed in plugin's environment, in later release SwiftBar will provide a UI to change values for these variables.
+* `<swiftbar.environment>[var1=default value, var2=default value, ... ]</swiftbar.environment>` - this variables will be passed in plugin's environment, in later release SwiftBar will provide a UI to change values for these variables.
 
 #### Metadata for Binary Plugins
 
