@@ -153,9 +153,20 @@ struct MenuLineParameters: Codable {
     var image: NSImage? {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
-                let config = NSImage.SymbolConfiguration(scale: .large)
+                var config = NSImage.SymbolConfiguration(scale: .large)
+                var template = true
+                if #available(OSX 12.0, *) {
+                    if let color = sfcolor {
+                        config = config.applying(.init(hierarchicalColor: color))
+                        template = false
+
+                        if #available(OSX 13.0, *) {
+                            config = config.applying(NSImage.SymbolConfiguration.preferringMonochrome())
+                        }
+                    }
+                }
                 let image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
-                image?.isTemplate = true
+                image?.isTemplate = template
                 return resizedImageIfRequested(image)
             }
         }
