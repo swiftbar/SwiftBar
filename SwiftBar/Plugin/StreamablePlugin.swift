@@ -98,7 +98,7 @@ class StreamablePlugin: Plugin {
                                             self?.content = nil
                                             return
                                         }
-                                        guard str.contains("\n") else {
+                                        guard str.contains("\n") || !str.contains(streamSeparator) else {
                                             self?.streamInProgressContent.append(contentsOf: str)
                                             return
                                         }
