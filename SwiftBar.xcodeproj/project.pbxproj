@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -61,7 +61,6 @@
 		39224E2025F4344600BABF21 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 396E6CAB258E8C5C002C735D /* Localizable.strings */; };
 		39224E2125F4344600BABF21 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 393375EB25508B320050AC28 /* Credits.rtf */; };
 		39224E2225F4344600BABF21 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
-		39224E3325F4351600BABF21 /* SwiftBarMAS.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 39224E3225F4351300BABF21 /* SwiftBarMAS.xcconfig */; };
 		39224E5C25F530AF00BABF21 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* Environment.swift */; };
 		39224E5F25F5317800BABF21 /* Environment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224E5B25F530AF00BABF21 /* Environment.swift */; };
 		393375E725507ADE0050AC28 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 393375E625507ADE0050AC28 /* Log.swift */; };
@@ -513,8 +512,9 @@
 		3920747225460FD000213DBE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1200;
-				LastUpgradeCheck = 1210;
+				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					3920747925460FD000213DBE = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -571,7 +571,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				39224E3325F4351600BABF21 /* SwiftBarMAS.xcconfig in Resources */,
 				39224E1F25F4344600BABF21 /* Preview Assets.xcassets in Resources */,
 				39224E2025F4344600BABF21 /* Localizable.strings in Resources */,
 				39224E2125F4344600BABF21 /* Credits.rtf in Resources */,
@@ -638,6 +637,7 @@
 		};
 		398DAE2F2550A86300747D90 /* Version Number */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -656,7 +656,8 @@
 		};
 		398DAE76255373B700747D90 /* Launch At Login */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			alwaysOutOfDate = 1;
+			buildActionMask = 8;
 			files = (
 			);
 			inputFileListPaths = (
@@ -668,12 +669,13 @@
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/copy-helper-swiftpm.sh\"\n";
 		};
 		FA3864F42589AB61000C6C97 /* Swift Format */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -692,7 +694,8 @@
 		};
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
+			alwaysOutOfDate = 1;
+			buildActionMask = 8;
 			files = (
 			);
 			inputFileListPaths = (
@@ -704,7 +707,7 @@
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
+			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
 			shellScript = "
 ";
@@ -889,6 +892,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -951,6 +955,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -981,6 +986,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 461;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -991,7 +997,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1008,6 +1014,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 461;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1018,7 +1025,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 1.5.0;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1035,6 +1042,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -1063,6 +1071,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
 				ENABLE_HARDENED_RUNTIME = YES;
