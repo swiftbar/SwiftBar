@@ -31,6 +31,7 @@ enum Localizable {
         case GetPlugins = "MB_GET_PLUGINS"
         case SendFeedback = "MB_SEND_FEEDBACK"
         case ShowError = "MB_SHOW_ERROR"
+        case TerminateEphemeralPlugin = "MB_TERMINATE_EPH"
     }
 
     enum Preferences: String {

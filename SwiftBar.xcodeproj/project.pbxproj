@@ -128,6 +128,8 @@
 		FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */; };
 		FAC3F2ED2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */; };
 		FAC3F2F12916A61800D8F346 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */; };
+		FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */; };
+		FAC4AE4B297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4A297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift */; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
@@ -219,6 +221,8 @@
 		FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Intents.swift"; sourceTree = "<group>"; };
 		FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutPluginsPreferencesView.swift; sourceTree = "<group>"; };
 		FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
+		FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EphemeralPlugin.swift; sourceTree = "<group>"; };
+		FAC4AE4A297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetEphemeralPluginIntentHandler.swift; sourceTree = "<group>"; };
 		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
 		FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginDetailsView.swift; sourceTree = "<group>"; };
 		FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatableWindow.swift; sourceTree = "<group>"; };
@@ -362,10 +366,11 @@
 				39AF776E25461277001D76E5 /* Plugin.swift */,
 				FAD571A225A0071700623B57 /* StreamablePlugin.swift */,
 				39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */,
+				FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */,
+				FA6E13852915B70E00BA4594 /* ShortcutPlugin.swift */,
 				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
 				3990DCE02602BB5B002CDCD5 /* PluginDebugInfo.swift */,
-				FA6E13852915B70E00BA4594 /* ShortcutPlugin.swift */,
 			);
 			path = Plugin;
 			sourceTree = "<group>";
@@ -429,6 +434,7 @@
 				FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */,
 				FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */,
 				FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */,
+				FAC4AE4A297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift */,
 			);
 			path = Intents;
 			sourceTree = "<group>";
@@ -512,9 +518,8 @@
 		3920747225460FD000213DBE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1200;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1410;
 				TargetAttributes = {
 					3920747925460FD000213DBE = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -657,7 +662,7 @@
 		398DAE76255373B700747D90 /* Launch At Login */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 8;
+			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
@@ -669,7 +674,7 @@
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/copy-helper-swiftpm.sh\"\n";
 		};
@@ -695,7 +700,7 @@
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 8;
+			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
@@ -707,7 +712,7 @@
 			);
 			outputPaths = (
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "
 ";
@@ -752,6 +757,7 @@
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
+				FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */,
 				FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */,
@@ -772,6 +778,7 @@
 				39641EA5254E096200713DAF /* PreferencesView.swift in Sources */,
 				39AF7772254612BF001D76E5 /* PluginMetadata.swift in Sources */,
 				39B84A1F257D436200FA012E /* RunScript.swift in Sources */,
+				FAC4AE4B297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift in Sources */,
 				FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */,
 				FA64C9DF25CF691D00C4E5C5 /* GeneralPreferencesView.swift in Sources */,
 				FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */,
@@ -985,7 +992,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 461;
+				CURRENT_PROJECT_VERSION = 479;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1013,7 +1020,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 461;
+				CURRENT_PROJECT_VERSION = 479;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;

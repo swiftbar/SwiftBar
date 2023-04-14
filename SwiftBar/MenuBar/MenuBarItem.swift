@@ -28,6 +28,7 @@ class MenubarItem: NSObject {
     let runInTerminalItem = NSMenuItem(title: Localizable.MenuBar.RunInTerminal.localized, action: #selector(runInTerminal), keyEquivalent: "")
     let disablePluginItem = NSMenuItem(title: Localizable.MenuBar.DisablePlugin.localized, action: #selector(disablePlugin), keyEquivalent: "")
     let debugPluginItem = NSMenuItem(title: Localizable.MenuBar.DebugPlugin.localized, action: #selector(debugPlugin), keyEquivalent: "")
+    let terminatePluginItem = NSMenuItem(title: Localizable.MenuBar.TerminateEphemeralPlugin.localized, action: #selector(terminateEphemeralPlugin), keyEquivalent: "")
     let swiftBarItem = NSMenuItem(title: Localizable.MenuBar.SwiftBar.localized, action: nil, keyEquivalent: "")
     var isDefault = false
     var isOpen = false
@@ -212,7 +213,7 @@ extension MenubarItem {
         let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
         let quitItem = NSMenuItem(title: Localizable.App.Quit.localized, action: #selector(quit), keyEquivalent: "q")
         let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showErrorPopover), keyEquivalent: "")
-        [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
+        [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, terminatePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
         }
@@ -245,11 +246,21 @@ extension MenubarItem {
             if plugin?.error != nil {
                 statusBarMenu.addItem(showErrorItem)
             }
-            statusBarMenu.addItem(runInTerminalItem)
-            statusBarMenu.addItem(disablePluginItem)
-            if PreferencesStore.shared.pluginDebugMode {
-                statusBarMenu.addItem(debugPluginItem)
+            if let pluginType = plugin?.type {
+                if PluginType.runnableInTerminal.contains(pluginType) {
+                    statusBarMenu.addItem(runInTerminalItem)
+                }
+                if PreferencesStore.shared.pluginDebugMode, PluginType.debugable.contains(pluginType) {
+                    statusBarMenu.addItem(debugPluginItem)
+                }
+                if PluginType.disableable.contains(pluginType) {
+                    statusBarMenu.addItem(disablePluginItem)
+                }
+                if pluginType == .Ephemeral {
+                    statusBarMenu.addItem(terminatePluginItem)
+                }
             }
+
             if plugin?.metadata?.isEmpty == false {
                 statusBarMenu.addItem(aboutItem)
             }
@@ -317,6 +328,11 @@ extension MenubarItem {
     @objc func debugPlugin() {
         guard let plugin = plugin else { return }
         AppShared.showPluginDebug(plugin: plugin)
+    }
+
+    @objc func terminateEphemeralPlugin() {
+        guard let plugin = plugin else { return }
+        plugin.terminate()
     }
 
     @objc func showErrorPopover() {

@@ -6,6 +6,19 @@ enum PluginType: String {
     case Executable
     case Streamable
     case Shortcut
+    case Ephemeral
+
+    static var debugable: [Self] {
+        [.Executable, .Streamable]
+    }
+
+    static var runnableInTerminal: [Self] {
+        [.Executable, .Streamable]
+    }
+
+    static var disableable: [Self] {
+        [.Executable, .Streamable, .Shortcut]
+    }
 }
 
 enum PluginState {

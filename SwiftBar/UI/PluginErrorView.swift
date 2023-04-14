@@ -29,6 +29,8 @@ struct PluginErrorView: View {
             return (plugin.error as? ShellOutError)?.message ?? "none"
         case .Shortcut:
             return (plugin.error as? RunShortcutError)?.message ?? "none"
+        case .Ephemeral:
+            return "none"
         }
     }
 
@@ -36,7 +38,7 @@ struct PluginErrorView: View {
         switch plugin.type {
         case .Executable, .Streamable:
             return (plugin.error as? ShellOutError)?.output ?? "none"
-        case .Shortcut:
+        case .Shortcut, .Ephemeral:
             return "none"
         }
     }

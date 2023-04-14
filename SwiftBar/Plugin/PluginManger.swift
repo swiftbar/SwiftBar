@@ -17,6 +17,7 @@ class PluginManager: ObservableObject {
     @Published var plugins: [Plugin] = [] {
         didSet {
             shortcutPlugins = plugins.filter { $0.type == .Shortcut }.compactMap { $0 as? ShortcutPlugin }
+
             pluginsDidChange()
         }
     }
@@ -25,6 +26,10 @@ class PluginManager: ObservableObject {
 
     var filePlugins: [Plugin] {
         plugins.filter { $0.type == .Streamable || $0.type == .Executable }
+    }
+
+    var ephemeralPlugins: [EphemeralPlugin] {
+        plugins.filter { $0.type == .Ephemeral }.compactMap { $0 as? EphemeralPlugin }
     }
 
     var enabledPlugins: [Plugin] {
@@ -235,6 +240,20 @@ class PluginManager: ObservableObject {
     func removeShortcutPlugin(plugin: PersistentShortcutPlugin) {
         prefs.shortcutsPlugins.removeAll(where: { $0.id == plugin.id })
         loadPlugins()
+    }
+
+    func setEphemeralPlugin(pluginId: PluginID, content: String, exitAfter: Double = 0) {
+        if let plugin = ephemeralPlugins.first(where: { $0.id == pluginId }) {
+            guard !content.isEmpty else {
+                plugins.removeAll(where: { $0.id == pluginId && $0.type == .Ephemeral })
+                return
+            }
+            plugin.content = content
+            plugin.updateInterval = exitAfter
+            return
+        }
+
+        plugins.append(EphemeralPlugin(id: pluginId, content: content, exitAfter: exitAfter))
     }
 
     enum ImportPluginError: Error {

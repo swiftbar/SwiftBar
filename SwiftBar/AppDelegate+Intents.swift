@@ -13,6 +13,8 @@ extension AppDelegate {
             return DisablePluginIntentHandler()
         case is ReloadPluginIntent:
             return ReloadPluginIntentHandler()
+        case is SetEphemeralPluginIntent:
+            return SetEphemeralPluginIntentHandler()
         default:
             return nil
         }
