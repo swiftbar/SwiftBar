@@ -7,6 +7,7 @@
 "MB_RUN_IN_TERMINAL" = "Voer uit in Terminal";
 "MB_DISABLE_PLUGIN" = "Schakel plug-in uit";
 "MB_DDEBUG_PLUGIN" = "Debug plug-in";
+"MB_TERMINATE_EPH" = "Terminate Plugin";
 "MB_PREFERENCES" = "Voorkeuren…";
 "MB_REFRESH_ALL" = "Ververs alle plug-ins";
 "MB_ENABLE_ALL" = "Schakel alle in";
@@ -44,7 +45,7 @@
 "PF_SHORTCUTS_COLUMN_REPEAT" = "Repeat";
 "PF_SHORTCUTS_DELETE_BUTTON" = "Delete";
 "PF_SHORTCUTS_DELETE_CONFIRMATION" = "Are you sure you want to delete '<selectedPlugin>'?";
-"PF_SHORTCUTS_ADD_BUTTON" = "Cancel";
+"PF_SHORTCUTS_ADD_BUTTON" = "Add";
 "PF_SHORTCUTS_COLUMN_TOGGLE_HELP" = "Enable\Disable menu bar item";
 "PF_SHORTCUTS_COLUMN_REFRESH_HELP" = "Refresh menu bar item";
 "PF_ADD_SHORTCUT_PLUGIN_HEADER" = "Add Shortcut Plugin";

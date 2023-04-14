@@ -7,6 +7,7 @@
 "MB_RUN_IN_TERMINAL" = "Запустить в терминале…";
 "MB_DISABLE_PLUGIN" = "Отключить плагин";
 "MB_DDEBUG_PLUGIN" = "Отладка плагина";
+"MB_TERMINATE_EPH" = "Terminate Plugin";
 "MB_PREFERENCES" = "Настройки…";
 "MB_REFRESH_ALL" = "Обновить все";
 "MB_ENABLE_ALL" = "Включить все";
@@ -44,7 +45,7 @@
 "PF_SHORTCUTS_COLUMN_REPEAT" = "Repeat";
 "PF_SHORTCUTS_DELETE_BUTTON" = "Delete";
 "PF_SHORTCUTS_DELETE_CONFIRMATION" = "Are you sure you want to delete '<selectedPlugin>'?";
-"PF_SHORTCUTS_ADD_BUTTON" = "Cancel";
+"PF_SHORTCUTS_ADD_BUTTON" = "Add";
 "PF_SHORTCUTS_COLUMN_TOGGLE_HELP" = "Enable\Disable menu bar item";
 "PF_SHORTCUTS_COLUMN_REFRESH_HELP" = "Refresh menu bar item";
 "PF_ADD_SHORTCUT_PLUGIN_HEADER" = "Add Shortcut Plugin";

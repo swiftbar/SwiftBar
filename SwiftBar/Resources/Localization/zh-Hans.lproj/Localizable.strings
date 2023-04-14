@@ -7,6 +7,7 @@
 "MB_RUN_IN_TERMINAL" = "从命令行运行…";
 "MB_DISABLE_PLUGIN" = "停用插件";
 "MB_DDEBUG_PLUGIN" = "调试插件";
+"MB_TERMINATE_EPH" = "Terminate Plugin";
 "MB_PREFERENCES" = "偏好设置…";
 "MB_REFRESH_ALL" = "刷新全部插件";
 "MB_ENABLE_ALL" = "开启全部插件";
@@ -44,7 +45,7 @@
 "PF_SHORTCUTS_COLUMN_REPEAT" = "Repeat";
 "PF_SHORTCUTS_DELETE_BUTTON" = "Delete";
 "PF_SHORTCUTS_DELETE_CONFIRMATION" = "Are you sure you want to delete '<selectedPlugin>'?";
-"PF_SHORTCUTS_ADD_BUTTON" = "Cancel";
+"PF_SHORTCUTS_ADD_BUTTON" = "Add";
 "PF_SHORTCUTS_COLUMN_TOGGLE_HELP" = "Enable\Disable menu bar item";
 "PF_SHORTCUTS_COLUMN_REFRESH_HELP" = "Refresh menu bar item";
 "PF_ADD_SHORTCUT_PLUGIN_HEADER" = "Add Shortcut Plugin";
