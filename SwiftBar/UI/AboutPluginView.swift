@@ -6,35 +6,35 @@ struct AboutPluginView: View {
     var body: some View {
         ScrollView(showsIndicators: true) {
             VStack {
-                if let name = md.name {
+                if !md.name.isEmpty {
                     VStack {
-                        Text(name)
+                        Text(md.name)
                             .font(.largeTitle)
                             .fixedSize()
-                        if let version = md.version {
-                            Text(version)
+                        if !md.version.isEmpty {
+                            Text(md.version)
                                 .font(.footnote)
                         }
                     }.padding(.bottom)
                 }
 
-                if let desc = md.desc {
-                    LabelView(label: "", value: desc)
+                if md.desc.isEmpty {
+                    LabelView(label: "", value: md.desc)
                 }
                 Divider()
-                if let imageURL = md.previewImageURL {
-                    ImageView(withURL: imageURL, width: 350, height: 200)
+                if let previewImageURL = md.previewImageURL {
+                    ImageView(withURL: previewImageURL, width: 350, height: 200)
                 }
 
-                if let author = md.author {
-                    LabelView(label: "Author:", value: author)
+                if md.author.isEmpty {
+                    LabelView(label: "Author:", value: md.author)
                 }
 
-                if let github = md.github {
-                    LabelView(label: "GitHub:", value: github, url: URL(string: "https://github.com/\(github.replacingOccurrences(of: "@", with: ""))"))
+                if md.github.isEmpty {
+                    LabelView(label: "GitHub:", value: md.github, url: URL(string: "https://github.com/\(md.github.replacingOccurrences(of: "@", with: ""))"))
                 }
 
-                if let dependencies = md.dependencies.joined(separator: ",") {
+                if case let dependencies = md.dependencies.joined(separator: ",") {
                     LabelView(label: "Dependencies:", value: dependencies)
                 }
 

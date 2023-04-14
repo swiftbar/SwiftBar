@@ -36,8 +36,8 @@ struct PluginEntryView: View {
                     }
 
                     VStack(alignment: .leading) {
-                        if let desc = pluginEntry.desc {
-                            Text(desc)
+                        if !pluginEntry.desc.isEmpty {
+                            Text(pluginEntry.desc)
                                 .font(.body)
                                 .lineLimit(4)
                                 .padding([.bottom, .top], 1)
@@ -158,8 +158,8 @@ struct PluginEntryModalView: View {
 
                     Text("Description")
                         .font(.headline)
-                    if let desc = pluginEntry.desc {
-                        Text(desc)
+                    if !pluginEntry.desc.isEmpty {
+                        Text(pluginEntry.desc)
                             .font(.body)
                             .lineLimit(10)
                             .padding([.bottom, .top], 1)
