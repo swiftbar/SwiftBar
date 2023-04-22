@@ -41,6 +41,15 @@ class PluginManager: ObservableObject {
         prefs.pluginDirectoryResolvedURL
     }
 
+    var ingoreFileContent: String? {
+        guard let url = pluginDirectoryURL,
+              case let ignoreFile = url.appendingPathComponent(".swiftbarignore"),
+              FileManager.default.fileExists(atPath: ignoreFile.path),
+              let content = try? String(contentsOfFile: ignoreFile.path)
+        else { return nil }
+        return content
+    }
+
     var disablePluginCancellable: AnyCancellable?
     var osAppearanceChangeCancellable: AnyCancellable?
 
@@ -137,7 +146,43 @@ class PluginManager: ObservableObject {
             }
             return (files, dirs)
         }
+
+        func filterFilesAndDirs(files: [URL], dirs: [URL], ignoreContent: String) -> (filteredFiles: [URL], filteredDirs: [URL]) {
+            let lines = ignoreContent.split(separator: "\n").map(String.init)
+            var ignorePatterns: [String] = []
+
+            for line in lines {
+                let trimmedLine = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !trimmedLine.isEmpty, !trimmedLine.starts(with: "#") {
+                    ignorePatterns.append(trimmedLine)
+                }
+            }
+
+            func shouldBeIgnored(url: URL, patterns: [String]) -> Bool {
+                let path = url.absoluteString.replacingOccurrences(of: pluginDirectoryURL?.absoluteString ?? "", with: "")
+                for pattern in patterns {
+                    let escapedPattern = NSRegularExpression.escapedPattern(for: pattern)
+                        .replacingOccurrences(of: "\\*", with: ".*")
+                        .replacingOccurrences(of: "\\?", with: ".")
+                    let regex = try? NSRegularExpression(pattern: "^\(escapedPattern)$", options: [])
+
+                    if let regex = regex, regex.numberOfMatches(in: path, options: [], range: NSRange(location: 0, length: path.count)) > 0 {
+                        return true
+                    }
+                }
+                return false
+            }
+
+            let filteredFiles = files.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns) }
+            let filteredDirs = dirs.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns) }
+
+            return (filteredFiles, filteredDirs)
+        }
+
         var (files, dirs) = filter(url: url)
+        if let ingoreFileContent {
+            (files, dirs) = filterFilesAndDirs(files: files, dirs: dirs, ignoreContent: ingoreFileContent)
+        }
         if !dirs.isEmpty {
             files.append(contentsOf: dirs.map { filter(url: $0) }.flatMap(\.files))
         }
