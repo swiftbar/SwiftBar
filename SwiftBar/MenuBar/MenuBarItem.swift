@@ -70,6 +70,10 @@ class MenubarItem: NSObject {
         Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
     }
 
+    var refreshOnOpen: Bool {
+        plugin?.metadata?.refreshOnOpen ?? false
+    }
+
     lazy var menuUpdateQueue: OperationQueue = delegate.pluginManager.menuUpdateQueue
 
     init(title: String, plugin: Plugin? = nil) {
@@ -81,6 +85,7 @@ class MenubarItem: NSObject {
             buildStandardMenu()
             return
         }
+        webPopover.delegate = self
         self.plugin = plugin
         barItem.autosaveName = plugin?.id
         statusBarMenu.delegate = self
@@ -364,13 +369,19 @@ extension MenubarItem {
     }
 
     func showWebPopover(url: URL, widht: CGFloat, height: CGFloat) {
+        defer {
+            webPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
+            webPopover.contentViewController?.view.window?.becomeKey()
+            startPopupMonitor()
+        }
+
+        guard webPopover.contentViewController == nil || refreshOnOpen else {
+            return
+        }
         let urlRequest = URLRequest(url: url)
         webPopover.behavior = .transient
-        webPopover.contentViewController = NSHostingController(rootView: WebPanelView(request: urlRequest))
+        webPopover.contentViewController = NSHostingController(rootView: WebPanelView(request: urlRequest, name: plugin?.name ?? ""))
         webPopover.contentSize = NSSize(width: widht, height: height)
-        webPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
-        webPopover.contentViewController?.view.window?.becomeKey()
-        startPopupMonitor()
     }
 
     func hideWebPopover(_ sender: AnyObject?) {
@@ -672,7 +683,7 @@ extension MenubarItem {
     }
 
     func showMenu() {
-        if plugin?.metadata?.refreshOnOpen == true, plugin?.type == .Executable {
+        if refreshOnOpen, plugin?.type == .Executable {
             refreshAndShowMenu()
             return
         }
@@ -778,5 +789,11 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
         env["LAUNCHED_FROM_DROP_ACTION"] = "TRUE"
         AppShared.runInTerminal(script: scriptPath, runInBackground: true, env: env, runInBash: plugin?.metadata?.shouldRunInBash ?? true)
         return true
+    }
+}
+
+extension MenubarItem: NSPopoverDelegate {
+    func popoverShouldDetach(_: NSPopover) -> Bool {
+        true
     }
 }
