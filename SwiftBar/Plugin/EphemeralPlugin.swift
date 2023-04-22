@@ -7,6 +7,7 @@ class EphemeralPlugin: Plugin {
     let type: PluginType = .Ephemeral
     let name: String = "Ephemeral"
     let file: String = "none"
+    var refreshEnv: [String: String] = [:]
 
     var updateInterval: Double = 60 * 60 * 24 * 100 {
         didSet {

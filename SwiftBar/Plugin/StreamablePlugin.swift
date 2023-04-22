@@ -9,6 +9,7 @@ class StreamablePlugin: Plugin {
     let type: PluginType = .Streamable
     let name: String
     let file: String
+    var refreshEnv: [String: String] = [:]
 
     var metadata: PluginMetadata?
     var lastUpdated: Date?

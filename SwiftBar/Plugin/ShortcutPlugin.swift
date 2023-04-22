@@ -32,6 +32,7 @@ class ShortcutPlugin: Plugin, Identifiable, ObservableObject {
     var shortcut: String
     var repeatString: String
     var cronString: String
+    var refreshEnv: [String: String] = [:]
     @Published var enabled: Bool = true
     var operation: RunPluginOperation<ShortcutPlugin>?
 

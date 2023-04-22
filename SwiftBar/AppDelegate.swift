@@ -144,6 +144,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             case "refreshplugin":
                 if let plugin = getPluginFromURL(url: url) {
                     pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
+                    if let params = url.queryParameters {
+                        plugin.refreshEnv = params.filter { $0.key != "name" }
+                    }
                     plugin.refresh(reason: .URLScheme)
                     return
                 }

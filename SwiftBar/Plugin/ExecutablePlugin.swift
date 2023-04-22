@@ -7,6 +7,7 @@ class ExecutablePlugin: Plugin {
     let type: PluginType = .Executable
     let name: String
     let file: String
+    var refreshEnv: [String: String] = [:]
 
     var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
     var metadata: PluginMetadata?

@@ -72,6 +72,7 @@ protocol Plugin: AnyObject {
     var content: String? { get set }
     var error: Error? { get set }
     var debugInfo: PluginDebugInfo { get set }
+    var refreshEnv: [String: String] { get set }
     func refresh(reason: PluginRefreshReason)
     func enable()
     func disable()
@@ -151,6 +152,11 @@ extension Plugin {
         metadata?.environment.forEach { k, v in
             pluginEnv[k] = v
         }
+
+        refreshEnv.forEach { k, v in
+            pluginEnv[k] = v
+        }
+        refreshEnv.removeAll()
         return pluginEnv
     }
 }
