@@ -5,7 +5,10 @@ import os
 class EphemeralPlugin: Plugin {
     var id: PluginID
     let type: PluginType = .Ephemeral
-    let name: String = "Ephemeral"
+    var name: String {
+        "Ephemeral: \(id)"
+    }
+
     let file: String = "none"
     var refreshEnv: [String: String] = [:]
 

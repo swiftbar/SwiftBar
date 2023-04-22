@@ -170,6 +170,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                 if let src = url.queryParameters?["src"], let url = URL(string: src) {
                     pluginManager.importPlugin(from: url)
                 }
+            case "setephemeralplugin":
+                if let name = url.queryParameters?["name"],
+                   case let pluginContent = url.queryParameters?["content"] ?? "",
+                   let exitAfter = Double(url.queryParameters?["exitafter"] ?? "0")
+                {
+                    pluginManager.setEphemeralPlugin(pluginId: name, content: pluginContent, exitAfter: exitAfter)
+                }
             case "notify":
                 guard let plugin = getPluginFromURL(url: url) else { return }
                 let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value.escaped())" }.joined(separator: " ") ?? ""
