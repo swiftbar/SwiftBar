@@ -177,7 +177,7 @@ struct AddShortcutPluginView: View {
             HStack {
                 Button(Localizable.MenuBar.GetPlugins.localized) {
                     AppShared.getPlugins()
-                }
+                }.hidden()
                 Spacer()
                 Button("Cancel", role: .cancel) {
                     isPresented = false
