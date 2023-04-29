@@ -7,7 +7,7 @@
 "MB_RUN_IN_TERMINAL" = "从命令行运行…";
 "MB_DISABLE_PLUGIN" = "停用插件";
 "MB_DDEBUG_PLUGIN" = "调试插件";
-"MB_TERMINATE_EPH" = "Terminate Plugin";
+"MB_TERMINATE_EPH" = "终止插件";
 "MB_PREFERENCES" = "偏好设置…";
 "MB_REFRESH_ALL" = "刷新全部插件";
 "MB_ENABLE_ALL" = "开启全部插件";
@@ -40,22 +40,22 @@
 "PF_PLUGINS_FOOTNOTE" = "菜单栏中会显示已启用的插件。";
 "PF_MENUBAR_ITEM" = "菜单栏项目";
 "PF_DIM_ON_MANUAL_REFRESH" = "手动刷新时变暗";
-"PF_SHORTCUTS_COLUMN_NAME" = "Name";
-"PF_SHORTCUTS_COLUMN_SHORTCUT" = "Shortcut";
-"PF_SHORTCUTS_COLUMN_REPEAT" = "Repeat";
-"PF_SHORTCUTS_DELETE_BUTTON" = "Delete";
-"PF_SHORTCUTS_DELETE_CONFIRMATION" = "Are you sure you want to delete '<selectedPlugin>'?";
-"PF_SHORTCUTS_ADD_BUTTON" = "Add";
-"PF_SHORTCUTS_COLUMN_TOGGLE_HELP" = "Enable\Disable menu bar item";
-"PF_SHORTCUTS_COLUMN_REFRESH_HELP" = "Refresh menu bar item";
-"PF_ADD_SHORTCUT_PLUGIN_HEADER" = "Add Shortcut Plugin";
-"PF_ADD_SHORTCUT_PLUGIN_NAME" = "Name";
-"PF_ADD_SHORTCUT_PLUGIN_FOLDER" = "Folder";
-"PF_ADD_SHORTCUT_PLUGIN_SHORTCUT" = "Shortcut";
-"PF_ADD_SHORTCUT_PLUGIN_REFRESH_HELP" = "Refresh Shortcuts list";
-"PF_ADD_SHORTCUT_PLUGIN_OPEN_HELP" = "Open in Shortcuts.app";
-"PF_ADD_SHORTCUT_PLUGIN_NEW_HELP" = "Create new Shortcut";
-"PF_ADD_SHORTCUT_PLUGIN_REFRESH_INTERVAL" = "Refresh Interval";
+"PF_SHORTCUTS_COLUMN_NAME" = "名称";
+"PF_SHORTCUTS_COLUMN_SHORTCUT" = "快捷指令";
+"PF_SHORTCUTS_COLUMN_REPEAT" = "重复";
+"PF_SHORTCUTS_DELETE_BUTTON" = "删除";
+"PF_SHORTCUTS_DELETE_CONFIRMATION" = "你确定要删除 '<selectedPlugin>' 吗？";
+"PF_SHORTCUTS_ADD_BUTTON" = "添加";
+"PF_SHORTCUTS_COLUMN_TOGGLE_HELP" = "启用\禁用菜单栏项目";
+"PF_SHORTCUTS_COLUMN_REFRESH_HELP" = "刷新菜单栏项目";
+"PF_ADD_SHORTCUT_PLUGIN_HEADER" = "添加到快捷指令插件";
+"PF_ADD_SHORTCUT_PLUGIN_NAME" = "名称";
+"PF_ADD_SHORTCUT_PLUGIN_FOLDER" = "文件夹";
+"PF_ADD_SHORTCUT_PLUGIN_SHORTCUT" = "快捷指令";
+"PF_ADD_SHORTCUT_PLUGIN_REFRESH_HELP" = "刷新快捷指令列表";
+"PF_ADD_SHORTCUT_PLUGIN_OPEN_HELP" = "在 快捷指令.app 中打开";
+"PF_ADD_SHORTCUT_PLUGIN_NEW_HELP" = "新建快捷指令";
+"PF_ADD_SHORTCUT_PLUGIN_REFRESH_INTERVAL" = "刷新时间";
 
 //Plugin Repository strings
 "PR_CATEGORY" = "类别";
@@ -75,7 +75,7 @@
 "APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "选择插件目录";
 "APP_FOLDER_NOT_ALLOWED_MESSAGE" = "不能使用此目录作为 SwiftBar 的插件目录";
 "APP_FOLDER_NOT_ALLOWED_ACTION" = "选择另一个位置";
-"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "哇！看起来你选择了一个包含很多文件的文件夹，请选择另一个。如果有插件依赖的node_modules文件夹，请将其隐藏。";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "哇！看起来你选择了一个包含很多文件的文件夹，请选择另一个。如果有插件依赖的 node_modules 文件夹，请将其隐藏。";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "设置 SwiftBar 插件位置";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "选择一个目录来储存插件仓库";
 "APP_QUIT" = "退出 SwiftBar";
