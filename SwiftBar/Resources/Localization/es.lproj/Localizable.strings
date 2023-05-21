@@ -21,6 +21,7 @@
 //Preferences strings
 "PF_PREFERENCES" = "Preferencias";
 "PF_GENERAL" = "General";
+"PF_ADVANCED" = "Advanced";
 "PF_PLUGINS" = "Complementos";
 "PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
 "PF_ABOUT" = "About";
@@ -32,6 +33,7 @@
 "PF_SHELL" = "Shell";
 "PF_TERMINAL" = "Terminal";
 "PF_HIDE_SWIFTBAR_ICON" = "Ocultar Ícono SwiftBar";
+"PF_STEALTH_MODE" = "Hide SwiftBar in the menu bar";
 "PF_CHECK_FOR_UPDATE" = "Actualizar";
 "PF_CHECK_FOR_UPDATES" = "Verificar Actualizaciones";
 "PR_INCLUDE_BETA_UPDATES" = "Incluir Versiones Beta";
@@ -42,7 +44,7 @@
 "PF_DIM_ON_MANUAL_REFRESH" = "Dim on Manual Refresh";
 "PF_SHORTCUTS_COLUMN_NAME" = "Name";
 "PF_SHORTCUTS_COLUMN_SHORTCUT" = "Shortcut";
-"PF_SHORTCUTS_COLUMN_REPEAT" = "Repeat";
+"PF_SHORTCUTS_COLUMN_REFRESH" = "Refresh";
 "PF_SHORTCUTS_DELETE_BUTTON" = "Delete";
 "PF_SHORTCUTS_DELETE_CONFIRMATION" = "Are you sure you want to delete '<selectedPlugin>'?";
 "PF_SHORTCUTS_ADD_BUTTON" = "Add";

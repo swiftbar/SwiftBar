@@ -5,6 +5,7 @@ extension Preferences.PaneIdentifier {
     static let general = Self("general")
     static let plugins = Self("plugins")
     static let shortcutPlugins = Self("shortcutPlugins")
+    static let advanced = Self("advanced")
     static let about = Self("about")
 
     var image: NSImage {
@@ -24,6 +25,12 @@ extension Preferences.PaneIdentifier {
         case .shortcutPlugins:
             if #available(OSX 11.0, *) {
                 return NSImage(systemSymbolName: "flowchart", accessibilityDescription: nil)!
+            } else {
+                return NSImage(named: "AppIcon")!
+            }
+        case .advanced:
+            if #available(OSX 11.0, *) {
+                return NSImage(systemSymbolName: "gearshape.2", accessibilityDescription: nil)!
             } else {
                 return NSImage(named: "AppIcon")!
             }
@@ -63,6 +70,14 @@ var preferencePanes: [PreferencePaneConvertible] = {
             ) { ShortcutPluginsPreferencesView(pluginManager: PluginManager.shared).environmentObject(PreferencesStore.shared) }
         )
     }
+
+    panes.append(
+        Preferences.Pane(
+            identifier: .advanced,
+            title: Localizable.Preferences.Advanced.localized,
+            toolbarIcon: Preferences.PaneIdentifier.advanced.image
+        ) { AdvancedPreferencesView().environmentObject(PreferencesStore.shared) }
+    )
 
     panes.append(
         Preferences.Pane(

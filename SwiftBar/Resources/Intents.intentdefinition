@@ -9,11 +9,11 @@
 	<key>INIntentDefinitionNamespace</key>
 	<string>pJtzyC</string>
 	<key>INIntentDefinitionSystemVersion</key>
-	<string>22C65</string>
+	<string>22E261</string>
 	<key>INIntentDefinitionToolsBuildVersion</key>
-	<string>14B47b</string>
+	<string>14E222b</string>
 	<key>INIntentDefinitionToolsVersion</key>
-	<string>14.1</string>
+	<string>14.3</string>
 	<key>INIntents</key>
 	<array>
 		<dict>
@@ -110,6 +110,8 @@
 			<true/>
 			<key>INIntentDescriptionID</key>
 			<string>1uwPBT</string>
+			<key>INIntentIneligibleForSuggestions</key>
+			<true/>
 			<key>INIntentInput</key>
 			<string>plugin</string>
 			<key>INIntentKeyParameter</key>
@@ -132,20 +134,6 @@
 			</dict>
 			<key>INIntentName</key>
 			<string>EnablePlugin</string>
-			<key>INIntentParameterCombinations</key>
-			<dict>
-				<key>plugin</key>
-				<dict>
-					<key>INIntentParameterCombinationIsLinked</key>
-					<true/>
-					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
-					<true/>
-					<key>INIntentParameterCombinationTitle</key>
-					<string>Enable${plugin}</string>
-					<key>INIntentParameterCombinationTitleID</key>
-					<string>zJ4uD7</string>
-				</dict>
-			</dict>
 			<key>INIntentParameters</key>
 			<array>
 				<dict>
@@ -222,6 +210,8 @@
 			<true/>
 			<key>INIntentDescriptionID</key>
 			<string>Yg8Xr6</string>
+			<key>INIntentIneligibleForSuggestions</key>
+			<true/>
 			<key>INIntentInput</key>
 			<string>plugin</string>
 			<key>INIntentKeyParameter</key>
@@ -244,20 +234,6 @@
 			</dict>
 			<key>INIntentName</key>
 			<string>DisablePlugin</string>
-			<key>INIntentParameterCombinations</key>
-			<dict>
-				<key>plugin</key>
-				<dict>
-					<key>INIntentParameterCombinationIsLinked</key>
-					<true/>
-					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
-					<true/>
-					<key>INIntentParameterCombinationTitle</key>
-					<string>Disable${plugin}</string>
-					<key>INIntentParameterCombinationTitleID</key>
-					<string>EO6dNz</string>
-				</dict>
-			</dict>
 			<key>INIntentParameters</key>
 			<array>
 				<dict>
@@ -334,6 +310,8 @@
 			<true/>
 			<key>INIntentDescriptionID</key>
 			<string>ZumjNI</string>
+			<key>INIntentIneligibleForSuggestions</key>
+			<true/>
 			<key>INIntentInput</key>
 			<string>plugin</string>
 			<key>INIntentKeyParameter</key>
@@ -356,20 +334,6 @@
 			</dict>
 			<key>INIntentName</key>
 			<string>ReloadPlugin</string>
-			<key>INIntentParameterCombinations</key>
-			<dict>
-				<key>plugin</key>
-				<dict>
-					<key>INIntentParameterCombinationIsLinked</key>
-					<true/>
-					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
-					<true/>
-					<key>INIntentParameterCombinationTitle</key>
-					<string>Reload${plugin}</string>
-					<key>INIntentParameterCombinationTitleID</key>
-					<string>uYj1Ro</string>
-				</dict>
-			</dict>
 			<key>INIntentParameters</key>
 			<array>
 				<dict>
@@ -448,6 +412,8 @@
 			<string>Sets or updates the content of Ephemeral plugin</string>
 			<key>INIntentDescriptionID</key>
 			<string>fEqrq5</string>
+			<key>INIntentIneligibleForSuggestions</key>
+			<true/>
 			<key>INIntentInput</key>
 			<string>name</string>
 			<key>INIntentKeyParameter</key>
@@ -470,20 +436,6 @@
 			</dict>
 			<key>INIntentName</key>
 			<string>SetEphemeralPlugin</string>
-			<key>INIntentParameterCombinations</key>
-			<dict>
-				<key>name,content,exitAfter</key>
-				<dict>
-					<key>INIntentParameterCombinationIsLinked</key>
-					<true/>
-					<key>INIntentParameterCombinationSupportsBackgroundExecution</key>
-					<true/>
-					<key>INIntentParameterCombinationTitle</key>
-					<string>Set ephemeral plugin named ${name}to ${content}</string>
-					<key>INIntentParameterCombinationTitleID</key>
-					<string>1wUwlk</string>
-				</dict>
-			</dict>
 			<key>INIntentParameters</key>
 			<array>
 				<dict>

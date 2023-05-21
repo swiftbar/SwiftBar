@@ -23,17 +23,8 @@ struct GeneralPreferencesView: View {
                 }
                 Text(preferences.pluginDirectoryPath ?? Localizable.Preferences.PathIsNone.localized)
                     .preferenceDescription()
+                Spacer()
             }
-
-            Preferences.Section(title: "\(Localizable.Preferences.Terminal.localized):", verticalAlignment: .top) {
-                EnumPicker(selected: $preferences.terminal, title: "")
-                    .frame(width: 120.0)
-            }
-            Preferences.Section(title: "\(Localizable.Preferences.Shell.localized):", bottomDivider: true) {
-                EnumPicker(selected: $preferences.shell, title: "")
-                    .frame(width: 120.0)
-            }
-
             Preferences.Section(title: "\(Localizable.Preferences.UpdateLabel.localized):", verticalAlignment: .top) {
                 HStack {
                     Button(Localizable.Preferences.CheckForUpdates.localized) {

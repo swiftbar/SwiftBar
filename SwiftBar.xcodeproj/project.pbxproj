@@ -126,6 +126,7 @@
 		FAA14A152728C6FC0052FDB8 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */; };
 		FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */; };
+		FAAFB2A52A1A567D00316F79 /* AdvancedPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAAFB2A42A1A567D00316F79 /* AdvancedPreferencesView.swift */; };
 		FAC3F2ED2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */; };
 		FAC3F2F12916A61800D8F346 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */; };
 		FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */; };
@@ -219,6 +220,7 @@
 		FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisablePluginIntentHandler.swift; sourceTree = "<group>"; };
 		FAA14A162728C79B0052FDB8 /* GetPluginsIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GetPluginsIntentHandler.swift; sourceTree = "<group>"; };
 		FAA14A182728C7FC0052FDB8 /* AppDelegate+Intents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppDelegate+Intents.swift"; sourceTree = "<group>"; };
+		FAAFB2A42A1A567D00316F79 /* AdvancedPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedPreferencesView.swift; sourceTree = "<group>"; };
 		FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutPluginsPreferencesView.swift; sourceTree = "<group>"; };
 		FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
 		FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EphemeralPlugin.swift; sourceTree = "<group>"; };
@@ -419,6 +421,7 @@
 			children = (
 				39641EA4254E096200713DAF /* PreferencesView.swift */,
 				FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */,
+				FAAFB2A42A1A567D00316F79 /* AdvancedPreferencesView.swift */,
 				FA64C9E125CF696D00C4E5C5 /* PluginsPreferencesView.swift */,
 				FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */,
 				FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */,
@@ -757,6 +760,7 @@
 				39AF7793254B5834001D76E5 /* NSColor.swift in Sources */,
 				FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */,
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
+				FAAFB2A52A1A567D00316F79 /* AdvancedPreferencesView.swift in Sources */,
 				FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */,
 				FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
@@ -992,7 +996,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 479;
+				CURRENT_PROJECT_VERSION = 500;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1020,7 +1024,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 479;
+				CURRENT_PROJECT_VERSION = 500;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;

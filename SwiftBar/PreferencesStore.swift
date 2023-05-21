@@ -139,8 +139,10 @@ class PreferencesStore: ObservableObject {
         PreferencesStore.getValue(key: .StreamablePluginDebugOutput) as? Bool ?? false
     }
 
-    var stealthMode: Bool {
-        PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
+    @Published var stealthMode: Bool {
+        didSet {
+            PreferencesStore.setValue(value: stealthMode, key: .StealthMode)
+        }
     }
 
     var collectCrashReports: Bool {
@@ -178,6 +180,7 @@ class PreferencesStore: ObservableObject {
         swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         includeBetaUpdates = PreferencesStore.getValue(key: .IncludeBetaUpdates) as? Bool ?? false
         dimOnManualRefresh = PreferencesStore.getValue(key: .DimOnManualRefresh) as? Bool ?? true
+        stealthMode = PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
         shortcutsPlugins = {
             guard let data = PreferencesStore.getValue(key: .ShortcutPlugins) as? Data,
                   let plugins = try? PropertyListDecoder().decode([PersistentShortcutPlugin].self, from: data) else { return [] }

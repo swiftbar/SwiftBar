@@ -28,7 +28,7 @@ struct ShortcutPluginsPreferencesView: View {
                     TableColumn(Localizable.Preferences.ShortcutsColumnShortcut.localized, value: \.shortcut) { plugin in
                         Text("\(plugin.shortcut)").font(.body)
                     }
-                    TableColumn(Localizable.Preferences.ShortcutsColumnRepeat.localized) { plugin in
+                    TableColumn(Localizable.Preferences.ShortcutsColumnRefresh.localized) { plugin in
                         Text("\(plugin.repeatString)").font(.body)
                     }.width(60)
 
