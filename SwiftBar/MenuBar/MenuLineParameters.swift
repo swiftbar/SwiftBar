@@ -1,5 +1,6 @@
 import Cocoa
 import HotKey
+import SwiftUI
 
 struct MenuLineParameters: Codable {
     let title: String
@@ -54,6 +55,20 @@ struct MenuLineParameters: Codable {
             }
         }
         return params
+    }
+
+    struct SFMulticolor: Codable {
+        enum RenderingMode: String, Codable {
+            case Hierarchical
+            case Palette
+        }
+
+        var renderingMode: RenderingMode
+        var colors: [String]
+
+        func getColors() -> [NSColor] {
+            colors.compactMap { NSColor.webColor(from: $0) }
+        }
     }
 
     var href: String? {
@@ -150,23 +165,29 @@ struct MenuLineParameters: Codable {
         params["alternate"]?.lowercased() == "true"
     }
 
+    func getSFMulticolor() -> SFMulticolor? {
+        guard let base64 = params["sfmulticolor"]?.data(using: .utf8),
+              let decodedData = Data(base64Encoded: base64),
+              case let sfmc = try? JSONDecoder().decode(SFMulticolor.self, from: decodedData)
+        else { return nil }
+        return sfmc
+    }
+
     var image: NSImage? {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
-                var config = NSImage.SymbolConfiguration(scale: .large)
-                var template = true
-                if #available(OSX 12.0, *) {
-                    if let color = sfcolor {
-                        config = config.applying(.init(hierarchicalColor: color))
-                        template = false
-
-                        if #available(OSX 13.0, *) {
-                            config = config.applying(NSImage.SymbolConfiguration.preferringMonochrome())
-                        }
+                var config = NSImage.SymbolConfiguration(scale: .medium)
+                if #available(OSX 12.0, *), let sfmc = getSFMulticolor() {
+                    switch sfmc.renderingMode {
+                    case .Hierarchical:
+                        config = config.applying(NSImage.SymbolConfiguration(hierarchicalColor: sfmc.getColors().first ?? NSColor(Color.primary)))
+                    case .Palette:
+                        config = config.applying(NSImage.SymbolConfiguration(paletteColors: sfmc.getColors()))
                     }
                 }
+
                 let image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
-                image?.isTemplate = template
+                image?.isTemplate = true
                 return resizedImageIfRequested(image)
             }
         }
