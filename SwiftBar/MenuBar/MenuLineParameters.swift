@@ -57,17 +57,77 @@ struct MenuLineParameters: Codable {
         return params
     }
 
-    struct SFMulticolor: Codable {
+    struct SFConfig: Codable {
         enum RenderingMode: String, Codable {
             case Hierarchical
             case Palette
         }
 
+        enum Scale: String, Codable {
+            case small
+            case medium
+            case large
+        }
+
+        enum Weight: String, Codable {
+            case ultralight
+            case thin
+            case light
+            case regular
+            case medium
+            case semibold
+            case bold
+            case heavy
+            case black
+        }
+
         var renderingMode: RenderingMode
         var colors: [String]
+        var scale: Scale?
+        var weight: Weight?
 
         func getColors() -> [NSColor] {
             colors.compactMap { NSColor.webColor(from: $0) }
+        }
+
+        @available(macOS 11.0, *)
+        func getScale() -> NSImage.SymbolScale {
+            switch scale {
+            case .small:
+                .small
+            case .medium:
+                .medium
+            case .large:
+                .large
+            case .none:
+                .large
+            }
+        }
+
+        @available(macOS 11.0, *)
+        func getWeight() -> NSFont.Weight {
+            switch weight {
+            case .ultralight:
+                .ultraLight
+            case .thin:
+                .thin
+            case .light:
+                .light
+            case .regular:
+                .regular
+            case .medium:
+                .medium
+            case .semibold:
+                .semibold
+            case .bold:
+                .bold
+            case .heavy:
+                .heavy
+            case .black:
+                .black
+            case .none:
+                .regular
+            }
         }
     }
 
@@ -165,10 +225,10 @@ struct MenuLineParameters: Codable {
         params["alternate"]?.lowercased() == "true"
     }
 
-    func getSFMulticolor() -> SFMulticolor? {
-        guard let base64 = params["sfmulticolor"]?.data(using: .utf8),
+    func getSFConfig() -> SFConfig? {
+        guard let base64 = params["sfconfig"]?.data(using: .utf8),
               let decodedData = Data(base64Encoded: base64),
-              case let sfmc = try? JSONDecoder().decode(SFMulticolor.self, from: decodedData)
+              case let sfmc = try? JSONDecoder().decode(SFConfig.self, from: decodedData)
         else { return nil }
         return sfmc
     }
@@ -176,14 +236,16 @@ struct MenuLineParameters: Codable {
     var image: NSImage? {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
-                var config = NSImage.SymbolConfiguration(scale: .medium)
-                if #available(OSX 12.0, *), let sfmc = getSFMulticolor() {
+                let sfmc = getSFConfig()
+                var config = NSImage.SymbolConfiguration(scale: .large)
+                if #available(OSX 12.0, *), let sfmc = sfmc {
                     switch sfmc.renderingMode {
                     case .Hierarchical:
                         config = config.applying(NSImage.SymbolConfiguration(hierarchicalColor: sfmc.getColors().first ?? NSColor(Color.primary)))
                     case .Palette:
                         config = config.applying(NSImage.SymbolConfiguration(paletteColors: sfmc.getColors()))
                     }
+                    config = config.applying(NSImage.SymbolConfiguration(pointSize: 0, weight: sfmc.getWeight(), scale: sfmc.getScale()))
                 }
 
                 let image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
