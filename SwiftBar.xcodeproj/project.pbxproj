@@ -698,7 +698,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd BuildTools\nswiftformat --swiftversion \"5.5.2\" \"$SRCROOT\"\n";
+			shellScript = "if which swiftformat >/dev/null; then\n  swiftformat .\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
 		};
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -996,7 +996,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 500;
+				CURRENT_PROJECT_VERSION = 501;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1024,7 +1024,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 500;
+				CURRENT_PROJECT_VERSION = 501;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
