@@ -34,7 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     func applicationDidFinishLaunching(_: Notification) {
         if prefs.collectCrashReports {
-//             Not cool to have the KEY here, but since this is for crash reporting I don't care
+            // Not cool to have the KEY here, but since this is for crash reporting I don't care
             AppCenter.start(withAppSecret: "40e6c2fa-2383-40a7-bfbd-75662a7d92a9", services: [
                 Crashes.self,
             ])

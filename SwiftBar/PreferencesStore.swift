@@ -103,6 +103,12 @@ class PreferencesStore: ObservableObject {
         }
     }
 
+    @Published var collectCrashReports: Bool {
+        didSet {
+            PreferencesStore.setValue(value: collectCrashReports, key: .CollectCrashReports)
+        }
+    }
+
     @Published var dimOnManualRefresh: Bool {
         didSet {
             PreferencesStore.setValue(value: dimOnManualRefresh, key: .DimOnManualRefresh)
@@ -145,10 +151,6 @@ class PreferencesStore: ObservableObject {
         }
     }
 
-    var collectCrashReports: Bool {
-        PreferencesStore.getValue(key: .CollectCrashReports) as? Bool ?? false
-    }
-
     var debugLoggingEnabled: Bool {
         PreferencesStore.getValue(key: .DebugLoggingEnabled) as? Bool ?? false
     }
@@ -179,6 +181,7 @@ class PreferencesStore: ObservableObject {
         shell = .Bash
         swiftBarIconIsHidden = PreferencesStore.getValue(key: .HideSwiftBarIcon) as? Bool ?? false
         includeBetaUpdates = PreferencesStore.getValue(key: .IncludeBetaUpdates) as? Bool ?? false
+        collectCrashReports = PreferencesStore.getValue(key: .CollectCrashReports) as? Bool ?? true
         dimOnManualRefresh = PreferencesStore.getValue(key: .DimOnManualRefresh) as? Bool ?? true
         stealthMode = PreferencesStore.getValue(key: .StealthMode) as? Bool ?? false
         shortcutsPlugins = {

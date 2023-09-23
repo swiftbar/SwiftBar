@@ -37,6 +37,7 @@
 "PF_CHECK_FOR_UPDATE" = "更新";
 "PF_CHECK_FOR_UPDATES" = "检查更新";
 "PR_INCLUDE_BETA_UPDATES" = "包括预发布版本";
+"PR_SHARE_CRASH_REPORTS" = "分享崩溃报告";
 "PF_NO_PLUGINS_MESSAGE" = "插件目录是空的";
 "PF_ENABLE_ALL" = "开启所有";
 "PF_PLUGINS_FOOTNOTE" = "菜单栏中会显示已启用的插件。";

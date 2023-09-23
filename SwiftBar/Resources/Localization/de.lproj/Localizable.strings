@@ -37,6 +37,7 @@
 "PF_CHECK_FOR_UPDATE" = "Update";
 "PF_CHECK_FOR_UPDATES" = "Check for updates";
 "PR_INCLUDE_BETA_UPDATES" = "Enthalten Vorabversionen";
+"PR_SHARE_CRASH_REPORTS" = "Fehlerberichte teilen";
 "PF_NO_PLUGINS_MESSAGE" = "Plugins folder is empty";
 "PF_ENABLE_ALL" = "Enable All";
 "PF_PLUGINS_FOOTNOTE" = "Enabled plugins appear in the menu bar.";

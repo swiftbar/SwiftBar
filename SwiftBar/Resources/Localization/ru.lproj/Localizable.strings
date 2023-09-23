@@ -37,6 +37,7 @@
 "PF_CHECK_FOR_UPDATE" = "Обновить";
 "PF_CHECK_FOR_UPDATES" = "Проверить обновления";
 "PR_INCLUDE_BETA_UPDATES" = "Включая бета версии";
+"PR_SHARE_CRASH_REPORTS" = "Поделиться отчётами о сбоях";
 "PF_NO_PLUGINS_MESSAGE" = "Папка плагина пуста";
 "PF_ENABLE_ALL" = "Включить все";
 "PF_PLUGINS_FOOTNOTE" = "Включенные плагины видны в панели меню.";
