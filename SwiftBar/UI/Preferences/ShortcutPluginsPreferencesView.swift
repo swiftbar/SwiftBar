@@ -188,7 +188,7 @@ struct AddShortcutPluginView: View {
                     pluginManager.addShortcutPlugin(plugin: plugin)
                 }.disabled(selectedShortcut.isEmpty || name.isEmpty || refreshValue.isEmpty || refreshValue.contains(where: { !$0.isNumber }))
             }.padding(8)
-        }.onAppear { shortcutsManager.getShortcuts() }
+        }
     }
 }
 

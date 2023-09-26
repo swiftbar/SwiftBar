@@ -4,9 +4,17 @@
 <dict>
 	<key>com.apple.security.automation.apple-events</key>
 	<true/>
+	<key>com.apple.security.personal-information.addressbook</key>
+	<true/>
 	<key>com.apple.security.personal-information.calendars</key>
 	<true/>
 	<key>com.apple.security.temporary-exception.apple-events:before:10.8</key>
 	<string>com.apple.Terminal</string>
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-onlycom.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+	<array>
+		<string>/usr/bin</string>
+		<string>/bin</string>
+		<string>/etc/profile</string>
+	</array>
 </dict>
 </plist>

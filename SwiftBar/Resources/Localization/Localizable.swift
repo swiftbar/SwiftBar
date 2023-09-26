@@ -49,6 +49,7 @@ enum Localizable {
         case Shell = "PF_SHELL"
         case LaunchAtLogin = "PR_LAUNCH_AT_LOGIN"
         case IncludeBetaUpdates = "PR_INCLUDE_BETA_UPDATES"
+        case ShareCrashReports = "PR_SHARE_CRASH_REPORTS"
         case HideSwiftBarIcon = "PF_HIDE_SWIFTBAR_ICON"
         case StealthMode = "PF_STEALTH_MODE"
         case UpdateLabel = "PF_CHECK_FOR_UPDATE"

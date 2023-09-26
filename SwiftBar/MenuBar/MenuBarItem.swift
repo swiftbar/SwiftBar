@@ -645,7 +645,7 @@ extension MenubarItem {
         let title = atributedTitle(with: params)
         item.attributedTitle = title.title
 
-        item.toolTip = params.tooltip
+        item.toolTip = params.tooltip?.replacingOccurrences(of: "\\n", with: "\n")
 
         if let length = params.length, length < title.title.string.count {
             item.toolTip = title.tooltip

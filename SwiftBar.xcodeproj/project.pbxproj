@@ -74,7 +74,6 @@
 		39641EB0254E163C00713DAF /* PreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39641EAF254E163C00713DAF /* PreferencesStore.swift */; };
 		396E6CA9258E8C5C002C735D /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 396E6CAB258E8C5C002C735D /* Localizable.strings */; };
 		396E6CB0258E8D47002C735D /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396E6CAF258E8D47002C735D /* Localizable.swift */; };
-		3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359525896DF9007CF2E8 /* LaunchAtLogin */; };
 		3989359E25896E29007CF2E8 /* HotKey in Frameworks */ = {isa = PBXBuildFile; productRef = 3989359D25896E29007CF2E8 /* HotKey */; };
 		398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C3254DA85300DEA027 /* URL+Extension.swift */; };
 		398B86CA254DB5D200DEA027 /* DirectoryObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 398B86C9254DB5D200DEA027 /* DirectoryObserver.swift */; };
@@ -120,6 +119,7 @@
 		FA8518CC258DAAAB008AD21C /* Binding+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */; };
 		FA8518F52598E786008AD21C /* SwifCron in Frameworks */ = {isa = PBXBuildFile; productRef = FA8518F42598E786008AD21C /* SwifCron */; };
 		FA90185927C318A700D72E63 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = FA90185827C318A700D72E63 /* Sparkle */; };
+		FA9CA6D72ABF152F009B72F4 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = FA9CA6D62ABF152F009B72F4 /* LaunchAtLogin */; };
 		FAA14A0E2728C65D0052FDB8 /* Intents.intentdefinition in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A0D2728C65D0052FDB8 /* Intents.intentdefinition */; };
 		FAA14A112728C6E90052FDB8 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
 		FAA14A132728C6F20052FDB8 /* ReloadPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A122728C6F20052FDB8 /* ReloadPluginIntentHandler.swift */; };
@@ -131,6 +131,7 @@
 		FAC3F2F12916A61800D8F346 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */; };
 		FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */; };
 		FAC4AE4B297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4A297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift */; };
+		FACE7A482A7FE73500FCE84E /* AppCenterCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = FACE7A472A7FE73500FCE84E /* AppCenterCrashes */; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
@@ -237,8 +238,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FA9CA6D72ABF152F009B72F4 /* LaunchAtLogin in Frameworks */,
 				FA90185927C318A700D72E63 /* Sparkle in Frameworks */,
-				3989359625896DF9007CF2E8 /* LaunchAtLogin in Frameworks */,
+				FACE7A482A7FE73500FCE84E /* AppCenterCrashes in Frameworks */,
 				39B64C29260F70D900B7FA63 /* Preferences in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
 				3989359E25896E29007CF2E8 /* HotKey in Frameworks */,
@@ -479,11 +481,12 @@
 			);
 			name = SwiftBar;
 			packageProductDependencies = (
-				3989359525896DF9007CF2E8 /* LaunchAtLogin */,
 				3989359D25896E29007CF2E8 /* HotKey */,
 				FA8518F42598E786008AD21C /* SwifCron */,
 				39B64C28260F70D900B7FA63 /* Preferences */,
 				FA90185827C318A700D72E63 /* Sparkle */,
+				FACE7A472A7FE73500FCE84E /* AppCenterCrashes */,
+				FA9CA6D62ABF152F009B72F4 /* LaunchAtLogin */,
 			);
 			productName = SwiftBar;
 			productReference = 3920747A25460FD000213DBE /* SwiftBar.app */;
@@ -521,8 +524,9 @@
 		3920747225460FD000213DBE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 1200;
-				LastUpgradeCheck = 1410;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					3920747925460FD000213DBE = {
 						CreatedOnToolsVersion = 12.0.1;
@@ -545,12 +549,12 @@
 			);
 			mainGroup = 3920747125460FD000213DBE;
 			packageReferences = (
-				3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
 				3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */,
 				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
 				39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */,
 				FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */,
 				FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */,
+				FA9CA6D52ABF152F009B72F4 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
 			projectDirPath = "";
@@ -698,7 +702,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which swiftformat >/dev/null; then\n  swiftformat .\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
+			shellScript = "if which swiftformat >/dev/null; then\n  swiftformat --swiftversion 5.9 .\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
 		};
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -907,6 +911,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -970,6 +975,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -996,7 +1002,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 501;
+				CURRENT_PROJECT_VERSION = 503;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1024,7 +1030,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 501;
+				CURRENT_PROJECT_VERSION = 503;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1159,14 +1165,6 @@
 				minimumVersion = 1.3.1;
 			};
 		};
-		3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/swiftbar/LaunchAtLogin";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.0;
-			};
-		};
 		3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/swiftbar/HotKey";
@@ -1199,6 +1197,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		FA9CA6D52ABF152F009B72F4 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin";
+			requirement = {
+				kind = exactVersion;
+				version = 5.0.0;
+			};
+		};
 		FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/microsoft/appcenter-sdk-apple.git";
@@ -1225,11 +1231,6 @@
 			package = 39224DE925F4344600BABF21 /* XCRemoteSwiftPackageReference "SwifCron" */;
 			productName = SwifCron;
 		};
-		3989359525896DF9007CF2E8 /* LaunchAtLogin */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3989359425896DF9007CF2E8 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */;
-			productName = LaunchAtLogin;
-		};
 		3989359D25896E29007CF2E8 /* HotKey */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3989359C25896E29007CF2E8 /* XCRemoteSwiftPackageReference "HotKey" */;
@@ -1254,6 +1255,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */;
 			productName = Sparkle;
+		};
+		FA9CA6D62ABF152F009B72F4 /* LaunchAtLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FA9CA6D52ABF152F009B72F4 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */;
+			productName = LaunchAtLogin;
+		};
+		FACE7A472A7FE73500FCE84E /* AppCenterCrashes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */;
+			productName = AppCenterCrashes;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

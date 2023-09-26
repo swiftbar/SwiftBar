@@ -37,6 +37,7 @@
 "PF_CHECK_FOR_UPDATE" = "Aktualiziraj";
 "PF_CHECK_FOR_UPDATES" = "Traži nove verzije";
 "PR_INCLUDE_BETA_UPDATES" = "Uključuju Verzije Prije Izdanja";
+"PR_SHARE_CRASH_REPORTS" = "Podijeli izvještaje o padovima";
 "PF_NO_PLUGINS_MESSAGE" = "Mapa dodataka je prazna";
 "PF_ENABLE_ALL" = "Aktiviraj sve";
 "PF_PLUGINS_FOOTNOTE" = "Aktivirani dodaci će se pojaviti u traci izbornika.";
