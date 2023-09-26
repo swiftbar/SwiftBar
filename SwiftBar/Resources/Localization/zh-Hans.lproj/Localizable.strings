@@ -21,7 +21,7 @@
 //Preferences strings
 "PF_PREFERENCES" = "偏好设置";
 "PF_GENERAL" = "通用";
-"PF_ADVANCED" = "Advanced";
+"PF_ADVANCED" = "高级";
 "PF_PLUGINS" = "插件";
 "PF_SHORTCUT_PLUGINS" = "快捷指令插件";
 "PF_ABOUT" = "关于";
@@ -33,7 +33,7 @@
 "PF_SHELL" = "命令行解释器";
 "PF_TERMINAL" = "终端";
 "PF_HIDE_SWIFTBAR_ICON" = "隐藏 SwiftBar 图标";
-"PF_STEALTH_MODE" = "Hide SwiftBar in the menu bar";
+"PF_STEALTH_MODE" = "在菜单栏隐藏 SwiftBar";
 "PF_CHECK_FOR_UPDATE" = "更新";
 "PF_CHECK_FOR_UPDATES" = "检查更新";
 "PR_INCLUDE_BETA_UPDATES" = "包括预发布版本";
