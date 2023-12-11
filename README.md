@@ -109,7 +109,7 @@ echo "This is a primary Menu Title"
 echo "This is a secondary Menu Title"
 echo "This is a n-th Menu Title"
 echo "---"
-echo "This is not a Menu Title, this will be showed in the drop-down menu only"
+echo "This is not a Menu Title, this will be shown in the drop-down menu only"
 ```
 
 Script output for both header and body is split by line (`\n`). Each line must follow this format:
