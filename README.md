@@ -143,7 +143,7 @@ Where:
 | ------------- | ------------- |------------- | 
 | `dropdown` | False | Only applicable to items in `Header`. When set to False, item will not be displayed in dropdown menu, but will be cycled in the menu bar. |
 | `alternate` | True | Marks a line as an alternative to the previous one for when the Option key (<kbd style="font-size:medium">⌥</kbd>) is pressed in the dropdown.|
-| `image` | Image encoded in Base64| Sets an image for item.|
+| `image` | Image encoded in Base64, `light_image,dark_image` | Sets an image for item. If only one image is provided, it is used for both light and dark appearance.|
 | `templateImage` | Image encoded in Base64| Same as `image`, but the image is a template image. Template images consist of black and clear colors (and an alpha channel). Template images are not intended to be used as standalone images and are usually mixed with other content to create the desired final appearance.|
 | `sfimage` | SFSymbol name| Sets an image for item from [SF Symbol](https://developer.apple.com/sf-symbols/). Only available on Big Sur and above.|
 | `checked` | True | Sets a checkmark in front of the item.|

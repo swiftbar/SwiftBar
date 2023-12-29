@@ -254,9 +254,19 @@ struct MenuLineParameters: Codable {
             }
         }
 
-        let image = NSImage.createImage(from: params["image"] ?? params["templateimage"], isTemplate: params["templateimage"] != nil)
+        if (params["image"] != nil) {
+            let images = params["image"]?.components(separatedBy: ",")
+            let lightImage = images?.first
+            let darkImage = images?.last
 
-        return resizedImageIfRequested(image)
+            return resizedImageIfRequested(NSImage.createImage(from: AppShared.isDarkStatusBar || darkImage == nil ? lightImage : darkImage, isTemplate: false))
+        }
+
+        if (params["templateimage"] != nil) {
+            return resizedImageIfRequested(NSImage.createImage(from: params["templateimage"], isTemplate: true))
+        }
+
+        return nil
     }
 
     private func resizedImageIfRequested(_ image: NSImage?) -> NSImage? {
