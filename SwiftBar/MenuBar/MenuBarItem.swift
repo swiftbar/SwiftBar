@@ -375,9 +375,10 @@ extension MenubarItem {
             startPopupMonitor()
         }
 
-        guard webPopover.contentViewController == nil || refreshOnOpen else {
+        guard webPopover.contentViewController == nil || plugin?.metadata?.persistentWebView == false else {
             return
         }
+
         let urlRequest = URLRequest(url: url)
         webPopover.behavior = .transient
         webPopover.contentViewController = NSHostingController(rootView: WebPanelView(request: urlRequest, name: plugin?.name ?? ""))
@@ -386,7 +387,14 @@ extension MenubarItem {
 
     func hideWebPopover(_ sender: AnyObject?) {
         webPopover.performClose(sender)
+        if plugin?.metadata?.persistentWebView == false {
+            resetWebPopoverContent()
+        }
         stopPopupMonitor()
+    }
+
+    func resetWebPopoverContent() {
+        webPopover.contentViewController = nil
     }
 
     func popoverHideHandler(_ event: NSEvent?) {
@@ -443,6 +451,7 @@ extension MenubarItem {
     func _updateMenu(content: String?) {
         barItem.button?.appearsDisabled = false
         statusBarMenu.removeAllItems()
+        resetWebPopoverContent()
         show()
 
         if plugin?.lastState == .Failed {
