@@ -21,10 +21,10 @@
     {
       "identity" : "launchatlogin",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftbar/LaunchAtLogin",
+      "location" : "https://github.com/sindresorhus/LaunchAtLogin",
       "state" : {
-        "revision" : "0f39982b9d6993eef253b81219d3c39ba1e680f3",
-        "version" : "4.0.0"
+        "revision" : "7ad6331f9c38953eb1ce8737758e18f7607e984a",
+        "version" : "5.0.0"
       }
     },
     {
