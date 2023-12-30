@@ -53,6 +53,7 @@ With the first launch, Swiftbar will ask you to set the `Plugin Folder`. SwiftBa
 **Important**:
 * hidden folders are ignored
 * nested folders are traversed by SwiftBar, including symlinks
+* `.swiftbarignore` file is supported, you can use it to exclude files from being imported as plugins.
 
 You can hide a folder by prepending `.` or using this command `chflags hidden <folder name>`.
 
@@ -85,7 +86,7 @@ Plugin is an executable script in the language of your choice. When SwiftBar det
 
 Script should produce output (`STDOUT`) in the required format (see next chapter). Script errors should be redirected to `STDERR`.
 
-Plugin API is adopted from the [BitBar](https://github.com/matryer/bitbar), which means that SwiftBar can run any existing BitBar plugin.
+Plugin API is adopted from the [BitBar\xbar](https://github.com/matryer/bitbar), which means that SwiftBar can run any existing BitBar\xbar plugin.
 
 ### Script Output
 
@@ -146,8 +147,12 @@ Where:
 | `image` | Image encoded in Base64| Sets an image for item.|
 | `templateImage` | Image encoded in Base64| Same as `image`, but the image is a template image. Template images consist of black and clear colors (and an alpha channel). Template images are not intended to be used as standalone images and are usually mixed with other content to create the desired final appearance.|
 | `sfimage` | SFSymbol name| Sets an image for item from [SF Symbol](https://developer.apple.com/sf-symbols/). Only available on Big Sur and above.|
+| `sfconfig` | SFSymbol configuration| Configures [Rendering Mode](https://developer.apple.com/design/human-interface-guidelines/sf-symbols#Rendering-modes) for `sfimage`. Accepts a json encoded as base64, example json `{"renderingMode":"Palette", "colors":["red","blue"], "scale": "large", "weight": "bold"}`. Original issue #354 |
 | `checked` | True | Sets a checkmark in front of the item.|
 | `tooltip` | Text | Sets a tooltip for the item. |
+| `webview` | True | Present provided href as a webview, instead of standard menu bar menu |
+| `webvieww` | Number | Sets webview width in pixels |
+| `webviewh` | Number | Sets webview height in pixels |
 
 **Actions**:
 | Parameter | Value | Description |
@@ -182,17 +187,17 @@ When running a plugin, SwiftBar sets the following environment variables:
 ### Script Metadata
 
 It is recommended to include metadata in plugin script. Metadata is used in the About Plugin screen in SwiftBar. 
-SwiftBar adopts metadata format suggested by BitBar:
+SwiftBar adopts metadata format suggested by BitBar\xbar:
 ```
-# <bitbar.title>Title goes here</bitbar.title>
-# <bitbar.version>v1.0</bitbar.version>
-# <bitbar.author>Your Name</bitbar.author>
-# <bitbar.author.github>your-github-username</bitbar.author.github>
-# <bitbar.desc>Short description of what your plugin does.</bitbar.desc>
-# <bitbar.image>http://www.hosted-somewhere/pluginimage</bitbar.image>
-# <bitbar.dependencies>python,ruby,node</bitbar.dependencies>
-# <bitbar.abouturl>http://url-to-about.com/</bitbar.abouturl>
-# <bitbar.droptypes>Supported UTI's for dropping things on menu bar</bitbar.droptypes>
+# <xbar.title>Title goes here</xbar.title>
+# <xbar.version>v1.0</xbar.version>
+# <xbar.author>Your Name</xbar.author>
+# <xbar.author.github>your-github-username</xbar.author.github>
+# <xbar.desc>Short description of what your plugin does.</xbar.desc>
+# <xbar.image>http://www.hosted-somewhere/pluginimage</xbar.image>
+# <xbar.dependencies>python,ruby,node</xbar.dependencies>
+# <xbar.abouturl>http://url-to-about.com/</xbar.abouturl>
+# <xbar.droptypes>Supported UTI's for dropping things on menu bar</xbar.droptypes>
 ```
 
 #### Hiding default items
@@ -226,10 +231,11 @@ You can configure multiple schedules, using the sepparator `|`:
 
 #### Other Parameters
 
-* `#<swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>` - refreshes plugin on click, before presenting the menu
+* `<swiftbar.refreshOnOpen>true</swiftbar.refreshOnOpen>` - refreshes plugin on click, before presenting the menu
 * `<swiftbar.runInBash>false</swiftbar.runInBash>` - doesn't wrap plugins in Bash when running
 * `<swiftbar.type>streamable</swiftbar.type>` - mark plugin as Streamable
 * `<swiftbar.environment>[var1=default value, var2=default value, ... ]</swiftbar.environment>` - this variables will be passed in plugin's environment, in later release SwiftBar will provide a UI to change values for these variables.
+* `<swiftbar.persistentWebView>true</swiftbar.persistentWebView>` - makes WebView persistent, so it doesn't reload on each menu bar click
 
 #### Metadata for Binary Plugins
 
@@ -247,6 +253,30 @@ For Standard type of plugins, SwiftBar expects that plugin execution is finite, 
 - exit with code 1 - error shown in the menu bar
 
 Optionally, a standard plugin can be run on a repeatable schedule, configured in the plugin's file name or `schedule` metadata property.
+
+### Shortcuts
+
+This plugin type is aimed for people who want to use Shortcuts app to create menu bar items. The Plugin API is pretty much the same as Standard. Create a Shortcut that outputs text in the required format, select this Shortcut in the Shortcuts Plugin section of SwiftBar's Settings, and you are good to go.
+
+For Shortcuts plugins, SwiftBar provides a handy UI to configure refresh schedule.
+
+Example Shortcuts:
+* [SwiftBar: Unsplash Example](https://www.icloud.com/shortcuts/3e66b6012aae4cb68290143590eca5b1)
+* [SwiftBar: Fake Weather Example](https://www.icloud.com/shortcuts/bd6b1db2c5ef4a078bd2a9a4f3e0ec09)
+
+### Ephemeral 
+
+Ephemeral plugins create menu bar items on demand by running SwiftBar's Shortcut action or calling a URL scheme. The Plugin API is pretty much the same as Standard.
+
+Here are the parameters for the URL scheme:
+
+- name - this is the plugin name, should be unique
+- content - this is the markup you want SwiftBar to render
+- exitafter - this is optional parameter forces plugin to exit after a period of time, set in seconds.. Defaults to 0, which means "don't exit".
+
+Shortcuts Action is pretty self-explanatory.
+
+This plugin type is best used for notifications or other temporary menu bar items.
 
 ### Streamable
 
@@ -284,13 +314,14 @@ Some notes:
 | Endpoint | Parameter | Description | Example |
 | ------------- | ------------- |------------- | ------------- | 
 | refreshallplugins | none | Force refresh all loaded plugins | `swiftbar://refreshallplugins` |
-| refreshplugin | `name` or `plugin` plugin [name](#plugin-naming) | Force refresh plugin by name | `swiftbar://refreshplugin?name=myplugin` |
+| refreshplugin | `name` or `plugin` plugin [name](#plugin-naming) | Force refresh plugin by name. If provided, additional URL parameters are exposed as ENV variables to the plugin | `swiftbar://refreshplugin?name=myplugin` |
 | refreshplugin | `index` plugin index in menubar, starting from `0` | Force refresh plugin by its position in menubar | `swiftbar://refreshplugin?index=1` |
 | enableplugin | `name` or `plugin` plugin [name](#plugin-naming) | Enable plugin by name | `swiftbar://enableplugin?name=myplugin` |
 | disableplugin | `name` or `plugin` plugin [name](#plugin-naming) | Disable plugin by name | `swiftbar://disableplugin?name=myplugin` |
 | toggleplugin | `name` or `plugin` plugin [name](#plugin-naming) | Toggle(enable\disable) plugin by name | `swiftbar://toggleplugin?name=myplugin` |
 | addplugin | `src` source URL to plugin file | Add plugin to Swiftbar from URL | `swiftbar://addplugin?src=https://coolplugin` |
 | notify | `name` or `plugin` plugin [name](#plugin-naming). Notification fields: `title`, `subtitle`, `body`. `href` to open an URL on click (including custom URL schemes). `silent=true` to disable sound | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
+| setephemeralplugin | `name` plugin name, should be unique. `content` - plugin content, `exitafter` - optionally set the lifetime of the menubar in seconds | Creates an Ephemeral Plugin | `swiftbar://setephemeralplugin?name=ephemeral&content=hi` |
 
 ## Preferences aka 'defaults'
 
