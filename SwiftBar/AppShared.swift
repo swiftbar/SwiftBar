@@ -188,6 +188,11 @@ class AppShared: NSObject {
         UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
     }
 
+    public static var isDarkStatusBar: Bool {
+        let currentAppearance = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength).button?.effectiveAppearance
+        return currentAppearance?.bestMatch(from: [.aqua, .darkAqua]) == .aqua
+    }
+
     public static var isReduceTransparencyEnabled: Bool {
         UserDefaults(suiteName: "com.apple.universalaccess.plist")?.bool(forKey: "reduceTransparency") ?? false
     }
