@@ -109,7 +109,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func changePresentationType() {
-        if preferencesWindowController.window?.isVisible != true && repositoryWindowController?.window?.isVisible != true {
+        if preferencesWindowController.window?.isVisible == false && repositoryWindowController?.window?.isVisible == false {
             NSApp.setActivationPolicy(.accessory)
             return
         }
