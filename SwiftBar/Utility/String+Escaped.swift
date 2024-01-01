@@ -31,3 +31,20 @@ extension String {
         return encodedString
     }
 }
+
+extension String {
+    var isEnclosedInQuotes: Bool {
+        let regex = #"^(?:'.*'|".*")$"#
+        return range(of: regex, options: .regularExpression) != nil
+    }
+
+    var needsShellQuoting: Bool {
+        let specialCharacters = " \t\n\"'`$\\|&;()<>[]*?{}!^~#%"
+        return rangeOfCharacter(from: CharacterSet(charactersIn: specialCharacters)) != nil
+    }
+
+    func quoteIfNeeded() -> String {
+        guard needsShellQuoting else { return self }
+        return isEnclosedInQuotes ? self : "\'\(self)\'"
+    }
+}

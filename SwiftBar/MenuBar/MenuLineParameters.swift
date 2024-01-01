@@ -149,7 +149,7 @@ struct MenuLineParameters: Codable {
             guard let param = params[key] else { continue }
             out.append(param.escaped())
         }
-        return out.map { "'\($0)'" }
+        return out.map { $0.quoteIfNeeded() }
     }
 
     var terminal: Bool {
