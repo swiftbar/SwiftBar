@@ -37,7 +37,6 @@ struct ShortcutPluginsPreferencesView: View {
                     }.width(40)
                 }
                 .onChange(of: sorting) { pluginManager.shortcutPlugins.sort(using: $0) }
-                .font(.title)
                 Spacer()
             }.padding(8)
             Divider()
