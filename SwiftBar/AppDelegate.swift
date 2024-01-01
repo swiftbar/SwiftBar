@@ -38,6 +38,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             AppCenter.start(withAppSecret: "40e6c2fa-2383-40a7-bfbd-75662a7d92a9", services: [
                 Crashes.self,
             ])
+            Crashes.notify(with: .send)
         }
         preferencesWindowController.window?.delegate = self
         setupToolbar()
