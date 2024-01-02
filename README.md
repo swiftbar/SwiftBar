@@ -321,7 +321,7 @@ Some notes:
 | toggleplugin | `name` or `plugin` plugin [name](#plugin-naming) | Toggle(enable\disable) plugin by name | `swiftbar://toggleplugin?name=myplugin` |
 | addplugin | `src` source URL to plugin file | Add plugin to Swiftbar from URL | `swiftbar://addplugin?src=https://coolplugin` |
 | notify | `name` or `plugin` plugin [name](#plugin-naming). Notification fields: `title`, `subtitle`, `body`. `href` to open an URL on click (including custom URL schemes). `silent=true` to disable sound | Show notification | `swiftbar://notify?plugin=MyPlugin&title=title&subtitle=subtitle&body=body&silent=true` |
-| setephemeralplugin | `name` plugin name, should be unique. `content` - plugin content, `exitafter` - optionally set the lifetime of the menubar in seconds | Creates an Ephemeral Plugin | `swiftbar://setephemeralplugin?name=ephemeral&content=hi` |
+| setephemeralplugin | `name` plugin name, should be unique. `content` - plugin content, `exitafter` - optionally set the lifetime of the menubar in seconds | Creates an Ephemeral Plugin. To remove existing Ephemeral Plugin set it's content to an empty string `""` | `swiftbar://setephemeralplugin?name=ephemeral&content=hi` |
 
 ## Preferences aka 'defaults'
 
