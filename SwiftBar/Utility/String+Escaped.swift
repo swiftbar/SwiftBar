@@ -34,17 +34,23 @@ extension String {
 
 extension String {
     var isEnclosedInQuotes: Bool {
-        let regex = #"^(?:'.*'|".*")$"#
-        return range(of: regex, options: .regularExpression) != nil
+        hasPrefix("'") && hasSuffix("'")
     }
 
     var needsShellQuoting: Bool {
         let specialCharacters = " \t\n\"'`$\\|&;()<>[]*?{}!^~#%"
+        let shellOperators = ["&&", "||", ";", "|", "<", ">"]
+
+        // Check if the string is exactly a logical operator
+        if shellOperators.contains(self) {
+            return false
+        }
+
         return rangeOfCharacter(from: CharacterSet(charactersIn: specialCharacters)) != nil
     }
 
     func quoteIfNeeded() -> String {
         guard needsShellQuoting else { return self }
-        return isEnclosedInQuotes ? self : "\'\(self)\'"
+        return isEnclosedInQuotes ? self : "\'\(replacingOccurrences(of: "'", with: "'\\''"))\'"
     }
 }
