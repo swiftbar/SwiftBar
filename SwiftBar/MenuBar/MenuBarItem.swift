@@ -702,6 +702,7 @@ extension MenubarItem {
 
     func refreshAndShowMenu() {
         os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
+        plugin?.lastRefreshReason = .MenuOpen
         let content = plugin?.invoke()
         _updateMenu(content: content)
         barItem.menu = statusBarMenu

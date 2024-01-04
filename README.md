@@ -176,6 +176,7 @@ When running a plugin, SwiftBar sets the following environment variables:
 | `SWIFTBAR_PLUGIN_PATH` | The path to the running plugin |
 | `SWIFTBAR_PLUGIN_CACHE_PATH` | The cache to data folder, individual per plugin |
 | `SWIFTBAR_PLUGIN_DATA_PATH` | The path to data folder, individual per plugin |
+| `SWIFTBAR_PLUGIN_REFRESH_REASON` | Plugin refresh reason\trigger | 
 | `SWIFTBAR_LAUNCH_TIME` | SwiftBar launch date and time, ISO8601 |
 | `OS_APPEARANCE` | Current macOS appearance (`Light` or `Dark`) |
 | `OS_VERSION_MAJOR` | The first part of the macOS version (e.g., `11` for macOS 11.0.1) |

@@ -11,6 +11,7 @@ class Environment {
         case swiftBarPluginPath = "SWIFTBAR_PLUGIN_PATH"
         case swiftBarPluginCachePath = "SWIFTBAR_PLUGIN_CACHE_PATH"
         case swiftBarPluginDataPath = "SWIFTBAR_PLUGIN_DATA_PATH"
+        case swiftBarPluginRefreshReason = "SWIFTBAR_PLUGIN_REFRESH_REASON"
         case swiftBarLaunchTime = "SWIFTBAR_LAUNCH_TIME"
         case osVersionMajor = "OS_VERSION_MAJOR"
         case osVersionMinor = "OS_VERSION_MINOR"

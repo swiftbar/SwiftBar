@@ -29,7 +29,7 @@ enum PluginState {
     case Disabled
 }
 
-enum PluginRefreshReason {
+enum PluginRefreshReason: String {
     case FirstLaunch
     case Schedule
     case MenuAction
@@ -40,6 +40,7 @@ enum PluginRefreshReason {
     case DebugView
     case NotificationAction
     case PluginSettings
+    case MenuOpen
 
     static func manualReasons() -> [Self] {
         [
@@ -51,6 +52,7 @@ enum PluginRefreshReason {
             .NotificationAction,
             .PluginSettings,
             .DebugView,
+            .MenuOpen,
         ]
     }
 }
@@ -148,6 +150,7 @@ extension Plugin {
             Environment.Variables.osAppearance.rawValue: AppShared.isDarkTheme ? "Dark" : "Light",
             Environment.Variables.swiftBarPluginCachePath.rawValue: cacheDirectoryPath,
             Environment.Variables.swiftBarPluginDataPath.rawValue: dataDirectoryPath,
+            Environment.Variables.swiftBarPluginRefreshReason.rawValue: lastRefreshReason.rawValue,
         ]
         metadata?.environment.forEach { k, v in
             pluginEnv[k] = v
