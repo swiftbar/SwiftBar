@@ -71,7 +71,7 @@
 "PR_INSTALL_STATUS_INSTALL" = "Установить";
 "PR_INSTALL_STATUS_INSTALLED" = "Установлен";
 "PR_INSTALL_STATUS_FAILED" = "Ошибка";
-"PR_INSTALL_STATUS_DOWNLOADING" = "Загружеается";
+"PR_INSTALL_STATUS_DOWNLOADING" = "Загружается";
 
 
 //App strings
