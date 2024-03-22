@@ -26,7 +26,7 @@
 "PF_SHORTCUT_PLUGINS" = "Shortcut Plugins";
 "PF_ABOUT" = "About";
 "PF_PLUGINS_FOLDER" = "Папка с плагином";
-"PR_LAUNCH_AT_LOGIN" = "Запускать при входе в систеу";
+"PR_LAUNCH_AT_LOGIN" = "Запускать при входе в систему";
 "PF_PATH" = "Путь";
 "PF_PATH_IS_NONE" = "Путь не указан";
 "PF_CHANGE_PATH" = "Изменить...";
