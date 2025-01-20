@@ -32,8 +32,6 @@ struct GeneralPreferencesView: View {
                     }
                 }
                 Toggle(Localizable.Preferences.IncludeBetaUpdates.localized, isOn: $preferences.includeBetaUpdates)
-                Spacer()
-                Toggle(Localizable.Preferences.ShareCrashReports.localized, isOn: $preferences.collectCrashReports)
             }
         }
     }

@@ -131,7 +131,6 @@
 		FAC3F2F12916A61800D8F346 /* AboutSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */; };
 		FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */; };
 		FAC4AE4B297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC4AE4A297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift */; };
-		FACE7A482A7FE73500FCE84E /* AppCenterCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = FACE7A472A7FE73500FCE84E /* AppCenterCrashes */; };
 		FAD14C052585AE1800CB7BBE /* String+ANSIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */; };
 		FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */; };
@@ -240,7 +239,6 @@
 			files = (
 				FA9CA6D72ABF152F009B72F4 /* LaunchAtLogin in Frameworks */,
 				FA90185927C318A700D72E63 /* Sparkle in Frameworks */,
-				FACE7A482A7FE73500FCE84E /* AppCenterCrashes in Frameworks */,
 				39B64C29260F70D900B7FA63 /* Preferences in Frameworks */,
 				FA8518F52598E786008AD21C /* SwifCron in Frameworks */,
 				3989359E25896E29007CF2E8 /* HotKey in Frameworks */,
@@ -485,7 +483,6 @@
 				FA8518F42598E786008AD21C /* SwifCron */,
 				39B64C28260F70D900B7FA63 /* Preferences */,
 				FA90185827C318A700D72E63 /* Sparkle */,
-				FACE7A472A7FE73500FCE84E /* AppCenterCrashes */,
 				FA9CA6D62ABF152F009B72F4 /* LaunchAtLogin */,
 			);
 			productName = SwiftBar;
@@ -553,7 +550,6 @@
 				FA8518F32598E786008AD21C /* XCRemoteSwiftPackageReference "SwifCron" */,
 				39B64C27260F70D900B7FA63 /* XCRemoteSwiftPackageReference "Preferences" */,
 				FA90185727C318A700D72E63 /* XCRemoteSwiftPackageReference "Sparkle" */,
-				FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */,
 				FA9CA6D52ABF152F009B72F4 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */,
 			);
 			productRefGroup = 3920747B25460FD000213DBE /* Products */;
@@ -1002,7 +998,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 509;
+				CURRENT_PROJECT_VERSION = 524;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1015,7 +1011,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1031,7 +1027,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 509;
+				CURRENT_PROJECT_VERSION = 524;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"SwiftBar/Preview Content\"";
 				DEVELOPMENT_TEAM = X93LWC49WV;
@@ -1044,7 +1040,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.15;
-				MARKETING_VERSION = 2.0.0;
+				MARKETING_VERSION = 2.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ameba.SwiftBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
@@ -1207,14 +1203,6 @@
 				version = 5.0.0;
 			};
 		};
-		FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/microsoft/appcenter-sdk-apple.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 4.0.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -1262,11 +1250,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = FA9CA6D52ABF152F009B72F4 /* XCRemoteSwiftPackageReference "LaunchAtLogin" */;
 			productName = LaunchAtLogin;
-		};
-		FACE7A472A7FE73500FCE84E /* AppCenterCrashes */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FABE059528C4035200093A83 /* XCRemoteSwiftPackageReference "appcenter-sdk-apple" */;
-			productName = AppCenterCrashes;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

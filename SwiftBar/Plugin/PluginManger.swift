@@ -183,6 +183,7 @@ class PluginManager: ObservableObject {
         if let ingoreFileContent {
             (files, dirs) = filterFilesAndDirs(files: files, dirs: dirs, ignoreContent: ingoreFileContent)
         }
+
         if !dirs.isEmpty {
             files.append(contentsOf: dirs.map { filter(url: $0) }.flatMap(\.files))
         }
