@@ -550,7 +550,6 @@ extension MenubarItem {
     }
 
     func setMenuTitle(title: String) {
-        barItem.button?.attributedTitle = NSAttributedString()
         barItem.button?.image = nil
 
         let params = MenuLineParameters(line: title)
@@ -610,12 +609,14 @@ extension MenubarItem {
 
         let fontSize = params.size ?? 0
         let color = params.color ?? NSColor.controlTextColor
-        let font = NSFont(name: params.font ?? "", size: fontSize) ??
-            NSFont.menuBarFont(ofSize: fontSize)
+        var font = NSFont.menuBarFont(ofSize: fontSize)
+        if let fontName = params.font, let customFont = NSFont(name: fontName, size: fontSize) {
+            font = customFont
+        }
         let offset = font.menuBarOffset
 
         let style = NSMutableParagraphStyle()
-        style.alignment = .left
+        style.alignment = pad ? .center : .left
 
         var attributedTitle = NSMutableAttributedString(string: title)
         if #available(macOS 12, *), params.md, let parsedMD = try? NSAttributedString(markdown: title) {
@@ -627,10 +628,6 @@ extension MenubarItem {
         }
         if params.ansi {
             attributedTitle = title.colorizedWithANSIColor()
-        }
-
-        if attributedTitle.length > 0, pad {
-            attributedTitle.insert(NSAttributedString(string: " "), at: 0)
         }
 
         if !params.ansi {
