@@ -132,14 +132,28 @@ class PluginMetadata: ObservableObject {
         }
         var environment: [String: String] = [:]
         if !getTagValue(tag: .environment).isEmpty {
-            getTagValue(tag: .environment)
-                .dropFirst()
-                .dropLast()
-                .split(separator: ",").forEach { str in
-                    let pair = str.split(separator: "=").map { $0.trimmingCharacters(in: .whitespaces) }
-                    guard pair.count == 2 else { return }
-                    environment[pair[0]] = pair[1]
+            let envString = getTagValue(tag: .environment)
+            
+            // Handle both formats: with brackets [...] and without
+            let processedString = envString.starts(with: "[") && envString.hasSuffix("]") 
+                ? envString.dropFirst().dropLast() 
+                : envString
+            
+            // Try both separators: = and :
+            processedString.split(separator: ",").forEach { str in
+                // First try with = separator
+                if let equalsIndex = str.firstIndex(of: "=") {
+                    let key = str[..<equalsIndex].trimmingCharacters(in: .whitespaces)
+                    let value = str[str.index(after: equalsIndex)...].trimmingCharacters(in: .whitespaces)
+                    environment[String(key)] = String(value)
+                } 
+                // Fall back to : separator
+                else if let colonIndex = str.firstIndex(of: ":") {
+                    let key = str[..<colonIndex].trimmingCharacters(in: .whitespaces)
+                    let value = str[str.index(after: colonIndex)...].trimmingCharacters(in: .whitespaces)
+                    environment[String(key)] = String(value)
                 }
+            }
         }
 
         return PluginMetadata(name: getTagValue(tag: .title),
@@ -229,7 +243,7 @@ class PluginMetadata: ObservableObject {
             case .hideSwiftBar:
                 value = hideSwiftBar ? "true" : ""
             case .environment:
-                value = environment.map { "\($0.key):\($0.value)" }.joined(separator: ",")
+                value = environment.isEmpty ? "" : "[\(environment.map { "\($0.key)=\($0.value)" }.joined(separator: ","))]"
             case .runInBash:
                 value = runInBash ? "" : "false"
             case .refreshOnOpen:
