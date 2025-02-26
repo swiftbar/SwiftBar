@@ -4,6 +4,7 @@ import Combine
 enum TerminalOptions: String, CaseIterable {
     case Terminal
     case iTerm
+    case Ghostty
 }
 
 enum ShellOptions: String, CaseIterable {

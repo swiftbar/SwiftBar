@@ -171,6 +171,20 @@ class AppShared: NSObject {
                 end tell
             end tell
             """
+        case .Ghostty:
+            appleScript = """
+            tell application "Ghostty"
+                activate
+                tell application "System Events"
+                    keystroke "n" using {command down}
+                    delay 0.2
+                end tell
+                tell application "System Events" to tell process "Ghostty"
+                    keystroke "\(runInTerminalScript)"
+                    keystroke return
+                end tell
+            end tell
+            """
         }
 
         var error: NSDictionary?
