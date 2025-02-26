@@ -89,6 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         { [weak self] _ in
             os_log("Mac waked up", log: Log.plugin, type: .info)
             self?.sharedEnv.updateWakeTime(date: NSDate.now)
+            // Start plugins with respect to their schedules
             self?.pluginManager.startAllPlugins()
         }
     }

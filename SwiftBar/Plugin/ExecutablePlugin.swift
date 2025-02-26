@@ -100,7 +100,30 @@ class ExecutablePlugin: Plugin {
     }
 
     func start() {
-        refresh(reason: .FirstLaunch)
+        // Check if this is a wake from sleep event by checking if lastUpdated exists
+        if lastUpdated != nil {
+            // Handle wake from sleep differently - check if it's time to update based on schedule
+            if let metadata = metadata, metadata.nextDate != nil {
+                // For cron-scheduled plugins, calculate next date and set timer
+                refreshPluginMetadata()
+                enableTimer()
+            } else if updateInterval > 0 {
+                // For interval-based plugins, check if the scheduled time has passed
+                if let lastUpdated = lastUpdated {
+                    let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)
+                    if Date() > nextUpdateTime {
+                        // It's time to update
+                        refresh(reason: .WakeFromSleep)
+                    } else {
+                        // Not yet time to update, just re-enable the timer
+                        enableTimer()
+                    }
+                }
+            }
+        } else {
+            // First start of the plugin
+            refresh(reason: .FirstLaunch)
+        }
     }
 
     func refresh(reason: PluginRefreshReason) {

@@ -41,6 +41,7 @@ enum PluginRefreshReason: String {
     case NotificationAction
     case PluginSettings
     case MenuOpen
+    case WakeFromSleep
 
     static func manualReasons() -> [Self] {
         [
