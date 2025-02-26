@@ -147,9 +147,9 @@ struct MenuLineParameters: Codable {
             .sorted { s1, s2 -> Bool in s1.localizedStandardCompare(s2) == .orderedAscending }
         for key in sortedParams {
             guard let param = params[key] else { continue }
-            out.append(param.escaped())
+            out.append(param)
         }
-        return out.map { $0.quoteIfNeeded() }
+        return out
     }
 
     var terminal: Bool {

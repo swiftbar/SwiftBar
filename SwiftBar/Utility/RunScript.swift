@@ -44,11 +44,14 @@ private extension Process {
     @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, onOutputUpdate: @escaping (String?) -> Void) throws -> (out: String, err: String?) {
         if !runInBash {
             executableURL = URL(fileURLWithPath: script)
+            // When directly executing a command (not in bash), we pass args directly without quoting
             arguments = args
         } else {
             let shell = delegate.prefs.shell
             executableURL = URL(fileURLWithPath: shell.path)
-            arguments = ["-c", "\(script.escaped()) \(args.joined(separator: " "))"]
+            // When executing in a shell, we need to properly escape arguments to handle spaces
+            let escapedArgs = args.map { $0.quoteIfNeeded() }
+            arguments = ["-c", "\(script.escaped()) \(escapedArgs.joined(separator: " "))"]
             if shell.path.hasSuffix("bash") || shell.path.hasSuffix("zsh") {
                 arguments?.insert("-l", at: 1)
             }
