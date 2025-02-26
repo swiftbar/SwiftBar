@@ -19,7 +19,7 @@ enum ShellOptions: String, CaseIterable {
         case .Zsh:
             return "/bin/zsh"
         case .Default:
-            return Environment.shared.userLoginShell
+            return "/bin/zsh"
         }
     }
 }

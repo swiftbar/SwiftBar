@@ -2,6 +2,19 @@ import Cocoa
 import HotKey
 import SwiftUI
 
+extension Scanner {
+    func peekChar() -> Character? {
+        guard !isAtEnd else { return nil }
+
+        let currentIndex = currentIndex
+        guard let char = scanCharacter() else { return nil }
+
+        self.currentIndex = currentIndex
+
+        return char
+    }
+}
+
 struct MenuLineParameters: Codable {
     let title: String
     var params: [String: String]
@@ -30,30 +43,88 @@ struct MenuLineParameters: Codable {
     }
 
     static func getParams(from line: String) -> [String: String] {
-        let scanner = Scanner(string: line)
-        let keyValueSeparator = CharacterSet(charactersIn: "=")
-        let quoteSeparator = CharacterSet(charactersIn: "\"'")
-
+        // Manual parameter parser that properly handles quoted values with spaces
         var params: [String: String] = [:]
+        let chars = Array(line)
+        var currentPos = 0
 
-        while !scanner.isAtEnd {
-            var key: String? = ""
-            var value: String? = ""
-            key = scanner.scanUpToCharacters(from: keyValueSeparator)
-            _ = scanner.scanCharacters(from: keyValueSeparator)
-            if scanner.scanCharacters(from: quoteSeparator) != nil {
-                value = scanner.scanUpToCharacters(from: quoteSeparator)
-                _ = scanner.scanCharacters(from: quoteSeparator)
+        while currentPos < chars.count {
+            // Skip whitespace
+            while currentPos < chars.count && (chars[currentPos] == " " || chars[currentPos] == "\t") {
+                currentPos += 1
+            }
+
+            // End of string?
+            if currentPos >= chars.count {
+                break
+            }
+
+            // Extract key
+            let keyStart = currentPos
+            while currentPos < chars.count && chars[currentPos] != "=" {
+                currentPos += 1
+            }
+
+            // If we didn't find an equals sign, this isn't a valid parameter
+            if currentPos >= chars.count || chars[currentPos] != "=" {
+                break
+            }
+
+            let keyString = String(chars[keyStart ..< currentPos]).trimmingCharacters(in: .whitespaces).lowercased()
+            currentPos += 1 // Skip the equals sign
+
+            // Skip whitespace after equals sign
+            while currentPos < chars.count, chars[currentPos] == " " || chars[currentPos] == "\t" {
+                currentPos += 1
+            }
+
+            // Extract value
+            var value = ""
+
+            // Check if value is quoted
+            if currentPos < chars.count, chars[currentPos] == "\"" || chars[currentPos] == "'" {
+                let quoteChar = chars[currentPos]
+                currentPos += 1 // Skip opening quote
+
+                // Parse until closing quote
+                var escaped = false
+                while currentPos < chars.count {
+                    let c = chars[currentPos]
+
+                    if escaped {
+                        // For escaped characters, we need to preserve both the backslash
+                        // and the character exactly as provided in the parameter
+                        value.append("\\")
+                        value.append(c)
+                        escaped = false
+                    } else if c == "\\" {
+                        // Start of an escape sequence
+                        escaped = true
+                    } else if c == quoteChar {
+                        // End of quoted section
+                        currentPos += 1
+                        break
+                    } else {
+                        // Regular character
+                        value.append(c)
+                    }
+
+                    currentPos += 1
+                }
             } else {
-                value = scanner.scanUpToString(" ")
+                // Unquoted value - read until next whitespace
+                let valueStart = currentPos
+                while currentPos < chars.count, chars[currentPos] != " ", chars[currentPos] != "\t" {
+                    currentPos += 1
+                }
+
+                value = String(chars[valueStart ..< currentPos])
             }
 
-            if let key = key?.trimmingCharacters(in: .whitespaces).lowercased(),
-               let value = value?.trimmingCharacters(in: .whitespaces)
-            {
-                params[key] = value
-            }
+            // Add the parameter to our dictionary
+            params[keyString] = value
         }
+
         return params
     }
 

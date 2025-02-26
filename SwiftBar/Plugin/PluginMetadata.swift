@@ -133,12 +133,12 @@ class PluginMetadata: ObservableObject {
         var environment: [String: String] = [:]
         if !getTagValue(tag: .environment).isEmpty {
             let envString = getTagValue(tag: .environment)
-            
+
             // Handle both formats: with brackets [...] and without
-            let processedString = envString.starts(with: "[") && envString.hasSuffix("]") 
-                ? envString.dropFirst().dropLast() 
+            let processedString = envString.starts(with: "[") && envString.hasSuffix("]")
+                ? String(envString.dropFirst().dropLast())
                 : envString
-            
+
             // Try both separators: = and :
             processedString.split(separator: ",").forEach { str in
                 // First try with = separator
@@ -146,7 +146,7 @@ class PluginMetadata: ObservableObject {
                     let key = str[..<equalsIndex].trimmingCharacters(in: .whitespaces)
                     let value = str[str.index(after: equalsIndex)...].trimmingCharacters(in: .whitespaces)
                     environment[String(key)] = String(value)
-                } 
+                }
                 // Fall back to : separator
                 else if let colonIndex = str.firstIndex(of: ":") {
                     let key = str[..<colonIndex].trimmingCharacters(in: .whitespaces)
