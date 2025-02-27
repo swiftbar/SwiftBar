@@ -5,7 +5,7 @@ struct AboutPluginView: View {
     let md: PluginMetadata
     var body: some View {
         ScrollView(showsIndicators: true) {
-            VStack {
+            VStack(alignment: .leading, spacing: 8) {
                 if !md.name.isEmpty {
                     VStack {
                         Text(md.name)
@@ -18,32 +18,84 @@ struct AboutPluginView: View {
                     }.padding(.bottom)
                 }
 
-                if md.desc.isEmpty {
-                    LabelView(label: "", value: md.desc)
-                }
-                Divider()
-                if let previewImageURL = md.previewImageURL {
-                    ImageView(withURL: previewImageURL, width: 350, height: 200)
+                if !md.desc.isEmpty {
+                    LabelView(label: "Description:", value: md.desc)
                 }
 
-                if md.author.isEmpty {
+                Divider()
+
+                if let previewImageURL = md.previewImageURL {
+                    ImageView(withURL: previewImageURL, width: 350, height: 200)
+                        .padding(.bottom, 8)
+                }
+
+                if !md.author.isEmpty {
                     LabelView(label: "Author:", value: md.author)
                 }
 
-                if md.github.isEmpty {
+                if !md.github.isEmpty {
                     LabelView(label: "GitHub:", value: md.github, url: URL(string: "https://github.com/\(md.github.replacingOccurrences(of: "@", with: ""))"))
                 }
 
-                if case let dependencies = md.dependencies.joined(separator: ",") {
-                    LabelView(label: "Dependencies:", value: dependencies)
+                if !md.dependencies.isEmpty {
+                    let dependencies = md.dependencies.filter { !$0.isEmpty }.joined(separator: ", ")
+                    if !dependencies.isEmpty {
+                        LabelView(label: "Dependencies:", value: dependencies)
+                    }
                 }
 
                 if let about = md.aboutURL {
                     LabelView(label: "About:", value: about.absoluteString, url: about)
                 }
+
+                // Display plugin variables if they exist
+                if !md.environment.isEmpty {
+                    Divider().padding(.vertical, 4)
+                    Text("Variables:").font(.headline).padding(.top, 4)
+
+                    ForEach(Array(md.environment.keys.sorted()), id: \.self) { key in
+                        if let value = md.environment[key] {
+                            LabelView(label: key + ":", value: value)
+                        }
+                    }
+                }
+
+                // Display additional plugin settings
+                if md.type != .Executable || md.runInBash == false || md.refreshOnOpen || md.persistentWebView {
+                    Divider().padding(.vertical, 4)
+                    Text("Settings:").font(.headline).padding(.top, 4)
+
+                    if md.type != .Executable {
+                        LabelView(label: "Type:", value: md.type.rawValue)
+                    }
+
+                    if !md.schedule.isEmpty {
+                        LabelView(label: "Schedule:", value: md.schedule)
+                    }
+
+                    if md.runInBash == false {
+                        LabelView(label: "Run in Bash:", value: "false")
+                    }
+
+                    if md.refreshOnOpen {
+                        LabelView(label: "Refresh on Open:", value: "true")
+                    }
+
+                    if md.persistentWebView {
+                        LabelView(label: "Persistent WebView:", value: "true")
+                    }
+                }
+
+                if !md.dropTypes.isEmpty {
+                    let dropTypes = md.dropTypes.filter { !$0.isEmpty }.joined(separator: ", ")
+                    if !dropTypes.isEmpty {
+                        Divider().padding(.vertical, 4)
+                        LabelView(label: "Drop Types:", value: dropTypes)
+                    }
+                }
             }
             .padding()
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
 }

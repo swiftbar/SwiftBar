@@ -122,6 +122,36 @@ class PluginMetadata: ObservableObject {
             return values.last ?? ""
         }
 
+        // Parse variable tags like <xbar.var>string(VAR_LOCATION="Cupertino"): Your location.</xbar.var>
+        func parseVarTags() -> [String: String] {
+            var variables: [String: String] = [:]
+
+            // Regular expression to find all var tags
+            let pattern = #"<(?:xbar|swiftbar)\.var>.*?\(([^=]+)=\"([^\"]+)\"\).*?<\/(?:xbar|swiftbar)\.var>"#
+
+            do {
+                let regex = try NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators])
+                let range = NSRange(location: 0, length: script.utf16.count)
+                let matches = regex.matches(in: script, options: [], range: range)
+
+                for match in matches {
+                    if match.numberOfRanges > 2,
+                       let keyRange = Range(match.range(at: 1), in: script),
+                       let valueRange = Range(match.range(at: 2), in: script)
+                    {
+                        let key = String(script[keyRange])
+                        let value = String(script[valueRange])
+                        variables[key] = value
+                    }
+                }
+            } catch {
+                // If regex fails, just return empty dictionary
+                print("Error parsing variable tags: \(error)")
+            }
+
+            return variables
+        }
+
         var imageURL: URL?
         if !getTagValue(tag: .image).isEmpty {
             imageURL = URL(string: getTagValue(tag: .image))
@@ -130,7 +160,15 @@ class PluginMetadata: ObservableObject {
         if !getTagValue(tag: .about).isEmpty {
             aboutURL = URL(string: getTagValue(tag: .about))
         }
+
+        // Parse environment from both environment tag and var tags
         var environment: [String: String] = [:]
+
+        // First, get variables from var tags
+        let varTagEnvironment = parseVarTags()
+        environment.merge(varTagEnvironment) { _, new in new }
+
+        // Then, parse the environment tag if present
         if !getTagValue(tag: .environment).isEmpty {
             let envString = getTagValue(tag: .environment)
 
