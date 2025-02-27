@@ -1,14 +1,6 @@
 {
+  "originHash" : "00d86dc916f446cbdad9679b84ebcf616ce2940c273d68994fc85aa694a5481e",
   "pins" : [
-    {
-      "identity" : "appcenter-sdk-apple",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/microsoft/appcenter-sdk-apple.git",
-      "state" : {
-        "revision" : "b2dc99cfedead0bad4e6573d86c5228c89cff332",
-        "version" : "4.4.3"
-      }
-    },
     {
       "identity" : "hotkey",
       "kind" : "remoteSourceControl",
@@ -25,15 +17,6 @@
       "state" : {
         "revision" : "7ad6331f9c38953eb1ce8737758e18f7607e984a",
         "version" : "5.0.0"
-      }
-    },
-    {
-      "identity" : "plcrashreporter",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/microsoft/PLCrashReporter.git",
-      "state" : {
-        "revision" : "81cdec2b3827feb03286cb297f4c501a8eb98df1",
-        "version" : "1.10.2"
       }
     },
     {
@@ -57,12 +40,12 @@
     {
       "identity" : "swifcron",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftbar/SwifCron",
+      "location" : "https://github.com/MihaelIsaev/SwifCron",
       "state" : {
-        "revision" : "effe20321342705e66894d86720c5882e2f4095e",
-        "version" : "1.3.1"
+        "revision" : "51d388da749b002522261e6fe4171acf93ee1b74",
+        "version" : "2.0.0"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
