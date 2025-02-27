@@ -76,7 +76,13 @@ class PluginManager: ObservableObject {
             })
 
         osAppearanceChangeCancellable = DistributedNotificationCenter.default().publisher(for: Notification.Name("AppleInterfaceThemeChangedNotification")).sink { [weak self] _ in
-            self?.menuBarItems.values.forEach { $0.updateMenu(content: $0.plugin?.content) }
+            self?.menuBarItems.values.forEach { item in
+                //this is not ideal, but should work in most cases — we should not reload plugins with active background webviews
+                guard item.plugin?.metadata?.persistentWebView != true else {
+                    return
+                }
+                item.updateMenu(content: item.plugin?.content)
+            }
         }
     }
 
