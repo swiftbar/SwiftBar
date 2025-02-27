@@ -34,6 +34,9 @@ class AppMenu: NSMenu {
     }
 
     @objc func quit() {
+        // Ensure the app is in regular activation policy before quitting
+        // This fixes an issue where CMD+Q would hide the dock instead of quitting
+        NSApp.setActivationPolicy(.regular)
         NSApp.terminate(self)
     }
 }
