@@ -386,6 +386,16 @@ extension MenubarItem {
     }
 
     func hideWebPopover(_ sender: AnyObject?) {
+        // If the popover is detached, don't automatically close it when clicking outside
+        if let window = webPopover.contentViewController?.view.window,
+           window.styleMask.contains(.titled)
+        {
+            // Only stop the monitor for detached windows, don't close the window
+            stopPopupMonitor()
+            return
+        }
+
+        // Normal popover behavior for non-detached popovers
         webPopover.performClose(sender)
         if plugin?.metadata?.persistentWebView == false {
             resetWebPopoverContent()
@@ -802,5 +812,28 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
 extension MenubarItem: NSPopoverDelegate {
     func popoverShouldDetach(_: NSPopover) -> Bool {
         true
+    }
+
+    func popoverDidDetach(_ popover: NSPopover) {
+        // For webPopover, configure the detached window properly
+        if popover == webPopover, let window = popover.contentViewController?.view.window {
+            // Set the window to have proper controls
+            window.styleMask = [
+                .titled,
+                .closable,
+                .miniaturizable,
+                .resizable,
+            ]
+            window.isReleasedWhenClosed = false
+
+            // Set a minimum window size to ensure controls are visible
+            window.minSize = NSSize(width: 300, height: 200)
+
+            // Set window title to match the plugin name
+            window.title = "‎ SwiftBar: \(plugin?.name ?? "")"
+
+            // Stop the popup monitor when detached to prevent auto-closing on outside clicks
+            stopPopupMonitor()
+        }
     }
 }
