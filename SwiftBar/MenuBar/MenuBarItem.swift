@@ -368,7 +368,7 @@ extension MenubarItem {
         stopPopupMonitor()
     }
 
-    func showWebPopover(url: URL, widht: CGFloat, height: CGFloat) {
+    func showWebPopover(url: URL, widht: CGFloat, height: CGFloat, zoom: CGFloat) {
         defer {
             webPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
             webPopover.contentViewController?.view.window?.becomeKey()
@@ -381,7 +381,13 @@ extension MenubarItem {
 
         let urlRequest = URLRequest(url: url)
         webPopover.behavior = .transient
-        webPopover.contentViewController = NSHostingController(rootView: WebPanelView(request: urlRequest, name: plugin?.name ?? ""))
+        webPopover.contentViewController = NSHostingController(
+            rootView: WebPanelView(
+                request: urlRequest,
+                name: plugin?.name ?? "",
+                zoomFactor: zoom
+            )
+        )
         webPopover.contentSize = NSSize(width: widht, height: height)
     }
 
@@ -732,7 +738,12 @@ extension MenubarItem {
 
         if let url = params.href?.getURL(), url.absoluteString != "." {
             if params.webView {
-                showWebPopover(url: url, widht: params.webViewWidth, height: params.webViewHeight)
+                showWebPopover(
+                    url: url,
+                    widht: params.webViewWidth,
+                    height: params.webViewHeight,
+                    zoom: params.webViewZoom
+                )
             } else {
                 NSWorkspace.shared.open(url)
             }

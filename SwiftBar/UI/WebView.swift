@@ -3,18 +3,64 @@ import WebKit
 
 struct WebView: NSViewRepresentable {
     let request: URLRequest
-    func makeNSView(context _: Context) -> WKWebView {
-        WKWebView()
+    let zoomFactor: CGFloat
+
+    init(request: URLRequest, zoomFactor: CGFloat = 1.0) {
+        self.request = request
+        self.zoomFactor = zoomFactor
     }
 
-    func updateNSView(_ uiView: WKWebView, context _: Context) {
-        uiView.load(request)
+    func makeNSView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.navigationDelegate = context.coordinator
+        return webView
+    }
+
+    func updateNSView(_ webView: WKWebView, context _: Context) {
+        webView.load(request)
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, WKNavigationDelegate {
+        var parent: WebView
+
+        init(_ parent: WebView) {
+            self.parent = parent
+        }
+
+        func webView(_ webView: WKWebView, didFinish _: WKNavigation!) {
+            if parent.zoomFactor != 1.0 {
+                applyZoom(to: webView, scale: parent.zoomFactor)
+            }
+        }
+
+        private func applyZoom(to webView: WKWebView, scale: CGFloat) {
+            let zoomScript = """
+            (function() {
+                document.body.style.transformOrigin = 'top left';
+                document.body.style.transform = 'scale(\(scale))';
+                document.body.style.width = '\(100 / scale)%';
+                document.documentElement.style.overflow = 'auto';
+            })();
+            """
+            webView.evaluateJavaScript(zoomScript, completionHandler: nil)
+        }
     }
 }
 
 struct WebPanelView: View {
     let request: URLRequest
     let name: String
+    let zoomFactor: CGFloat
+
+    init(request: URLRequest, name: String, zoomFactor: CGFloat = 1.0) {
+        self.request = request
+        self.name = name
+        self.zoomFactor = zoomFactor
+    }
 
     // This property lets us detect if we're in a detached window
     @State private var isDetachedWindow: Bool = false
@@ -42,7 +88,7 @@ struct WebPanelView: View {
                 .padding(.top, 4)
             }
 
-            WebView(request: request)
+            WebView(request: request, zoomFactor: zoomFactor)
         }
     }
 }

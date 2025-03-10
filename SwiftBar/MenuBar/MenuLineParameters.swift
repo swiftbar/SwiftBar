@@ -382,6 +382,18 @@ struct MenuLineParameters: Codable {
         return CGFloat(pSize)
     }
 
+    var webViewZoom: CGFloat {
+        guard let zoomStr = params["zoom"] else { return 1.0 }
+        if zoomStr.hasSuffix("%") {
+            if let percentValue = Float(zoomStr.dropLast(1)) {
+                return CGFloat(percentValue / 100.0)
+            }
+        } else if let directValue = Float(zoomStr) {
+            return CGFloat(directValue)
+        }
+        return 1.0
+    }
+
     var shortcut: KeyCombo? {
         guard let shortcut = params["shortcut"] else { return nil }
         var modifiers: NSEvent.ModifierFlags = []
