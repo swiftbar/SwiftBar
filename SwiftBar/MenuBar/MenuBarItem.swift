@@ -34,6 +34,7 @@ class MenubarItem: NSObject {
     var isOpen = false
     var refreshOnClose = false
     var hotKeys: [HotKey] = []
+    var hotkeyTrigger: Bool = false
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
@@ -154,10 +155,14 @@ extension MenubarItem: NSMenuDelegate {
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
         lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
 
-        guard NSApp.currentEvent?.modifierFlags.contains(.option) == false else {
-            [lastUpdatedItem, runInTerminalItem, disablePluginItem, debugPluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
-            return
+        if hotkeyTrigger == false {
+            guard NSApp.currentEvent?.modifierFlags.contains(.option) == false
+            else {
+                [lastUpdatedItem, runInTerminalItem, disablePluginItem, debugPluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
+                return
+            }
         }
+        hotkeyTrigger = false
         lastUpdatedItem.isHidden = plugin?.metadata?.hideLastUpdated ?? false
         runInTerminalItem.isHidden = plugin?.metadata?.hideRunInTerminal ?? false
         disablePluginItem.isHidden = plugin?.metadata?.hideDisablePlugin ?? false
@@ -489,6 +494,7 @@ extension MenubarItem {
         updateMenuTitle(titleLines: parts.header)
         if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
             addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
+                self?.hotkeyTrigger = true
                 self?.barItem.button?.performClick(nil)
             }
         }
