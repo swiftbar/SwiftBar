@@ -178,18 +178,37 @@ class PluginMetadata: ObservableObject {
                 : envString
 
             // Try both separators: = and :
-            processedString.split(separator: ",").forEach { str in
-                // First try with = separator
-                if let equalsIndex = str.firstIndex(of: "=") {
-                    let key = str[..<equalsIndex].trimmingCharacters(in: .whitespaces)
-                    let value = str[str.index(after: equalsIndex)...].trimmingCharacters(in: .whitespaces)
-                    environment[String(key)] = String(value)
+            processedString.split(separator: ",").forEach { strSegment in
+                let str = String(strSegment) // Convert Substring to String for easier processing
+                let equalsIndex = str.firstIndex(of: "=")
+                let colonIndex = str.firstIndex(of: ":")
+
+                var key: String?
+                var value: String?
+
+                if let eqIdx = equalsIndex, let colIdx = colonIndex {
+                    // Both separators are present, decide which one is primary
+                    if str.distance(from: str.startIndex, to: eqIdx) < str.distance(from: str.startIndex, to: colIdx) {
+                        // '=' comes first, so it's the separator
+                        key = str[..<eqIdx].trimmingCharacters(in: .whitespaces)
+                        value = str[str.index(after: eqIdx)...].trimmingCharacters(in: .whitespaces)
+                    } else {
+                        // ':' comes first or at the same position (though same position is unlikely for distinct chars), so it's the separator
+                        key = str[..<colIdx].trimmingCharacters(in: .whitespaces)
+                        value = str[str.index(after: colIdx)...].trimmingCharacters(in: .whitespaces)
+                    }
+                } else if let eqIdx = equalsIndex {
+                    // Only '=' is present
+                    key = str[..<eqIdx].trimmingCharacters(in: .whitespaces)
+                    value = str[str.index(after: eqIdx)...].trimmingCharacters(in: .whitespaces)
+                } else if let colIdx = colonIndex {
+                    // Only ':' is present
+                    key = str[..<colIdx].trimmingCharacters(in: .whitespaces)
+                    value = str[str.index(after: colIdx)...].trimmingCharacters(in: .whitespaces)
                 }
-                // Fall back to : separator
-                else if let colonIndex = str.firstIndex(of: ":") {
-                    let key = str[..<colonIndex].trimmingCharacters(in: .whitespaces)
-                    let value = str[str.index(after: colonIndex)...].trimmingCharacters(in: .whitespaces)
-                    environment[String(key)] = String(value)
+
+                if let finalKey = key, let finalValue = value, !finalKey.isEmpty {
+                    environment[finalKey] = finalValue
                 }
             }
         }
