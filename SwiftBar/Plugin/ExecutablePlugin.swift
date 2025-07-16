@@ -107,8 +107,8 @@ class ExecutablePlugin: Plugin {
                 // For cron-scheduled plugins, calculate next date and set timer
                 refreshPluginMetadata()
                 enableTimer()
-            } else if updateInterval > 0 {
-                // For interval-based plugins, check if the scheduled time has passed
+            } else if updateInterval > 0 && updateInterval < 60 * 60 * 24 * 100 {
+                // For interval-based plugins (excluding "never" plugins), check if the scheduled time has passed
                 if let lastUpdated {
                     let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)
                     if Date() > nextUpdateTime {
@@ -119,6 +119,9 @@ class ExecutablePlugin: Plugin {
                         enableTimer()
                     }
                 }
+            } else {
+                // For plugins without a specific interval ("never" plugins), always refresh on wake
+                refresh(reason: .WakeFromSleep)
             }
         } else {
             // First start of the plugin
