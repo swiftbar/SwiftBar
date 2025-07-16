@@ -309,7 +309,7 @@ struct MenuLineParameters: Codable {
             if let sfString = params["sfimage"] {
                 let sfmc = getSFConfig()
                 var config = NSImage.SymbolConfiguration(scale: .large)
-                if #available(OSX 12.0, *), let sfmc = sfmc {
+                if #available(OSX 12.0, *), let sfmc {
                     switch sfmc.renderingMode {
                     case .Hierarchical:
                         config = config.applying(NSImage.SymbolConfiguration(hierarchicalColor: sfmc.getColors().first ?? NSColor(Color.primary)))

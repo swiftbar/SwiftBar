@@ -11,7 +11,7 @@ class AppMenu: NSMenu {
         let menuItemOne = NSMenuItem()
         menuItemOne.submenu = NSMenu(title: "menuItemOne")
         menuItemOne.submenu?.items = [aboutSwiftbarItem, NSMenuItem.separator(), sendFeedbackItem, preferencesItem, NSMenuItem.separator(), quitItem]
-        [aboutSwiftbarItem, preferencesItem, sendFeedbackItem, quitItem].forEach { item in
+        for item in [aboutSwiftbarItem, preferencesItem, sendFeedbackItem, quitItem] {
             item.target = self
         }
         items = [menuItemOne]

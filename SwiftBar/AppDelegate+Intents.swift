@@ -6,17 +6,17 @@ extension AppDelegate {
     func application(_: NSApplication, handlerFor intent: INIntent) -> Any? {
         switch intent {
         case is GetPluginsIntent:
-            return GetPluginsIntentHandler()
+            GetPluginsIntentHandler()
         case is EnablePluginIntent:
-            return EnablePluginIntentHandler()
+            EnablePluginIntentHandler()
         case is DisablePluginIntent:
-            return DisablePluginIntentHandler()
+            DisablePluginIntentHandler()
         case is ReloadPluginIntent:
-            return ReloadPluginIntentHandler()
+            ReloadPluginIntentHandler()
         case is SetEphemeralPluginIntent:
-            return SetEphemeralPluginIntentHandler()
+            SetEphemeralPluginIntentHandler()
         default:
-            return nil
+            nil
         }
     }
 }

@@ -59,51 +59,51 @@ class PluginRepository: ObservableObject {
     static func categorySFImage(_ category: String) -> String {
         switch category.lowercased() {
         case "aws":
-            return "bolt"
+            "bolt"
         case "cryptocurrency":
-            return "bitcoinsign.circle"
+            "bitcoinsign.circle"
         case "dev":
-            return "hammer"
+            "hammer"
         case "e-commerce":
-            return "bag.circle"
+            "bag.circle"
         case "email":
-            return "envelope"
+            "envelope"
         case "environment":
-            return "leaf"
+            "leaf"
         case "finance":
-            return "dollarsign.circle"
+            "dollarsign.circle"
         case "games":
-            return "gamecontroller"
+            "gamecontroller"
         case "lifestyle":
-            return "face.smiling"
+            "face.smiling"
         case "messenger":
-            return "message"
+            "message"
         case "music":
-            return "music.note"
+            "music.note"
         case "network":
-            return "network"
+            "network"
         case "politics":
-            return "person.2"
+            "person.2"
         case "science":
-            return "graduationcap"
+            "graduationcap"
         case "sports":
-            return "sportscourt"
+            "sportscourt"
         case "system":
-            return "gear"
+            "gear"
         case "time":
-            return "clock"
+            "clock"
         case "tools":
-            return "paintbrush"
+            "paintbrush"
         case "travel":
-            return "briefcase"
+            "briefcase"
         case "tutorial":
-            return "bubble.left.and.bubble.right"
+            "bubble.left.and.bubble.right"
         case "weather":
-            return "cloud.sun"
+            "cloud.sun"
         case "web":
-            return "globe"
+            "globe"
         default:
-            return "questionmark.circle"
+            "questionmark.circle"
         }
     }
 }

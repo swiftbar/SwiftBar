@@ -109,7 +109,7 @@ struct LabelView: View {
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
-            if let url = url {
+            if let url {
                 Text(value)
                     .fixedSize(horizontal: false, vertical: true)
                     .font(.subheadline)

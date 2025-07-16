@@ -82,19 +82,19 @@ class StreamablePlugin: Plugin {
         lastUpdated = Date()
         do {
             procces = Process()
-            guard let procces = procces else { return nil }
+            guard let procces else { return nil }
             let out = try runScript(to: file, process: procces,
                                     env: env,
                                     runInBash: metadata?.shouldRunInBash ?? true,
                                     streamOutput: true,
                                     onOutputUpdate: { [weak self] str in
                                         if self?.prefs.streamablePluginDebugOutput == true,
-                                           let str = str,
+                                           let str,
                                            let name = self?.name
                                         {
                                             os_log("Streaming %{public}@: %{public}@", log: Log.plugin, name, str)
                                         }
-                                        guard let str = str else {
+                                        guard let str else {
                                             self?.streamInProgressContent.removeAll()
                                             self?.content = nil
                                             return

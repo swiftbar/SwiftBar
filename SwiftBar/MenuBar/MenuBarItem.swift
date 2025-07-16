@@ -223,7 +223,7 @@ extension MenubarItem {
         let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
         let quitItem = NSMenuItem(title: Localizable.App.Quit.localized, action: #selector(quit), keyEquivalent: "q")
         let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showErrorPopover), keyEquivalent: "")
-        [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, terminatePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem].forEach { item in
+        for item in [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, terminatePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem] {
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
         }
@@ -331,22 +331,22 @@ extension MenubarItem {
     }
 
     @objc func disablePlugin() {
-        guard let plugin = plugin else { return }
+        guard let plugin else { return }
         delegate.pluginManager.disablePlugin(plugin: plugin)
     }
 
     @objc func debugPlugin() {
-        guard let plugin = plugin else { return }
+        guard let plugin else { return }
         AppShared.showPluginDebug(plugin: plugin)
     }
 
     @objc func terminateEphemeralPlugin() {
-        guard let plugin = plugin else { return }
+        guard let plugin else { return }
         plugin.terminate()
     }
 
     @objc func showErrorPopover() {
-        guard let plugin = plugin, plugin.error != nil else { return }
+        guard let plugin, plugin.error != nil else { return }
         errorPopover.behavior = .transient
         errorPopover.contentViewController = NSHostingController(rootView: PluginErrorView(plugin: plugin))
         errorPopover.show(relativeTo: barItem.button!.bounds, of: barItem.button!, preferredEdge: .minY)
@@ -504,7 +504,7 @@ extension MenubarItem {
         }
 
         // prevItems.append(statusBarMenu.items.last)
-        parts.body.forEach { line in
+        for line in parts.body {
             addMenuItem(from: line)
         }
         buildStandardMenu()
@@ -566,7 +566,7 @@ extension MenubarItem {
         setMenuTitle(title: titleLines.first ?? "􀇾")
         guard titleLines.count > 1 else { return }
 
-        titleLines.forEach { line in
+        for line in titleLines {
             addMenuItem(from: line)
         }
     }
@@ -813,7 +813,7 @@ extension MenubarItem: NSWindowDelegate, NSDraggingDestination {
             // swiftformat:enable all
         }
 
-        if let url = url {
+        if let url {
             env["DROPPED_URL"] = url.absoluteString
         }
 

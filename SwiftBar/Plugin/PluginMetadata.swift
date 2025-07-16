@@ -34,9 +34,9 @@ enum PluginMetadataOption: String, CaseIterable {
     var optionType: [PluginMetadataType] {
         switch self {
         case .title, .version, .author, .github, .desc, .about, .image, .dependencies:
-            return [.bitbar, .xbar]
+            [.bitbar, .xbar]
         case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar, .refreshOnOpen, .persistentWebView, .useTrailingStreamSeparator:
-            return [.swiftbar]
+            [.swiftbar]
         }
     }
 }
@@ -178,7 +178,7 @@ class PluginMetadata: ObservableObject {
                 : envString
 
             // Try both separators: = and :
-            processedString.split(separator: ",").forEach { strSegment in
+            for strSegment in processedString.split(separator: ",") {
                 let str = String(strSegment) // Convert Substring to String for easier processing
                 let equalsIndex = str.firstIndex(of: "=")
                 let colonIndex = str.firstIndex(of: ":")
@@ -264,7 +264,7 @@ class PluginMetadata: ObservableObject {
 
     func genereteMetadataString() -> String {
         var result = ""
-        PluginMetadataOption.allCases.forEach { option in
+        for option in PluginMetadataOption.allCases {
             var value = ""
             switch option {
             case .title:
@@ -310,7 +310,7 @@ class PluginMetadata: ObservableObject {
             case .useTrailingStreamSeparator:
                 value = useTrailingStreamSeparator ? "true" : ""
             }
-            guard !value.isEmpty else { return }
+            guard !value.isEmpty else { continue }
             let tag = option
             let prefix = tag.optionType.last!.rawValue
             result.append("\n<\(prefix).\(tag)>\(value)</\(prefix).\(tag)>")

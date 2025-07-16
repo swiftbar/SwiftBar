@@ -12,8 +12,8 @@ extension NSMutableAttributedString {
             let regex = try NSRegularExpression(pattern: regex)
             let results = regex.matches(in: currentString,
                                         range: NSRange(currentString.startIndex..., in: currentString))
-            results.forEach {
-                resultRanges.append($0.range)
+            for result in results {
+                resultRanges.append(result.range)
             }
 
         } catch {
@@ -28,11 +28,10 @@ extension NSMutableAttributedString {
 
             let imageConfig = NSImage.SymbolConfiguration(pointSize: sfsize ?? font.pointSize, weight: .regular)
             guard let image = NSImage(systemSymbolName: clearedImageName, accessibilityDescription: nil)?.withSymbolConfiguration(imageConfig) else { continue }
-            let tintColor: NSColor?
-            if index >= colors.count {
-                tintColor = colors.last
+            let tintColor: NSColor? = if index >= colors.count {
+                colors.last
             } else {
-                tintColor = colors[index]
+                colors[index]
             }
             let attachment = NSTextAttachment.centeredImage(with: image.tintedImage(color: tintColor), and: font)
 

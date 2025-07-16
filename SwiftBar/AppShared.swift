@@ -191,7 +191,7 @@ class AppShared: NSObject {
         if let scriptObject = NSAppleScript(source: appleScript) {
             if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
                 print(outputString)
-            } else if let error = error {
+            } else if let error {
                 os_log("Failed to execute script in Terminal \n%{public}@", log: Log.plugin, type: .error, error.description)
             }
             completionHandler?()

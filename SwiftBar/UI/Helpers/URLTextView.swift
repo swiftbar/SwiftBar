@@ -5,7 +5,7 @@ struct URLTextView: View {
     var url: URL
     var sfSymbol: String?
     var body: some View {
-        if #available(OSX 11.0, *), let sfSymbol = sfSymbol {
+        if #available(OSX 11.0, *), let sfSymbol {
             Image(systemName: sfSymbol)
                 .colorMultiply(.blue)
                 .onTapGesture {

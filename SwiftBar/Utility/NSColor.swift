@@ -6,7 +6,7 @@ extension NSColor {
     ]
 
     public static func webColor(from colorString: String?) -> NSColor? {
-        guard let colorString = colorString else { return nil }
+        guard let colorString else { return nil }
 
         if colorString.hasPrefix("#") {
             return fromHexString(hex: colorString)

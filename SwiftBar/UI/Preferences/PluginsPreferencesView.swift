@@ -1,5 +1,6 @@
 import Preferences
 import SwiftUI
+
 struct PluginsPreferencesView: View {
     @ObservedObject var pluginManager: PluginManager
 
@@ -36,13 +37,13 @@ struct SidebarView: View {
     var body: some View {
         List {
             ForEach(plugins, id: \.id) { plugin in
-                PluginRowView(plugin: plugin, selected: self.selectedPlugin.id == plugin.id)
+                PluginRowView(plugin: plugin, selected: selectedPlugin.id == plugin.id)
                     .onTapGesture {
-                        self.selectedPlugin = plugin
+                        selectedPlugin = plugin
                         print(plugin.id)
                     }
                     .listRowBackground(Group {
-                        if self.selectedPlugin.id == plugin.id {
+                        if selectedPlugin.id == plugin.id {
                             Color(NSColor.selectedContentBackgroundColor).mask(RoundedRectangle(cornerRadius: 5, style: .continuous))
                         } else { Color.clear }
                     })

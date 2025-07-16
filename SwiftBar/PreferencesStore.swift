@@ -15,11 +15,11 @@ enum ShellOptions: String, CaseIterable {
     var path: String {
         switch self {
         case .Bash:
-            return "/bin/bash"
+            "/bin/bash"
         case .Zsh:
-            return "/bin/zsh"
+            "/bin/zsh"
         case .Default:
-            return "/bin/zsh"
+            "/bin/zsh"
         }
     }
 }

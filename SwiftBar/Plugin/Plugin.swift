@@ -157,7 +157,7 @@ extension Plugin {
             pluginEnv[k] = v
         }
 
-        refreshEnv.forEach { k, v in
+        for (k, v) in refreshEnv {
             pluginEnv[k] = v
         }
         refreshEnv.removeAll()

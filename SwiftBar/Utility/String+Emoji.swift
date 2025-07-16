@@ -1088,7 +1088,7 @@ extension String {
     func emojify() -> Self {
         guard contains(":") else { return self }
         var out = self
-        emoji.forEach { k, v in
+        for (k, v) in emoji {
             out = out.replacingOccurrences(of: k, with: v)
         }
         return out
