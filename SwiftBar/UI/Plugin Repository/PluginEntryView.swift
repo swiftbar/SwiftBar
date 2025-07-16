@@ -76,13 +76,13 @@ struct PluginEntryModalView: View {
         var localized: String {
             switch self {
             case .Install:
-                return Localizable.PluginRepository.InstallStatusInstall.localized
+                Localizable.PluginRepository.InstallStatusInstall.localized
             case .Installed:
-                return Localizable.PluginRepository.InstallStatusInstalled.localized
+                Localizable.PluginRepository.InstallStatusInstalled.localized
             case .Failed:
-                return Localizable.PluginRepository.InstallStatusFailed.localized
+                Localizable.PluginRepository.InstallStatusFailed.localized
             case .Downloading:
-                return Localizable.PluginRepository.InstallStatusDownloading.localized
+                Localizable.PluginRepository.InstallStatusDownloading.localized
             }
         }
     }
@@ -91,11 +91,11 @@ struct PluginEntryModalView: View {
     var installButtonColor: Color? {
         switch installStatus {
         case .Install, .Downloading:
-            return .blue
+            .blue
         case .Installed:
-            return .green
+            .green
         case .Failed:
-            return .red
+            .red
         }
     }
 

@@ -2,6 +2,7 @@ import Cocoa
 import os
 import Preferences
 import UserNotifications
+
 #if MAC_APP_STORE
     protocol SPUStandardUserDriverDelegate {}
     protocol SPUUpdaterDelegate {}

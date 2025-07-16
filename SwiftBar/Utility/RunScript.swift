@@ -6,7 +6,7 @@ let sharedEnv = Environment.shared
 
 func getEnvExportString(env: [String: String]) -> String {
     let dict = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
-    return "export \(dict.map { "\($0.key)='\($0.value)'" }.joined(separator: " "))"
+    return "export \(dict.map { "\($0.key)=\($0.value.quoteIfNeeded())" }.joined(separator: " "))"
 }
 
 @discardableResult func runScript(to command: String,
@@ -56,7 +56,7 @@ private extension Process {
             }
         }
 
-        guard let executableURL = executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {
+        guard let executableURL, FileManager.default.fileExists(atPath: executableURL.path) else {
             return (out: "", err: nil)
         }
 

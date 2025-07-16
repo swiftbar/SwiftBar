@@ -88,12 +88,12 @@ class PluginManager: ObservableObject {
 
     func pluginsDidChange() {
         os_log("Plugins did change, updating menu bar...", log: Log.plugin)
-        enabledPlugins.forEach { plugin in
-            guard menuBarItems[plugin.id] == nil else { return }
+        for plugin in enabledPlugins {
+            guard menuBarItems[plugin.id] == nil else { continue }
             menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
         }
-        menuBarItems.keys.forEach { pluginID in
-            guard !enabledPlugins.contains(where: { $0.id == pluginID }) else { return }
+        for pluginID in menuBarItems.keys {
+            guard !enabledPlugins.contains(where: { $0.id == pluginID }) else { continue }
             menuBarItems.removeValue(forKey: pluginID)
         }
 
@@ -165,15 +165,21 @@ class PluginManager: ObservableObject {
             }
 
             func shouldBeIgnored(url: URL, patterns: [String]) -> Bool {
-                let path = url.absoluteString.replacingOccurrences(of: pluginDirectoryURL?.absoluteString ?? "", with: "")
+                let filename = url.lastPathComponent
+
                 for pattern in patterns {
+                    if filename == pattern {
+                        return true
+                    }
+
                     let escapedPattern = NSRegularExpression.escapedPattern(for: pattern)
                         .replacingOccurrences(of: "\\*", with: ".*")
                         .replacingOccurrences(of: "\\?", with: ".")
-                    let regex = try? NSRegularExpression(pattern: "^\(escapedPattern)$", options: [])
-
-                    if let regex = regex, regex.numberOfMatches(in: path, options: [], range: NSRange(location: 0, length: path.count)) > 0 {
-                        return true
+                    if let regex = try? NSRegularExpression(pattern: "^\(escapedPattern)$", options: []) {
+                        let range = NSRange(location: 0, length: filename.utf16.count)
+                        if regex.firstMatch(in: filename, options: [], range: range) != nil {
+                            return true
+                        }
                     }
                 }
                 return false
@@ -240,7 +246,7 @@ class PluginManager: ObservableObject {
             !freshFilePlugins.contains(where: { $0.path == plugin.file })
         }
 
-        (removedPlugins + removedShortcutPlugins).forEach { plugin in
+        for plugin in removedPlugins + removedShortcutPlugins {
             menuBarItems.removeValue(forKey: plugin.id)
             prefs.disabledPlugins.removeAll(where: { $0 == plugin.id })
             plugins.removeAll(where: { $0.id == plugin.id })
@@ -316,7 +322,7 @@ class PluginManager: ObservableObject {
     func importPlugin(from url: URL, completionHandler: ((Result<Any, ImportPluginError>) -> Void)? = nil) {
         os_log("Starting plugin import from %{public}@", log: Log.plugin, url.absoluteString)
         let downloadTask = URLSession.shared.downloadTask(with: url) { fileURL, _, _ in
-            guard let fileURL = fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else {
+            guard let fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else {
                 completionHandler?(.failure(.badURL))
                 return
             }
@@ -367,7 +373,7 @@ extension PluginManager {
             content.userInfo[SystemNotificationName.url] = urlString
         }
 
-        if let commandParams = commandParams {
+        if let commandParams {
             content.userInfo[SystemNotificationName.command] = commandParams
         }
 

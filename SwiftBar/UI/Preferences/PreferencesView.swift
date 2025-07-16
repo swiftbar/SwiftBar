@@ -12,37 +12,36 @@ extension Preferences.PaneIdentifier {
         switch self {
         case .general:
             if #available(OSX 11.0, *) {
-                return NSImage(systemSymbolName: "gear", accessibilityDescription: nil)!
+                NSImage(systemSymbolName: "gear", accessibilityDescription: nil)!
             } else {
-                return NSImage(named: "AppIcon")!
+                NSImage(named: "AppIcon")!
             }
         case .plugins:
             if #available(OSX 11.0, *) {
-                return NSImage(systemSymbolName: "curlybraces", accessibilityDescription: nil)!
+                NSImage(systemSymbolName: "curlybraces", accessibilityDescription: nil)!
             } else {
-                return NSImage(named: "AppIcon")!
+                NSImage(named: "AppIcon")!
             }
         case .shortcutPlugins:
             if #available(OSX 11.0, *) {
-                return NSImage(systemSymbolName: "flowchart", accessibilityDescription: nil)!
+                NSImage(systemSymbolName: "flowchart", accessibilityDescription: nil)!
             } else {
-                return NSImage(named: "AppIcon")!
+                NSImage(named: "AppIcon")!
             }
         case .advanced:
             if #available(OSX 11.0, *) {
-                return NSImage(systemSymbolName: "gearshape.2", accessibilityDescription: nil)!
+                NSImage(systemSymbolName: "gearshape.2", accessibilityDescription: nil)!
             } else {
-                return NSImage(named: "AppIcon")!
+                NSImage(named: "AppIcon")!
             }
         case .about:
             if #available(OSX 11.0, *) {
-                return NSImage(systemSymbolName: "info", accessibilityDescription: nil)!
+                NSImage(systemSymbolName: "info", accessibilityDescription: nil)!
             } else {
-                return NSImage(named: "AppIcon")!
+                NSImage(named: "AppIcon")!
             }
-
         default:
-            return NSImage(named: "AppIcon")!
+            NSImage(named: "AppIcon")!
         }
     }
 }

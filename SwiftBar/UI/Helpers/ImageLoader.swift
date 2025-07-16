@@ -12,7 +12,7 @@ class ImageLoader: ObservableObject {
             imageData = data
         } else {
             URLSession.shared.dataTask(with: request, completionHandler: { data, response, _ in
-                if let data = data, let response = response {
+                if let data, let response {
                     let cachedData = CachedURLResponse(response: response, data: data)
                     cache.storeCachedResponse(cachedData, for: request)
                     DispatchQueue.main.async {

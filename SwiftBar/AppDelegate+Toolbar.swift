@@ -35,11 +35,10 @@ extension AppDelegate: NSToolbarDelegate {
     func toolbar(_: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar _: Bool) -> NSToolbarItem? {
         switch itemIdentifier {
         case .sendFeedback:
-            var button: NSButton
-            if #available(OSX 11.0, *) {
-                button = NSButton(image: NSImage(systemSymbolName: "ant", accessibilityDescription: "")!, target: nil, action: #selector(sendFeedback))
+            var button = if #available(OSX 11.0, *) {
+                NSButton(image: NSImage(systemSymbolName: "ant", accessibilityDescription: "")!, target: nil, action: #selector(sendFeedback))
             } else {
-                button = NSButton(title: "Feedback", target: nil, action: #selector(sendFeedback))
+                NSButton(title: "Feedback", target: nil, action: #selector(sendFeedback))
             }
             button.bezelStyle = .texturedRounded
             return customToolbarItem(itemIdentifier: .sendFeedback, label: Localizable.MenuBar.SendFeedback.localized,
@@ -47,11 +46,10 @@ extension AppDelegate: NSToolbarDelegate {
         case .search:
             return repositoryToolbarSearchItem
         case .refresh:
-            var button: NSButton
-            if #available(OSX 11.0, *) {
-                button = NSButton(image: NSImage(systemSymbolName: "arrow.counterclockwise.circle", accessibilityDescription: "")!, target: nil, action: #selector(refresh))
+            var button = if #available(OSX 11.0, *) {
+                NSButton(image: NSImage(systemSymbolName: "arrow.counterclockwise.circle", accessibilityDescription: "")!, target: nil, action: #selector(refresh))
             } else {
-                button = NSButton(title: "Refresh", target: nil, action: #selector(refresh))
+                NSButton(title: "Refresh", target: nil, action: #selector(refresh))
             }
             button.bezelStyle = .texturedRounded
             return customToolbarItem(itemIdentifier: .refresh, label: Localizable.MenuBar.GetPlugins.localized,

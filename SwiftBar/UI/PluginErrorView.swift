@@ -26,20 +26,20 @@ struct PluginErrorView: View {
     func errorMessage() -> String {
         switch plugin.type {
         case .Executable, .Streamable:
-            return (plugin.error as? ShellOutError)?.message ?? "none"
+            (plugin.error as? ShellOutError)?.message ?? "none"
         case .Shortcut:
-            return (plugin.error as? RunShortcutError)?.message ?? "none"
+            (plugin.error as? RunShortcutError)?.message ?? "none"
         case .Ephemeral:
-            return "none"
+            "none"
         }
     }
 
     func errorOutput() -> String {
         switch plugin.type {
         case .Executable, .Streamable:
-            return (plugin.error as? ShellOutError)?.output ?? "none"
+            (plugin.error as? ShellOutError)?.output ?? "none"
         case .Shortcut, .Ephemeral:
-            return "none"
+            "none"
         }
     }
 }
