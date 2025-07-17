@@ -42,7 +42,8 @@ class ExecutablePlugin: Plugin {
 
     init(fileURL: URL) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
-        id = fileURL.lastPathComponent
+        // Use resolved path as ID to ensure uniqueness even with symlinks
+        id = fileURL.resolvingSymlinksInPath().path
         name = nameComponents.first ?? ""
         file = fileURL.path
 

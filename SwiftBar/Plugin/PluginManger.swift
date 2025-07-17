@@ -137,15 +137,22 @@ class PluginManager: ObservableObject {
             return []
         }
 
+        // Track processed directories by their resolved paths to avoid duplicates
+        var processedDirs = Set<String>()
+
         func filter(url: URL) -> (files: [URL], dirs: [URL]) {
             guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
             else { return ([], []) }
             var dirs: [URL] = []
             let files = enumerator.compactMap { $0 as? URL }.filter { origURL in
-                let url = origURL.resolvingSymlinksInPath()
+                let resolvedURL = origURL.resolvingSymlinksInPath()
                 var isDir: ObjCBool = false
-                guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir), !isDir.boolValue else {
-                    dirs.append(url)
+                guard fileManager.fileExists(atPath: resolvedURL.path, isDirectory: &isDir), !isDir.boolValue else {
+                    // Only add directory if we haven't processed its resolved path yet
+                    if isDir.boolValue, !processedDirs.contains(resolvedURL.path) {
+                        processedDirs.insert(resolvedURL.path)
+                        dirs.append(origURL) // Keep original URL for traversal
+                    }
                     return false
                 }
                 return true
@@ -219,7 +226,20 @@ class PluginManager: ObservableObject {
                 }
             }
         }
-        return Array(Set(files))
+
+        // Deduplicate files based on resolved paths
+        var uniqueFiles: [URL] = []
+        var seenPaths = Set<String>()
+
+        for file in files {
+            let resolvedPath = file.resolvingSymlinksInPath().path
+            if !seenPaths.contains(resolvedPath) {
+                seenPaths.insert(resolvedPath)
+                uniqueFiles.append(file)
+            }
+        }
+
+        return uniqueFiles
     }
 
     func loadShortcutPlugins() -> [ShortcutPlugin] {
