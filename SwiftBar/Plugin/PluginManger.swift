@@ -41,7 +41,7 @@ class PluginManager: ObservableObject {
         prefs.pluginDirectoryResolvedURL
     }
 
-    var ingoreFileContent: String? {
+    var ignoreFileContent: String? {
         guard let url = pluginDirectoryURL,
               case let ignoreFile = url.appendingPathComponent(".swiftbarignore"),
               FileManager.default.fileExists(atPath: ignoreFile.path),
@@ -164,20 +164,31 @@ class PluginManager: ObservableObject {
                 }
             }
 
-            func shouldBeIgnored(url: URL, patterns: [String]) -> Bool {
+            func shouldBeIgnored(url: URL, patterns: [String], baseURL: URL) -> Bool {
+                // Get relative path from plugin directory
+                let relativePath = url.path.replacingOccurrences(of: baseURL.path + "/", with: "")
                 let filename = url.lastPathComponent
 
                 for pattern in patterns {
-                    if filename == pattern {
+                    // Direct filename match
+                    if filename == pattern || relativePath == pattern {
                         return true
                     }
 
+                    // Convert glob pattern to regex
                     let escapedPattern = NSRegularExpression.escapedPattern(for: pattern)
-                        .replacingOccurrences(of: "\\*", with: ".*")
-                        .replacingOccurrences(of: "\\?", with: ".")
+                        .replacingOccurrences(of: "\\*\\*/", with: "(.*/)?") // ** matches any directory depth
+                        .replacingOccurrences(of: "\\*", with: "[^/]*") // * matches within directory
+                        .replacingOccurrences(of: "\\?", with: "[^/]") // ? matches single character
+
+                    // Try to match against both filename and relative path
                     if let regex = try? NSRegularExpression(pattern: "^\(escapedPattern)$", options: []) {
-                        let range = NSRange(location: 0, length: filename.utf16.count)
-                        if regex.firstMatch(in: filename, options: [], range: range) != nil {
+                        let filenameRange = NSRange(location: 0, length: filename.utf16.count)
+                        let pathRange = NSRange(location: 0, length: relativePath.utf16.count)
+
+                        if regex.firstMatch(in: filename, options: [], range: filenameRange) != nil ||
+                            regex.firstMatch(in: relativePath, options: [], range: pathRange) != nil
+                        {
                             return true
                         }
                     }
@@ -185,19 +196,28 @@ class PluginManager: ObservableObject {
                 return false
             }
 
-            let filteredFiles = files.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns) }
-            let filteredDirs = dirs.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns) }
+            let filteredFiles = files.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns, baseURL: url) }
+            let filteredDirs = dirs.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns, baseURL: url) }
 
             return (filteredFiles, filteredDirs)
         }
 
         var (files, dirs) = filter(url: url)
-        if let ingoreFileContent {
-            (files, dirs) = filterFilesAndDirs(files: files, dirs: dirs, ignoreContent: ingoreFileContent)
+        if let ignoreFileContent {
+            (files, dirs) = filterFilesAndDirs(files: files, dirs: dirs, ignoreContent: ignoreFileContent)
         }
 
+        // Only process directories that weren't filtered out by ignore patterns
         if !dirs.isEmpty {
-            files.append(contentsOf: dirs.map { filter(url: $0) }.flatMap(\.files))
+            for dir in dirs {
+                let (subFiles, subDirs) = filter(url: dir)
+                if let ignoreFileContent {
+                    let (filteredSubFiles, _) = filterFilesAndDirs(files: subFiles, dirs: subDirs, ignoreContent: ignoreFileContent)
+                    files.append(contentsOf: filteredSubFiles)
+                } else {
+                    files.append(contentsOf: subFiles)
+                }
+            }
         }
         return Array(Set(files))
     }
