@@ -574,12 +574,30 @@ extension MenubarItem {
     func setMenuTitle(title: String) {
         barItem.button?.image = nil
 
-        let params = MenuLineParameters(line: title)
+        let lines = title.components(separatedBy: .newlines).filter { !$0.isEmpty }
+        let displayText: String
+        let isTwoLine: Bool
+
+        if lines.count == 2 {
+            // Exactly 2 lines - keep as is for proper multi-line display
+            displayText = title
+            isTwoLine = true
+        } else if lines.count > 2 {
+            // More than 2 lines - truncate to first line
+            displayText = "\(lines.first ?? "")..."
+            isTwoLine = false
+        } else {
+            // Single line or empty - no change
+            displayText = title
+            isTwoLine = false
+        }
+
+        let params = MenuLineParameters(line: displayText)
         if let image = params.image {
             barItem.button?.image = image
             barItem.button?.imagePosition = .imageLeft
         }
-        barItem.button?.attributedTitle = atributedTitle(with: params, pad: true).title
+        barItem.button?.attributedTitle = atributedTitle(with: params, pad: true, isTwoLine: isTwoLine).title
     }
 
     func cycleThroughTitles() {
@@ -615,7 +633,7 @@ extension MenubarItem {
         return newstr
     }
 
-    func atributedTitle(with params: MenuLineParameters, pad: Bool = false) -> (title: NSAttributedString, tooltip: String) {
+    func atributedTitle(with params: MenuLineParameters, pad: Bool = false, isTwoLine: Bool = false) -> (title: NSAttributedString, tooltip: String) {
         var title = params.trim ? params.title.trimmingCharacters(in: .whitespaces) : params.title
         guard !title.isEmpty else { return (NSAttributedString(), "") }
 
@@ -635,7 +653,7 @@ extension MenubarItem {
         if let fontName = params.font, let customFont = NSFont(name: fontName, size: fontSize) {
             font = customFont
         }
-        let offset = font.menuBarOffset
+        let offset = isTwoLine ? font.twoLineMenuBarOffset : font.menuBarOffset
 
         let style = NSMutableParagraphStyle()
         style.alignment = pad ? .center : .left

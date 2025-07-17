@@ -71,7 +71,7 @@ extension String {
     }
 }
 
-extension Dictionary where Key == NSAttributedString.Key, Value == Any {
+extension [NSAttributedString.Key: Any] {
     mutating func attributesForANSICodes(codes: String) {
         var color256 = false
         var foreground = false

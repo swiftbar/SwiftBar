@@ -31,4 +31,9 @@ extension NSFont {
             0
         }
     }
+
+    var twoLineMenuBarOffset: CGFloat {
+        // Adjust offset for 2-line content (move up slightly to center better)
+        menuBarOffset - (pointSize * 0.15)
+    }
 }
