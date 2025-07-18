@@ -305,9 +305,20 @@ struct MenuLineParameters: Codable {
         return sfmc
     }
 
-    var image: NSImage? {
+    func getImage(isMenuBarItem: Bool = false) -> NSImage? {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
+                // Handle comma-separated SF symbols for light/dark themes
+                let sfSymbols = sfString.components(separatedBy: ",")
+                let lightSymbol = sfSymbols.first?.trimmingCharacters(in: .whitespaces)
+                let darkSymbol = sfSymbols.count > 1 ? sfSymbols.last?.trimmingCharacters(in: .whitespaces) : lightSymbol
+                
+                // Choose symbol based on theme context
+                let shouldUseDarkSymbol = isMenuBarItem ? AppShared.isDarkStatusBar : AppShared.isDarkTheme
+                let symbolToUse = (shouldUseDarkSymbol && darkSymbol != lightSymbol) ? darkSymbol : lightSymbol
+                
+                guard let finalSymbol = symbolToUse else { return nil }
+                
                 let sfmc = getSFConfig()
                 var config = NSImage.SymbolConfiguration(scale: .large)
                 if #available(OSX 12.0, *), let sfmc {
@@ -326,10 +337,10 @@ struct MenuLineParameters: Codable {
                 let image: NSImage?
                 if #available(macOS 13.0, *), let variableValue = variableValue {
                     // Create image with variable value for symbols that support it
-                    image = NSImage(systemSymbolName: sfString, variableValue: variableValue, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                    image = NSImage(systemSymbolName: finalSymbol, variableValue: variableValue, accessibilityDescription: nil)?.withSymbolConfiguration(config)
                 } else {
                     // Fallback to regular symbol creation
-                    image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                    image = NSImage(systemSymbolName: finalSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
                 }
                 
                 image?.isTemplate = true
@@ -342,7 +353,9 @@ struct MenuLineParameters: Codable {
             let lightImage = images?.first
             let darkImage = images?.last
 
-            return resizedImageIfRequested(NSImage.createImage(from: AppShared.isDarkStatusBar || darkImage == nil ? lightImage : darkImage, isTemplate: false))
+            // Use isDarkStatusBar for menu bar items, isDarkTheme for dropdown items
+            let shouldUseDarkImage = isMenuBarItem ? AppShared.isDarkStatusBar : AppShared.isDarkTheme
+            return resizedImageIfRequested(NSImage.createImage(from: shouldUseDarkImage || darkImage == nil ? lightImage : darkImage, isTemplate: false))
         }
 
         if params["templateimage"] != nil {
@@ -350,6 +363,11 @@ struct MenuLineParameters: Codable {
         }
 
         return nil
+    }
+    
+    var image: NSImage? {
+        // Default behavior for backward compatibility - assumes dropdown item
+        getImage(isMenuBarItem: false)
     }
 
     private func resizedImageIfRequested(_ image: NSImage?) -> NSImage? {

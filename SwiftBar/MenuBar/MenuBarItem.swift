@@ -617,7 +617,7 @@ extension MenubarItem {
         }
 
         let params = MenuLineParameters(line: displayText)
-        if let image = params.image {
+        if let image = params.getImage(isMenuBarItem: true) {
             barItem.button?.image = image
             barItem.button?.imagePosition = .imageLeft
         }
