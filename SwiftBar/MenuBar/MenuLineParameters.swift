@@ -156,6 +156,7 @@ struct MenuLineParameters: Codable {
         var colors: [String]
         var scale: Scale?
         var weight: Weight?
+        var variableValue: Double?
 
         func getColors() -> [NSColor] {
             colors.compactMap { NSColor.webColor(from: $0) }
@@ -319,7 +320,18 @@ struct MenuLineParameters: Codable {
                     config = config.applying(NSImage.SymbolConfiguration(pointSize: 0, weight: sfmc.getWeight(), scale: sfmc.getScale()))
                 }
 
-                let image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                // Check for variable value from either sfconfig or sfvalue parameter
+                let variableValue = sfmc?.variableValue ?? sfvalue
+                
+                let image: NSImage?
+                if #available(macOS 13.0, *), let variableValue = variableValue {
+                    // Create image with variable value for symbols that support it
+                    image = NSImage(systemSymbolName: sfString, variableValue: variableValue, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                } else {
+                    // Fallback to regular symbol creation
+                    image = NSImage(systemSymbolName: sfString, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+                }
+                
                 image?.isTemplate = true
                 return resizedImageIfRequested(image)
             }
@@ -431,5 +443,11 @@ struct MenuLineParameters: Codable {
         // Positive values move text down, negative values move text up
         guard let valignStr = params["valign"], let offset = Float(valignStr) else { return nil }
         return CGFloat(offset)
+    }
+    
+    var sfvalue: Double? {
+        // Parse SF Symbol variable value parameter (0.0 to 1.0)
+        guard let sfvalueStr = params["sfvalue"], let value = Double(sfvalueStr) else { return nil }
+        return max(0.0, min(1.0, value)) // Clamp to 0.0-1.0 range
     }
 }
