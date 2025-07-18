@@ -23,6 +23,7 @@ class MenubarItem: NSObject {
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
+    var stalenessCheckCancellable: AnyCancellable?
     let lastUpdatedItem = NSMenuItem(title: Localizable.MenuBar.UpdatingMenu.localized, action: nil, keyEquivalent: "")
     let aboutItem = NSMenuItem(title: Localizable.MenuBar.AboutSwiftBar.localized, action: #selector(showAboutPopover), keyEquivalent: "")
     let runInTerminalItem = NSMenuItem(title: Localizable.MenuBar.RunInTerminal.localized, action: #selector(runInTerminal), keyEquivalent: "")
@@ -106,11 +107,28 @@ class MenubarItem: NSObject {
                 self?.disableTitleCycle()
                 self?.updateMenu(content: content)
             }
+
+        // Start staleness check timer - check every 30 seconds
+        stalenessCheckCancellable = Timer.publish(every: 30, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self,
+                      let plugin = self.plugin else { return }
+
+                // Refresh title if staleness status has changed
+                let wasStale = barItem.button?.attributedTitle.string.hasPrefix("⚠️") ?? false
+                let isNowStale = plugin.isStale
+
+                if wasStale != isNowStale {
+                    setMenuTitle(title: currentTitleLine)
+                }
+            }
     }
 
     deinit {
         contentUpdateCancellable?.cancel()
         titleCycleCancellable?.cancel()
+        stalenessCheckCancellable?.cancel()
     }
 
     func enableTitleCycle() {
@@ -153,7 +171,13 @@ extension MenubarItem: NSMenuDelegate {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .full
         let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
-        lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
+
+        // Add warning if plugin is stale
+        if let plugin, plugin.isStale {
+            lastUpdatedItem.title = "⚠️ \(Localizable.MenuBar.LastUpdated.localized) \(relativeDate) (Stale - expected update every \(formatInterval(plugin.updateInterval)))"
+        } else {
+            lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
+        }
 
         if hotkeyTrigger == false {
             guard NSApp.currentEvent?.modifierFlags.contains(.option) == false
@@ -597,7 +621,18 @@ extension MenubarItem {
             barItem.button?.image = image
             barItem.button?.imagePosition = .imageLeft
         }
-        barItem.button?.attributedTitle = atributedTitle(with: params, pad: true, isTwoLine: isTwoLine).title
+
+        var attributedTitle = atributedTitle(with: params, pad: true, isTwoLine: isTwoLine).title
+
+        // Add stale indicator if plugin hasn't updated within 2x its refresh interval
+        if let plugin, plugin.isStale {
+            let warningSymbol = "⚠️ "
+            let mutableTitle = NSMutableAttributedString(string: warningSymbol)
+            mutableTitle.append(attributedTitle)
+            attributedTitle = mutableTitle
+        }
+
+        barItem.button?.attributedTitle = attributedTitle
     }
 
     func cycleThroughTitles() {
@@ -606,6 +641,14 @@ extension MenubarItem {
             currentTitleLineIndex = 0
         }
         setMenuTitle(title: titleLines[currentTitleLineIndex])
+    }
+
+    private func formatInterval(_ interval: TimeInterval) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.allowedUnits = [.day, .hour, .minute, .second]
+        formatter.maximumUnitCount = 2
+        return formatter.string(from: interval) ?? "\(Int(interval))s"
     }
 
     // do the following conversion:

@@ -96,6 +96,19 @@ extension Plugin {
         """
     }
 
+    var isStale: Bool {
+        // Check if plugin has timed updates and hasn't updated within 2x the interval
+        guard updateInterval > 0,
+              updateInterval < 60 * 60 * 24 * 100, // Not a "never" update plugin
+              let lastUpdated
+        else {
+            return false
+        }
+
+        let timeSinceLastUpdate = Date().timeIntervalSince(lastUpdated)
+        return timeSinceLastUpdate > (updateInterval * 2)
+    }
+
     var prefs: PreferencesStore {
         PreferencesStore.shared
     }
