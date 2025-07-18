@@ -696,7 +696,8 @@ extension MenubarItem {
         if let fontName = params.font, let customFont = NSFont(name: fontName, size: fontSize) {
             font = customFont
         }
-        let offset = isTwoLine ? font.twoLineMenuBarOffset : font.menuBarOffset
+        // Use custom vertical alignment if provided, otherwise use default offset
+        let offset = params.valign ?? (isTwoLine ? font.twoLineMenuBarOffset : font.menuBarOffset)
 
         let style = NSMutableParagraphStyle()
         style.alignment = pad ? .center : .left

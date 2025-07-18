@@ -425,4 +425,11 @@ struct MenuLineParameters: Codable {
     var hasAction: Bool {
         href != nil || bash != nil || refresh
     }
+
+    var valign: CGFloat? {
+        // Parse vertical alignment offset parameter
+        // Positive values move text down, negative values move text up
+        guard let valignStr = params["valign"], let offset = Float(valignStr) else { return nil }
+        return CGFloat(offset)
+    }
 }

@@ -2,31 +2,33 @@ import Cocoa
 
 extension NSFont {
     var menuBarOffset: CGFloat {
+        // Adjusted values to better center text vertically
+        // Reduced offsets to fix alignment issues in SwiftBar 2.0
         switch pointSize {
         case 0 ..< 2:
-            2.5
-        case 2 ..< 5:
-            2
-        case 5 ..< 8:
             1.5
-        case 8 ..< 10:
-            1
-        case 10 ..< 13:
+        case 2 ..< 5:
+            1.0
+        case 5 ..< 8:
             0.5
+        case 8 ..< 10:
+            0.5
+        case 10 ..< 13:
+            0
         case 13 ..< 15:
             0
         case 15 ..< 17:
-            -0.5
+            0
         case 17 ..< 20:
-            -1
+            -0.5
         case 20 ..< 22:
-            -1.5
+            -1.0
         case 22 ..< 24:
-            -2
+            -1.5
         case 24 ..< 26:
-            -2.5
+            -2.0
         case 26 ..< 28:
-            -3
+            -2.5
         default:
             0
         }

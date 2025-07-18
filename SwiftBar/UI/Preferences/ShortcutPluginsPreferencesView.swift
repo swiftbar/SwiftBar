@@ -45,8 +45,7 @@ struct ShortcutPluginsPreferencesView: View {
                 Button(Localizable.Preferences.ShortcutsDeleteButton.localized, role: .destructive) {
                     isPresentingConfirm.toggle()
                 }.confirmationDialog(Localizable.Preferences.ShortcutsDeleteConfirmation.localized.replacingOccurrences(of: "<selectedPlugin>", with: "\(selectedPlugin?.name ?? "")"),
-                                     isPresented: $isPresentingConfirm)
-                {
+                                     isPresented: $isPresentingConfirm) {
                     Button(Localizable.Preferences.ShortcutsDeleteButton.localized, role: .destructive) {
                         guard let selectedPlugin else { return }
                         pluginManager.removeShortcutPlugin(plugin: selectedPlugin.persistentPlugin)
