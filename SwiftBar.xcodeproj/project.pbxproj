@@ -104,6 +104,8 @@
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
 		FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA136A532917EE0700A7D712 /* PluginUtilities.swift */; };
+		FA3F26072E2AFE35007CF785 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3F26062E2AFE35007CF785 /* LaunchAtLogin.swift */; };
+		FA3F26082E2AFE35007CF785 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA3F26062E2AFE35007CF785 /* LaunchAtLogin.swift */; };
 		FA57F2A4272A307900817A79 /* PluginRepositoryAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B64C3E26152F5E00B7FA63 /* PluginRepositoryAPI.swift */; };
 		FA57F2A5272A308F00817A79 /* DisablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A142728C6FC0052FDB8 /* DisablePluginIntentHandler.swift */; };
 		FA57F2A6272A308F00817A79 /* EnablePluginIntentHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAA14A102728C6E90052FDB8 /* EnablePluginIntentHandler.swift */; };
@@ -217,6 +219,7 @@
 		FA136A532917EE0700A7D712 /* PluginUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginUtilities.swift; sourceTree = "<group>"; };
 		FA3C3793281EB2760003DEDE /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA3C3794281EB27B0003DEDE /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
+		FA3F26062E2AFE35007CF785 /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
 		FA58E39927AD855D0034837F /* SystemNotificationName.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemNotificationName.swift; sourceTree = "<group>"; };
 		FA60506726B593FA001A939A /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		FA64C9DE25CF691D00C4E5C5 /* GeneralPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneralPreferencesView.swift; sourceTree = "<group>"; };
@@ -422,6 +425,7 @@
 		39AF7791254B5824001D76E5 /* Utility */ = {
 			isa = PBXGroup;
 			children = (
+				FA3F26062E2AFE35007CF785 /* LaunchAtLogin.swift */,
 				39AF7792254B5834001D76E5 /* NSColor.swift */,
 				39AF7795254B6203001D76E5 /* NSImage.swift */,
 				39AF7798254C7796001D76E5 /* String+Emoji.swift */,
@@ -758,7 +762,8 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if which swiftformat >/dev/null; then\n  swiftformat --swiftversion 5.9 .\nelse\n  echo \"warning: SwiftFormat not installed, download from https://github.com/nicklockwood/SwiftFormat\"\nfi\n";
+			shellScript = "
+";
 		};
 		FAD14BF62583256A00CB7BBE /* Codesign Sparkle */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -804,6 +809,7 @@
 				3920747E25460FD000213DBE /* AppDelegate.swift in Sources */,
 				393375E725507ADE0050AC28 /* Log.swift in Sources */,
 				FAA14A172728C79B0052FDB8 /* GetPluginsIntentHandler.swift in Sources */,
+				FA3F26072E2AFE35007CF785 /* LaunchAtLogin.swift in Sources */,
 				39AF7799254C7796001D76E5 /* String+Emoji.swift in Sources */,
 				39641EA9254E0E0B00713DAF /* EnumPicker.swift in Sources */,
 				FA64C9E225CF696D00C4E5C5 /* PluginsPreferencesView.swift in Sources */,
@@ -861,6 +867,7 @@
 				39224DEE25F4344600BABF21 /* PluginRepository.swift in Sources */,
 				39224DEF25F4344600BABF21 /* Plugin.swift in Sources */,
 				39224DF025F4344600BABF21 /* String+Escaped.swift in Sources */,
+				FA3F26082E2AFE35007CF785 /* LaunchAtLogin.swift in Sources */,
 				39224DF125F4344600BABF21 /* ImageVIew.swift in Sources */,
 				3990DCDB2602BB32002CDCD5 /* DebugView.swift in Sources */,
 				39224DF225F4344600BABF21 /* URLTextView.swift in Sources */,

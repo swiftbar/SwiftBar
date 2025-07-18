@@ -1,4 +1,3 @@
-import LaunchAtLogin
 import Preferences
 import SwiftUI
 

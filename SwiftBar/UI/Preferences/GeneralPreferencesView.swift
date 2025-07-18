@@ -1,4 +1,3 @@
-import LaunchAtLogin
 import Preferences
 import SwiftUI
 
@@ -9,7 +8,7 @@ struct GeneralPreferencesView: View {
     var body: some View {
         Preferences.Container(contentWidth: 350) {
             Preferences.Section(title: "\(Localizable.Preferences.LaunchAtLogin.localized):") {
-                LaunchAtLogin.Toggle {
+                ModernLaunchAtLogin.Toggle {
                     Text(Localizable.Preferences.LaunchAtLogin.localized)
                 }
             }
