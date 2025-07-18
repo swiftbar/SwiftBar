@@ -23,7 +23,20 @@ class ShortcutPlugin: Plugin, Identifiable, ObservableObject {
     var type: PluginType = .Shortcut
     var name: String
     var file: String = "none"
-    var metadata: PluginMetadata?
+    private var _metadata: PluginMetadata?
+    private let metadataQueue = DispatchQueue(label: "com.ameba.SwiftBar.ShortcutPlugin.metadata", attributes: .concurrent)
+    
+    var metadata: PluginMetadata? {
+        get {
+            metadataQueue.sync { _metadata }
+        }
+        set {
+            metadataQueue.async(flags: .barrier) { [weak self] in
+                self?._metadata = newValue
+            }
+        }
+    }
+    
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
     var updateInterval: Double = 60 * 60 * 24 * 100
     var lastUpdated: Date?

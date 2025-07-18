@@ -11,7 +11,20 @@ class StreamablePlugin: Plugin {
     let file: String
     var refreshEnv: [String: String] = [:]
 
-    var metadata: PluginMetadata?
+    private var _metadata: PluginMetadata?
+    private let metadataQueue = DispatchQueue(label: "com.ameba.SwiftBar.StreamablePlugin.metadata", attributes: .concurrent)
+    
+    var metadata: PluginMetadata? {
+        get {
+            metadataQueue.sync { _metadata }
+        }
+        set {
+            metadataQueue.async(flags: .barrier) { [weak self] in
+                self?._metadata = newValue
+            }
+        }
+    }
+    
     var lastUpdated: Date?
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch

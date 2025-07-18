@@ -10,7 +10,20 @@ class ExecutablePlugin: Plugin {
     var refreshEnv: [String: String] = [:]
 
     var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
-    var metadata: PluginMetadata?
+    private var _metadata: PluginMetadata?
+    private let metadataQueue = DispatchQueue(label: "com.ameba.SwiftBar.ExecutablePlugin.metadata", attributes: .concurrent)
+    
+    var metadata: PluginMetadata? {
+        get {
+            metadataQueue.sync { _metadata }
+        }
+        set {
+            metadataQueue.async(flags: .barrier) { [weak self] in
+                self?._metadata = newValue
+            }
+        }
+    }
+    
     var lastUpdated: Date?
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch

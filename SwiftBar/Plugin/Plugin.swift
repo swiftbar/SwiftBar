@@ -125,11 +125,24 @@ extension Plugin {
     func refreshPluginMetadata() {
         os_log("Refreshing plugin metadata \n%{public}@", log: Log.plugin, file)
         let url = URL(fileURLWithPath: file)
+        
+        // Parse metadata in a thread-safe way
+        var newMetadata: PluginMetadata?
         if let script = try? String(contentsOf: url) {
-            metadata = PluginMetadata.parser(script: script)
+            newMetadata = PluginMetadata.parser(script: script)
         }
         if let md = PluginMetadata.parser(fileURL: url) {
-            metadata = md
+            newMetadata = md
+        }
+        
+        // Only update if we got new metadata
+        if let newMetadata = newMetadata {
+            metadata = newMetadata
+            
+            // Update refresh environment if needed
+            if !newMetadata.environment.isEmpty {
+                refreshEnv = newMetadata.environment
+            }
         }
     }
 
