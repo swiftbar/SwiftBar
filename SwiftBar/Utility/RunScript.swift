@@ -6,6 +6,21 @@ let sharedEnv = Environment.shared
 
 func getEnvExportString(env: [String: String]) -> String {
     let dict = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
+    let shell = sharedEnv.userLoginShell.lowercased()
+
+    // Check for tcsh/csh
+    if shell.contains("tcsh") || shell.contains("csh") {
+        // tcsh/csh uses: setenv VAR value
+        return dict.map { "setenv \($0.key) \($0.value.quoteIfNeeded())" }.joined(separator: "; ")
+    }
+
+    // Check for fish
+    if shell.contains("fish") {
+        // fish uses: set -x VAR value
+        return dict.map { "set -x \($0.key) \($0.value.quoteIfNeeded())" }.joined(separator: "; ")
+    }
+
+    // Default to bash/zsh/sh syntax: export VAR=value
     return "export \(dict.map { "\($0.key)=\($0.value.quoteIfNeeded())" }.joined(separator: " "))"
 }
 
