@@ -229,20 +229,20 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     
     private func cleanupStatusItemVisibility() {
         let defaults = UserDefaults.standard
-        // Remove any NSStatusItem visibility keys that might be corrupted
+        // Remove ALL NSStatusItem visibility keys to prevent any persistence issues
         // These keys are automatically created by macOS when autosaveName is set
-        let keysToCheck = defaults.dictionaryRepresentation().keys.filter { 
-            $0.hasPrefix("NSStatusItem Visible") 
+        // We don't want SwiftBar menu items to persist their visibility state
+        let keysToRemove = defaults.dictionaryRepresentation().keys.filter { 
+            $0.hasPrefix("NSStatusItem Visible") || $0.hasPrefix("NSStatusItem Preferred Position")
         }
         
-        for key in keysToCheck {
-            // Reset any visibility states that are set to 0 (hidden)
-            if let value = defaults.object(forKey: key) as? Int, value == 0 {
-                defaults.removeObject(forKey: key)
-                os_log("Cleaned up corrupted status item visibility for key: %{public}@", log: Log.plugin, type: .info, key)
-            }
+        for key in keysToRemove {
+            defaults.removeObject(forKey: key)
+            os_log("Removed NSStatusItem persistence key: %{public}@", log: Log.plugin, type: .info, key)
         }
         
-        defaults.synchronize()
+        if !keysToRemove.isEmpty {
+            defaults.synchronize()
+        }
     }
 }
