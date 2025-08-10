@@ -34,6 +34,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     func applicationDidFinishLaunching(_: Notification) {
         preferencesWindowController.window?.delegate = self
         setupToolbar()
+        
+        // Clean up any corrupted NSStatusItem visibility states from UserDefaults
+        // This fixes issues where menubar items disappear after initial setup
+        cleanupStatusItemVisibility()
+        
         let hostBundle = Bundle.main
         #if !MAC_APP_STORE
             let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
@@ -220,5 +225,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.changePresentationType()
         }
+    }
+    
+    private func cleanupStatusItemVisibility() {
+        let defaults = UserDefaults.standard
+        // Remove any NSStatusItem visibility keys that might be corrupted
+        // These keys are automatically created by macOS when autosaveName is set
+        let keysToCheck = defaults.dictionaryRepresentation().keys.filter { 
+            $0.hasPrefix("NSStatusItem Visible") 
+        }
+        
+        for key in keysToCheck {
+            // Reset any visibility states that are set to 0 (hidden)
+            if let value = defaults.object(forKey: key) as? Int, value == 0 {
+                defaults.removeObject(forKey: key)
+                os_log("Cleaned up corrupted status item visibility for key: %{public}@", log: Log.plugin, type: .info, key)
+            }
+        }
+        
+        defaults.synchronize()
     }
 }

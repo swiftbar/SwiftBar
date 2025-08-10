@@ -89,7 +89,11 @@ class MenubarItem: NSObject {
         }
         webPopover.delegate = self
         self.plugin = plugin
-        barItem.autosaveName = plugin?.id
+        // Only set autosaveName if not running from a translocated path (Downloads, etc)
+        // This prevents the visibility state from being incorrectly persisted
+        if !isRunningFromTranslocatedPath() {
+            barItem.autosaveName = plugin?.id
+        }
         statusBarMenu.delegate = self
         if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
             barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL])
@@ -150,6 +154,14 @@ class MenubarItem: NSObject {
 
     func hide() {
         barItem.isVisible = false
+    }
+    
+    private func isRunningFromTranslocatedPath() -> Bool {
+        let bundlePath = Bundle.main.bundlePath
+        // Check if running from AppTranslocation directory or Downloads
+        return bundlePath.contains("/AppTranslocation/") ||
+               bundlePath.contains("/Downloads/") ||
+               bundlePath.contains("/tmp/")
     }
 }
 
@@ -465,6 +477,8 @@ extension MenubarItem {
     static func defaultBarItem() -> MenubarItem {
         let item = MenubarItem(title: "SwiftBar")
         item.isDefault = true
+        // Ensure the default bar item is always visible
+        item.barItem.isVisible = true
         return item
     }
 }
