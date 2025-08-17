@@ -110,8 +110,7 @@ struct PluginEntryModalView: View {
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 15)
-                .foregroundColor(Color(NSColor.controlColor))
+            Rectangle().foregroundColor(Color(NSColor.controlColor))
             VStack(alignment: .leading) {
                 HStack {
                     VStack(alignment: .leading) {
