@@ -25,15 +25,18 @@ struct PluginEntryView: View {
                     }
                 }
                 HStack {
-                    if let image = pluginEntry.image {
-                        ImageView(withURL: image, width: 80, height: 60)
-                    } else {
-                        Image(nsImage: NSImage(named: "AppIcon")!)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .opacity(0.6)
-                            .frame(width: 80, height: 60)
-                    }
+                    ImageView(
+                        withURL: pluginEntry.image,
+                        width: 80,
+                        height: 60,
+                        fallbackView: AnyView(
+                            Image(nsImage: NSImage(named: "AppIcon")!)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .opacity(0.6)
+                                .frame(width: 80, height: 60)
+                        )
+                    )
 
                     VStack(alignment: .leading) {
                         if !pluginEntry.desc.isEmpty {
@@ -143,16 +146,16 @@ struct PluginEntryModalView: View {
                 VStack(alignment: .leading) {
                     HStack {
                         Spacer()
-                        if let image = pluginEntry.image {
-                            ImageView(withURL: image, width: 120, height: 120)
-                        } else {
-                            Image(nsImage: NSImage(named: "AppIcon")!)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .opacity(0.6)
-                                .frame(width: 80, height: 60)
-                        }
-
+                        ImageView(
+                            withURL: pluginEntry.image,
+                            fallbackView: AnyView(
+                                Image(nsImage: NSImage(named: "AppIcon")!)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .opacity(0.6)
+                                    .frame(width: 80, height: 60)
+                            )
+                        )
                         Spacer()
                     }
 

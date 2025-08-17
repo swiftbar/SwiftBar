@@ -3,9 +3,10 @@ import Combine
 import Foundation
 
 class ImageLoader: ObservableObject {
-    @Published var imageData = NSImage(named: "AppIcon")!.tiffRepresentation
+    @Published var imageData: Data?
 
-    init(url: URL) {
+    init(url: URL?) {
+        guard let url else { return }
         let cache = URLCache.shared
         let request = URLRequest(url: url, cachePolicy: URLRequest.CachePolicy.returnCacheDataElseLoad, timeoutInterval: 60.0)
         if let data = cache.cachedResponse(for: request)?.data {
