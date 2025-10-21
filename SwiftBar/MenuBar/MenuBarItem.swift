@@ -832,6 +832,17 @@ extension MenubarItem {
             return out
         }
 
+        if let stdinInput = params.stdin {
+            try? plugin?.writeStdin(stdinInput)
+
+            if params.refresh {
+                plugin?.refresh(reason: .MenuAction)
+            }
+
+            out = true
+            return out
+        }
+
         if params.refresh {
             dimOnManualRefresh()
             plugin?.refresh(reason: .MenuAction)

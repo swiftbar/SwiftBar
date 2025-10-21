@@ -30,11 +30,12 @@ func getEnvExportString(env: [String: String]) -> String {
                                   env: [String: String] = [:],
                                   runInBash: Bool = true,
                                   streamOutput: Bool = false,
+                                  stdinPipe: Pipe? = nil,
                                   onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> (out: String, err: String?)
 {
     let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
     process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
-    return try process.launchScript(with: command, args: args, runInBash: runInBash, streamOutput: streamOutput, onOutputUpdate: onOutputUpdate)
+    return try process.launchScript(with: command, args: args, runInBash: runInBash, streamOutput: streamOutput, stdinPipe: stdinPipe, onOutputUpdate: onOutputUpdate)
 }
 
 // Code below is adopted from https://github.com/JohnSundell/ShellOut
@@ -56,7 +57,7 @@ public struct ShellOutError: Swift.Error {
 // MARK: - Private
 
 private extension Process {
-    @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, onOutputUpdate: @escaping (String?) -> Void) throws -> (out: String, err: String?) {
+    @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, stdinPipe: Pipe? = nil, onOutputUpdate: @escaping (String?) -> Void) throws -> (out: String, err: String?) {
         if !runInBash {
             executableURL = URL(fileURLWithPath: script)
             arguments = args
@@ -83,6 +84,11 @@ private extension Process {
 
         let errorPipe = Pipe()
         standardError = errorPipe
+
+        // Set up stdin pipe if provided
+        if let stdinPipe = stdinPipe {
+            standardInput = stdinPipe
+        }
 
         guard streamOutput else { // horrible hack, code below this guard doesn't work reliably and I can't fugire out why.
             do {

@@ -211,6 +211,10 @@ struct MenuLineParameters: Codable {
         params["bash"] ?? params["shell"]
     }
 
+    var stdin: String? {
+        params["stdin"]
+    }
+
     var bashParams: [String] {
         var out: [String] = []
 
@@ -312,13 +316,13 @@ struct MenuLineParameters: Codable {
                 let sfSymbols = sfString.components(separatedBy: ",")
                 let lightSymbol = sfSymbols.first?.trimmingCharacters(in: .whitespaces)
                 let darkSymbol = sfSymbols.count > 1 ? sfSymbols.last?.trimmingCharacters(in: .whitespaces) : lightSymbol
-                
+
                 // Choose symbol based on theme context
                 let shouldUseDarkSymbol = isMenuBarItem ? AppShared.isDarkStatusBar : AppShared.isDarkTheme
                 let symbolToUse = (shouldUseDarkSymbol && darkSymbol != lightSymbol) ? darkSymbol : lightSymbol
-                
+
                 guard let finalSymbol = symbolToUse else { return nil }
-                
+
                 let sfmc = getSFConfig()
                 var config = NSImage.SymbolConfiguration(scale: .large)
                 if #available(OSX 12.0, *), let sfmc {
@@ -333,7 +337,7 @@ struct MenuLineParameters: Codable {
 
                 // Check for variable value from either sfconfig or sfvalue parameter
                 let variableValue = sfmc?.variableValue ?? sfvalue
-                
+
                 let image: NSImage?
                 if #available(macOS 13.0, *), let variableValue = variableValue {
                     // Create image with variable value for symbols that support it
@@ -342,7 +346,7 @@ struct MenuLineParameters: Codable {
                     // Fallback to regular symbol creation
                     image = NSImage(systemSymbolName: finalSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
                 }
-                
+
                 image?.isTemplate = true
                 return resizedImageIfRequested(image)
             }
@@ -364,7 +368,7 @@ struct MenuLineParameters: Codable {
 
         return nil
     }
-    
+
     var image: NSImage? {
         // Default behavior for backward compatibility - assumes dropdown item
         getImage(isMenuBarItem: false)
@@ -453,7 +457,7 @@ struct MenuLineParameters: Codable {
     }
 
     var hasAction: Bool {
-        href != nil || bash != nil || refresh
+        href != nil || bash != nil || stdin != nil || refresh
     }
 
     var valign: CGFloat? {
@@ -462,7 +466,7 @@ struct MenuLineParameters: Codable {
         guard let valignStr = params["valign"], let offset = Float(valignStr) else { return nil }
         return CGFloat(offset)
     }
-    
+
     var sfvalue: Double? {
         // Parse SF Symbol variable value parameter (0.0 to 1.0)
         guard let sfvalueStr = params["sfvalue"], let value = Double(sfvalueStr) else { return nil }
