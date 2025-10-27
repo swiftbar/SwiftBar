@@ -199,7 +199,10 @@ class AppShared: NSObject {
     }
 
     public static var isDarkTheme: Bool {
-        UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
+        if #available(macOS 15.0, *) {
+            NSApplication.shared.effectiveAppearance.name.rawValue.contains("Dark")
+        else
+            UserDefaults.standard.string(forKey: "AppleInterfaceStyle") != nil
     }
 
     public static var isDarkStatusBar: Bool {
