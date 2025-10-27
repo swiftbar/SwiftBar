@@ -84,6 +84,7 @@ protocol Plugin: AnyObject {
     func invoke() -> String?
     func makeScriptExecutable(file: String)
     func refreshPluginMetadata()
+    func writeStdin(_ input: String) throws
 }
 
 extension Plugin {
@@ -125,7 +126,7 @@ extension Plugin {
     func refreshPluginMetadata() {
         os_log("Refreshing plugin metadata \n%{public}@", log: Log.plugin, file)
         let url = URL(fileURLWithPath: file)
-        
+
         // Parse metadata in a thread-safe way
         var newMetadata: PluginMetadata?
         if let script = try? String(contentsOf: url) {
@@ -134,11 +135,11 @@ extension Plugin {
         if let md = PluginMetadata.parser(fileURL: url) {
             newMetadata = md
         }
-        
+
         // Only update if we got new metadata
         if let newMetadata = newMetadata {
             metadata = newMetadata
-            
+
             // Update refresh environment if needed
             if !newMetadata.environment.isEmpty {
                 refreshEnv = newMetadata.environment
@@ -188,5 +189,9 @@ extension Plugin {
         }
         refreshEnv.removeAll()
         return pluginEnv
+    }
+
+    func writeStdin(_ input: String) throws {
+        throw NSError(domain: "SwiftBar.Plugin", code: 1, userInfo: [NSLocalizedDescriptionKey: "Plugin type \(type.rawValue) does not support stdin input"])
     }
 }
