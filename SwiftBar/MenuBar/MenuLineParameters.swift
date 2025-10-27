@@ -224,6 +224,10 @@ struct MenuLineParameters: Codable {
         return out
     }
 
+    var badge: String {
+        params["badge"] ?? ""
+    }
+
     var terminal: Bool {
         params["terminal"]?.lowercased() != "false"
     }
