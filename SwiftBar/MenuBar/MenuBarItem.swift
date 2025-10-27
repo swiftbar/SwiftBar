@@ -754,6 +754,12 @@ extension MenubarItem {
             item.state = .on
         }
 
+        if #available(macOS 14.0, *) {
+            if !params.badge.isEmpty {
+                item.badge = NSMenuItemBadge(string: params.badge)
+            }
+        }
+
         return item
     }
 

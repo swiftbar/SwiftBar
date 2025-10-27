@@ -150,6 +150,7 @@ Where:
 | `sfconfig` | SFSymbol configuration| Configures [Rendering Mode](https://developer.apple.com/design/human-interface-guidelines/sf-symbols#Rendering-modes) for `sfimage`. Accepts a json encoded as base64, example json `{"renderingMode":"Palette", "colors":["red","blue"], "scale": "large", "weight": "bold"}`. Original issue #354 |
 | `checked` | True | Sets a checkmark in front of the item.|
 | `tooltip` | Text | Sets a tooltip for the item. |
+| `badge` | Text | Sets text to be displayed in a badge to the right of the item |
 | `webview` | True | Present provided href as a webview, instead of standard menu bar menu |
 | `webvieww` | Number | Sets webview width in pixels |
 | `webviewh` | Number | Sets webview height in pixels |
