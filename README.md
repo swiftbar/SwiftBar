@@ -162,6 +162,7 @@ Where:
 | `bash` | Absolute file path | Executable script to run in Shell |
 | `terminal` | False | `bash` script will be run in the background, instead of launching the Terminal |
 | `params` | `param0=`,`param1=`,`param10=`... | Parameters for `bash` script |
+| `stdin` | Text | Text to pass back into a streamable plugin on item clicked |
 | `shortcut` | CMD+OPTION+T | Hotkey assigned to item. If item is in header, hotkey will show the menu; otherwise, hotkey will launch associated action. |
 
 ### Environment Variables
