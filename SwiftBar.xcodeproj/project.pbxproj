@@ -19,7 +19,7 @@
 		39224DEE25F4344600BABF21 /* PluginRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3962572A256967DC00341A19 /* PluginRepository.swift */; };
 		39224DEF25F4344600BABF21 /* Plugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39AF776E25461277001D76E5 /* Plugin.swift */; };
 		39224DF025F4344600BABF21 /* String+Escaped.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A0A257C21D400FA012E /* String+Escaped.swift */; };
-		39224DF125F4344600BABF21 /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
+		39224DF125F4344600BABF21 /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageView.swift */; };
 		39224DF225F4344600BABF21 /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
 		39224DF325F4344600BABF21 /* PluginDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD1BC9A25D22E9400B761E8 /* PluginDetailsView.swift */; };
 		39224DF425F4344600BABF21 /* AppDelegate+Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39224DCE25F3E6DE00BABF21 /* AppDelegate+Menu.swift */; };
@@ -100,7 +100,7 @@
 		39B84A1F257D436200FA012E /* RunScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A1E257D436200FA012E /* RunScript.swift */; };
 		39B84A22257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B84A21257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift */; };
 		39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549B25699C8F00287D8A /* URLTextView.swift */; };
-		39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageVIew.swift */; };
+		39E1549F2569A2D700287D8A /* ImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39E1549E2569A2D700287D8A /* ImageView.swift */; };
 		ABF91B7D2589C7920020590A /* NSFont+Offset.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABF91B7C2589C7920020590A /* NSFont+Offset.swift */; };
 		FA06104625F0564400B08B6E /* PluginEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA06104525F0564400B08B6E /* PluginEntryView.swift */; };
 		FA136A542917EE0700A7D712 /* PluginUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA136A532917EE0700A7D712 /* PluginUtilities.swift */; };
@@ -213,7 +213,7 @@
 		39B84A1E257D436200FA012E /* RunScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunScript.swift; sourceTree = "<group>"; };
 		39B84A21257D63F700FA012E /* NSMutableAttributedString+SFSymbols.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSMutableAttributedString+SFSymbols.swift"; sourceTree = "<group>"; };
 		39E1549B25699C8F00287D8A /* URLTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLTextView.swift; sourceTree = "<group>"; };
-		39E1549E2569A2D700287D8A /* ImageVIew.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageVIew.swift; sourceTree = "<group>"; };
+		39E1549E2569A2D700287D8A /* ImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageView.swift; sourceTree = "<group>"; };
 		ABF91B7C2589C7920020590A /* NSFont+Offset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "NSFont+Offset.swift"; sourceTree = "<group>"; };
 		FA06104525F0564400B08B6E /* PluginEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginEntryView.swift; sourceTree = "<group>"; };
 		FA136A532917EE0700A7D712 /* PluginUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginUtilities.swift; sourceTree = "<group>"; };
@@ -374,7 +374,7 @@
 				39641EA8254E0E0B00713DAF /* EnumPicker.swift */,
 				39641EAC254E0E3400713DAF /* ImageLoader.swift */,
 				39E1549B25699C8F00287D8A /* URLTextView.swift */,
-				39E1549E2569A2D700287D8A /* ImageVIew.swift */,
+				39E1549E2569A2D700287D8A /* ImageView.swift */,
 				FA8518CB258DAAAB008AD21C /* Binding+Extension.swift */,
 				FAD1BC9D25D22EEA00B761E8 /* AnimatableWindow.swift */,
 			);
@@ -799,7 +799,7 @@
 				3962572B256967DC00341A19 /* PluginRepository.swift in Sources */,
 				39AF776F25461277001D76E5 /* Plugin.swift in Sources */,
 				39B84A0B257C21D400FA012E /* String+Escaped.swift in Sources */,
-				39E1549F2569A2D700287D8A /* ImageVIew.swift in Sources */,
+				39E1549F2569A2D700287D8A /* ImageView.swift in Sources */,
 				3990DCDA2602BB32002CDCD5 /* DebugView.swift in Sources */,
 				39E1549C25699C8F00287D8A /* URLTextView.swift in Sources */,
 				FAD1BC9B25D22E9400B761E8 /* PluginDetailsView.swift in Sources */,
@@ -868,7 +868,7 @@
 				39224DEF25F4344600BABF21 /* Plugin.swift in Sources */,
 				39224DF025F4344600BABF21 /* String+Escaped.swift in Sources */,
 				FA3F26082E2AFE35007CF785 /* LaunchAtLogin.swift in Sources */,
-				39224DF125F4344600BABF21 /* ImageVIew.swift in Sources */,
+				39224DF125F4344600BABF21 /* ImageView.swift in Sources */,
 				3990DCDB2602BB32002CDCD5 /* DebugView.swift in Sources */,
 				39224DF225F4344600BABF21 /* URLTextView.swift in Sources */,
 				39224DF325F4344600BABF21 /* PluginDetailsView.swift in Sources */,
