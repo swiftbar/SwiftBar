@@ -34,6 +34,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     func applicationDidFinishLaunching(_: Notification) {
         preferencesWindowController.window?.delegate = self
         setupToolbar()
+        
+        // Clean up any corrupted NSStatusItem visibility states from UserDefaults
+        // This fixes issues where menubar items disappear after initial setup
+        cleanupStatusItemVisibility()
+        
         let hostBundle = Bundle.main
         #if !MAC_APP_STORE
             let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
@@ -219,6 +224,25 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     func windowWillClose(_: Notification) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.changePresentationType()
+        }
+    }
+    
+    private func cleanupStatusItemVisibility() {
+        let defaults = UserDefaults.standard
+        // Remove ALL NSStatusItem visibility keys to prevent any persistence issues
+        // These keys are automatically created by macOS when autosaveName is set
+        // We don't want SwiftBar menu items to persist their visibility state
+        let keysToRemove = defaults.dictionaryRepresentation().keys.filter { 
+            $0.hasPrefix("NSStatusItem Visible") || $0.hasPrefix("NSStatusItem Preferred Position")
+        }
+        
+        for key in keysToRemove {
+            defaults.removeObject(forKey: key)
+            os_log("Removed NSStatusItem persistence key: %{public}@", log: Log.plugin, type: .info, key)
+        }
+        
+        if !keysToRemove.isEmpty {
+            defaults.synchronize()
         }
     }
 }

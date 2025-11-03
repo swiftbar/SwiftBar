@@ -89,7 +89,9 @@ class MenubarItem: NSObject {
         }
         webPopover.delegate = self
         self.plugin = plugin
-        barItem.autosaveName = plugin?.id
+        // DO NOT set autosaveName - this causes visibility states to be incorrectly persisted
+        // when plugins have no output or fail to load, leading to disappearing menu items
+        // barItem.autosaveName = plugin?.id
         statusBarMenu.delegate = self
         if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
             barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL])
@@ -465,6 +467,8 @@ extension MenubarItem {
     static func defaultBarItem() -> MenubarItem {
         let item = MenubarItem(title: "SwiftBar")
         item.isDefault = true
+        // Ensure the default bar item is always visible
+        item.barItem.isVisible = true
         return item
     }
 }
@@ -752,6 +756,12 @@ extension MenubarItem {
 
         if params.checked {
             item.state = .on
+        }
+
+        if #available(macOS 14.0, *) {
+            if !params.badge.isEmpty {
+                item.badge = NSMenuItemBadge(string: params.badge)
+            }
         }
 
         return item
