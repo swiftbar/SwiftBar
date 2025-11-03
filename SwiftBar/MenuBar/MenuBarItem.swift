@@ -833,13 +833,28 @@ extension MenubarItem {
         }
 
         if let stdinInput = params.stdin {
-            try? plugin?.writeStdin(stdinInput)
-
-            if params.refresh {
-                plugin?.refresh(reason: .MenuAction)
+            guard let plugin else {
+                os_log("No plugin available to handle stdin input", log: Log.plugin, type: .error)
+                return out
             }
 
-            out = true
+            do {
+                try plugin.writeStdin(stdinInput)
+
+                if params.refresh {
+                    plugin.refresh(reason: .MenuAction)
+                }
+
+                out = true
+            } catch {
+                plugin.error = error
+                os_log("Failed to write stdin for plugin %{public}@: %{public}@", log: Log.plugin, type: .error, plugin.name, error.localizedDescription)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, !self.isOpen else { return }
+                    self.showErrorPopover()
+                }
+            }
+
             return out
         }
 

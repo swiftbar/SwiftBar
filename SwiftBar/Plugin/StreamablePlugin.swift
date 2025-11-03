@@ -177,7 +177,6 @@ class StreamablePlugin: Plugin {
 
         do {
             try stdinPipe.fileHandleForWriting.write(contentsOf: data)
-            stdinPipe.fileHandleForWriting.synchronizeFile()
         } catch {
             throw NSError(domain: "SwiftBar.StreamablePlugin", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to write to stdin: \(error.localizedDescription)"])
         }
