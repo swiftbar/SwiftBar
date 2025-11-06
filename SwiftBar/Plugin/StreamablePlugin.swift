@@ -13,7 +13,7 @@ class StreamablePlugin: Plugin {
 
     private var _metadata: PluginMetadata?
     private let metadataQueue = DispatchQueue(label: "com.ameba.SwiftBar.StreamablePlugin.metadata", attributes: .concurrent)
-    
+
     var metadata: PluginMetadata? {
         get {
             metadataQueue.sync { _metadata }
@@ -24,7 +24,7 @@ class StreamablePlugin: Plugin {
             }
         }
     }
-    
+
     var lastUpdated: Date?
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
@@ -47,6 +47,7 @@ class StreamablePlugin: Plugin {
     lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
 
     var procces: Process?
+    var stdinPipe: Pipe = Pipe()
     let prefs = PreferencesStore.shared
 
     init?(fileURL: URL) {
@@ -96,10 +97,12 @@ class StreamablePlugin: Plugin {
         do {
             procces = Process()
             guard let procces else { return nil }
+
             let out = try runScript(to: file, process: procces,
                                     env: env,
                                     runInBash: metadata?.shouldRunInBash ?? true,
                                     streamOutput: true,
+                                    stdinPipe: stdinPipe,
                                     onOutputUpdate: { [weak self] str in
                                         if self?.prefs.streamablePluginDebugOutput == true,
                                            let str,
@@ -165,5 +168,17 @@ class StreamablePlugin: Plugin {
             content = nil
         }
         return nil
+    }
+
+    func writeStdin(_ input: String) throws {
+        guard let data = (input + "\n").data(using: .utf8) else {
+            throw NSError(domain: "SwiftBar.StreamablePlugin", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to encode input as UTF8"])
+        }
+
+        do {
+            try stdinPipe.fileHandleForWriting.write(contentsOf: data)
+        } catch {
+            throw NSError(domain: "SwiftBar.StreamablePlugin", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to write to stdin: \(error.localizedDescription)"])
+        }
     }
 }
