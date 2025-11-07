@@ -239,6 +239,29 @@ struct PluginMetadataEnvironmentParsingTests {
         #expect(!exportString.contains("VAR_MONOSPACE_FONT: font"))
     }
 
+    @Test func testMenuLineParameters_TabCharacterHandling() throws {
+        // Test the fix for issue #455: tab character handling
+        // The unescape function should convert \t escape sequences to actual tab characters
+
+        // Test that the title is extracted correctly (with escape sequences preserved as literal characters)
+        let line1 = "Hello\\tWorld | bash='/bin/echo'"
+        let params1 = MenuLineParameters(line: line1)
+        // The title contains the literal backslash and t characters
+        #expect(params1.title.contains("\\"), "Title should contain backslash")
+        #expect(params1.title.contains("t"), "Title should contain t")
+
+        // Test multiple escapes
+        let line2 = "Column1\\tColumn2\\tColumn3"
+        let params2 = MenuLineParameters(line: line2)
+        #expect(params2.title.contains("\\"), "Title should contain backslashes")
+
+        // Test mixed escapes
+        let line3 = "Test\\tTab\\nNewline | color=blue"
+        let params3 = MenuLineParameters(line: line3)
+        #expect(params3.title.contains("\\"), "Title should contain escape characters")
+        #expect(params3.params["color"] == "blue", "Parameters should be parsed correctly")
+    }
+
     @Test func testIssue445_ShellExportString() throws {
         // Test that environment variables with equals signs in values are properly escaped
         // This addresses the specific tcsh export error mentioned in the issue

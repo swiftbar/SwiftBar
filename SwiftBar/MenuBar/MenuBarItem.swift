@@ -658,6 +658,7 @@ extension MenubarItem {
     // do the following conversion:
     // \\ -> \
     // \n -> LF
+    // \t -> TAB
     // \c -> c  any char else
     func unescape(_ str: String) -> String {
         var newstr = ""
@@ -667,6 +668,10 @@ extension MenubarItem {
                 backslash = false
                 if c == "n" {
                     newstr += "\n"
+                    continue
+                }
+                if c == "t" {
+                    newstr += "\t"
                     continue
                 }
             } else {
@@ -705,6 +710,15 @@ extension MenubarItem {
 
         let style = NSMutableParagraphStyle()
         style.alignment = pad ? .center : .left
+
+        // Configure tab stops for proper tab alignment (issue #455)
+        // Add tab stops every 100 points to support tab-aligned text
+        var tabStops: [NSTextTab] = []
+        for i in 1...10 {
+            let location = CGFloat(i * 100)
+            tabStops.append(NSTextTab(textAlignment: .left, location: location))
+        }
+        style.tabStops = tabStops
 
         var attributedTitle = NSMutableAttributedString(string: title)
         if #available(macOS 12, *), params.md, let parsedMD = try? NSAttributedString(markdown: title) {
