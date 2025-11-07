@@ -20,6 +20,7 @@ class MenubarItem: NSObject {
     }()
 
     let statusBarMenu = NSMenu(title: "")
+    let defaultTabStop: CGFloat = 150
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
@@ -705,6 +706,7 @@ extension MenubarItem {
 
         let style = NSMutableParagraphStyle()
         style.alignment = pad ? .center : .left
+        style.tabStops = [NSTextTab(textAlignment: .right, location: defaultTabStop, options: [:])]
 
         var attributedTitle = NSMutableAttributedString(string: title)
         if #available(macOS 12, *), params.md, let parsedMD = try? NSAttributedString(markdown: title) {
