@@ -374,3 +374,268 @@ struct PluginMetadataEnvironmentParsingTests {
         #expect(metadata.environment.count == 4)
     }
 }
+
+// MARK: - xbar.var Variable Tests (Issue #469)
+
+struct PluginVariableParsingTests {
+    @Test func testVariableParsing_StringType() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>string(VAR_NAME="default value"): Your name</xbar.var>
+        echo "Hello"
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 1)
+        let variable = metadata.variables[0]
+        #expect(variable.type == .string)
+        #expect(variable.name == "VAR_NAME")
+        #expect(variable.defaultValue == "default value")
+        #expect(variable.description == "Your name")
+        #expect(variable.options.isEmpty)
+    }
+
+    @Test func testVariableParsing_NumberType() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>number(VAR_COUNT="42"): Number of items</xbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 1)
+        let variable = metadata.variables[0]
+        #expect(variable.type == .number)
+        #expect(variable.name == "VAR_COUNT")
+        #expect(variable.defaultValue == "42")
+        #expect(variable.description == "Number of items")
+    }
+
+    @Test func testVariableParsing_BooleanType() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>boolean(VAR_ENABLED="true"): Enable feature</xbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 1)
+        let variable = metadata.variables[0]
+        #expect(variable.type == .boolean)
+        #expect(variable.name == "VAR_ENABLED")
+        #expect(variable.defaultValue == "true")
+        #expect(variable.description == "Enable feature")
+    }
+
+    @Test func testVariableParsing_SelectType_WithOptions() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>select(VAR_THEME="light"): Color theme. [light, dark, auto]</xbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 1)
+        let variable = metadata.variables[0]
+        #expect(variable.type == .select)
+        #expect(variable.name == "VAR_THEME")
+        #expect(variable.defaultValue == "light")
+        #expect(variable.description == "Color theme")
+        #expect(variable.options == ["light", "dark", "auto"])
+    }
+
+    @Test func testVariableParsing_MultipleVariables() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>string(VAR_LOCATION="San Francisco"): Your location</xbar.var>
+        # <xbar.var>number(VAR_REFRESH="5"): Refresh interval</xbar.var>
+        # <xbar.var>boolean(VAR_EMOJI="true"): Show emoji</xbar.var>
+        # <xbar.var>select(VAR_THEME="light"): Theme. [light, dark]</xbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 4)
+        #expect(metadata.variables[0].name == "VAR_LOCATION")
+        #expect(metadata.variables[1].name == "VAR_REFRESH")
+        #expect(metadata.variables[2].name == "VAR_EMOJI")
+        #expect(metadata.variables[3].name == "VAR_THEME")
+    }
+
+    @Test func testVariableParsing_SwiftBarPrefix() throws {
+        // SwiftBar should also support swiftbar.var prefix
+        let script = """
+        #!/bin/bash
+        # <swiftbar.var>string(VAR_TEST="value"): Test variable</swiftbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 1)
+        #expect(metadata.variables[0].name == "VAR_TEST")
+        #expect(metadata.variables[0].defaultValue == "value")
+    }
+
+    @Test func testVariableParsing_DefaultsAddedToEnvironment() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>string(VAR_NAME="John"): Name</xbar.var>
+        # <xbar.var>number(VAR_AGE="30"): Age</xbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        // Defaults should be added to metadata.environment
+        #expect(metadata.environment["VAR_NAME"] == "John")
+        #expect(metadata.environment["VAR_AGE"] == "30")
+    }
+
+    @Test func testVariableParsing_EmptyDefaultValue() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>string(VAR_OPTIONAL=""): Optional value</xbar.var>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+
+        #expect(metadata.variables.count == 1)
+        #expect(metadata.variables[0].defaultValue == "")
+    }
+}
+
+struct PluginVariableStorageTests {
+    @Test func testVarsFileURL_GeneratesCorrectPath() throws {
+        let pluginFile = "/path/to/myplugin.1h.sh"
+        let varsURL = PluginVariableStorage.variablesFileURL(forPluginFile: pluginFile)
+
+        #expect(varsURL.path == "/path/to/myplugin.1h.vars.json")
+    }
+
+    @Test func testVarsFileURL_HandlesMultipleExtensions() throws {
+        let pluginFile = "/plugins/weather.5m.py"
+        let varsURL = PluginVariableStorage.variablesFileURL(forPluginFile: pluginFile)
+
+        // Should replace last extension with .vars.json
+        #expect(varsURL.path == "/plugins/weather.5m.vars.json")
+    }
+
+    @Test func testBuildEnvironment_UserValuesOverrideDefaults() throws {
+        let variables = [
+            PluginVariable(type: .string, name: "VAR_LOCATION", defaultValue: "San Francisco", description: "Location"),
+            PluginVariable(type: .number, name: "VAR_COUNT", defaultValue: "10", description: "Count"),
+        ]
+        let userValues = [
+            "VAR_LOCATION": "New York",
+            "VAR_COUNT": "25",
+        ]
+
+        let env = PluginVariableStorage.buildEnvironment(variables: variables, userValues: userValues)
+
+        #expect(env["VAR_LOCATION"] == "New York", "User value should override default")
+        #expect(env["VAR_COUNT"] == "25", "User value should override default")
+    }
+
+    @Test func testBuildEnvironment_FallbackToDefaults() throws {
+        let variables = [
+            PluginVariable(type: .string, name: "VAR_A", defaultValue: "default_a", description: "A"),
+            PluginVariable(type: .string, name: "VAR_B", defaultValue: "default_b", description: "B"),
+        ]
+        let userValues = [
+            "VAR_A": "custom_a",
+            // VAR_B not in user values
+        ]
+
+        let env = PluginVariableStorage.buildEnvironment(variables: variables, userValues: userValues)
+
+        #expect(env["VAR_A"] == "custom_a", "User value should be used")
+        #expect(env["VAR_B"] == "default_b", "Should fall back to default when user value missing")
+    }
+
+    @Test func testBuildEnvironment_EmptyUserValues() throws {
+        let variables = [
+            PluginVariable(type: .string, name: "VAR_X", defaultValue: "default_x", description: "X"),
+            PluginVariable(type: .boolean, name: "VAR_Y", defaultValue: "true", description: "Y"),
+        ]
+        let userValues: [String: String] = [:]
+
+        let env = PluginVariableStorage.buildEnvironment(variables: variables, userValues: userValues)
+
+        #expect(env["VAR_X"] == "default_x", "Should use default when no user values")
+        #expect(env["VAR_Y"] == "true", "Should use default when no user values")
+    }
+
+    @Test func testBuildEnvironment_AllVariablesIncluded() throws {
+        let variables = [
+            PluginVariable(type: .string, name: "VAR_1", defaultValue: "a", description: ""),
+            PluginVariable(type: .number, name: "VAR_2", defaultValue: "1", description: ""),
+            PluginVariable(type: .boolean, name: "VAR_3", defaultValue: "false", description: ""),
+            PluginVariable(type: .select, name: "VAR_4", defaultValue: "opt1", description: "", options: ["opt1", "opt2"]),
+        ]
+        let userValues = [
+            "VAR_1": "b",
+            "VAR_3": "true",
+        ]
+
+        let env = PluginVariableStorage.buildEnvironment(variables: variables, userValues: userValues)
+
+        #expect(env.count == 4, "All variables should be in environment")
+        #expect(env["VAR_1"] == "b")
+        #expect(env["VAR_2"] == "1") // default
+        #expect(env["VAR_3"] == "true")
+        #expect(env["VAR_4"] == "opt1") // default
+    }
+}
+
+struct PluginVariableIntegrationTests {
+    @Test func testFullFlow_ParseAndBuildEnvironment() throws {
+        // Simulate full flow: parse script -> get variables -> build environment with user values
+        let script = """
+        #!/bin/bash
+        # <xbar.var>string(VAR_LOCATION="San Francisco"): Location</xbar.var>
+        # <xbar.var>number(VAR_REFRESH="5"): Refresh</xbar.var>
+        # <xbar.var>boolean(VAR_EMOJI="true"): Emoji</xbar.var>
+        # <xbar.var>select(VAR_THEME="light"): Theme. [light, dark, auto]</xbar.var>
+        echo "$VAR_LOCATION"
+        """
+
+        // Step 1: Parse metadata
+        let metadata = PluginMetadata.parser(script: script)
+        #expect(metadata.variables.count == 4)
+
+        // Verify defaults are in metadata.environment
+        #expect(metadata.environment["VAR_LOCATION"] == "San Francisco")
+        #expect(metadata.environment["VAR_REFRESH"] == "5")
+        #expect(metadata.environment["VAR_EMOJI"] == "true")
+        #expect(metadata.environment["VAR_THEME"] == "light")
+
+        // Step 2: Simulate user values from .vars.json
+        let userValues = [
+            "VAR_LOCATION": "New York",
+            "VAR_REFRESH": "10",
+            "VAR_EMOJI": "false",
+            "VAR_THEME": "dark",
+        ]
+
+        // Step 3: Build environment (should use user values)
+        let env = PluginVariableStorage.buildEnvironment(variables: metadata.variables, userValues: userValues)
+
+        // Step 4: Verify user values override defaults
+        #expect(env["VAR_LOCATION"] == "New York", "User value should override default")
+        #expect(env["VAR_REFRESH"] == "10", "User value should override default")
+        #expect(env["VAR_EMOJI"] == "false", "User value should override default")
+        #expect(env["VAR_THEME"] == "dark", "User value should override default")
+    }
+
+    @Test func testPartialUserValues_MixedWithDefaults() throws {
+        let script = """
+        #!/bin/bash
+        # <xbar.var>string(VAR_A="default_a"): A</xbar.var>
+        # <xbar.var>string(VAR_B="default_b"): B</xbar.var>
+        # <xbar.var>string(VAR_C="default_c"): C</xbar.var>
+        """
+
+        let metadata = PluginMetadata.parser(script: script)
+
+        // User only customized VAR_B
+        let userValues = ["VAR_B": "custom_b"]
+
+        let env = PluginVariableStorage.buildEnvironment(variables: metadata.variables, userValues: userValues)
+
+        #expect(env["VAR_A"] == "default_a", "Should use default")
+        #expect(env["VAR_B"] == "custom_b", "Should use user value")
+        #expect(env["VAR_C"] == "default_c", "Should use default")
+    }
+}

@@ -155,6 +155,10 @@ class PluginManager: ObservableObject {
                     }
                     return false
                 }
+                // Exclude .json files (used for plugin variable storage)
+                if origURL.pathExtension.lowercased() == "json" {
+                    return false
+                }
                 return true
             }
             return (files, dirs)
