@@ -33,7 +33,10 @@ final class RunPluginOperation<T: Plugin>: Operation {
 
     override func main() {
         guard !isCancelled else { return }
-        plugin?.content = plugin?.invoke()
+        let result = plugin?.invoke()
+        // Check again after invoke - operation may have been cancelled while script was running
+        guard !isCancelled else { return }
+        plugin?.content = result
         (plugin as? ExecutablePlugin)?.enableTimer()
         (plugin as? ShortcutPlugin)?.enableTimer()
     }

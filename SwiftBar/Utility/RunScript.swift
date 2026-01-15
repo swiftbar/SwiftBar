@@ -33,7 +33,7 @@ func getEnvExportString(env: [String: String]) -> String {
                                   stdinPipe: Pipe? = nil,
                                   onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> (out: String, err: String?)
 {
-    let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
+    let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { _, new in new }
     process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
     return try process.launchScript(with: command, args: args, runInBash: runInBash, streamOutput: streamOutput, stdinPipe: stdinPipe, onOutputUpdate: onOutputUpdate)
 }
