@@ -119,7 +119,7 @@ Script output for both header and body is split by line (`\n`). Each line must f
 ```
 Where:
 - **"Item Title"** can be any string, this will be used as a menu item title.
-- **[param = ...]** is an optional set of parameters\modificators. Each parameter is a key-value separated by `=`. Use `|` to separate parameters from the title.
+- **[param = ...]** is an optional set of parameters\modificators. Each parameter is a key-value separated by `=`. Use `|` to separate parameters from the title and spaces to separate multiple parameters.
 
 
 #### Parameters
