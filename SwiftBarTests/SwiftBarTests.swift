@@ -512,6 +512,25 @@ struct PluginVariableStorageTests {
         #expect(varsURL.path == "/plugins/weather.5m.vars.json")
     }
 
+    @Test func testSaveUserValues_DoesNotEscapeForwardSlashes() throws {
+        let tempDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDir) }
+
+        let pluginFile = tempDir.appendingPathComponent("repo.1h.sh").path
+        let values = ["REPO_PATH": "/Users/bob/git-repos/swiftbar"]
+
+        PluginVariableStorage.saveUserValues(values, pluginFile: pluginFile)
+
+        let varsURL = PluginVariableStorage.variablesFileURL(forPluginFile: pluginFile)
+        let data = try Data(contentsOf: varsURL)
+        let json = try #require(String(data: data, encoding: .utf8))
+
+        #expect(json.contains("\"REPO_PATH\":\"/Users/bob/git-repos/swiftbar\""))
+        #expect(!json.contains("\\/Users\\/bob\\/git-repos\\/swiftbar"))
+    }
+
     @Test func testBuildEnvironment_UserValuesOverrideDefaults() throws {
         let variables = [
             PluginVariable(type: .string, name: "VAR_LOCATION", defaultValue: "San Francisco", description: "Location"),

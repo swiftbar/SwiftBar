@@ -414,8 +414,10 @@ class PluginVariableStorage {
     /// Save user-configured variable values to the plugin's vars.json file
     static func saveUserValues(_ values: [String: String], pluginFile: String) {
         let fileURL = variablesFileURL(forPluginFile: pluginFile)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.withoutEscapingSlashes]
 
-        if let data = try? JSONEncoder().encode(values) {
+        if let data = try? encoder.encode(values) {
             try? data.write(to: fileURL)
         }
     }
