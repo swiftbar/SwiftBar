@@ -500,6 +500,9 @@ extension MenubarItem {
     func _updateMenu(content: String?) {
         barItem.button?.appearsDisabled = false
         statusBarMenu.removeAllItems()
+        hotKeys.removeAll()
+        prevItems.removeAll()
+        prevLevel = 0
         resetWebPopoverContent()
         show()
 

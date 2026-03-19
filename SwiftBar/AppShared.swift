@@ -203,7 +203,9 @@ class AppShared: NSObject {
     }
 
     public static var isDarkStatusBar: Bool {
-        let currentAppearance = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength).button?.effectiveAppearance
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        let currentAppearance = item.button?.effectiveAppearance
+        NSStatusBar.system.removeStatusItem(item)
         return currentAppearance?.bestMatch(from: [.aqua, .darkAqua]) == .aqua
     }
 
