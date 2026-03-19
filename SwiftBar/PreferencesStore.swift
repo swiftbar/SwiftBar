@@ -5,6 +5,7 @@ enum TerminalOptions: String, CaseIterable {
     case Terminal
     case iTerm
     case Ghostty
+    case Kitty
 }
 
 enum ShellOptions: String, CaseIterable {

@@ -10,6 +10,18 @@ import UserNotifications
     import Sparkle
 #endif
 
+func parseUserShell(from output: String) -> String? {
+    for line in output.split(separator: "\n") {
+        let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.hasPrefix("UserShell:") else { continue }
+
+        let shell = trimmed.replacingOccurrences(of: "UserShell:", with: "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return shell.isEmpty ? nil : shell
+    }
+
+    return nil
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
     var repositoryWindowController: NSWindowController? {
         didSet {
@@ -101,10 +113,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func setDefaultShelf() {
-        let out = try? runScript(to: "echo", args: ["$SHELL"])
-        if let shell = out?.out, shell != "" {
-            sharedEnv.userLoginShell = shell.trimmingCharacters(in: .newlines)
+        if let shell = ProcessInfo.processInfo.environment["SHELL"],
+           shell.hasPrefix("/"),
+           FileManager.default.isExecutableFile(atPath: shell)
+        {
+            sharedEnv.userLoginShell = shell
+            return
         }
+
+        let out = try? runScript(to: "/usr/bin/dscl", args: [".", "-read", "/Users/\(NSUserName())", "UserShell"], runInBash: false)
+        if let output = out?.out,
+           let shell = parseUserShell(from: output),
+           shell.hasPrefix("/")
+        {
+            sharedEnv.userLoginShell = shell
+            return
+        }
+
+        os_log("Failed to determine user login shell, using default: %{public}@", log: Log.plugin, type: .error, sharedEnv.userLoginShell)
     }
 
     func changePresentationType() {

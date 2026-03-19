@@ -5,6 +5,33 @@ import Testing
 @testable import SwiftBar
 
 struct SwiftBarTests {
+    @Test func testParseUserShell_extractsShellPath() async throws {
+        let output = """
+        GeneratedUID: ABCDEF-1234
+        UserShell: /opt/homebrew/bin/fish
+        """
+
+        #expect(parseUserShell(from: output) == "/opt/homebrew/bin/fish")
+    }
+
+    @Test func testParseUserShell_returnsNilWhenMissing() async throws {
+        let output = "GeneratedUID: ABCDEF-1234"
+
+        #expect(parseUserShell(from: output) == nil)
+    }
+
+    @Test func testParseUserShell_trimsWhitespace() async throws {
+        let output = "UserShell:    /bin/zsh  \n"
+
+        #expect(parseUserShell(from: output) == "/bin/zsh")
+    }
+
+    @Test func testParseUserShell_returnsNilForEmptyValue() async throws {
+        let output = "UserShell:   "
+
+        #expect(parseUserShell(from: output) == nil)
+    }
+
     @Test func testBuildTerminalCommand_quotesMultiWordBashCArgument() async throws {
         let command = buildTerminalCommand(
             script: "bash",
@@ -75,6 +102,28 @@ struct SwiftBarTests {
         #expect(appleScript.contains("input text \"echo \\\"hello\\\"\" to ghosttyTerminal"))
     }
 
+    @Test func testBuildKittyLaunchArguments_usesSingleInstanceLoginShellLaunch() async throws {
+        let args = buildKittyLaunchArguments(command: "export FOO=bar; echo hello", loginShell: "/bin/zsh")
+
+        #expect(args == [
+            "--single-instance",
+            "/bin/zsh",
+            "-lc",
+            "export FOO=bar; echo hello",
+        ])
+    }
+
+    @Test func testBuildKittyLaunchArguments_usesCshCompatibleCommandFlag() async throws {
+        let args = buildKittyLaunchArguments(command: "setenv FOO bar; echo hello", loginShell: "/bin/tcsh")
+
+        #expect(args == [
+            "--single-instance",
+            "/bin/tcsh",
+            "-c",
+            "setenv FOO bar; echo hello",
+        ])
+    }
+
     @Test func testBuildTerminalCommand_preventsCommandInjectionViaSemicolon() async throws {
         let command = buildTerminalCommand(
             script: "echo",
@@ -142,6 +191,10 @@ struct SwiftBarTests {
     }
 
     @Test func testBuildTerminalCommand_envValueWithMetacharacters() async throws {
+        let originalShell = sharedEnv.userLoginShell
+        defer { sharedEnv.userLoginShell = originalShell }
+        sharedEnv.userLoginShell = "/bin/zsh"
+
         let command = buildTerminalCommand(
             script: "echo",
             args: [],
@@ -353,6 +406,10 @@ struct PluginMetadataEnvironmentParsingTests {
     }
 
     @Test func testEnvironmentExportString_WithEqualsInValue() throws {
+        let originalShell = sharedEnv.userLoginShell
+        defer { sharedEnv.userLoginShell = originalShell }
+        sharedEnv.userLoginShell = "/bin/zsh"
+
         // Test case from issue #445: VAR_MONOSPACE_FONT: font=Menlo size=12
         let env = ["VAR_MONOSPACE_FONT": "font=Menlo size=12"]
         let exportString = getEnvExportString(env: env)
@@ -366,6 +423,10 @@ struct PluginMetadataEnvironmentParsingTests {
     }
 
     @Test func testEnvironmentExportString_WithSpecialChars() throws {
+        let originalShell = sharedEnv.userLoginShell
+        defer { sharedEnv.userLoginShell = originalShell }
+        sharedEnv.userLoginShell = "/bin/zsh"
+
         // Test various special characters that might cause issues
         let env = [
             "VAR_WITH_EQUALS": "key=value",
@@ -396,6 +457,10 @@ struct PluginMetadataEnvironmentParsingTests {
     }
 
     @Test func testIssue445_EnvironmentVariableParsing() throws {
+        let originalShell = sharedEnv.userLoginShell
+        defer { sharedEnv.userLoginShell = originalShell }
+        sharedEnv.userLoginShell = "/bin/zsh"
+
         // Test the specific issue reported in GitHub #445
         let script = "<swiftbar.environment>[VAR_MONOSPACE_FONT: font=Menlo size=12]</swiftbar.environment>"
         let metadata = PluginMetadata.parser(script: script)
@@ -437,6 +502,10 @@ struct PluginMetadataEnvironmentParsingTests {
     }
 
     @Test func testIssue445_ShellExportString() throws {
+        let originalShell = sharedEnv.userLoginShell
+        defer { sharedEnv.userLoginShell = originalShell }
+        sharedEnv.userLoginShell = "/bin/zsh"
+
         // Test that environment variables with equals signs in values are properly escaped
         // This addresses the specific tcsh export error mentioned in the issue
         let problematicEnv = [

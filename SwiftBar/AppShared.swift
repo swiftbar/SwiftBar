@@ -2,6 +2,8 @@ import Cocoa
 import os
 import SwiftUI
 
+private let kittyBundleIdentifier = "net.kovidgoyal.kitty"
+
 func buildTerminalAppleScript(command: String, terminal: TerminalOptions) -> String {
     let escapedCommand = command.appleScriptEscaped()
 
@@ -50,7 +52,43 @@ func buildTerminalAppleScript(command: String, terminal: TerminalOptions) -> Str
             send key "enter" to ghosttyTerminal
         end tell
         """
+    case .Kitty:
+        assertionFailure("Kitty should be handled via runInKitty(), not AppleScript")
+        return ""
     }
+}
+
+func buildKittyLaunchArguments(command: String, loginShell: String) -> [String] {
+    let shellPath = loginShell.lowercased()
+    let shellArgs = if shellPath.hasSuffix("tcsh") || shellPath.hasSuffix("csh") {
+        ["-c", command]
+    } else {
+        ["-lc", command]
+    }
+
+    return ["--single-instance", loginShell] + shellArgs
+}
+
+func kittyExecutableURL(workspace: NSWorkspace = .shared) -> URL? {
+    if let appURL = workspace.urlForApplication(withBundleIdentifier: kittyBundleIdentifier) {
+        let executableURL = appURL.appendingPathComponent("Contents/MacOS/kitty")
+        if FileManager.default.isExecutableFile(atPath: executableURL.path) {
+            return executableURL
+        }
+    }
+
+    let fallbackPaths = [
+        "/Applications/kitty.app/Contents/MacOS/kitty",
+        "/Applications/Kitty.app/Contents/MacOS/kitty",
+        "/opt/homebrew/bin/kitty",
+        "/usr/local/bin/kitty",
+    ]
+
+    for path in fallbackPaths where FileManager.default.isExecutableFile(atPath: path) {
+        return URL(fileURLWithPath: path)
+    }
+
+    return nil
 }
 
 class AppShared: NSObject {
@@ -187,6 +225,11 @@ class AppShared: NSObject {
         }
 
         let runInTerminalScript = buildTerminalCommand(script: script, args: args, env: env)
+        if PreferencesStore.shared.terminal == .Kitty {
+            runInKitty(command: runInTerminalScript, completionHandler: completionHandler)
+            return
+        }
+
         let appleScript = buildTerminalAppleScript(command: runInTerminalScript, terminal: PreferencesStore.shared.terminal)
 
         var error: NSDictionary?
@@ -197,6 +240,25 @@ class AppShared: NSObject {
                 os_log("Failed to execute script in Terminal \n%{public}@", log: Log.plugin, type: .error, error.description)
             }
             completionHandler?()
+        }
+    }
+
+    private static func runInKitty(command: String, completionHandler: (() -> Void)? = nil) {
+        guard let executableURL = kittyExecutableURL() else {
+            os_log("Failed to locate Kitty executable", log: Log.plugin, type: .error)
+            return
+        }
+
+        let loginShell = sharedEnv.userLoginShell.isEmpty ? "/bin/zsh" : sharedEnv.userLoginShell
+        let process = Process()
+        process.executableURL = executableURL
+        process.arguments = buildKittyLaunchArguments(command: command, loginShell: loginShell)
+
+        do {
+            try process.run()
+            completionHandler?()
+        } catch {
+            os_log("Failed to execute script in Kitty \n%{public}@", log: Log.plugin, type: .error, String(describing: error))
         }
     }
 
