@@ -129,10 +129,18 @@ extension Plugin {
 
         // Parse metadata in a thread-safe way
         var newMetadata: PluginMetadata?
+        var scriptVariables: [PluginVariable] = []
+
+        // Always parse from script first to get variables (they're only defined in the script)
         if let script = try? String(contentsOf: url) {
-            newMetadata = PluginMetadata.parser(script: script)
+            let scriptMetadata = PluginMetadata.parser(script: script)
+            newMetadata = scriptMetadata
+            scriptVariables = scriptMetadata.variables
         }
+
+        // If there's metadata in extended attributes, use it but preserve variables from script
         if let md = PluginMetadata.parser(fileURL: url) {
+            md.variables = scriptVariables
             newMetadata = md
         }
 
@@ -180,14 +188,27 @@ extension Plugin {
             Environment.Variables.swiftBarPluginDataPath.rawValue: dataDirectoryPath,
             Environment.Variables.swiftBarPluginRefreshReason.rawValue: lastRefreshReason.rawValue,
         ]
+
+        // Add metadata environment (contains defaults from script parsing)
         metadata?.environment.forEach { k, v in
             pluginEnv[k] = v
         }
 
+        // Add refreshEnv (from swiftbar.environment tag, may overlap with xbar.var defaults)
         for (k, v) in refreshEnv {
             pluginEnv[k] = v
         }
         refreshEnv.removeAll()
+
+        // Add xbar.var variables LAST - user values must take final precedence
+        if let variables = metadata?.variables, !variables.isEmpty {
+            let userValues = PluginVariableStorage.loadUserValues(pluginFile: file)
+            let varEnv = PluginVariableStorage.buildEnvironment(variables: variables, userValues: userValues)
+            for (k, v) in varEnv {
+                pluginEnv[k] = v
+            }
+        }
+
         return pluginEnv
     }
 
