@@ -5,6 +5,13 @@ import os
 import SwiftUI
 
 class MenubarItem: NSObject {
+    enum ActionKind: Equatable {
+        case href
+        case bash
+        case stdin
+        case refresh
+    }
+
     var plugin: Plugin?
 
     private lazy var workQueue: OperationQueue = {
@@ -825,8 +832,44 @@ extension MenubarItem {
         barItem.button?.appearsDisabled = true
     }
 
+    static func actionKinds(for params: MenuLineParameters) -> [ActionKind] {
+        var actions: [ActionKind] = []
+
+        if let url = params.href?.getURL(), url.absoluteString != "." {
+            actions.append(.href)
+        }
+
+        if params.bash != nil {
+            actions.append(.bash)
+        }
+
+        if params.stdin != nil {
+            actions.append(.stdin)
+        }
+
+        if params.refresh {
+            actions.append(.refresh)
+        }
+
+        return actions
+    }
+
     @discardableResult func performItemAction(params: MenuLineParameters) -> Bool {
         var out = false
+        let actions = Self.actionKinds(for: params)
+        let shouldTriggerStandaloneRefresh = actions.contains(.refresh) && !actions.contains(.bash) && !actions.contains(.stdin)
+        let refreshLock = NSLock()
+        var didRequestRefresh = false
+
+        let requestRefreshIfNeeded: () -> Void = { [weak self] in
+            guard params.refresh else { return }
+
+            refreshLock.lock()
+            defer { refreshLock.unlock() }
+            guard !didRequestRefresh else { return }
+            didRequestRefresh = true
+            self?.plugin?.refresh(reason: .MenuAction)
+        }
 
         defer {
             if params.color != nil, out {
@@ -834,7 +877,7 @@ extension MenubarItem {
             }
         }
 
-        if let url = params.href?.getURL(), url.absoluteString != "." {
+        if actions.contains(.href), let url = params.href?.getURL() {
             if params.webView {
                 showWebPopover(
                     url: url,
@@ -847,19 +890,17 @@ extension MenubarItem {
             }
 
             out = true
-            return out
         }
 
         if let bash = params.bash {
             AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
                                     env: plugin?.env ?? [:], runInBash: plugin?.metadata?.shouldRunInBash ?? true)
-            { [weak self] in
+            {
                 if params.refresh {
-                    self?.plugin?.refresh(reason: .MenuAction)
+                    requestRefreshIfNeeded()
                 }
             }
             out = true
-            return out
         }
 
         if let stdinInput = params.stdin {
@@ -872,7 +913,7 @@ extension MenubarItem {
                 try plugin.writeStdin(stdinInput)
 
                 if params.refresh {
-                    plugin.refresh(reason: .MenuAction)
+                    requestRefreshIfNeeded()
                 }
 
                 out = true
@@ -885,16 +926,14 @@ extension MenubarItem {
                 }
             }
 
-            return out
         }
 
-        if params.refresh {
+        if shouldTriggerStandaloneRefresh {
             dimOnManualRefresh()
-            plugin?.refresh(reason: .MenuAction)
+            requestRefreshIfNeeded()
             out = true
-            return out
         }
-        out = false
+
         return out
     }
 

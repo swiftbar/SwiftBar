@@ -5,6 +5,24 @@ import Testing
 @testable import SwiftBar
 
 struct SwiftBarTests {
+    @Test func testMenuItemActionKinds_includeHrefAndRefreshTogether() async throws {
+        let params = MenuLineParameters(line: "Test | href=https://example.com refresh=true")
+
+        #expect(MenubarItem.actionKinds(for: params) == [.href, .refresh])
+    }
+
+    @Test func testMenuItemActionKinds_includeAllSupportedActionsWithoutShortCircuiting() async throws {
+        let params = MenuLineParameters(line: "Test | href=https://example.com bash=/bin/echo param1=hello stdin=ping refresh=true")
+
+        #expect(MenubarItem.actionKinds(for: params) == [.href, .bash, .stdin, .refresh])
+    }
+
+    @Test func testMenuItemActionKinds_ignorePlaceholderHref() async throws {
+        let params = MenuLineParameters(line: "Test | href=. refresh=true")
+
+        #expect(MenubarItem.actionKinds(for: params) == [.refresh])
+    }
+
     @Test func testParseUserShell_extractsShellPath() async throws {
         let output = """
         GeneratedUID: ABCDEF-1234
