@@ -812,6 +812,9 @@ extension MenubarItem {
         os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
         plugin?.lastRefreshReason = .MenuOpen
         let content = plugin?.invoke()
+        // Keep plugin.content in sync with the displayed content so that subsequent
+        // scheduled refreshes are not suppressed by the content didSet guard.
+        plugin?.content = content
         _updateMenu(content: content)
         barItem.menu = statusBarMenu
         barItem.button?.performClick(nil)

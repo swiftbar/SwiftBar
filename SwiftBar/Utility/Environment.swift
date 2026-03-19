@@ -40,8 +40,12 @@ class Environment {
     ]
 
     var systemEnvStr: [String: String] {
-        Dictionary(uniqueKeysWithValues:
+        var env = Dictionary(uniqueKeysWithValues:
             systemEnv.map { key, value in (key.rawValue, value) })
+        // Always resolve plugin directory path dynamically so it reflects the current value,
+        // not the potentially stale value captured at init time.
+        env[Variables.swiftBarPluginsPath.rawValue] = PreferencesStore.shared.pluginDirectoryPath ?? ""
+        return env
     }
 
     init() {

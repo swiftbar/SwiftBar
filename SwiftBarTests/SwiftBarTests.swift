@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import Testing
 
@@ -679,5 +680,107 @@ struct PluginVariableIntegrationTests {
         #expect(env["VAR_A"] == "default_a", "Should use default")
         #expect(env["VAR_B"] == "custom_b", "Should use user value")
         #expect(env["VAR_C"] == "default_c", "Should use default")
+    }
+}
+
+// MARK: - Environment Variable Tests (Issues #473, #453)
+
+struct EnvironmentVariableTests {
+    // Issue #473: SWIFTBAR_PLUGINS_PATH should reflect the current plugin directory,
+    // not a stale value captured at Environment init time.
+    @Test func testPluginsPathReflectsCurrentPreference() throws {
+        let env = Environment.shared
+
+        // Save original value to restore later
+        let originalPath = PreferencesStore.shared.pluginDirectoryPath
+
+        // Set a known path
+        PreferencesStore.shared.pluginDirectoryPath = "/tmp/test-plugins-path"
+        let envStr = env.systemEnvStr
+        #expect(envStr["SWIFTBAR_PLUGINS_PATH"] == "/tmp/test-plugins-path",
+                "SWIFTBAR_PLUGINS_PATH should reflect the current pluginDirectoryPath")
+
+        // Change the path and verify it updates dynamically
+        PreferencesStore.shared.pluginDirectoryPath = "/tmp/other-plugins-path"
+        let envStr2 = env.systemEnvStr
+        #expect(envStr2["SWIFTBAR_PLUGINS_PATH"] == "/tmp/other-plugins-path",
+                "SWIFTBAR_PLUGINS_PATH should update when pluginDirectoryPath changes")
+
+        // Restore original value
+        PreferencesStore.shared.pluginDirectoryPath = originalPath
+    }
+
+    @Test func testPluginsPathHandlesNilDirectory() throws {
+        let env = Environment.shared
+
+        let originalPath = PreferencesStore.shared.pluginDirectoryPath
+
+        PreferencesStore.shared.pluginDirectoryPath = nil
+        let envStr = env.systemEnvStr
+        #expect(envStr["SWIFTBAR_PLUGINS_PATH"] == "",
+                "SWIFTBAR_PLUGINS_PATH should be empty string when directory is nil")
+
+        PreferencesStore.shared.pluginDirectoryPath = originalPath
+    }
+}
+
+struct RefreshReasonContentSyncTests {
+    // Issue #453: When invoke() is called directly (as in refreshAndShowMenu),
+    // plugin.content must be updated to prevent subsequent scheduled refreshes
+    // from being suppressed by the didSet guard.
+    @Test func testContentDidSetGuardSuppressesIdenticalContent() throws {
+        // This test demonstrates the mechanism behind issue #453:
+        // If plugin.content is "Schedule" and a new invoke() also returns "Schedule",
+        // the didSet guard prevents contentUpdatePublisher from firing.
+
+        var publisherFired = false
+        let publisher = PassthroughSubject<String?, Never>()
+        let cancellable = publisher.sink { _ in
+            publisherFired = true
+        }
+
+        // Simulate the didSet guard logic from ExecutablePlugin.content
+        let oldContent = "Schedule"
+        let newContent = "Schedule"
+        let lastRefreshReason = PluginRefreshReason.Schedule
+
+        // This mirrors the guard in ExecutablePlugin.content didSet
+        let shouldPublish = newContent != oldContent || PluginRefreshReason.manualReasons().contains(lastRefreshReason)
+
+        if shouldPublish {
+            publisher.send(newContent)
+        }
+
+        #expect(!publisherFired,
+                "Publisher should NOT fire when content is identical and reason is Schedule")
+        _ = cancellable // keep alive
+    }
+
+    @Test func testContentDidSetAllowsChangedContent() throws {
+        var publisherFired = false
+        let publisher = PassthroughSubject<String?, Never>()
+        let cancellable = publisher.sink { _ in
+            publisherFired = true
+        }
+
+        let oldContent = "MenuOpen"
+        let newContent = "Schedule"
+        let lastRefreshReason = PluginRefreshReason.Schedule
+
+        let shouldPublish = newContent != oldContent || PluginRefreshReason.manualReasons().contains(lastRefreshReason)
+
+        if shouldPublish {
+            publisher.send(newContent)
+        }
+
+        #expect(publisherFired,
+                "Publisher should fire when content changes")
+        _ = cancellable
+    }
+
+    @Test func testMenuOpenIsManualReason() throws {
+        // MenuOpen should be a manual reason, which forces content update even if content is identical
+        #expect(PluginRefreshReason.manualReasons().contains(.MenuOpen),
+                "MenuOpen should be in manualReasons so refreshOnOpen always triggers UI updates")
     }
 }
