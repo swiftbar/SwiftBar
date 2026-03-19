@@ -5,6 +5,179 @@ import Testing
 @testable import SwiftBar
 
 struct SwiftBarTests {
+    @Test func testBuildTerminalCommand_quotesMultiWordBashCArgument() async throws {
+        let command = buildTerminalCommand(
+            script: "bash",
+            args: ["-c", "echo Hello"],
+            env: [:]
+        )
+
+        #expect(command.contains("bash -c 'echo Hello'"))
+    }
+
+    @Test func testBuildTerminalCommand_preservesShellExpandedExecutablePath() async throws {
+        let command = buildTerminalCommand(
+            script: "$HOME/bin/tool",
+            args: ["--flag"],
+            env: [:]
+        )
+
+        #expect(command.contains("$HOME/bin/tool --flag"))
+        #expect(!command.contains("'$HOME/bin/tool'"))
+    }
+
+    @Test func testBuildTerminalCommand_andAppleScriptEscaping_preserveQuotedArguments() async throws {
+        let command = buildTerminalCommand(
+            script: "bash",
+            args: ["-c", "echo \"Hello\" && echo done"],
+            env: [:]
+        )
+        let appleScriptSafe = command.appleScriptEscaped()
+
+        #expect(command.contains("bash -c 'echo \"Hello\" && echo done'"))
+        #expect(appleScriptSafe.contains("\\\"Hello\\\""))
+    }
+
+    @Test func testBuildTerminalAppleScript_terminalUsesExplicitNewTabPath() async throws {
+        let appleScript = buildTerminalAppleScript(command: "echo hello", terminal: .Terminal)
+
+        #expect(appleScript.contains("if (count of windows) is 0 then"))
+        #expect(appleScript.contains("do script \"echo hello\""))
+        #expect(appleScript.contains("keystroke \"t\" using {command down}"))
+        #expect(appleScript.contains("do script \"echo hello\" in selected tab of front window"))
+    }
+
+    @Test func testBuildTerminalAppleScript_iTermUsesCreateTabAndWriteText() async throws {
+        let appleScript = buildTerminalAppleScript(command: "echo hello", terminal: .iTerm)
+
+        #expect(appleScript.contains("if (count of windows) is 0 then"))
+        #expect(appleScript.contains("create window with default profile"))
+        #expect(appleScript.contains("create tab with default profile"))
+        #expect(appleScript.contains("tell current session of current tab of current window to write text \"echo hello\""))
+    }
+
+    @Test func testBuildTerminalAppleScript_ghosttyUsesNativeAppleScriptAPI() async throws {
+        let appleScript = buildTerminalAppleScript(command: "echo hello", terminal: .Ghostty)
+
+        #expect(appleScript.contains("set ghosttyWindow to front window"))
+        #expect(appleScript.contains("set ghosttyTab to new tab in ghosttyWindow"))
+        #expect(appleScript.contains("set ghosttyTerminal to focused terminal of ghosttyTab"))
+        #expect(appleScript.contains("set ghosttyWindow to new window"))
+        #expect(appleScript.contains("input text \"echo hello\" to ghosttyTerminal"))
+        #expect(appleScript.contains("send key \"enter\" to ghosttyTerminal"))
+        #expect(!appleScript.contains("System Events"))
+        #expect(!appleScript.contains("keystroke"))
+    }
+
+    @Test func testBuildTerminalAppleScript_ghosttyEscapesQuotedCommands() async throws {
+        let appleScript = buildTerminalAppleScript(command: "echo \"hello\"", terminal: .Ghostty)
+
+        #expect(appleScript.contains("input text \"echo \\\"hello\\\"\" to ghosttyTerminal"))
+    }
+
+    @Test func testBuildTerminalCommand_preventsCommandInjectionViaSemicolon() async throws {
+        let command = buildTerminalCommand(
+            script: "echo",
+            args: ["foo; rm -rf /"],
+            env: [:]
+        )
+
+        // The malicious arg should be fully quoted, not interpreted as separate commands
+        #expect(command.contains("'foo; rm -rf /'"))
+    }
+
+    @Test func testBuildTerminalCommand_quotesEnclosedInQuotesBypass() async throws {
+        let safelyQuoted = "'; rm -rf /; echo '"
+        let result = safelyQuoted.quoteIfNeeded()
+
+        // This shell token is already safely single-quoted, so it should be preserved.
+        #expect(result == safelyQuoted)
+    }
+
+    @Test func testBuildTerminalCommand_requotesMalformedSingleQuotedToken() async throws {
+        let malformed = "'foo' bar '"
+        let result = malformed.quoteIfNeeded()
+
+        #expect(result != malformed)
+    }
+
+    @Test func testBuildTerminalCommand_preservesEscapedApostropheSingleQuotedToken() async throws {
+        let quoted = "'O'\\''Reilly'"
+        let result = quoted.quoteIfNeeded()
+
+        #expect(result == quoted)
+    }
+
+    @Test func testBuildTerminalCommand_preventsCommandInjectionViaDollar() async throws {
+        let command = buildTerminalCommand(
+            script: "echo",
+            args: ["$(whoami)"],
+            env: [:]
+        )
+
+        // Should be single-quoted so $() is not expanded
+        #expect(command.contains("'$(whoami)'"))
+    }
+
+    @Test func testBuildTerminalCommand_preventsBacktickExpansion() async throws {
+        let command = buildTerminalCommand(
+            script: "echo",
+            args: ["`whoami`"],
+            env: [:]
+        )
+
+        // Should be single-quoted so backticks are not expanded
+        #expect(command.contains("'`whoami`'"))
+    }
+
+    @Test func testBuildTerminalCommand_handlesPipeAndRedirect() async throws {
+        let command = buildTerminalCommand(
+            script: "echo",
+            args: ["hello | cat > /tmp/evil"],
+            env: [:]
+        )
+
+        // Should be quoted as a single argument, not interpreted as pipe/redirect
+        #expect(command.contains("'hello | cat > /tmp/evil'"))
+    }
+
+    @Test func testBuildTerminalCommand_envValueWithMetacharacters() async throws {
+        let command = buildTerminalCommand(
+            script: "echo",
+            args: [],
+            env: ["EVIL": "$(whoami); rm -rf /"]
+        )
+
+        // Env value should be safely quoted
+        #expect(command.contains("EVIL='$(whoami); rm -rf /'"))
+    }
+
+    @Test func testAppleScriptEscaped_handlesBackslashesAndQuotes() async throws {
+        let input = "path\\to\\file \"with quotes\""
+        let escaped = input.appleScriptEscaped()
+
+        // Backslashes must be escaped first (\\ in AppleScript = literal \),
+        // then double quotes (\\" in AppleScript = literal ")
+        #expect(escaped == "path\\\\to\\\\file \\\"with quotes\\\"")
+    }
+
+    @Test func testAppleScriptEscaped_escapesBackslashFromShellQuoting() async throws {
+        // quoteIfNeeded() uses the '\'' pattern to escape single quotes in shell.
+        // This pattern contains a backslash which AppleScript would treat as an
+        // escape character, causing a parse error on \'. Escaping \ to \\ fixes this.
+        let shellQuoted = "hello'world".quoteIfNeeded()
+        #expect(shellQuoted == "'hello'\\''world'")
+
+        let escaped = shellQuoted.appleScriptEscaped()
+        // '\'' becomes '\\'' — AppleScript sees \\\\ as literal backslash
+        #expect(escaped == "'hello'\\\\''world'")
+    }
+
+    @Test func testAppleScriptEscaped_plainStringUnchanged() async throws {
+        let input = "hello world"
+        #expect(input.appleScriptEscaped() == "hello world")
+    }
+
     @Test func testQuoteIfNeeded_singleQuotes() async throws {
         // Test that strings with single quotes are properly escaped
         let input = "This has 'single quotes'"
@@ -685,6 +858,7 @@ struct PluginVariableIntegrationTests {
 
 // MARK: - Environment Variable Tests (Issues #473, #453)
 
+@Suite(.serialized)
 struct EnvironmentVariableTests {
     // Issue #473: SWIFTBAR_PLUGINS_PATH should reflect the current plugin directory,
     // not a stale value captured at Environment init time.
@@ -693,6 +867,7 @@ struct EnvironmentVariableTests {
 
         // Save original value to restore later
         let originalPath = PreferencesStore.shared.pluginDirectoryPath
+        defer { PreferencesStore.shared.pluginDirectoryPath = originalPath }
 
         // Set a known path
         PreferencesStore.shared.pluginDirectoryPath = "/tmp/test-plugins-path"
@@ -706,21 +881,18 @@ struct EnvironmentVariableTests {
         #expect(envStr2["SWIFTBAR_PLUGINS_PATH"] == "/tmp/other-plugins-path",
                 "SWIFTBAR_PLUGINS_PATH should update when pluginDirectoryPath changes")
 
-        // Restore original value
-        PreferencesStore.shared.pluginDirectoryPath = originalPath
     }
 
     @Test func testPluginsPathHandlesNilDirectory() throws {
         let env = Environment.shared
 
         let originalPath = PreferencesStore.shared.pluginDirectoryPath
+        defer { PreferencesStore.shared.pluginDirectoryPath = originalPath }
 
         PreferencesStore.shared.pluginDirectoryPath = nil
         let envStr = env.systemEnvStr
         #expect(envStr["SWIFTBAR_PLUGINS_PATH"] == "",
                 "SWIFTBAR_PLUGINS_PATH should be empty string when directory is nil")
-
-        PreferencesStore.shared.pluginDirectoryPath = originalPath
     }
 }
 

@@ -24,6 +24,11 @@ func getEnvExportString(env: [String: String]) -> String {
     return "export \(dict.map { "\($0.key)=\($0.value.quoteIfNeeded())" }.joined(separator: " "))"
 }
 
+func buildTerminalCommand(script: String, args: [String] = [], env: [String: String] = [:]) -> String {
+    let command = ([script.escaped()] + args.map { $0.quoteIfNeeded() }).joined(separator: " ")
+    return "\(getEnvExportString(env: env)); \(command)"
+}
+
 @discardableResult func runScript(to command: String,
                                   args: [String] = [],
                                   process: Process = Process(),

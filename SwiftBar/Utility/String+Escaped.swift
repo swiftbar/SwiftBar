@@ -5,6 +5,11 @@ extension String {
         guard contains(" ") else { return self }
         return "'\(self)'"
     }
+
+    func appleScriptEscaped() -> String {
+        replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+    }
 }
 
 extension String {
@@ -34,7 +39,26 @@ extension String {
 
 extension String {
     var isEnclosedInQuotes: Bool {
-        hasPrefix("'") && hasSuffix("'")
+        guard count >= 2, hasPrefix("'"), hasSuffix("'") else { return false }
+
+        var index = self.index(after: startIndex)
+        while index < endIndex {
+            while index < endIndex, self[index] != "'" {
+                index = self.index(after: index)
+            }
+
+            guard index < endIndex else { return false }
+
+            let afterClosingQuote = self.index(after: index)
+            if afterClosingQuote == endIndex {
+                return true
+            }
+
+            guard self[index...].hasPrefix("'\\''") else { return false }
+            index = self.index(index, offsetBy: 4)
+        }
+
+        return false
     }
 
     var needsShellQuoting: Bool {

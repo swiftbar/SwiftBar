@@ -2,6 +2,57 @@ import Cocoa
 import os
 import SwiftUI
 
+func buildTerminalAppleScript(command: String, terminal: TerminalOptions) -> String {
+    let escapedCommand = command.appleScriptEscaped()
+
+    switch terminal {
+    case .Terminal:
+        return """
+        tell application "Terminal"
+            activate
+            if (count of windows) is 0 then
+                do script "\(escapedCommand)"
+            else
+                tell application "System Events" to keystroke "t" using {command down}
+                delay 0.1
+                do script "\(escapedCommand)" in selected tab of front window
+            end if
+            activate
+        end tell
+        """
+    case .iTerm:
+        return """
+        tell application "iTerm"
+            activate
+            if (count of windows) is 0 then
+                create window with default profile
+            else
+                tell current window
+                    create tab with default profile
+                end tell
+            end if
+            tell current session of current tab of current window to write text "\(escapedCommand)"
+        end tell
+        """
+    case .Ghostty:
+        return """
+        tell application "Ghostty"
+            activate
+            try
+                set ghosttyWindow to front window
+                set ghosttyTab to new tab in ghosttyWindow
+                set ghosttyTerminal to focused terminal of ghosttyTab
+            on error
+                set ghosttyWindow to new window
+                set ghosttyTerminal to focused terminal of selected tab of ghosttyWindow
+            end try
+            input text "\(escapedCommand)" to ghosttyTerminal
+            send key "enter" to ghosttyTerminal
+        end tell
+        """
+    }
+}
+
 class AppShared: NSObject {
     public static func openPluginFolder(path: String? = nil) {
         NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: PreferencesStore.shared.pluginDirectoryResolvedPath ?? "")
@@ -135,57 +186,8 @@ class AppShared: NSObject {
             return
         }
 
-        let runInTerminalScript = getEnvExportString(env: env).appending(";")
-            .appending(script.escaped())
-            .appending(" ")
-            .appending(args.joined(separator: " "))
-        var appleScript = ""
-        switch PreferencesStore.shared.terminal {
-        case .Terminal:
-            appleScript = """
-            tell application "Terminal"
-                activate
-                tell application "System Events" to keystroke "t" using {command down}
-                delay 0.2
-                do script "\(runInTerminalScript)" in front window
-                activate
-            end tell
-            """
-        case .iTerm:
-            appleScript = """
-            tell application "iTerm"
-                activate
-                try
-                    select first window
-                    set onlywindow to false
-                on error
-                    create window with default profile
-                    select first window
-                    set onlywindow to true
-                end try
-                tell the first window
-                    if onlywindow is false then
-                        create tab with default profile
-                    end if
-                    tell current session to write text "\(runInTerminalScript)"
-                end tell
-            end tell
-            """
-        case .Ghostty:
-            appleScript = """
-            tell application "Ghostty"
-                activate
-                tell application "System Events"
-                    keystroke "n" using {command down}
-                    delay 0.2
-                end tell
-                tell application "System Events" to tell process "Ghostty"
-                    keystroke "\(runInTerminalScript)"
-                    keystroke return
-                end tell
-            end tell
-            """
-        }
+        let runInTerminalScript = buildTerminalCommand(script: script, args: args, env: env)
+        let appleScript = buildTerminalAppleScript(command: runInTerminalScript, terminal: PreferencesStore.shared.terminal)
 
         var error: NSDictionary?
         if let scriptObject = NSAppleScript(source: appleScript) {
