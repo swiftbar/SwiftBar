@@ -69,7 +69,9 @@ struct FilePluginSyncResult {
     let freshFileStates: [String: PluginFileState]
 }
 
-func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], previousFileStates: [String: PluginFileState], fileManager: FileManager = .default, loadPlugin: (URL) -> Plugin) -> FilePluginSyncResult {
+func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], previousFileStates: [String: PluginFileState], discoveredFilePlugins: [URL]? = nil, fileManager: FileManager = .default, loadPlugin: (URL) -> Plugin) -> FilePluginSyncResult {
+    let discoveredFilePlugins = discoveredFilePlugins ?? freshFilePlugins
+
     // 1. Build fresh file state map from current disk contents
     let freshFileStates = Dictionary(uniqueKeysWithValues: freshFilePlugins.compactMap { fileURL in
         pluginFileState(for: fileURL, fileManager: fileManager).map { (fileURL.path, $0) }
@@ -77,7 +79,7 @@ func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], pre
 
     // 2. Find removed plugins (present in existing but absent from fresh list)
     let removedPlugins = existingFilePlugins.filter { plugin in
-        !freshFilePlugins.contains(where: { $0.path == plugin.file })
+        !discoveredFilePlugins.contains(where: { $0.path == plugin.file })
     }
 
     // 3. Find modified plugins (state on disk differs from previously recorded state)
@@ -106,6 +108,33 @@ func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], pre
         loadedPlugins: loadedPlugins,
         freshFileStates: freshFileStates
     )
+}
+
+func mergePluginsPreservingOrder(existingPlugins: [Plugin], removedPluginIDs: Set<PluginID>, reloadedFilePlugins: [Plugin], newShortcutPlugins: [ShortcutPlugin]) -> [Plugin] {
+    let reloadedPluginsByFile = Dictionary(uniqueKeysWithValues: reloadedFilePlugins.map { ($0.file, $0) })
+    let reloadedPluginFiles = Set(reloadedFilePlugins.map(\.file))
+    var consumedReloadedFiles = Set<String>()
+    var mergedPlugins: [Plugin] = []
+
+    // Only file-backed plugins (Executable/Streamable) are eligible for in-place replacement.
+    for plugin in existingPlugins where !removedPluginIDs.contains(plugin.id) {
+        guard (plugin.type == .Executable || plugin.type == .Streamable),
+              reloadedPluginFiles.contains(plugin.file),
+              let replacementPlugin = reloadedPluginsByFile[plugin.file]
+        else {
+            mergedPlugins.append(plugin)
+            continue
+        }
+
+        mergedPlugins.append(replacementPlugin)
+        consumedReloadedFiles.insert(plugin.file)
+    }
+
+    let appendedFilePlugins = reloadedFilePlugins.filter { !consumedReloadedFiles.contains($0.file) }
+    mergedPlugins.append(contentsOf: appendedFilePlugins)
+    mergedPlugins.append(contentsOf: newShortcutPlugins)
+
+    return mergedPlugins
 }
 
 class PluginManager: ObservableObject {
@@ -198,7 +227,12 @@ class PluginManager: ObservableObject {
         let enabledIDs = Set(enabledPlugins.map(\.id))
 
         for plugin in enabledPlugins {
-            guard menuBarItems[plugin.id] == nil else { continue }
+            if let existingMenuBarItem = menuBarItems[plugin.id] {
+                if existingMenuBarItem.plugin !== plugin {
+                    existingMenuBarItem.replacePlugin(plugin)
+                }
+                continue
+            }
             menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin, visibilityDidChange: { [weak self] _ in
                 self?.updateDefaultBarItemVisibility()
             })
@@ -373,7 +407,11 @@ class PluginManager: ObservableObject {
             }
         }
 
-        return uniqueFiles.filter { shouldLoadPluginFile(at: $0, makePluginExecutable: prefs.makePluginExecutable) }
+        return uniqueFiles
+    }
+
+    func getLoadablePluginList(from pluginCandidates: [URL]) -> [URL] {
+        pluginCandidates.filter { shouldLoadPluginFile(at: $0, makePluginExecutable: prefs.makePluginExecutable) }
     }
 
     func loadShortcutPlugins() -> [ShortcutPlugin] {
@@ -402,8 +440,9 @@ class PluginManager: ObservableObject {
             }
         #endif
         let freshShortcutPlugins = loadShortcutPlugins()
-        let freshFilePlugins = getPluginList()
-        guard freshFilePlugins.count < 50 else {
+        let discoveredFilePlugins = getPluginList()
+        let freshFilePlugins = getLoadablePluginList(from: discoveredFilePlugins)
+        guard discoveredFilePlugins.count < 50 else {
             let alert = NSAlert()
             alert.messageText = Localizable.App.FolderHasToManyFilesMessage.localized
             alert.runModal()
@@ -434,16 +473,30 @@ class PluginManager: ObservableObject {
             existingFilePlugins: filePlugins,
             freshFilePlugins: freshFilePlugins,
             previousFileStates: filePluginStates,
+            discoveredFilePlugins: discoveredFilePlugins,
             loadPlugin: loadPlugin(fileURL:)
         )
 
         let removedFilePlugins = filePlugins.filter { fileSyncResult.removedPluginIDs.contains($0.id) }
         let modifiedFilePlugins = filePlugins.filter { fileSyncResult.modifiedPluginIDs.contains($0.id) }
 
-        unloadPlugins(modifiedFilePlugins, clearDisabledState: false)
-        unloadPlugins(removedFilePlugins + removedShortcutPlugins, clearDisabledState: true)
+        for plugin in modifiedFilePlugins {
+            plugin.terminate()
+        }
 
-        plugins.append(contentsOf: fileSyncResult.loadedPlugins + newShortcutPlugins)
+        for plugin in removedFilePlugins + removedShortcutPlugins {
+            plugin.terminate()
+            menuBarItems.removeValue(forKey: plugin.id)
+            prefs.disabledPlugins.removeAll(where: { $0 == plugin.id })
+        }
+
+        let removedPluginIDs = fileSyncResult.removedPluginIDs.union(removedShortcutPlugins.map(\.id))
+        plugins = mergePluginsPreservingOrder(
+            existingPlugins: plugins,
+            removedPluginIDs: removedPluginIDs,
+            reloadedFilePlugins: fileSyncResult.loadedPlugins,
+            newShortcutPlugins: newShortcutPlugins
+        )
         filePluginStates = fileSyncResult.freshFileStates
     }
 

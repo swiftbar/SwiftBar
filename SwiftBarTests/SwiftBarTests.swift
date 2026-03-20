@@ -141,6 +141,20 @@ struct SwiftBarTests {
         #expect(parseUserShell(from: output) == nil)
     }
 
+    @Test func testStatusItemVisibilityKeys_preservesPreferredPositionKeys() async throws {
+        let keysToRemove = statusItemVisibilityKeys(in: [
+            "NSStatusItem Visible com.example.one": 0,
+            "NSStatusItem Visible com.example.two": 1,
+            "NSStatusItem Preferred Position com.example.one": 12,
+            "UnrelatedKey": true,
+        ])
+
+        #expect(keysToRemove == [
+            "NSStatusItem Visible com.example.one",
+            "NSStatusItem Visible com.example.two",
+        ])
+    }
+
     @Test func testBuildTerminalCommand_quotesMultiWordBashCArgument() async throws {
         let command = buildTerminalCommand(
             script: "bash",
@@ -582,6 +596,85 @@ struct SwiftBarIntegrationTests {
         #expect(syncResult.freshFileStates[fileURL.path] != initialState)
     }
 
+    @Test func testSyncFilePlugins_doesNotTreatTemporarilySkippedFileAsRemoved() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let fileURL = tempDirectory.appendingPathComponent("test.5s.sh")
+        try Data("#!/bin/zsh\necho one\n".utf8).write(to: fileURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o644], ofItemAtPath: fileURL.path)
+
+        let existingPlugin = TestPlugin(id: "disabled-plugin", file: fileURL.path, enabled: false, lastState: .Disabled)
+
+        let syncResult = syncFilePlugins(
+            existingFilePlugins: [existingPlugin],
+            freshFilePlugins: [],
+            previousFileStates: [:],
+            discoveredFilePlugins: [fileURL]
+        ) { fileURL in
+            TestPlugin(id: "reloaded-plugin", file: fileURL.path, content: "updated", lastState: .Success)
+        }
+
+        #expect(syncResult.removedPluginIDs.isEmpty)
+        #expect(syncResult.modifiedPluginIDs.isEmpty)
+        #expect(syncResult.loadedPlugins.isEmpty)
+    }
+
+    @Test func testMergePluginsPreservingOrder_replacesModifiedPluginsInPlace() async throws {
+        let firstPlugin = TestPlugin(id: "first", file: "/tmp/first.5s.sh")
+        let modifiedPlugin = TestPlugin(id: "modified", file: "/tmp/modified.5s.sh")
+        let thirdPlugin = TestPlugin(id: "third", file: "/tmp/third.5s.sh")
+        let replacementPlugin = TestPlugin(id: "modified", file: "/tmp/modified.5s.sh", content: "updated")
+
+        let mergedPlugins = mergePluginsPreservingOrder(
+            existingPlugins: [firstPlugin, modifiedPlugin, thirdPlugin],
+            removedPluginIDs: [],
+            reloadedFilePlugins: [replacementPlugin],
+            newShortcutPlugins: []
+        )
+
+        #expect(mergedPlugins.count == 3)
+        #expect(mergedPlugins[0] === firstPlugin)
+        #expect(mergedPlugins[1] === replacementPlugin)
+        #expect(mergedPlugins[2] === thirdPlugin)
+    }
+
+    @Test func testMergePluginsPreservingOrder_removesPluginInMiddleOfList() async throws {
+        let first = TestPlugin(id: "first", file: "/tmp/first.5s.sh")
+        let middle = TestPlugin(id: "middle", file: "/tmp/middle.5s.sh")
+        let last = TestPlugin(id: "last", file: "/tmp/last.5s.sh")
+
+        let merged = mergePluginsPreservingOrder(
+            existingPlugins: [first, middle, last],
+            removedPluginIDs: ["middle"],
+            reloadedFilePlugins: [],
+            newShortcutPlugins: []
+        )
+
+        #expect(merged.count == 2)
+        #expect(merged[0] === first)
+        #expect(merged[1] === last)
+    }
+
+    @Test func testMergePluginsPreservingOrder_appendsNewFilePluginAndShortcuts() async throws {
+        let existing = TestPlugin(id: "existing", file: "/tmp/existing.5s.sh")
+        let brandNew = TestPlugin(id: "brand-new", file: "/tmp/brand-new.5s.sh")
+        let shortcut = ShortcutPlugin(PersistentShortcutPlugin(id: "shortcut", name: "shortcut", shortcut: "test", repeatString: "", cronString: ""))
+
+        let merged = mergePluginsPreservingOrder(
+            existingPlugins: [existing],
+            removedPluginIDs: [],
+            reloadedFilePlugins: [brandNew],
+            newShortcutPlugins: [shortcut]
+        )
+
+        #expect(merged.count == 3)
+        #expect(merged[0] === existing)
+        #expect(merged[1] === brandNew)
+        #expect(merged[2] === shortcut)
+    }
+
     @Test func testUnloadPlugins_preservesDisabledStateForModifiedPlugins() async throws {
         let manager = PluginManager()
         let originalDisabledPlugins = manager.prefs.disabledPlugins
@@ -612,6 +705,28 @@ struct SwiftBarIntegrationTests {
         #expect(plugin.terminateCallCount == 1)
         #expect(manager.prefs.disabledPlugins.isEmpty)
         #expect(manager.plugins.isEmpty)
+    }
+
+    @MainActor @Test func testPluginsDidChange_reusesMenuBarItemForReloadedPluginWithSameID() async throws {
+        let manager = PluginManager()
+        defer {
+            manager.plugins.removeAll()
+            manager.menuBarItems.removeAll()
+            manager.directoryObserver = nil
+        }
+
+        let originalPlugin = TestPlugin(id: "reloaded-plugin", file: "/tmp/reloaded-plugin.5s.sh", content: "one")
+        let replacementPlugin = TestPlugin(id: "reloaded-plugin", file: "/tmp/reloaded-plugin.5s.sh", content: "two")
+
+        manager.plugins = [originalPlugin]
+
+        let originalMenuBarItem = try #require(manager.menuBarItems[originalPlugin.id])
+
+        manager.plugins = [replacementPlugin]
+
+        let updatedMenuBarItem = try #require(manager.menuBarItems[replacementPlugin.id])
+        #expect(updatedMenuBarItem === originalMenuBarItem)
+        #expect(updatedMenuBarItem.plugin === replacementPlugin)
     }
 }
 

@@ -97,43 +97,9 @@ class MenubarItem: NSObject {
             return
         }
         webPopover.delegate = self
-        self.plugin = plugin
-        // DO NOT set autosaveName - this causes visibility states to be incorrectly persisted
-        // when plugins have no output or fail to load, leading to disappearing menu items
-        // barItem.autosaveName = plugin?.id
+        barItem.autosaveName = plugin?.id
         statusBarMenu.delegate = self
-        if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
-            barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL])
-            barItem.button?.window?.registerForDraggedTypes(NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) })
-            barItem.button?.window?.delegate = self
-        }
-        updateMenu(content: plugin?.content)
-        contentUpdateCancellable = plugin?.contentUpdatePublisher
-            .receive(on: menuUpdateQueue)
-            .sink { [weak self] content in
-                guard self?.isOpen == false else {
-                    self?.refreshOnClose = true
-                    return
-                }
-                self?.disableTitleCycle()
-                self?.updateMenu(content: content)
-            }
-
-        // Start staleness check timer - check every 30 seconds
-        stalenessCheckCancellable = Timer.publish(every: 30, on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                guard let self,
-                      let plugin = self.plugin else { return }
-
-                // Refresh title if staleness status has changed
-                let wasStale = barItem.button?.attributedTitle.string.hasPrefix("⚠️") ?? false
-                let isNowStale = plugin.isStale
-
-                if wasStale != isNowStale {
-                    setMenuTitle(title: currentTitleLine)
-                }
-            }
+        replacePlugin(plugin)
     }
 
     deinit {
@@ -161,6 +127,60 @@ class MenubarItem: NSObject {
 
     func hide() {
         setVisibility(isVisible: false)
+    }
+
+    func replacePlugin(_ plugin: Plugin?) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let wasCyclingTitles = titleCycleCancellable != nil
+        contentUpdateCancellable?.cancel()
+        titleCycleCancellable?.cancel()
+        stalenessCheckCancellable?.cancel()
+        self.plugin = plugin
+        // Only update autosaveName when we have a plugin so that a nil plugin
+        // doesn't erase the saved menu bar position.
+        if let plugin {
+            barItem.autosaveName = plugin.id
+        }
+
+        if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
+            barItem.button?.window?.registerForDraggedTypes([NSPasteboard.PasteboardType.fileURL, NSPasteboard.PasteboardType.URL])
+            barItem.button?.window?.registerForDraggedTypes(NSFilePromiseReceiver.readableDraggedTypes.map { NSPasteboard.PasteboardType($0) })
+            barItem.button?.window?.delegate = self
+        } else {
+            barItem.button?.window?.unregisterDraggedTypes()
+        }
+
+        updateMenu(content: plugin?.content)
+        contentUpdateCancellable = plugin?.contentUpdatePublisher
+            .receive(on: menuUpdateQueue)
+            .sink { [weak self] content in
+                guard self?.isOpen == false else {
+                    self?.refreshOnClose = true
+                    return
+                }
+                self?.disableTitleCycle()
+                self?.updateMenu(content: content)
+            }
+
+        // Keep the existing status item and swap only the plugin bindings so menu bar position stays stable.
+        stalenessCheckCancellable = Timer.publish(every: 30, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                guard let self,
+                      let plugin = self.plugin else { return }
+
+                let wasStale = barItem.button?.attributedTitle.string.hasPrefix("⚠️") ?? false
+                let isNowStale = plugin.isStale
+
+                if wasStale != isNowStale {
+                    setMenuTitle(title: currentTitleLine)
+                }
+            }
+
+        // Restore title cycling if it was active before the replacement.
+        if wasCyclingTitles, titleLines.count > 1 {
+            enableTitleCycle()
+        }
     }
 
     private func setVisibility(isVisible: Bool) {

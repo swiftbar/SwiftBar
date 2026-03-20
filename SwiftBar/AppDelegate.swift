@@ -22,6 +22,10 @@ func parseUserShell(from output: String) -> String? {
     return nil
 }
 
+func statusItemVisibilityKeys(in defaults: [String: Any]) -> [String] {
+    defaults.keys.filter { $0.hasPrefix("NSStatusItem Visible") }.sorted()
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
     var repositoryWindowController: NSWindowController? {
         didSet {
@@ -253,14 +257,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         }
     }
     
+    /// Removes `NSStatusItem Visible` keys from UserDefaults on launch.
+    ///
+    /// MenubarItem sets `autosaveName` so macOS persists Preferred Position keys
+    /// (preserving the user's menu bar ordering). As a side effect, macOS also
+    /// creates `NSStatusItem Visible` keys which can incorrectly hide items
+    /// when plugins have no output or fail to load. We clear those keys at launch
+    /// while keeping Preferred Position keys intact.
     private func cleanupStatusItemVisibility() {
         let defaults = UserDefaults.standard
-        // Remove ALL NSStatusItem visibility keys to prevent any persistence issues
-        // These keys are automatically created by macOS when autosaveName is set
-        // We don't want SwiftBar menu items to persist their visibility state
-        let keysToRemove = defaults.dictionaryRepresentation().keys.filter { 
-            $0.hasPrefix("NSStatusItem Visible") || $0.hasPrefix("NSStatusItem Preferred Position")
-        }
+        // Clear visibility persistence while keeping Preferred Position keys so user ordering survives restarts.
+        let keysToRemove = statusItemVisibilityKeys(in: defaults.dictionaryRepresentation())
         
         for key in keysToRemove {
             defaults.removeObject(forKey: key)
