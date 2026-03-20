@@ -56,12 +56,13 @@ enum PluginMetadataOption: String, CaseIterable {
     case refreshOnOpen
     case persistentWebView
     case useTrailingStreamSeparator
+    case alwaysVisible
 
     var optionType: [PluginMetadataType] {
         switch self {
         case .title, .version, .author, .github, .desc, .about, .image, .dependencies:
             [.bitbar, .xbar]
-        case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar, .refreshOnOpen, .persistentWebView, .useTrailingStreamSeparator:
+        case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar, .refreshOnOpen, .persistentWebView, .useTrailingStreamSeparator, .alwaysVisible:
             [.swiftbar]
         }
     }
@@ -89,6 +90,7 @@ class PluginMetadata: ObservableObject {
     @Published var refreshOnOpen: Bool
     @Published var persistentWebView: Bool
     @Published var useTrailingStreamSeparator: Bool
+    @Published var alwaysVisible: Bool
     @Published var variables: [PluginVariable]
 
     var isEmpty: Bool {
@@ -108,7 +110,7 @@ class PluginMetadata: ObservableObject {
         return date == Date.distantFuture ? nil : date
     }
 
-    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:], runInBash: Bool = true, refreshOnOpen: Bool = false, persistentWebView: Bool = false, useTrailingStreamSeparator: Bool = false, variables: [PluginVariable] = []) {
+    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:], runInBash: Bool = true, refreshOnOpen: Bool = false, persistentWebView: Bool = false, useTrailingStreamSeparator: Bool = false, alwaysVisible: Bool = false, variables: [PluginVariable] = []) {
         self.name = name
         self.version = version
         self.author = author
@@ -130,6 +132,7 @@ class PluginMetadata: ObservableObject {
         self.refreshOnOpen = refreshOnOpen
         self.persistentWebView = persistentWebView
         self.useTrailingStreamSeparator = useTrailingStreamSeparator
+        self.alwaysVisible = alwaysVisible
         self.variables = variables
     }
 
@@ -299,6 +302,7 @@ class PluginMetadata: ObservableObject {
                               refreshOnOpen: getTagValue(tag: .refreshOnOpen) == "true" ? true : false,
                               persistentWebView: getTagValue(tag: .persistentWebView) == "true" ? true : false,
                               useTrailingStreamSeparator: getTagValue(tag: .useTrailingStreamSeparator) == "true" ? true : false,
+                              alwaysVisible: getTagValue(tag: .alwaysVisible) == "true",
                               variables: variables)
     }
 
@@ -375,6 +379,8 @@ class PluginMetadata: ObservableObject {
                 value = persistentWebView ? "true" : ""
             case .useTrailingStreamSeparator:
                 value = useTrailingStreamSeparator ? "true" : ""
+            case .alwaysVisible:
+                value = alwaysVisible ? "true" : ""
             }
             guard !value.isEmpty else { continue }
             let tag = option

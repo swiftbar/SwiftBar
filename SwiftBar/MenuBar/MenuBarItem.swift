@@ -556,7 +556,11 @@ extension MenubarItem {
         guard let scriptOutput = content,
               !scriptOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || plugin?.lastState == .Loading
         else {
-            hide()
+            if plugin?.metadata?.alwaysVisible == true {
+                buildStandardMenu()
+            } else {
+                hide()
+            }
             return
         }
 
