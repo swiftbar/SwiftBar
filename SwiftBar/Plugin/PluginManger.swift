@@ -5,6 +5,109 @@ import os
 import SwiftUI
 import UserNotifications
 
+struct PluginFileState: Equatable {
+    let size: UInt64
+    let modificationDate: Date?
+}
+
+enum PluginFileSkipReason: String {
+    case notRegularFile = "not a regular file"
+    case emptyFile = "empty file"
+    case notExecutable = "not executable while auto-make-executable is disabled"
+}
+
+func pluginFileState(for fileURL: URL, fileManager: FileManager = .default) -> PluginFileState? {
+    let resolvedFileURL = fileURL.resolvingSymlinksInPath()
+
+    guard let attributes = try? fileManager.attributesOfItem(atPath: resolvedFileURL.path),
+          let fileType = attributes[.type] as? FileAttributeType,
+          fileType == .typeRegular,
+          let fileSize = attributes[.size] as? NSNumber
+    else {
+        return nil
+    }
+
+    return PluginFileState(
+        size: fileSize.uint64Value,
+        modificationDate: attributes[.modificationDate] as? Date
+    )
+}
+
+func pluginFileSkipReason(for fileURL: URL, makePluginExecutable: Bool, fileManager: FileManager = .default) -> PluginFileSkipReason? {
+    guard let state = pluginFileState(for: fileURL, fileManager: fileManager) else {
+        return .notRegularFile
+    }
+
+    guard state.size > 0 else {
+        return .emptyFile
+    }
+
+    if !makePluginExecutable, !fileManager.isExecutableFile(atPath: fileURL.path) {
+        return .notExecutable
+    }
+
+    return nil
+}
+
+func shouldLoadPluginFile(at fileURL: URL, makePluginExecutable: Bool, fileManager: FileManager = .default) -> Bool {
+    if let skipReason = pluginFileSkipReason(for: fileURL, makePluginExecutable: makePluginExecutable, fileManager: fileManager) {
+        os_log("Skipping plugin candidate %{public}@ (%{public}@)", log: Log.plugin, type: .info, fileURL.path, skipReason.rawValue)
+        return false
+    }
+
+    return true
+}
+
+func shouldShowDefaultBarItem(hasVisiblePlugins: Bool, stealthMode: Bool) -> Bool {
+    !stealthMode && !hasVisiblePlugins
+}
+
+struct FilePluginSyncResult {
+    let removedPluginIDs: Set<PluginID>
+    let modifiedPluginIDs: Set<PluginID>
+    let loadedPlugins: [Plugin]
+    let freshFileStates: [String: PluginFileState]
+}
+
+func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], previousFileStates: [String: PluginFileState], fileManager: FileManager = .default, loadPlugin: (URL) -> Plugin) -> FilePluginSyncResult {
+    // 1. Build fresh file state map from current disk contents
+    let freshFileStates = Dictionary(uniqueKeysWithValues: freshFilePlugins.compactMap { fileURL in
+        pluginFileState(for: fileURL, fileManager: fileManager).map { (fileURL.path, $0) }
+    })
+
+    // 2. Find removed plugins (present in existing but absent from fresh list)
+    let removedPlugins = existingFilePlugins.filter { plugin in
+        !freshFilePlugins.contains(where: { $0.path == plugin.file })
+    }
+
+    // 3. Find modified plugins (state on disk differs from previously recorded state)
+    let modifiedPlugins = existingFilePlugins.filter { plugin in
+        guard let freshState = freshFileStates[plugin.file] else { return false }
+        return previousFileStates[plugin.file] != freshState
+    }
+
+    // 4. Determine which files need (re)loading: new files + modified files
+    let filesToLoad = Set(
+        freshFilePlugins
+            .filter { fileURL in
+                !existingFilePlugins.contains(where: { $0.file == fileURL.path }) ||
+                    modifiedPlugins.contains(where: { $0.file == fileURL.path })
+            }
+            .map(\.path)
+    )
+
+    let loadedPlugins = freshFilePlugins
+        .filter { filesToLoad.contains($0.path) }
+        .map(loadPlugin)
+
+    return FilePluginSyncResult(
+        removedPluginIDs: Set(removedPlugins.map(\.id)),
+        modifiedPluginIDs: Set(modifiedPlugins.map(\.id)),
+        loadedPlugins: loadedPlugins,
+        freshFileStates: freshFileStates
+    )
+}
+
 class PluginManager: ObservableObject {
     static let shared = PluginManager()
     let prefs = PreferencesStore.shared
@@ -23,6 +126,10 @@ class PluginManager: ObservableObject {
     }
 
     @Published var shortcutPlugins: [ShortcutPlugin] = []
+    var filePluginStates: [String: PluginFileState] = [:]
+    var directoryChangeWorkItem: DispatchWorkItem?
+    private var isUpdatingDefaultBarItemVisibility = false
+    private static let directoryChangeDebounceInterval: TimeInterval = 0.5
 
     var filePlugins: [Plugin] {
         plugins.filter { $0.type == .Streamable || $0.type == .Executable }
@@ -88,16 +195,39 @@ class PluginManager: ObservableObject {
 
     func pluginsDidChange() {
         os_log("Plugins did change, updating menu bar...", log: Log.plugin)
+        let enabledIDs = Set(enabledPlugins.map(\.id))
+
         for plugin in enabledPlugins {
             guard menuBarItems[plugin.id] == nil else { continue }
-            menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin)
+            menuBarItems[plugin.id] = MenubarItem(title: plugin.name, plugin: plugin, visibilityDidChange: { [weak self] _ in
+                self?.updateDefaultBarItemVisibility()
+            })
         }
         for pluginID in menuBarItems.keys {
-            guard !enabledPlugins.contains(where: { $0.id == pluginID }) else { continue }
+            guard !enabledIDs.contains(pluginID) else { continue }
             menuBarItems.removeValue(forKey: pluginID)
         }
 
-        enabledPlugins.isEmpty && !prefs.stealthMode ? barItem.show() : barItem.hide()
+        updateDefaultBarItemVisibility()
+    }
+
+    func updateDefaultBarItemVisibility() {
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { [weak self] in
+                self?.updateDefaultBarItemVisibility()
+            }
+            return
+        }
+
+        guard !isUpdatingDefaultBarItemVisibility else { return }
+        isUpdatingDefaultBarItemVisibility = true
+        defer { isUpdatingDefaultBarItemVisibility = false }
+
+        let hasVisiblePlugins = enabledPlugins.contains { plugin in
+            menuBarItems[plugin.id]?.barItem.isVisible == true
+        }
+
+        shouldShowDefaultBarItem(hasVisiblePlugins: hasVisiblePlugins, stealthMode: prefs.stealthMode) ? barItem.show() : barItem.hide()
     }
 
     func getPluginByNameOrID(identifier: String) -> Plugin? {
@@ -243,11 +373,26 @@ class PluginManager: ObservableObject {
             }
         }
 
-        return uniqueFiles
+        return uniqueFiles.filter { shouldLoadPluginFile(at: $0, makePluginExecutable: prefs.makePluginExecutable) }
     }
 
     func loadShortcutPlugins() -> [ShortcutPlugin] {
         prefs.shortcutsPlugins.map { ShortcutPlugin($0) }
+    }
+
+    func unloadPlugins(_ pluginsToUnload: [Plugin], clearDisabledState: Bool) {
+        let pluginIDs = Set(pluginsToUnload.map(\.id))
+
+        for plugin in pluginsToUnload {
+            plugin.terminate()
+            menuBarItems.removeValue(forKey: plugin.id)
+
+            if clearDisabledState {
+                prefs.disabledPlugins.removeAll(where: { $0 == plugin.id })
+            }
+        }
+
+        plugins.removeAll(where: { pluginIDs.contains($0.id) })
     }
 
     func loadPlugins() {
@@ -270,12 +415,11 @@ class PluginManager: ObservableObject {
             plugins.removeAll()
             shortcutPlugins.removeAll()
             menuBarItems.removeAll()
+            filePluginStates.removeAll()
+            // Preserve the original escape hatch: if everything is gone, show SwiftBar
+            // even in stealth mode so the user can recover.
             barItem.show()
             return
-        }
-
-        let newPluginsFiles = freshFilePlugins.filter { file in
-            !filePlugins.contains(where: { $0.file == file.path })
         }
 
         let newShortcutPlugins = freshShortcutPlugins.filter { plugin in
@@ -286,17 +430,21 @@ class PluginManager: ObservableObject {
             !freshShortcutPlugins.contains(where: { $0.id == plugin.id })
         }
 
-        let removedPlugins = filePlugins.filter { plugin in
-            !freshFilePlugins.contains(where: { $0.path == plugin.file })
-        }
+        let fileSyncResult = syncFilePlugins(
+            existingFilePlugins: filePlugins,
+            freshFilePlugins: freshFilePlugins,
+            previousFileStates: filePluginStates,
+            loadPlugin: loadPlugin(fileURL:)
+        )
 
-        for plugin in removedPlugins + removedShortcutPlugins {
-            menuBarItems.removeValue(forKey: plugin.id)
-            prefs.disabledPlugins.removeAll(where: { $0 == plugin.id })
-            plugins.removeAll(where: { $0.id == plugin.id })
-        }
+        let removedFilePlugins = filePlugins.filter { fileSyncResult.removedPluginIDs.contains($0.id) }
+        let modifiedFilePlugins = filePlugins.filter { fileSyncResult.modifiedPluginIDs.contains($0.id) }
 
-        plugins.append(contentsOf: newPluginsFiles.map { loadPlugin(fileURL: $0) } + newShortcutPlugins)
+        unloadPlugins(modifiedFilePlugins, clearDisabledState: false)
+        unloadPlugins(removedFilePlugins + removedShortcutPlugins, clearDisabledState: true)
+
+        plugins.append(contentsOf: fileSyncResult.loadedPlugins + newShortcutPlugins)
+        filePluginStates = fileSyncResult.freshFileStates
     }
 
     func loadPlugin(fileURL: URL) -> Plugin {
@@ -394,9 +542,14 @@ class PluginManager: ObservableObject {
     #endif
 
     func directoryChanged() {
-        DispatchQueue.main.async { [weak self] in
+        directoryChangeWorkItem?.cancel()
+
+        let workItem = DispatchWorkItem { [weak self] in
             self?.loadPlugins()
         }
+
+        directoryChangeWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.directoryChangeDebounceInterval, execute: workItem)
     }
 }
 

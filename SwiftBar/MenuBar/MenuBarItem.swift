@@ -13,6 +13,7 @@ class MenubarItem: NSObject {
     }
 
     var plugin: Plugin?
+    let visibilityDidChange: ((Bool) -> Void)?
 
     private lazy var workQueue: OperationQueue = {
         let providerQueue = OperationQueue()
@@ -85,7 +86,8 @@ class MenubarItem: NSObject {
 
     lazy var menuUpdateQueue: OperationQueue = delegate.pluginManager.menuUpdateQueue
 
-    init(title: String, plugin: Plugin? = nil) {
+    init(title: String, plugin: Plugin? = nil, visibilityDidChange: ((Bool) -> Void)? = nil) {
+        self.visibilityDidChange = visibilityDidChange
         super.init()
         barItem.button?.action = #selector(barItemClicked)
         barItem.button?.target = self
@@ -154,11 +156,20 @@ class MenubarItem: NSObject {
     }
 
     func show() {
-        barItem.isVisible = true
+        setVisibility(isVisible: true)
     }
 
     func hide() {
-        barItem.isVisible = false
+        setVisibility(isVisible: false)
+    }
+
+    private func setVisibility(isVisible: Bool) {
+        dispatchPrecondition(condition: .onQueue(.main))
+        let visibilityChanged = barItem.isVisible != isVisible
+        barItem.isVisible = isVisible
+
+        guard visibilityChanged else { return }
+        visibilityDidChange?(isVisible)
     }
 }
 
@@ -474,6 +485,8 @@ extension MenubarItem {
     static func defaultBarItem() -> MenubarItem {
         let item = MenubarItem(title: "SwiftBar")
         item.isDefault = true
+        // The fallback SwiftBar item intentionally has no visibility callback.
+        // PluginManager owns its visibility directly, which avoids callback recursion.
         // Ensure the default bar item is always visible
         item.barItem.isVisible = true
         return item

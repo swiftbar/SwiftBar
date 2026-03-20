@@ -4,7 +4,98 @@ import Testing
 
 @testable import SwiftBar
 
+final class TestPlugin: Plugin {
+    let id: PluginID
+    let type: PluginType = .Executable
+    let name: String
+    let file: String
+    let enabled: Bool
+    var metadata: PluginMetadata?
+    var contentUpdatePublisher = PassthroughSubject<String?, Never>()
+    var updateInterval: Double = 60
+    var lastUpdated: Date?
+    var lastState: PluginState
+    var lastRefreshReason: PluginRefreshReason = .FirstLaunch
+    var content: String?
+    var error: Error?
+    var debugInfo = PluginDebugInfo()
+    var refreshEnv: [String: String] = [:]
+    var terminateCallCount = 0
+
+    init(id: PluginID, file: String, content: String? = "...", enabled: Bool = true, lastState: PluginState = .Loading) {
+        self.id = id
+        self.name = id
+        self.file = file
+        self.content = content
+        self.enabled = enabled
+        self.lastState = lastState
+    }
+
+    func refresh(reason: PluginRefreshReason) {}
+    func enable() {}
+    func disable() {}
+    func start() {}
+    func terminate() {
+        terminateCallCount += 1
+    }
+    func invoke() -> String? { content }
+    func makeScriptExecutable(file: String) {}
+    func refreshPluginMetadata() {}
+    func writeStdin(_ input: String) throws {}
+}
+
 struct SwiftBarTests {
+    @Test func testShouldShowDefaultBarItem_whenNoVisiblePluginsAndNotInStealthMode() async throws {
+        #expect(shouldShowDefaultBarItem(hasVisiblePlugins: false, stealthMode: false))
+    }
+
+    @Test func testShouldShowDefaultBarItem_hidesFallbackWhenPluginIsVisible() async throws {
+        #expect(!shouldShowDefaultBarItem(hasVisiblePlugins: true, stealthMode: false))
+    }
+
+    @Test func testShouldShowDefaultBarItem_hidesFallbackInStealthMode() async throws {
+        #expect(!shouldShowDefaultBarItem(hasVisiblePlugins: false, stealthMode: true))
+    }
+
+    @Test func testShouldLoadPluginFile_skipsEmptyFiles() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let fileURL = tempDirectory.appendingPathComponent("empty.5s.sh")
+        FileManager.default.createFile(atPath: fileURL.path, contents: Data())
+
+        #expect(!shouldLoadPluginFile(at: fileURL, makePluginExecutable: true))
+    }
+
+    @Test func testShouldLoadPluginFile_requiresExecutableBitWhenAutoChmodIsDisabled() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let fileURL = tempDirectory.appendingPathComponent("test.5s.sh")
+        FileManager.default.createFile(atPath: fileURL.path, contents: Data("echo hi\n".utf8))
+
+        #expect(!shouldLoadPluginFile(at: fileURL, makePluginExecutable: false))
+        #expect(shouldLoadPluginFile(at: fileURL, makePluginExecutable: true))
+    }
+
+    @Test func testShouldLoadPluginFile_acceptsSymlinkedExecutableFiles() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let targetFileURL = tempDirectory.appendingPathComponent("target.5s.sh")
+        try Data("#!/bin/zsh\necho hi\n".utf8).write(to: targetFileURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: targetFileURL.path)
+
+        let symlinkURL = tempDirectory.appendingPathComponent("link.5s.sh")
+        try FileManager.default.createSymbolicLink(atPath: symlinkURL.path, withDestinationPath: targetFileURL.path)
+
+        #expect(pluginFileState(for: symlinkURL) != nil)
+        #expect(shouldLoadPluginFile(at: symlinkURL, makePluginExecutable: false))
+    }
+
     @Test func testMenuItemActionKinds_includeHrefAndRefreshTogether() async throws {
         let params = MenuLineParameters(line: "Test | href=https://example.com refresh=true")
 
@@ -411,6 +502,116 @@ struct SwiftBarTests {
 
         #expect(params6.params["param1"] == "text\\\\'s",
                 "Double escaped backslash with single quote should be preserved exactly")
+    }
+}
+
+@Suite(.serialized)
+struct SwiftBarIntegrationTests {
+    @Test func testPluginFileState_changesWhenFileContentChanges() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let fileURL = tempDirectory.appendingPathComponent("test.5s.sh")
+        FileManager.default.createFile(atPath: fileURL.path, contents: Data("echo hi\n".utf8))
+
+        let initialState = try #require(pluginFileState(for: fileURL))
+        try Data("echo hello world\n".utf8).write(to: fileURL)
+        let updatedState = try #require(pluginFileState(for: fileURL))
+
+        #expect(initialState != updatedState)
+    }
+
+    @MainActor @Test func testPluginItemHideCallbackRestoresDefaultBarItem() async throws {
+        let manager = PluginManager()
+        let originalStealthMode = manager.prefs.stealthMode
+        manager.prefs.stealthMode = false
+
+        defer {
+            manager.plugins.removeAll()
+            manager.menuBarItems.removeAll()
+            manager.directoryObserver = nil
+            manager.barItem.show()
+            manager.prefs.stealthMode = originalStealthMode
+        }
+
+        let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh")
+        manager.plugins = [plugin]
+
+        let pluginItem = try #require(manager.menuBarItems[plugin.id])
+        #expect(!manager.barItem.barItem.isVisible)
+
+        pluginItem.hide()
+
+        #expect(manager.barItem.barItem.isVisible)
+    }
+
+    @Test func testSyncFilePlugins_reloadsModifiedFilePlugin() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let fileURL = tempDirectory.appendingPathComponent("test.5s.sh")
+        try Data("#!/bin/zsh\necho one\n".utf8).write(to: fileURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fileURL.path)
+
+        let initialState = try #require(pluginFileState(for: fileURL))
+        let existingPlugin = TestPlugin(id: "original-plugin", file: fileURL.path, content: "one", lastState: .Success)
+
+        try Data("#!/bin/zsh\necho updated output that changes size\n".utf8).write(to: fileURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fileURL.path)
+
+        let syncResult = syncFilePlugins(
+            existingFilePlugins: [existingPlugin],
+            freshFilePlugins: [fileURL],
+            previousFileStates: [fileURL.path: initialState]
+        ) { fileURL in
+            TestPlugin(
+                id: "reloaded-plugin",
+                file: fileURL.path,
+                content: "updated",
+                lastState: .Success
+            )
+        }
+
+        let reloadedPlugin = try #require(syncResult.loadedPlugins.first)
+        #expect(syncResult.removedPluginIDs.isEmpty)
+        #expect(syncResult.modifiedPluginIDs == [existingPlugin.id])
+        #expect(syncResult.loadedPlugins.count == 1)
+        #expect(ObjectIdentifier(reloadedPlugin as AnyObject) != ObjectIdentifier(existingPlugin as AnyObject))
+        #expect(syncResult.freshFileStates[fileURL.path] != initialState)
+    }
+
+    @Test func testUnloadPlugins_preservesDisabledStateForModifiedPlugins() async throws {
+        let manager = PluginManager()
+        let originalDisabledPlugins = manager.prefs.disabledPlugins
+        defer { manager.prefs.disabledPlugins = originalDisabledPlugins }
+
+        let plugin = TestPlugin(id: "disabled-plugin", file: "/tmp/disabled-plugin.5s.sh", enabled: false, lastState: .Disabled)
+        manager.prefs.disabledPlugins = [plugin.id]
+        manager.plugins = [plugin]
+
+        manager.unloadPlugins([plugin], clearDisabledState: false)
+
+        #expect(plugin.terminateCallCount == 1)
+        #expect(manager.prefs.disabledPlugins == [plugin.id])
+        #expect(manager.plugins.isEmpty)
+    }
+
+    @Test func testUnloadPlugins_clearsDisabledStateForRemovedPlugins() async throws {
+        let manager = PluginManager()
+        let originalDisabledPlugins = manager.prefs.disabledPlugins
+        defer { manager.prefs.disabledPlugins = originalDisabledPlugins }
+
+        let plugin = TestPlugin(id: "removed-plugin", file: "/tmp/removed-plugin.5s.sh", enabled: false, lastState: .Disabled)
+        manager.prefs.disabledPlugins = [plugin.id]
+        manager.plugins = [plugin]
+
+        manager.unloadPlugins([plugin], clearDisabledState: true)
+
+        #expect(plugin.terminateCallCount == 1)
+        #expect(manager.prefs.disabledPlugins.isEmpty)
+        #expect(manager.plugins.isEmpty)
     }
 }
 
