@@ -121,7 +121,7 @@ struct RepositoryCategory: Codable {
 }
 
 struct RepositoryPlugin: Codable {
-    struct Plugin: Codable, Hashable {
+    struct Plugin: Codable, Hashable, Identifiable {
         struct Author: Codable, Hashable {
             let name: String
             let githubUsername: String?
@@ -142,6 +142,10 @@ struct RepositoryPlugin: Codable {
         let dependencies: [String]?
         var authors: [Author]
         let aboutURL: String
+
+        var id: String {
+            path
+        }
 
         var image: URL? {
             URL(string: imageURL)

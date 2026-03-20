@@ -37,10 +37,8 @@ struct PluginRepositoryView: View {
 
 struct CategoryDetailScrollView: View {
     let category: String
-    private let size: CGFloat = 150
     private let padding: CGFloat = 5
-    @State var pluginModalPresented = false
-    @State var index: Int = 0
+    @State private var selectedPlugin: RepositoryPlugin.Plugin?
 
     var body: some View {
         let plugins = PluginRepository.shared.getPlugins(for: category)
@@ -54,14 +52,10 @@ struct CategoryDetailScrollView: View {
                         PluginEntryView(pluginEntry: plugin)
                             .padding()
                             .shadow(radius: 5)
-                            .id(plugins.firstIndex(of: plugin))
+                            .contentShape(Rectangle())
                             .onTapGesture {
-                                pluginModalPresented = true
-                                index = plugins.firstIndex(of: plugin) ?? 0
+                                selectedPlugin = plugin
                             }
-                            .sheet(isPresented: $pluginModalPresented, content: {
-                                PluginEntryModalView(modalPresented: $pluginModalPresented, pluginEntry: plugins[index])
-                            })
                     }
                 }.padding(padding)
             } else {
@@ -69,26 +63,24 @@ struct CategoryDetailScrollView: View {
                     PluginEntryView(pluginEntry: plugin)
                         .padding()
                         .shadow(radius: 20)
-                        .id(plugins.firstIndex(of: plugin))
+                        .contentShape(Rectangle())
                         .onTapGesture {
-                            pluginModalPresented = true
-                            index = plugins.firstIndex(of: plugin) ?? 0
+                            selectedPlugin = plugin
                         }
-                        .sheet(isPresented: $pluginModalPresented, content: {
-                            PluginEntryModalView(modalPresented: $pluginModalPresented, pluginEntry: plugins[index])
-                        })
                 }
             }
-        }.frame(minWidth: 100, maxWidth: .infinity)
+        }
+        .frame(minWidth: 100, maxWidth: .infinity)
+        .sheet(item: $selectedPlugin) { plugin in
+            PluginEntryModalView(pluginEntry: plugin)
+        }
     }
 }
 
 struct SearchScrollView: View {
     @Binding var searchString: String
-    private let size: CGFloat = 150
     private let padding: CGFloat = 5
-    @State var pluginModalPresented = false
-    @State var index: Int = 0
+    @State private var selectedPlugin: RepositoryPlugin.Plugin?
 
     var body: some View {
         let plugins = PluginRepository.shared.searchPlugins(with: searchString)
@@ -106,17 +98,16 @@ struct SearchScrollView: View {
                             PluginEntryView(pluginEntry: plugin)
                                 .padding()
                                 .shadow(radius: 5)
-                                .id(plugins.firstIndex(of: plugin))
+                                .contentShape(Rectangle())
                                 .onTapGesture {
-                                    pluginModalPresented = true
-                                    index = plugins.firstIndex(of: plugin) ?? 0
+                                    selectedPlugin = plugin
                                 }
-                                .sheet(isPresented: $pluginModalPresented, content: {
-                                    PluginEntryModalView(modalPresented: $pluginModalPresented, pluginEntry: plugins[index])
-                                })
                         }
                     }.padding(padding)
                 }
+            }
+            .sheet(item: $selectedPlugin) { plugin in
+                PluginEntryModalView(pluginEntry: plugin)
             }
         }
     }

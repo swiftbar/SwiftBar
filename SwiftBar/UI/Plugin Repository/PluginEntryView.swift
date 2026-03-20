@@ -69,7 +69,8 @@ struct PluginEntryView: View {
 }
 
 struct PluginEntryModalView: View {
-    @Binding var modalPresented: Bool
+    @SwiftUI.Environment(\.presentationMode) private var presentationMode: Binding<PresentationMode>
+
     enum InstallStatus: String {
         case Install
         case Installed
@@ -133,12 +134,12 @@ struct PluginEntryModalView: View {
                                 .foregroundColor(.white)
                         }.frame(width: 20, height: 20)
                             .onTapGesture {
-                                modalPresented.toggle()
+                                presentationMode.wrappedValue.dismiss()
                             }
 
                     } else {
                         Button("Close", action: {
-                            modalPresented.toggle()
+                            presentationMode.wrappedValue.dismiss()
                         })
                     }
                 }
@@ -231,7 +232,7 @@ struct PluginEntryModalView: View {
 
 // struct PluginEntryView_Previews: PreviewProvider {
 //    static var previews: some View {
-//        PluginEntryModalView(modalPresented: .constant(true), pluginEntry: RepositoryEntry.PluginEntry(
+//        PluginEntryModalView(pluginEntry: RepositoryEntry.PluginEntry(
 //            title: "iTunes Lite",
 //            author: "Padraic Renaghan",
 //            github: "prenagha",
