@@ -789,8 +789,11 @@ extension MenubarItem {
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
         guard params.dropdown else { return nil }
 
+        // Assign action when color is set so macOS renders the item as enabled,
+        // allowing the custom color to display instead of the disabled grey.
+        let needsAction = params.hasAction || params.color != nil
         let item = NSMenuItem(title: params.title,
-                              action: params.hasAction ? #selector(perfomMenutItemAction) : nil,
+                              action: needsAction ? #selector(perfomMenutItemAction) : nil,
                               keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)

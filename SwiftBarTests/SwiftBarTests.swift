@@ -114,6 +114,22 @@ struct SwiftBarTests {
         #expect(MenubarItem.actionKinds(for: params) == [.refresh])
     }
 
+    @Test func testHasAction_falseWithNoActionParams() async throws {
+        let params = MenuLineParameters(line: "Status | color=red")
+        #expect(!params.hasAction)
+    }
+
+    @Test func testHasAction_trueWithRefresh() async throws {
+        let params = MenuLineParameters(line: "Status | color=red refresh=true")
+        #expect(params.hasAction)
+    }
+
+    @Test func testColorParam_parsedWithoutAction() async throws {
+        let params = MenuLineParameters(line: "Status | color=white")
+        #expect(params.color != nil)
+        #expect(!params.hasAction)
+    }
+
     @Test func testParseUserShell_extractsShellPath() async throws {
         let output = """
         GeneratedUID: ABCDEF-1234
