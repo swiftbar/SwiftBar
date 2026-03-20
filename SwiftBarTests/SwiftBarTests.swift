@@ -1375,3 +1375,290 @@ struct RefreshReasonContentSyncTests {
                 "MenuOpen should be in manualReasons so refreshOnOpen always triggers UI updates")
     }
 }
+
+// MARK: - MenuItemNode Tree Building Tests
+
+struct MenuItemNodeParsingTests {
+    @Test func testParseLine_topLevelSeparator() throws {
+        let result = MenuItemNode.parseLine("---")
+        #expect(result.level == 0)
+        #expect(result.isSeparator == true)
+        #expect(result.workingLine == "---")
+    }
+
+    @Test func testParseLine_plainItem() throws {
+        let result = MenuItemNode.parseLine("Hello World | color=red")
+        #expect(result.level == 0)
+        #expect(result.isSeparator == false)
+        #expect(result.workingLine == "Hello World | color=red")
+    }
+
+    @Test func testParseLine_nestedItem() throws {
+        let result = MenuItemNode.parseLine("--Sub Item | href=https://example.com")
+        #expect(result.level == 1)
+        #expect(result.isSeparator == false)
+        #expect(result.workingLine == "Sub Item | href=https://example.com")
+    }
+
+    @Test func testParseLine_deeplyNestedItem() throws {
+        let result = MenuItemNode.parseLine("----Deep Item")
+        #expect(result.level == 2)
+        #expect(result.isSeparator == false)
+        #expect(result.workingLine == "Deep Item")
+    }
+
+    @Test func testParseLine_nestedSeparator() throws {
+        // "-----" = two levels of "--" then "---"
+        let result = MenuItemNode.parseLine("-----")
+        #expect(result.level == 1)
+        #expect(result.isSeparator == true)
+        #expect(result.workingLine == "---")
+    }
+
+    @Test func testParseLine_tripleNestedSeparator() throws {
+        // "-------" = "--" + "--" + "---"
+        let result = MenuItemNode.parseLine("-------")
+        #expect(result.level == 2)
+        #expect(result.isSeparator == true)
+        #expect(result.workingLine == "---")
+    }
+}
+
+struct MenuItemNodeTreeBuildingTests {
+    @Test func testBuildMenuTree_emptyInput() throws {
+        let tree = MenuItemNode.buildMenuTree(from: [])
+        #expect(tree.isEmpty)
+    }
+
+    @Test func testBuildMenuTree_flatItems() throws {
+        let lines = ["---", "Item A", "Item B", "Item C"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 4)
+        #expect(tree[0].isSeparator == true)
+        #expect(tree[1].workingLine == "Item A")
+        #expect(tree[2].workingLine == "Item B")
+        #expect(tree[3].workingLine == "Item C")
+        #expect(tree.allSatisfy { $0.children.isEmpty })
+    }
+
+    @Test func testBuildMenuTree_singleLevelNesting() throws {
+        let lines = ["---", "Parent", "--Child 1", "--Child 2"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 2) // separator + parent
+        #expect(tree[1].workingLine == "Parent")
+        #expect(tree[1].children.count == 2)
+        #expect(tree[1].children[0].workingLine == "Child 1")
+        #expect(tree[1].children[1].workingLine == "Child 2")
+    }
+
+    @Test func testBuildMenuTree_multiLevelNesting() throws {
+        let lines = [
+            "---",
+            "Item A",
+            "--Sub A1",
+            "--Sub A2",
+            "----Deep A2a",
+            "--Sub A3",
+            "Item B",
+        ]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 3) // separator, Item A, Item B
+        #expect(tree[2].workingLine == "Item B")
+        #expect(tree[2].children.isEmpty)
+
+        let itemA = tree[1]
+        #expect(itemA.workingLine == "Item A")
+        #expect(itemA.children.count == 3) // Sub A1, Sub A2, Sub A3
+
+        let subA2 = itemA.children[1]
+        #expect(subA2.workingLine == "Sub A2")
+        #expect(subA2.children.count == 1)
+        #expect(subA2.children[0].workingLine == "Deep A2a")
+    }
+
+    @Test func testBuildMenuTree_nestedSeparator() throws {
+        let lines = ["---", "Parent", "--Child 1", "-----", "--Child 2"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        let parent = tree[1]
+        #expect(parent.children.count == 3)
+        #expect(parent.children[0].workingLine == "Child 1")
+        #expect(parent.children[1].isSeparator == true)
+        #expect(parent.children[1].level == 1)
+        #expect(parent.children[2].workingLine == "Child 2")
+    }
+
+    @Test func testBuildMenuTree_multipleSeparatorsAtRoot() throws {
+        let lines = ["---", "Section 1", "---", "Section 2"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 4)
+        #expect(tree[0].isSeparator == true)
+        #expect(tree[1].workingLine == "Section 1")
+        #expect(tree[2].isSeparator == true)
+        #expect(tree[3].workingLine == "Section 2")
+    }
+
+    @Test func testBuildMenuTree_levelJump() throws {
+        // Jump from level 0 to level 2 (skipping level 1)
+        // The level 2 item should become a child of the level 0 item,
+        // matching the original addMenuItem behavior.
+        let lines = ["---", "Item A", "----Deep"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 2) // separator, Item A
+        let itemA = tree[1]
+        #expect(itemA.children.count == 1)
+        #expect(itemA.children[0].workingLine == "Deep")
+        #expect(itemA.children[0].level == 2)
+    }
+
+    @Test func testBuildMenuTree_returnToShallowerAfterJump() throws {
+        // Level 0 → level 2 → level 1 should work correctly
+        let lines = ["---", "Item A", "----Deep", "--Normal Sub"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        let itemA = tree[1]
+        #expect(itemA.children.count == 2)
+        #expect(itemA.children[0].workingLine == "Deep")
+        #expect(itemA.children[0].level == 2)
+        #expect(itemA.children[1].workingLine == "Normal Sub")
+        #expect(itemA.children[1].level == 1)
+    }
+
+    @Test func testBuildMenuTree_preservesOriginalLine() throws {
+        let lines = ["--Sub Item | color=red"]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 1)
+        #expect(tree[0].line == "--Sub Item | color=red")
+        #expect(tree[0].workingLine == "Sub Item | color=red")
+    }
+}
+
+// MARK: - MenuDiff Tests
+
+struct MenuDiffTests {
+    // Helper to make a simple non-separator node
+    func node(_ line: String, children: [MenuItemNode] = []) -> MenuItemNode {
+        let (level, isSep, working) = MenuItemNode.parseLine(line)
+        return MenuItemNode(line: line, level: level, isSeparator: isSep, workingLine: working, children: children)
+    }
+
+    @Test func testDiff_identicalArrays() throws {
+        let items = [node("Item A"), node("Item B"), node("Item C")]
+        let changes = diffMenuNodes(old: items, new: items)
+
+        #expect(changes.count == 3)
+        #expect(changes[0] == .unchanged(oldIndex: 0, newIndex: 0))
+        #expect(changes[1] == .unchanged(oldIndex: 1, newIndex: 1))
+        #expect(changes[2] == .unchanged(oldIndex: 2, newIndex: 2))
+    }
+
+    @Test func testDiff_emptyArrays() throws {
+        let changes = diffMenuNodes(old: [], new: [])
+        #expect(changes.isEmpty)
+    }
+
+    @Test func testDiff_singleItemChanged() throws {
+        let old = [node("Item A"), node("Item B"), node("Item C")]
+        let new = [node("Item A"), node("Item B Changed"), node("Item C")]
+        let changes = diffMenuNodes(old: old, new: new)
+
+        #expect(changes.count == 3)
+        #expect(changes[0] == .unchanged(oldIndex: 0, newIndex: 0))
+        #expect(changes[1] == .update(oldIndex: 1, newIndex: 1))
+        #expect(changes[2] == .unchanged(oldIndex: 2, newIndex: 2))
+    }
+
+    @Test func testDiff_itemsAppended() throws {
+        let old = [node("Item A")]
+        let new = [node("Item A"), node("Item B"), node("Item C")]
+        let changes = diffMenuNodes(old: old, new: new)
+
+        #expect(changes.count == 3)
+        #expect(changes[0] == .unchanged(oldIndex: 0, newIndex: 0))
+        #expect(changes[1] == .insert(newIndex: 1))
+        #expect(changes[2] == .insert(newIndex: 2))
+    }
+
+    @Test func testDiff_itemsRemoved() throws {
+        let old = [node("Item A"), node("Item B"), node("Item C")]
+        let new = [node("Item A")]
+        let changes = diffMenuNodes(old: old, new: new)
+
+        #expect(changes.count == 3)
+        #expect(changes[0] == .unchanged(oldIndex: 0, newIndex: 0))
+        // Removals in reverse index order
+        #expect(changes[1] == .remove(oldIndex: 2))
+        #expect(changes[2] == .remove(oldIndex: 1))
+    }
+
+    @Test func testDiff_allChanged() throws {
+        let old = [node("Item A"), node("Item B")]
+        let new = [node("Item X"), node("Item Y")]
+        let changes = diffMenuNodes(old: old, new: new)
+
+        #expect(changes.count == 2)
+        #expect(changes[0] == .update(oldIndex: 0, newIndex: 0))
+        #expect(changes[1] == .update(oldIndex: 1, newIndex: 1))
+    }
+
+    @Test func testDiff_fromEmptyToFull() throws {
+        let new = [node("Item A"), node("Item B")]
+        let changes = diffMenuNodes(old: [], new: new)
+
+        #expect(changes.count == 2)
+        #expect(changes[0] == .insert(newIndex: 0))
+        #expect(changes[1] == .insert(newIndex: 1))
+    }
+
+    @Test func testDiff_fromFullToEmpty() throws {
+        let old = [node("Item A"), node("Item B")]
+        let changes = diffMenuNodes(old: old, new: [])
+
+        #expect(changes.count == 2)
+        // Reverse order
+        #expect(changes[0] == .remove(oldIndex: 1))
+        #expect(changes[1] == .remove(oldIndex: 0))
+    }
+
+    @Test func testDiff_childrenChangeTriggersUpdate() throws {
+        let oldChild = node("--Child A")
+        let newChild = node("--Child B")
+        let old = [node("Parent", children: [oldChild])]
+        let new = [node("Parent", children: [newChild])]
+        let changes = diffMenuNodes(old: old, new: new)
+
+        // Parent's deep equality fails because children differ
+        #expect(changes.count == 1)
+        #expect(changes[0] == .update(oldIndex: 0, newIndex: 0))
+    }
+
+    @Test func testDiff_contentEqualWithDifferentChildren() throws {
+        let oldChild = node("--Child A")
+        let newChild = node("--Child B")
+        let oldParent = node("Parent", children: [oldChild])
+        let newParent = node("Parent", children: [newChild])
+
+        // Deep equality: different (children differ)
+        #expect(oldParent != newParent)
+        // Content equality: same (own properties match)
+        #expect(oldParent.contentEqual(to: newParent))
+    }
+
+    @Test func testDiff_mixedInsertAndRemove() throws {
+        let old = [node("Item A"), node("Item B"), node("Item C")]
+        let new = [node("Item A"), node("Item B"), node("Item C"), node("Item D")]
+        let changes = diffMenuNodes(old: old, new: new)
+
+        #expect(changes.count == 4)
+        #expect(changes[0] == .unchanged(oldIndex: 0, newIndex: 0))
+        #expect(changes[1] == .unchanged(oldIndex: 1, newIndex: 1))
+        #expect(changes[2] == .unchanged(oldIndex: 2, newIndex: 2))
+        #expect(changes[3] == .insert(newIndex: 3))
+    }
+}

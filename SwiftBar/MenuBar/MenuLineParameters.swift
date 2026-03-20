@@ -15,7 +15,7 @@ extension Scanner {
     }
 }
 
-struct MenuLineParameters: Codable {
+struct MenuLineParameters: Codable, Equatable {
     let title: String
     var params: [String: String]
 
