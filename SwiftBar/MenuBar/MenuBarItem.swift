@@ -44,14 +44,7 @@ class MenubarItem: NSObject {
     var refreshOnClose = false
     var hotKeys: [HotKey] = []
     var hotkeyTrigger: Bool = false
-
-    /// Current menu tree for incremental diffing (body items only, no standard menu items).
-    private var currentMenuTree: [MenuItemNode] = []
-    /// Current header lines for title diffing.
-    private var currentHeaderLines: [String] = []
-    /// Number of plugin-owned items in statusBarMenu (title items + separator + body items).
-    /// Standard menu items (SwiftBar submenu, etc.) start after this index.
-    private var pluginItemCount: Int = 0
+    var showsAllStandardItemsWhileOpen = false
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
@@ -85,7 +78,7 @@ class MenubarItem: NSObject {
     var prevItems = [NSMenuItem]()
 
     var titleCylleTimerPubliser: Timer.TimerPublisher {
-        Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .common)
+        Timer.TimerPublisher(interval: titleCylleInterval, runLoop: .main, mode: .default)
     }
 
     var refreshOnOpen: Bool {
@@ -162,6 +155,10 @@ class MenubarItem: NSObject {
         contentUpdateCancellable = plugin?.contentUpdatePublisher
             .receive(on: menuUpdateQueue)
             .sink { [weak self] content in
+                guard self?.isOpen == false else {
+                    self?.refreshOnClose = true
+                    return
+                }
                 self?.disableTitleCycle()
                 self?.updateMenu(content: content)
             }
@@ -200,6 +197,7 @@ class MenubarItem: NSObject {
 extension MenubarItem: NSMenuDelegate {
     func menuWillOpen(_: NSMenu) {
         isOpen = true
+        showsAllStandardItemsWhileOpen = !hotkeyTrigger && (NSApp.currentEvent?.modifierFlags.contains(.option) ?? false)
 
         if #available(macOS 12, *) {
             // nothing todo here
@@ -210,38 +208,24 @@ extension MenubarItem: NSMenuDelegate {
             barItem.button?.attributedTitle = atributedTitle(with: params, pad: true).title
         }
 
-        hotKeys.forEach { $0.isPaused = true }
-        guard let lastUpdated = plugin?.lastUpdated else { return }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        let relativeDate = formatter.localizedString(for: lastUpdated, relativeTo: Date()).capitalized
-
-        // Add warning if plugin is stale
-        if let plugin, plugin.isStale {
-            lastUpdatedItem.title = "⚠️ \(Localizable.MenuBar.LastUpdated.localized) \(relativeDate) (Stale - expected update every \(formatInterval(plugin.updateInterval)))"
-        } else {
-            lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
-        }
-
-        if hotkeyTrigger == false {
-            guard NSApp.currentEvent?.modifierFlags.contains(.option) == false
-            else {
-                [lastUpdatedItem, runInTerminalItem, disablePluginItem, debugPluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
-                return
-            }
-        }
         hotkeyTrigger = false
-        lastUpdatedItem.isHidden = plugin?.metadata?.hideLastUpdated ?? false
-        runInTerminalItem.isHidden = plugin?.metadata?.hideRunInTerminal ?? false
-        disablePluginItem.isHidden = plugin?.metadata?.hideDisablePlugin ?? false
-        aboutItem.isHidden = plugin?.metadata?.hideAbout ?? false
-        swiftBarItem.isHidden = plugin?.metadata?.hideSwiftBar ?? false
+        reapplyOpenMenuStateIfNeeded()
     }
 
     func menuDidClose(_: NSMenu) {
         isOpen = false
+        showsAllStandardItemsWhileOpen = false
         setMenuTitle(title: currentTitleLine)
         hotKeys.forEach { $0.isPaused = false }
+
+        // if plugin was refreshed when menu was opened refresh on menu close
+        if refreshOnClose {
+            menuUpdateQueue.addOperation { [weak self] in
+                self?.refreshOnClose = false
+                self?.disableTitleCycle()
+                self?.updateMenu(content: self?.plugin?.content)
+            }
+        }
         // since we're handling click in barItemClicked we need to remove the menu
         barItem.menu = nil
     }
@@ -533,6 +517,7 @@ extension MenubarItem {
     }
 
     func _updateMenu(content: String?) {
+        dispatchPrecondition(condition: .onQueue(.main))
         barItem.button?.appearsDisabled = false
 
         if plugin?.lastState == .Failed {
@@ -559,7 +544,7 @@ extension MenubarItem {
 
         // Use incremental diff if we have a previous tree to compare against
         if !currentMenuTree.isEmpty {
-            incrementalUpdateMenu(header: parts.header, body: parts.body, newTree: newTree)
+            incrementalUpdateMenu(content: scriptOutput, header: parts.header, body: parts.body, newTree: newTree)
         } else {
             fullRebuildMenu(content: content)
         }
@@ -573,10 +558,10 @@ extension MenubarItem {
         prevItems.removeAll()
         prevLevel = 0
         resetWebPopoverContent()
-        currentMenuTree = []
-        currentHeaderLines = []
-        pluginItemCount = 0
         show()
+        defer {
+            reapplyOpenMenuStateIfNeeded()
+        }
 
         if plugin?.lastState == .Failed {
             titleLines = ["􀇾"]
@@ -588,83 +573,90 @@ extension MenubarItem {
         guard let scriptOutput = content,
               !scriptOutput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || plugin?.lastState == .Loading
         else {
-            buildStandardMenu()
+            if plugin?.metadata?.alwaysVisible == true {
+                buildStandardMenu()
+            } else {
+                hide()
+            }
             return
         }
 
         let parts = splitScriptOutput(scriptOutput: scriptOutput)
         titleLines = parts.header
-        currentHeaderLines = parts.header
         updateMenuTitle(titleLines: parts.header)
-        if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
-            addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
-                self?.hotkeyTrigger = true
-                self?.barItem.button?.performClick(nil)
-            }
-        }
 
-        var bodyItemCount = 0
         if !parts.body.isEmpty {
             statusBarMenu.addItem(NSMenuItem.separator())
-            bodyItemCount += 1
         }
 
+        // prevItems.append(statusBarMenu.items.last)
         for line in parts.body {
             addMenuItem(from: line)
-            bodyItemCount += 1
         }
 
-        // Track how many items belong to the plugin content (title items + separator + body)
+        // Track how many items belong to the plugin content.
+        // Includes title/header items + optional separator + body root-level items.
+        // Standard menu items (SwiftBar submenu, etc.) are appended after this point.
         pluginItemCount = statusBarMenu.items.count
         currentMenuTree = MenuItemNode.buildMenuTree(from: parts.body)
+        syncHotKeys()
         buildStandardMenu()
     }
 
     /// Incremental update: diffs old vs new tree and patches the live menu.
-    private func incrementalUpdateMenu(header: [String], body: [String], newTree: [MenuItemNode]) {
-        // Update title if header changed
-        if header != currentHeaderLines {
-            titleLines = header
-            currentHeaderLines = header
-            setMenuTitle(title: header.first ?? "􀇾")
+    /// This runs while the menu may be open, enabling live content updates
+    /// without waiting for the menu to close and rebuild.
+    private func incrementalUpdateMenu(content: String, header: [String], body: [String], newTree: [MenuItemNode]) {
+        dispatchPrecondition(condition: .onQueue(.main))
 
-            // Rebuild hotkeys for title
-            hotKeys.removeAll()
-            if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
-                addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
-                    self?.hotkeyTrigger = true
-                    self?.barItem.button?.performClick(nil)
-                }
-            }
+        if header != currentHeaderLines || body.isEmpty {
+            fullRebuildMenu(content: content)
+            return
+        }
+
+        // Calculate the base index in statusBarMenu where body items start.
+        // Layout: [title items...] [separator] [body items...] [standard items...]
+        let oldBodyCount = countMenuItems(in: currentMenuTree)
+        let bodyBaseIndex = pluginItemCount - oldBodyCount
+
+        // Validate index assumptions; fall back to full rebuild if out of sync.
+        guard bodyBaseIndex >= 0, bodyBaseIndex + oldBodyCount <= statusBarMenu.items.count else {
+            os_log("Incremental update index mismatch (base=%d, bodyCount=%d, menuCount=%d), falling back to full rebuild",
+                   log: Log.plugin, type: .error, bodyBaseIndex, oldBodyCount, statusBarMenu.items.count)
+            fullRebuildMenu(content: content)
+            return
         }
 
         // Diff body items and patch in-place
         let changes = diffMenuNodes(old: currentMenuTree, new: newTree)
-
-        // Calculate the base index in statusBarMenu where body items start.
-        // Layout: [title items...] [separator] [body items...] [standard items...]
-        // The body items produced by addMenuItem start after the title items + separator.
-        let bodyBaseIndex = pluginItemCount - countMenuItems(in: currentMenuTree)
-
         applyDiff(changes, oldTree: currentMenuTree, newTree: newTree, to: statusBarMenu, baseIndex: bodyBaseIndex)
 
         // Update tracking state
-        pluginItemCount = pluginItemCount - countMenuItems(in: currentMenuTree) + countMenuItems(in: newTree)
+        pluginItemCount = pluginItemCount - oldBodyCount + countMenuItems(in: newTree)
         currentMenuTree = newTree
-
-        // Update the "Last Updated" timestamp
-        updateLastUpdatedItem()
+        restoreTitleCycleIfNeeded()
+        syncHotKeys()
+        if isOpen {
+            reapplyOpenMenuStateIfNeeded()
+        } else {
+            updateLastUpdatedItem()
+        }
     }
 
-    /// Count the total number of NSMenuItems a tree produces (including nested submenu items
-    /// that are added to submenus, not the root menu — we only count root-level items).
+    /// Count the visible root-level NSMenuItems represented by the diff tree.
     private func countMenuItems(in nodes: [MenuItemNode]) -> Int {
         nodes.count
     }
 
     /// Apply a diff to a live NSMenu, patching items in-place.
     private func applyDiff(_ changes: [MenuItemChange], oldTree: [MenuItemNode], newTree: [MenuItemNode], to menu: NSMenu, baseIndex: Int) {
-        // Process removals first (they come in reverse order from diffMenuNodes)
+        applyRemovals(changes, to: menu, baseIndex: baseIndex)
+        applyUpdatesAndInserts(changes, oldTree: oldTree, newTree: newTree, to: menu, baseIndex: baseIndex)
+    }
+
+    /// Remove items from the menu. Removals arrive in reverse index order from
+    /// diffMenuNodes so that earlier indices are not invalidated.
+    private func applyRemovals(_ changes: [MenuItemChange], to menu: NSMenu, baseIndex: Int) {
         for change in changes {
             if case .remove(let oldIndex) = change {
                 let menuIndex = baseIndex + oldIndex
@@ -673,61 +665,64 @@ extension MenubarItem {
                 }
             }
         }
+    }
 
-        // Process updates and inserts (in forward order)
+    /// Process updates and inserts in forward order after removals are complete.
+    private func applyUpdatesAndInserts(_ changes: [MenuItemChange], oldTree: [MenuItemNode], newTree: [MenuItemNode], to menu: NSMenu, baseIndex: Int) {
         for change in changes {
             switch change {
-            case .unchanged(let oldIndex, _):
-                // Node content is the same, but check if children differ
-                // (deep equality already passed, so nothing to do)
+            case .unchanged:
                 break
 
             case .update(let oldIndex, let newIndex):
-                let menuIndex = baseIndex + newIndex
-                guard menuIndex < menu.items.count else { continue }
-                let existingItem = menu.items[menuIndex]
-                let oldNode = oldTree[oldIndex]
-                let newNode = newTree[newIndex]
-
-                if newNode.isSeparator {
-                    if !existingItem.isSeparatorItem {
-                        // Was a regular item, now a separator: replace
-                        menu.removeItem(at: menuIndex)
-                        menu.insertItem(NSMenuItem.separator(), at: menuIndex)
-                    }
-                } else if existingItem.isSeparatorItem {
-                    // Was a separator, now a regular item: replace
-                    menu.removeItem(at: menuIndex)
-                    if let newItem = buildMenuItem(params: MenuLineParameters(line: newNode.workingLine)) {
-                        newItem.target = self
-                        menu.insertItem(newItem, at: menuIndex)
-                        buildSubmenuItems(for: newItem, from: newNode)
-                    }
-                } else {
-                    // Both are regular items: patch properties
-                    if !oldNode.contentEqual(to: newNode) {
-                        patchMenuItem(existingItem, with: MenuLineParameters(line: newNode.workingLine))
-                    }
-                    // Recursively diff children (submenus)
-                    if oldNode.children != newNode.children {
-                        updateSubmenu(of: existingItem, oldChildren: oldNode.children, newChildren: newNode.children)
-                    }
-                }
+                applyUpdate(menu: menu, baseIndex: baseIndex, oldNode: oldTree[oldIndex], newNode: newTree[newIndex], newIndex: newIndex)
 
             case .insert(let newIndex):
-                let menuIndex = baseIndex + newIndex
-                let newNode = newTree[newIndex]
-                if newNode.isSeparator {
-                    menu.insertItem(NSMenuItem.separator(), at: min(menuIndex, menu.items.count))
-                } else if let newItem = buildMenuItem(params: MenuLineParameters(line: newNode.workingLine)) {
-                    newItem.target = self
-                    menu.insertItem(newItem, at: min(menuIndex, menu.items.count))
-                    buildSubmenuItems(for: newItem, from: newNode)
-                }
+                applyInsert(menu: menu, baseIndex: baseIndex, newNode: newTree[newIndex], newIndex: newIndex)
 
             case .remove:
-                break // Already handled above
+                break // Already handled in applyRemovals
             }
+        }
+    }
+
+    /// Update a single existing menu item to match a new node.
+    private func applyUpdate(menu: NSMenu, baseIndex: Int, oldNode: MenuItemNode, newNode: MenuItemNode, newIndex: Int) {
+        let menuIndex = baseIndex + newIndex
+        guard menuIndex < menu.items.count else { return }
+        let existingItem = menu.items[menuIndex]
+
+        if newNode.isSeparator {
+            if !existingItem.isSeparatorItem {
+                menu.removeItem(at: menuIndex)
+                menu.insertItem(NSMenuItem.separator(), at: menuIndex)
+            }
+        } else if existingItem.isSeparatorItem {
+            menu.removeItem(at: menuIndex)
+            if let newItem = buildMenuItem(params: MenuLineParameters(line: newNode.workingLine)) {
+                newItem.target = self
+                menu.insertItem(newItem, at: menuIndex)
+                buildSubmenuItems(for: newItem, from: newNode)
+            }
+        } else {
+            if !oldNode.contentEqual(to: newNode) {
+                patchMenuItem(existingItem, with: MenuLineParameters(line: newNode.workingLine))
+            }
+            if oldNode.children != newNode.children {
+                updateSubmenu(of: existingItem, oldChildren: oldNode.children, newChildren: newNode.children)
+            }
+        }
+    }
+
+    /// Insert a new menu item for a node that did not exist in the old tree.
+    private func applyInsert(menu: NSMenu, baseIndex: Int, newNode: MenuItemNode, newIndex: Int) {
+        let menuIndex = baseIndex + newIndex
+        if newNode.isSeparator {
+            menu.insertItem(NSMenuItem.separator(), at: min(menuIndex, menu.items.count))
+        } else if let newItem = buildMenuItem(params: MenuLineParameters(line: newNode.workingLine)) {
+            newItem.target = self
+            menu.insertItem(newItem, at: min(menuIndex, menu.items.count))
+            buildSubmenuItems(for: newItem, from: newNode)
         }
     }
 
@@ -746,15 +741,85 @@ extension MenubarItem {
         }
 
         item.isAlternate = params.alternate
-        if params.alternate {
-            item.keyEquivalentModifierMask = NSEvent.ModifierFlags.option
-        }
 
         item.image = params.image
         item.state = params.checked ? .on : .off
 
         if #available(macOS 14.0, *) {
             item.badge = params.badge.isEmpty ? nil : NSMenuItemBadge(string: params.badge)
+        }
+    }
+
+    private func syncHotKeys() {
+        hotKeys.removeAll()
+
+        if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
+            addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
+                self?.hotkeyTrigger = true
+                self?.barItem.button?.performClick(nil)
+            }
+        }
+
+        for item in statusBarMenu.items.prefix(pluginItemCount) {
+            syncHotKeys(for: item)
+        }
+    }
+
+    private func syncHotKeys(for item: NSMenuItem) {
+        if let params = item.representedObject as? MenuLineParameters {
+            applyShortcut(for: item, params: params)
+
+            if let kc = params.shortcut {
+                addShortcut(shortcut: HotKey(keyCombo: kc)) {
+                    guard let action = item.action else { return }
+                    NSApp.sendAction(action, to: item.target, from: item)
+                }
+            }
+        } else {
+            item.keyEquivalent = ""
+            item.keyEquivalentModifierMask = []
+        }
+
+        item.submenu?.items.forEach { syncHotKeys(for: $0) }
+    }
+
+    private func restoreTitleCycleIfNeeded() {
+        guard titleLines.count > 1 else { return }
+        enableTitleCycle()
+    }
+
+    private func reapplyOpenMenuStateIfNeeded() {
+        guard isOpen else { return }
+        hotKeys.forEach { $0.isPaused = true }
+        updateOpenMenuItemVisibility()
+    }
+
+    private func updateOpenMenuItemVisibility() {
+        updateLastUpdatedItem()
+
+        if showsAllStandardItemsWhileOpen {
+            [lastUpdatedItem, runInTerminalItem, disablePluginItem, debugPluginItem, aboutItem, swiftBarItem].forEach { $0.isHidden = false }
+            return
+        }
+
+        lastUpdatedItem.isHidden = plugin?.metadata?.hideLastUpdated ?? false
+        runInTerminalItem.isHidden = plugin?.metadata?.hideRunInTerminal ?? false
+        disablePluginItem.isHidden = plugin?.metadata?.hideDisablePlugin ?? false
+        aboutItem.isHidden = plugin?.metadata?.hideAbout ?? false
+        swiftBarItem.isHidden = plugin?.metadata?.hideSwiftBar ?? false
+    }
+
+    private func applyShortcut(for item: NSMenuItem, params: MenuLineParameters) {
+        item.keyEquivalent = ""
+        item.keyEquivalentModifierMask = []
+
+        if params.alternate {
+            item.keyEquivalentModifierMask = NSEvent.ModifierFlags.option
+        }
+
+        if let kc = params.shortcut {
+            item.keyEquivalentModifierMask = kc.modifiers
+            item.keyEquivalent = kc.key?.description.lowercased() ?? ""
         }
     }
 
@@ -804,23 +869,15 @@ extension MenubarItem {
             lastUpdatedItem.title = "\(Localizable.MenuBar.LastUpdated.localized) \(relativeDate)"
         }
     }
-
     func addMenuItem(from line: String) {
-        if line == "---" {
+        let (currentLevel, isSeparator, workingLine) = MenuItemNode.parseLine(line)
+
+        if isSeparator, currentLevel == 0 {
             statusBarMenu.addItem(NSMenuItem.separator())
             return
         }
-        var workingLine = line
-        var submenu: NSMenu?
-        var currentLevel = 0
 
-        while workingLine.hasPrefix("--") {
-            workingLine = String(workingLine.dropFirst(2))
-            currentLevel += 1
-            if workingLine == "---" {
-                break
-            }
-        }
+        var submenu: NSMenu?
 
         if prevLevel >= currentLevel, prevItems.count > 0 {
             var cnt = prevLevel - currentLevel
@@ -839,21 +896,12 @@ extension MenubarItem {
             submenu = item?.submenu
         }
 
-        if let item = workingLine == "---" ? NSMenuItem.separator() : buildMenuItem(params: MenuLineParameters(line: workingLine)) {
+        if let item = isSeparator ? NSMenuItem.separator() : buildMenuItem(params: MenuLineParameters(line: workingLine)) {
             item.target = self
             (submenu ?? statusBarMenu)?.addItem(item)
             lastMenuItem = item
             prevLevel = currentLevel
             prevItems.insert(item, at: 0)
-
-            if let kc = MenuLineParameters(line: line).shortcut {
-                item.keyEquivalentModifierMask = kc.modifiers
-                item.keyEquivalent = kc.key?.description.lowercased() ?? ""
-                addShortcut(shortcut: HotKey(keyCombo: kc)) {
-                    guard let action = item.action else { return }
-                    NSApp.sendAction(action, to: item.target, from: item)
-                }
-            }
         }
     }
 

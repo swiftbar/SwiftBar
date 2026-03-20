@@ -1376,6 +1376,197 @@ struct RefreshReasonContentSyncTests {
     }
 }
 
+struct MenubarItemIncrementalUpdateTests {
+    @MainActor
+    private func makeMenuBarItem() -> MenubarItem {
+        let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh", content: nil, lastState: .Success)
+        let item = MenubarItem(title: "Test")
+        item.plugin = plugin
+        item.statusBarMenu.delegate = item
+        return item
+    }
+
+    @MainActor
+    private func menuLabels(for item: MenubarItem) -> [String] {
+        item.statusBarMenu.items.map { menuItem in
+            menuItem.isSeparatorItem ? "<separator>" : (menuItem.attributedTitle?.string ?? menuItem.title)
+        }
+    }
+
+    @MainActor @Test func testIncrementalUpdate_excludesHiddenBodyRowsFromMenuDiff() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        Hidden | dropdown=false
+        Visible B
+        """)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        Hidden Changed | dropdown=false
+        Visible B Updated
+        """)
+
+        #expect(Array(menuLabels(for: item).prefix(4)) == [
+            "<separator>",
+            "<separator>",
+            "Visible A",
+            "Visible B Updated",
+        ])
+    }
+
+    @MainActor @Test func testIncrementalUpdate_rebuildsWhenBodyDisappearsToRemoveExtraSeparator() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        """)
+
+        item._updateMenu(content: "Title")
+
+        #expect(item.statusBarMenu.items[0].isSeparatorItem)
+        #expect(!item.statusBarMenu.items[1].isSeparatorItem)
+        #expect(item.statusBarMenu.items[1].title == item.swiftBarItem.title)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_rebuildsHeaderMenuRowsWhenHeaderChanges() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Header A
+        Header B
+        ---
+        Body
+        """)
+
+        item._updateMenu(content: """
+        Renamed Header
+        ---
+        Body
+        """)
+
+        let labels = menuLabels(for: item)
+
+        #expect(!labels.contains("Header A"))
+        #expect(!labels.contains("Header B"))
+        #expect(Array(labels.prefix(3)) == [
+            "<separator>",
+            "<separator>",
+            "Body",
+        ])
+    }
+
+    @MainActor @Test func testIncrementalUpdate_reenablesTitleCycleWhenHeaderIsUnchanged() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Header A
+        Header B
+        ---
+        Body
+        """)
+
+        let initialTitleCycle = try #require(item.titleCycleCancellable)
+        item.disableTitleCycle()
+
+        item._updateMenu(content: """
+        Header A
+        Header B
+        ---
+        Body Updated
+        """)
+
+        let updatedTitleCycle = try #require(item.titleCycleCancellable)
+        #expect(ObjectIdentifier(initialTitleCycle) != ObjectIdentifier(updatedTitleCycle))
+    }
+
+    @MainActor @Test func testIncrementalUpdate_restoresBodyShortcuts() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A | refresh=true
+        """)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A | refresh=true shortcut=cmd+b
+        """)
+
+        let bodyItem = item.statusBarMenu.items[2]
+        #expect(bodyItem.keyEquivalent == "b")
+        #expect(bodyItem.keyEquivalentModifierMask.contains(.command))
+        #expect(item.hotKeys.count == 1)
+    }
+
+    @MainActor @Test func testFullRebuildWhileMenuIsOpen_reappliesHiddenStandardItems() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(
+            hideRunInTerminal: true,
+            hideLastUpdated: true,
+            hideDisablePlugin: true,
+            hideSwiftBar: true
+        )
+        item.plugin?.lastUpdated = Date()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        """)
+
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(item.lastUpdatedItem.isHidden)
+        #expect(item.runInTerminalItem.isHidden)
+        #expect(item.disablePluginItem.isHidden)
+        #expect(item.swiftBarItem.isHidden)
+
+        item._updateMenu(content: """
+        Renamed Title
+        ---
+        Visible A
+        """)
+
+        #expect(item.lastUpdatedItem.isHidden)
+        #expect(item.runInTerminalItem.isHidden)
+        #expect(item.disablePluginItem.isHidden)
+        #expect(item.swiftBarItem.isHidden)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_keepsRegeneratedHotKeysPausedWhileMenuIsOpen() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A | refresh=true shortcut=cmd+b
+        """)
+
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A Updated | refresh=true shortcut=cmd+b
+        """)
+
+        #expect(item.hotKeys.count == 1)
+        #expect(item.hotKeys.allSatisfy { $0.isPaused })
+    }
+}
+
 // MARK: - MenuItemNode Tree Building Tests
 
 struct MenuItemNodeParsingTests {
@@ -1536,6 +1727,38 @@ struct MenuItemNodeTreeBuildingTests {
         #expect(tree.count == 1)
         #expect(tree[0].line == "--Sub Item | color=red")
         #expect(tree[0].workingLine == "Sub Item | color=red")
+    }
+
+    @Test func testBuildMenuTree_excludesHiddenRowsAndKeepsFollowingVisibleItemsAligned() throws {
+        let lines = [
+            "---",
+            "Visible A",
+            "Hidden | dropdown=false",
+            "Visible B",
+        ]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        #expect(tree.count == 3)
+        #expect(tree[0].isSeparator == true)
+        #expect(tree[1].workingLine == "Visible A")
+        #expect(tree[2].workingLine == "Visible B")
+    }
+
+    @Test func testBuildMenuTree_skipsHiddenParentsWithoutBreakingVisibleChildren() throws {
+        let lines = [
+            "---",
+            "Parent",
+            "--Hidden Parent | dropdown=false",
+            "----Visible Grandchild",
+            "--Visible Child",
+        ]
+        let tree = MenuItemNode.buildMenuTree(from: lines)
+
+        let parent = tree[1]
+        #expect(parent.children.count == 2)
+        #expect(parent.children[0].workingLine == "Visible Grandchild")
+        #expect(parent.children[0].level == 2)
+        #expect(parent.children[1].workingLine == "Visible Child")
     }
 }
 

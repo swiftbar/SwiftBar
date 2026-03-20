@@ -21,7 +21,8 @@ struct MenuItemNode: Equatable {
 
 extension MenuItemNode {
     /// Parse a raw plugin output line into its level, separator status, and stripped content.
-    /// Replicates the `--` prefix counting logic from `MenuBarItem.addMenuItem(from:)`.
+    /// This is the single source of truth for `--` prefix counting, used by both
+    /// tree building and `MenuBarItem.addMenuItem(from:)`.
     static func parseLine(_ line: String) -> (level: Int, isSeparator: Bool, workingLine: String) {
         if line == "---" {
             return (level: 0, isSeparator: true, workingLine: "---")
@@ -60,6 +61,9 @@ extension MenuItemNode {
 
         for line in bodyLines {
             let (level, isSeparator, workingLine) = parseLine(line)
+            if !isSeparator, !MenuLineParameters(line: workingLine).dropdown {
+                continue
+            }
             let node = NodeBuilder(line: line, level: level, isSeparator: isSeparator, workingLine: workingLine)
 
             // Pop entries at or above current level to find the parent.

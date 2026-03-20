@@ -41,8 +41,10 @@ func diffMenuNodes(old: [MenuItemNode], new: [MenuItemNode]) -> [MenuItemChange]
     }
 
     // Reverse order so removing by index doesn't shift later indices
-    for i in stride(from: old.count - 1, through: minCount, by: -1) {
-        changes.append(.remove(oldIndex: i))
+    if old.count > minCount {
+        for i in stride(from: old.count - 1, through: minCount, by: -1) {
+            changes.append(.remove(oldIndex: i))
+        }
     }
 
     return changes
