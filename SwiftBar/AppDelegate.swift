@@ -35,7 +35,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     lazy var preferencesWindowController = PreferencesWindowController(
         panes: preferencePanes,
-        style: .toolbarItems
+        style: .toolbarItems,
+        animated: false
     )
 
     var repositoryToolbarSearchItem: NSToolbarItem?

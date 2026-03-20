@@ -44,7 +44,7 @@ class ExecutablePlugin: Plugin {
     lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
 
     var updateTimerPublisher: Timer.TimerPublisher {
-        Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .default)
+        Timer.TimerPublisher(interval: updateInterval, runLoop: .main, mode: .common)
     }
 
     var cronTimer: Timer?

@@ -1,26 +1,37 @@
-import Preferences
 import SwiftUI
 
 struct AdvancedPreferencesView: View {
     @EnvironmentObject var preferences: PreferencesStore
-    @State private var launchAtLogin = true
 
     var body: some View {
-        Preferences.Container(contentWidth: 350) {
-            Preferences.Section(title: "\(Localizable.Preferences.Terminal.localized):", verticalAlignment: .top) {
-                EnumPicker(selected: $preferences.terminal, title: "")
-                    .frame(width: 120.0)
+        VStack(alignment: .leading, spacing: 14) {
+            SettingsPaneSection {
+                SettingsPaneRow(title: Localizable.Preferences.Terminal.localized) {
+                    EnumPicker(selected: $preferences.terminal, title: "")
+                        .frame(width: 140)
+                }
+
+                SettingsPaneRow(title: Localizable.Preferences.Shell.localized) {
+                    EnumPicker(selected: $preferences.shell, title: "")
+                        .frame(width: 140)
+                }
             }
-            Preferences.Section(title: "\(Localizable.Preferences.Shell.localized):", bottomDivider: true) {
-                EnumPicker(selected: $preferences.shell, title: "")
-                    .frame(width: 120.0)
-            }
-            Preferences.Section(title: "\(Localizable.Preferences.HideSwiftBarIcon.localized):", verticalAlignment: .top) {
-                Toggle("", isOn: $preferences.swiftBarIconIsHidden)
-            }
-            Preferences.Section(title: "\(Localizable.Preferences.StealthMode.localized):", verticalAlignment: .top) {
-                Toggle("", isOn: $preferences.stealthMode)
+
+            SettingsPaneSection {
+                SettingsPaneRow(title: "") {
+                    Toggle("", isOn: $preferences.swiftBarIconIsHidden)
+                        .labelsHidden()
+                    Text(Localizable.Preferences.HideSwiftBarIcon.localized)
+                }
+
+                SettingsPaneRow(title: "") {
+                    Toggle("", isOn: $preferences.stealthMode)
+                        .labelsHidden()
+                    Text(Localizable.Preferences.StealthMode.localized)
+                }
             }
         }
+        .padding(18)
+        .frame(width: 500, alignment: .topLeading)
     }
 }

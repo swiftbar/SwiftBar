@@ -95,6 +95,7 @@ class StreamablePlugin: Plugin {
     @discardableResult func invoke() -> String? {
         lastUpdated = Date()
         do {
+            stdinPipe = Pipe()
             procces = Process()
             guard let procces else { return nil }
 
