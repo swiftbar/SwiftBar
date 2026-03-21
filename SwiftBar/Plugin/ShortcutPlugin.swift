@@ -38,7 +38,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     }
     
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
-    var updateInterval: Double = 60 * 60 * 24 * 100
+    var updateInterval: Double = pluginNeverUpdateInterval
     var lastUpdated: Date?
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch

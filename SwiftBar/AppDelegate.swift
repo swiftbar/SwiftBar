@@ -37,7 +37,7 @@ func shouldImportOpenedPluginFile(at url: URL, makePluginExecutable: Bool, fileM
     }
 
     if isDirectory.boolValue {
-        return url.lastPathComponent.hasSuffix(".swiftbar") && PackagedPlugin.findMainExecutable(in: url) != nil
+        return url.isSwiftBarPackage && PackagedPlugin.findMainExecutable(in: url) != nil
     }
 
     return shouldLoadPluginFile(at: url, makePluginExecutable: makePluginExecutable, fileManager: fileManager)

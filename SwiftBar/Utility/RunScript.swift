@@ -29,6 +29,10 @@ func buildTerminalCommand(script: String, args: [String] = [], env: [String: Str
     return "\(getEnvExportString(env: env)); \(command)"
 }
 
+/// Launches a script and returns its stdout/stderr output.
+///
+/// - Parameter workingDirectory: If non-nil, sets `Process.currentDirectoryURL`
+///   so the script runs with this as its working directory (used by packaged plugins).
 @discardableResult func runScript(to command: String,
                                   args: [String] = [],
                                   process: Process = Process(),

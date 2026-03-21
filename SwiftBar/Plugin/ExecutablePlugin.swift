@@ -9,7 +9,7 @@ class ExecutablePlugin: TimerArmingPlugin {
     let file: String
     var refreshEnv: [String: String] = [:]
 
-    var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never", for NOT timed scripts
+    var updateInterval: Double = pluginNeverUpdateInterval
     private var _metadata: PluginMetadata?
     private let metadataQueue = DispatchQueue(label: "com.ameba.SwiftBar.ExecutablePlugin.metadata", attributes: .concurrent)
     
@@ -121,7 +121,7 @@ class ExecutablePlugin: TimerArmingPlugin {
                 // For cron-scheduled plugins, calculate next date and set timer
                 refreshPluginMetadata()
                 enableTimer()
-            } else if updateInterval > 0, updateInterval < 60 * 60 * 24 * 100 {
+            } else if updateInterval > 0, updateInterval < pluginNeverUpdateInterval {
                 // For interval-based plugins (excluding "never" plugins), check if the scheduled time has passed
                 if let lastUpdated {
                     let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)

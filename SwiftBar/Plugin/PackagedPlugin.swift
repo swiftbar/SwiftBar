@@ -11,7 +11,7 @@ class PackagedPlugin: TimerArmingPlugin {
     var file: String
     let packageDirectory: URL
     let mainExecutable: URL
-    var updateInterval: Double = 60 * 60 * 24 * 100 // defaults to "never"
+    var updateInterval: Double = pluginNeverUpdateInterval
     var refreshEnv: [String: String] = [:]
 
     private var _metadata: PluginMetadata?
@@ -60,7 +60,7 @@ class PackagedPlugin: TimerArmingPlugin {
 
     /// Initialize with a `.swiftbar` directory URL.
     init?(packageDirectory: URL) {
-        guard packageDirectory.lastPathComponent.hasSuffix(".swiftbar") else {
+        guard packageDirectory.isSwiftBarPackage else {
             os_log("Directory %{public}@ is not a valid packaged plugin (must end with .swiftbar)",
                    log: Log.plugin, type: .error, packageDirectory.path)
             return nil
@@ -104,7 +104,7 @@ class PackagedPlugin: TimerArmingPlugin {
 
     /// Finds the `plugin.*` entry point inside a `.swiftbar` directory.
     static func findMainExecutable(in directory: URL) -> URL? {
-        guard directory.lastPathComponent.hasSuffix(".swiftbar") else {
+        guard directory.isSwiftBarPackage else {
             return nil
         }
 
@@ -193,7 +193,7 @@ class PackagedPlugin: TimerArmingPlugin {
             if let metadata, metadata.nextDate != nil {
                 refreshPluginMetadata()
                 enableTimer()
-            } else if updateInterval > 0, updateInterval < 60 * 60 * 24 * 100 {
+            } else if updateInterval > 0, updateInterval < pluginNeverUpdateInterval {
                 if let lastUpdated {
                     let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)
                     if Date() > nextUpdateTime {

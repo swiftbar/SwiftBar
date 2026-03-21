@@ -2,6 +2,10 @@ import Combine
 import Foundation
 import os
 
+/// Update interval value that effectively means "never refresh automatically".
+/// Used as the default for plugins that are not on a timed schedule.
+let pluginNeverUpdateInterval: Double = 60 * 60 * 24 * 100
+
 enum PluginType: String {
     case Executable
     case Streamable
@@ -87,6 +91,10 @@ protocol Plugin: AnyObject {
     func writeStdin(_ input: String) throws
 }
 
+/// A plugin that manages its own refresh timer.
+///
+/// Conforming types can be generically re-armed by `RunPluginOperation`
+/// after each invocation, without the caller knowing the concrete plugin type.
 protocol TimerArmingPlugin: Plugin {
     func enableTimer()
 }
@@ -104,7 +112,7 @@ extension Plugin {
     var isStale: Bool {
         // Check if plugin has timed updates and hasn't updated within 2x the interval
         guard updateInterval > 0,
-              updateInterval < 60 * 60 * 24 * 100, // Not a "never" update plugin
+              updateInterval < pluginNeverUpdateInterval,
               let lastUpdated
         else {
             return false
