@@ -11,6 +11,7 @@
 		CC467003000000000000A103 /* MenuItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467001000000000000A101 /* MenuItemNode.swift */; };
 		CC467005000000000000A105 /* MenuDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467004000000000000A104 /* MenuDiff.swift */; };
 		CC467006000000000000A106 /* MenuDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467004000000000000A104 /* MenuDiff.swift */; };
+		CC467008000000000000A108 /* FoldableMenuItemView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467007000000000000A107 /* FoldableMenuItemView.swift */; };
 		3920747E25460FD000213DBE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3920747D25460FD000213DBE /* AppDelegate.swift */; };
 		3920748225460FD300213DBE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748125460FD300213DBE /* Assets.xcassets */; };
 		3920748525460FD300213DBE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3920748425460FD300213DBE /* Preview Assets.xcassets */; };
@@ -209,6 +210,7 @@
 		39AF777B254618F6001D76E5 /* MenuBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarItem.swift; sourceTree = "<group>"; };
 		CC467001000000000000A101 /* MenuItemNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuItemNode.swift; sourceTree = "<group>"; };
 		CC467004000000000000A104 /* MenuDiff.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuDiff.swift; sourceTree = "<group>"; };
+		CC467007000000000000A107 /* FoldableMenuItemView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldableMenuItemView.swift; sourceTree = "<group>"; };
 		39AF77832547750E001D76E5 /* AppShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppShared.swift; sourceTree = "<group>"; };
 		39AF778C2548EBA3001D76E5 /* MenuLineParameters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuLineParameters.swift; sourceTree = "<group>"; };
 		39AF7792254B5834001D76E5 /* NSColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSColor.swift; sourceTree = "<group>"; };
@@ -414,6 +416,7 @@
 		398B86D4254DC01800DEA027 /* MenuBar */ = {
 			isa = PBXGroup;
 			children = (
+				CC467007000000000000A107 /* FoldableMenuItemView.swift */,
 				39AF777B254618F6001D76E5 /* MenuBarItem.swift */,
 				CC467004000000000000A104 /* MenuDiff.swift */,
 				CC467001000000000000A101 /* MenuItemNode.swift */,
@@ -840,6 +843,7 @@
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				CC467002000000000000A102 /* MenuItemNode.swift in Sources */,
 				CC467005000000000000A105 /* MenuDiff.swift in Sources */,
+				CC467008000000000000A108 /* FoldableMenuItemView.swift in Sources */,
 				FAD1BC9E25D22EEA00B761E8 /* AnimatableWindow.swift in Sources */,
 				39AF7796254B6203001D76E5 /* NSImage.swift in Sources */,
 				398B86CE254DBF2F00DEA027 /* main.swift in Sources */,

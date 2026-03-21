@@ -1885,3 +1885,224 @@ struct MenuDiffTests {
         #expect(changes[3] == .insert(newIndex: 3))
     }
 }
+
+// MARK: - Fold Parameter Tests
+
+struct FoldParameterTests {
+    @Test func testFoldParam_parsedAsTrue() throws {
+        let params = MenuLineParameters(line: "Network | fold=true")
+        #expect(params.fold == true)
+    }
+
+    @Test func testFoldParam_defaultsToFalse() throws {
+        let params = MenuLineParameters(line: "Network | color=red")
+        #expect(params.fold == false)
+    }
+
+    @Test func testFoldParam_caseInsensitive() throws {
+        let params = MenuLineParameters(line: "Network | fold=True")
+        #expect(params.fold == true)
+        let params2 = MenuLineParameters(line: "Network | fold=TRUE")
+        #expect(params2.fold == true)
+    }
+
+    @Test func testFoldParam_explicitFalse() throws {
+        let params = MenuLineParameters(line: "Network | fold=false")
+        #expect(params.fold == false)
+    }
+}
+
+// MARK: - Fold Menu Item Tests
+
+struct FoldMenuItemBuildTests {
+    @MainActor
+    private func makeMenuBarItem() -> MenubarItem {
+        let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh", content: nil, lastState: .Success)
+        let item = MenubarItem(title: "Test")
+        item.plugin = plugin
+        item.statusBarMenu.delegate = item
+        return item
+    }
+
+    @MainActor
+    private func menuLabels(for item: MenubarItem) -> [String] {
+        item.statusBarMenu.items.map { menuItem in
+            if menuItem.isSeparatorItem { return "<separator>" }
+            if let view = menuItem.view as? FoldableMenuItemView {
+                return "<fold>"
+            }
+            return menuItem.attributedTitle?.string ?? menuItem.title
+        }
+    }
+
+    @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        --Ethernet: Off
+        Item B
+        """)
+
+        // fold parent + 2 hidden children + Item B + standard menu items
+        let labels = menuLabels(for: item)
+        #expect(labels.contains("<fold>"))
+        #expect(labels.contains("Item B"))
+
+        // The fold children should be hidden
+        let foldIndex = labels.firstIndex(of: "<fold>")!
+        let childItem1 = item.statusBarMenu.items[foldIndex + 1]
+        let childItem2 = item.statusBarMenu.items[foldIndex + 2]
+        #expect(childItem1.isHidden == true)
+        #expect(childItem2.isHidden == true)
+        #expect(childItem1.attributedTitle?.string == "Wi-Fi: Connected")
+        #expect(childItem2.attributedTitle?.string == "Ethernet: Off")
+    }
+
+    @MainActor @Test func testFullBuild_foldItemExpandsOnToggle() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        --Ethernet: Off
+        """)
+
+        // Find the fold parent
+        let foldParent = item.statusBarMenu.items.first { $0.view is FoldableMenuItemView }!
+
+        // Toggle to expand
+        item.toggleFoldItem(foldParent)
+
+        // Children should now be visible
+        let foldIndex = item.statusBarMenu.index(of: foldParent)
+        let childItem1 = item.statusBarMenu.items[foldIndex + 1]
+        let childItem2 = item.statusBarMenu.items[foldIndex + 2]
+        #expect(childItem1.isHidden == false)
+        #expect(childItem2.isHidden == false)
+
+        // Toggle to collapse
+        item.toggleFoldItem(foldParent)
+
+        #expect(childItem1.isHidden == true)
+        #expect(childItem2.isHidden == true)
+    }
+
+    @MainActor @Test func testFullBuild_nonFoldItemUsesSubmenu() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section
+        --Sub A
+        --Sub B
+        """)
+
+        // Regular submenu behavior (no fold)
+        let sectionItem = item.statusBarMenu.items.first {
+            $0.attributedTitle?.string == "Section"
+        }!
+        #expect(sectionItem.view == nil)
+        #expect(sectionItem.submenu != nil)
+        #expect(sectionItem.submenu?.items.count == 2)
+    }
+
+    @MainActor @Test func testFullBuild_pluginItemCountIncludesFoldChildren() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Fold Parent | fold=true
+        --Child A
+        --Child B
+        Regular Item
+        """)
+
+        // pluginItemCount should include: separator + fold parent + 2 fold children + regular item
+        // = 1 (title sep) + 1 (fold parent) + 2 (fold children) + 1 (regular) = 5
+        // Plus however many title items are before the separator
+        let expectedBodyItems = 5 // sep + fold parent + 2 children + regular
+        #expect(item.pluginItemCount >= expectedBodyItems)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_preservesFoldStateOnContentUpdate() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        --Ethernet: Off
+        Status: OK
+        """)
+
+        // Expand the fold
+        let foldParent = item.statusBarMenu.items.first { $0.view is FoldableMenuItemView }!
+        item.toggleFoldItem(foldParent)
+
+        // Verify expanded
+        let foldIndex = item.statusBarMenu.index(of: foldParent)
+        #expect(item.statusBarMenu.items[foldIndex + 1].isHidden == false)
+
+        // Update content (non-fold item changes)
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        --Ethernet: Off
+        Status: Updated
+        """)
+
+        // Fold state should be preserved (still expanded)
+        let updatedFoldParent = item.statusBarMenu.items.first { $0.view is FoldableMenuItemView }!
+        let updatedFoldIndex = item.statusBarMenu.index(of: updatedFoldParent)
+        #expect(item.statusBarMenu.items[updatedFoldIndex + 1].isHidden == false)
+    }
+
+    @MainActor @Test func testNestedFold_outerToggleHidesInnerChildren() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Outer | fold=true
+        --Inner | fold=true
+        ----Deep A
+        ----Deep B
+        --Regular Child
+        """)
+
+        // Find outer fold parent
+        let outerFold = item.statusBarMenu.items.first { $0.view is FoldableMenuItemView }!
+
+        // Expand outer
+        item.toggleFoldItem(outerFold)
+
+        // Find inner fold parent (now visible)
+        let outerIndex = item.statusBarMenu.index(of: outerFold)
+        let innerFold = item.statusBarMenu.items[outerIndex + 1]
+        #expect(innerFold.view is FoldableMenuItemView)
+        #expect(innerFold.isHidden == false)
+
+        // Expand inner
+        item.toggleFoldItem(innerFold)
+        let innerIndex = item.statusBarMenu.index(of: innerFold)
+        #expect(item.statusBarMenu.items[innerIndex + 1].isHidden == false) // Deep A visible
+
+        // Collapse outer — inner and its children should all be hidden
+        item.toggleFoldItem(outerFold)
+        #expect(innerFold.isHidden == true)
+        // Deep children should also be hidden
+        #expect(item.statusBarMenu.items[innerIndex + 1].isHidden == true)
+    }
+}
+
