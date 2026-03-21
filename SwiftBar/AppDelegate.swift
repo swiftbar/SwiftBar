@@ -26,6 +26,23 @@ func statusItemVisibilityKeys(in defaults: [String: Any]) -> [String] {
     defaults.keys.filter { $0.hasPrefix("NSStatusItem Visible") }.sorted()
 }
 
+func shouldImportOpenedPluginFile(at url: URL, makePluginExecutable: Bool, fileManager: FileManager = .default) -> Bool {
+    guard url.isFileURL else {
+        return false
+    }
+
+    var isDirectory: ObjCBool = false
+    guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory) else {
+        return false
+    }
+
+    if isDirectory.boolValue {
+        return url.lastPathComponent.hasSuffix(".swiftbar") && PackagedPlugin.findMainExecutable(in: url) != nil
+    }
+
+    return shouldLoadPluginFile(at: url, makePluginExecutable: makePluginExecutable, fileManager: fileManager)
+}
+
 class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegate, SPUUpdaterDelegate, UNUserNotificationCenterDelegate, NSWindowDelegate {
     var repositoryWindowController: NSWindowController? {
         didSet {
@@ -168,6 +185,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     func application(_: NSApplication, open urls: [URL]) {
         for url in urls {
+            if shouldImportOpenedPluginFile(at: url, makePluginExecutable: prefs.makePluginExecutable) {
+                pluginManager.importPlugin(from: url)
+                continue
+            }
+
             switch url.host?.lowercased() {
             case "refreshallplugins":
                 pluginManager.refreshAllPlugins(reason: .RefreshAllURLScheme)

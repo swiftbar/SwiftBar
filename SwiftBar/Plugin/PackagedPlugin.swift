@@ -120,9 +120,12 @@ class PackagedPlugin: Plugin {
             return url.lastPathComponent.hasPrefix("plugin.")
         }
 
-        // Prefer already-executable files
+        // Prefer already-executable files, break ties alphabetically for determinism
         candidates.sort {
-            fileManager.isExecutableFile(atPath: $0.path) && !fileManager.isExecutableFile(atPath: $1.path)
+            let exec0 = fileManager.isExecutableFile(atPath: $0.path)
+            let exec1 = fileManager.isExecutableFile(atPath: $1.path)
+            if exec0 != exec1 { return exec0 && !exec1 }
+            return $0.lastPathComponent < $1.lastPathComponent
         }
 
         if let pluginFile = candidates.first {
@@ -151,14 +154,17 @@ class PackagedPlugin: Plugin {
             .autoconnect()
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
-                self?.lastRefreshReason = .Schedule
-                self?.invokeQueue.addOperation(RunPluginOperation<PackagedPlugin>(plugin: self!))
+                guard let self else { return }
+                self.lastRefreshReason = .Schedule
+                self.invokeQueue.addOperation(RunPluginOperation<PackagedPlugin>(plugin: self))
             }).store(in: &cancellable)
     }
 
     func disableTimer() {
         cancellable.forEach { $0.cancel() }
         cancellable.removeAll()
+        cronTimer?.invalidate()
+        cronTimer = nil
     }
 
     func disable() {
@@ -230,12 +236,16 @@ class PackagedPlugin: Plugin {
                 os_log("Error output from the script: \n%{public}@:", log: Log.plugin, err)
             }
             return out.out
-        } catch {
-            guard let error = error as? ShellOutError else { return nil }
+        } catch let shellError as ShellOutError {
             os_log("Failed to execute packaged plugin script\n%{public}@\n%{public}@",
-                   log: Log.plugin, type: .error, file, error.message)
+                   log: Log.plugin, type: .error, file, shellError.message)
+            self.error = shellError
+            debugInfo.addEvent(type: .ContentUpdateError, value: shellError.message)
+            lastState = .Failed
+        } catch {
+            os_log("Failed to execute packaged plugin script\n%{public}@\n%{public}@",
+                   log: Log.plugin, type: .error, file, error.localizedDescription)
             self.error = error
-            debugInfo.addEvent(type: .ContentUpdateError, value: error.message)
             lastState = .Failed
         }
         return nil
