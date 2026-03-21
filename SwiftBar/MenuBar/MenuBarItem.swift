@@ -55,6 +55,8 @@ class MenubarItem: NSObject {
 
     /// Tracks which fold parent NSMenuItems are currently expanded.
     private var expandedFoldItems: Set<ObjectIdentifier> = []
+    /// Fold expansion state tracked by working line, survives full rebuilds.
+    private var expandedFoldLines: Set<String> = []
     /// NSMenuItems injected as fold children, keyed by parent NSMenuItem identity.
     private var foldChildItems: [ObjectIdentifier: [NSMenuItem]] = [:]
 
@@ -567,6 +569,8 @@ extension MenubarItem {
         prevLevel = 0
         expandedFoldItems.removeAll()
         foldChildItems.removeAll()
+        // Note: expandedFoldLines is intentionally NOT cleared here
+        // so that fold state survives full rebuilds.
         resetWebPopoverContent()
         show()
         defer {
@@ -653,7 +657,7 @@ extension MenubarItem {
 
         // Calculate the base index in statusBarMenu where body items start.
         // Layout: [title items...] [separator] [body items...] [standard items...]
-        let oldBodyCount = countMenuItems(in: currentMenuTree)
+        let oldBodyCount = countMenuItems(in: currentMenuTree, for: statusBarMenu)
         let bodyBaseIndex = pluginItemCount - oldBodyCount
 
         // Validate index assumptions; fall back to full rebuild if out of sync.
@@ -669,7 +673,7 @@ extension MenubarItem {
         applyDiff(changes, oldTree: currentMenuTree, newTree: newTree, to: statusBarMenu, baseIndex: bodyBaseIndex)
 
         // Update tracking state
-        pluginItemCount = pluginItemCount - oldBodyCount + countMenuItems(in: newTree)
+        pluginItemCount = pluginItemCount - oldBodyCount + countMenuItems(in: newTree, for: statusBarMenu)
         currentMenuTree = newTree
         restoreTitleCycleIfNeeded()
         syncHotKeys()
@@ -682,9 +686,16 @@ extension MenubarItem {
 
     /// Count the NSMenuItems in the flat menu that belong to the plugin content.
     /// Includes root-level nodes plus any fold children injected as siblings.
-    private func countMenuItems(in nodes: [MenuItemNode]) -> Int {
-        let foldChildCount = foldChildItems.values.reduce(0) { $0 + $1.count }
-        return nodes.count + foldChildCount
+    /// Counts only fold children that are actually inserted into the target menu.
+    private func countMenuItems(in nodes: [MenuItemNode], for menu: NSMenu) -> Int {
+        var uniqueChildren = Set<ObjectIdentifier>()
+        for items in foldChildItems.values {
+            for item in items {
+                guard item.menu === menu else { continue }
+                uniqueChildren.insert(ObjectIdentifier(item))
+            }
+        }
+        return nodes.count + uniqueChildren.count
     }
 
     /// Apply a diff to a live NSMenu, patching items in-place.
@@ -727,11 +738,17 @@ extension MenubarItem {
                             let childKey = ObjectIdentifier(child)
                             foldChildItems.removeValue(forKey: childKey)
                             expandedFoldItems.remove(childKey)
+                            if let childParams = child.representedObject as? MenuLineParameters {
+                                expandedFoldLines.remove(childParams.title)
+                            }
                             menu.removeItem(at: childIndex)
                         }
                     }
                 }
                 expandedFoldItems.remove(key)
+                if let params = item.representedObject as? MenuLineParameters {
+                    expandedFoldLines.remove(params.title)
+                }
                 menu.removeItem(at: menu.index(of: item))
             }
         }
@@ -776,6 +793,7 @@ extension MenubarItem {
                 buildSubmenuItems(for: newItem, from: newNode, into: menu)
             }
         } else {
+            let oldParams = MenuLineParameters(line: oldNode.workingLine)
             let newParams = MenuLineParameters(line: newNode.workingLine)
             if !oldNode.contentEqual(to: newNode) {
                 if let foldView = existingItem.view as? FoldableMenuItemView, newParams.fold {
@@ -785,9 +803,12 @@ extension MenubarItem {
                     patchMenuItem(existingItem, with: newParams)
                 }
             }
-            if oldNode.children != newNode.children {
-                let oldParams = MenuLineParameters(line: oldNode.workingLine)
+            let foldModeChanged = oldParams.fold != newParams.fold
+            if oldNode.children != newNode.children || foldModeChanged {
                 if newParams.fold {
+                    if foldModeChanged {
+                        existingItem.submenu = nil
+                    }
                     updateFoldChildren(of: existingItem, from: newNode, in: menu)
                 } else if oldParams.fold {
                     // Transitioning from fold to submenu: clean up fold children first
@@ -834,24 +855,19 @@ extension MenubarItem {
         }
 
         // Patch direct children in-place where possible
-        let oldDirectCount = existingChildren.count
         let newDirectChildren = newNode.children
 
         // Count only direct children (not nested fold grandchildren) in existing list
         var directItems: [NSMenuItem] = []
-        var i = 0
-        for child in existingChildren {
+        var index = 0
+        while index < existingChildren.count {
+            let child = existingChildren[index]
             let childKey = ObjectIdentifier(child)
+            directItems.append(child)
             if let nestedChildren = foldChildItems[childKey] {
-                // This is a nested fold parent — skip its children in the flat list
-                directItems.append(child)
-                i += 1 + nestedChildren.count
+                index += 1 + nestedChildren.count
             } else {
-                directItems.append(child)
-                i += 1
-            }
-            if directItems.count >= newDirectChildren.count && i >= existingChildren.count {
-                break
+                index += 1
             }
         }
 
@@ -1048,10 +1064,14 @@ extension MenubarItem {
     /// and attach a FoldableMenuItemView to the parent item.
     private func buildFoldChildren(for item: NSMenuItem, from node: MenuItemNode, into menu: NSMenu) {
         let key = ObjectIdentifier(item)
-        let isExpanded = expandedFoldItems.contains(key)
+        let params = MenuLineParameters(line: node.workingLine)
+        // Check ObjectIdentifier first (incremental), fall back to line-based state (rebuild)
+        let isExpanded = expandedFoldItems.contains(key) || expandedFoldLines.contains(params.title)
+        if isExpanded {
+            expandedFoldItems.insert(key)
+        }
 
         // Attach the foldable view to the parent item
-        let params = MenuLineParameters(line: node.workingLine)
         let titleInfo = atributedTitle(with: params)
         let foldView = FoldableMenuItemView(
             attributedTitle: titleInfo.title,
@@ -1115,6 +1135,15 @@ extension MenubarItem {
             expandedFoldItems.insert(key)
         }
 
+        // Also track by line for cross-rebuild persistence
+        if let params = item.representedObject as? MenuLineParameters {
+            if wasExpanded {
+                expandedFoldLines.remove(params.title)
+            } else {
+                expandedFoldLines.insert(params.title)
+            }
+        }
+
         if let children = foldChildItems[key] {
             for child in children {
                 child.isHidden = wasExpanded
@@ -1136,6 +1165,9 @@ extension MenubarItem {
             let key = ObjectIdentifier(item)
             guard foldChildItems[key] != nil else { continue }
             expandedFoldItems.remove(key)
+            if let params = item.representedObject as? MenuLineParameters {
+                expandedFoldLines.remove(params.title)
+            }
             if let view = item.view as? FoldableMenuItemView {
                 view.isFolded = true
             }

@@ -62,11 +62,20 @@ class FoldableMenuItemView: NSView {
         let iconWidth: CGFloat = hasImage ? 18 : 0
         let iconTrailingPad: CGFloat = hasImage ? 4 : 0
 
+        let iconWidthConstraint = iconView.widthAnchor.constraint(equalToConstant: iconWidth)
+        iconWidthConstraint.priority = .defaultHigh
+        let iconHeightConstraint = iconView.heightAnchor.constraint(equalToConstant: 16)
+        iconHeightConstraint.priority = .defaultHigh
+        let chevronWidthConstraint = chevronView.widthAnchor.constraint(equalToConstant: 10)
+        chevronWidthConstraint.priority = .defaultHigh
+        let chevronHeightConstraint = chevronView.heightAnchor.constraint(equalToConstant: 12)
+        chevronHeightConstraint.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
             iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 18),
             iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            iconView.widthAnchor.constraint(equalToConstant: iconWidth),
-            iconView.heightAnchor.constraint(equalToConstant: 16),
+            iconWidthConstraint,
+            iconHeightConstraint,
 
             titleField.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: iconTrailingPad),
             titleField.centerYAnchor.constraint(equalTo: centerYAnchor),
@@ -74,8 +83,8 @@ class FoldableMenuItemView: NSView {
 
             chevronView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
             chevronView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            chevronView.widthAnchor.constraint(equalToConstant: 10),
-            chevronView.heightAnchor.constraint(equalToConstant: 12),
+            chevronWidthConstraint,
+            chevronHeightConstraint,
         ])
     }
 

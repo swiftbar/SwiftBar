@@ -1,3 +1,4 @@
+import Cocoa
 import Combine
 import Foundation
 import Testing
@@ -1928,11 +1929,23 @@ struct FoldMenuItemBuildTests {
     private func menuLabels(for item: MenubarItem) -> [String] {
         item.statusBarMenu.items.map { menuItem in
             if menuItem.isSeparatorItem { return "<separator>" }
-            if let view = menuItem.view as? FoldableMenuItemView {
+            if menuItem.view is FoldableMenuItemView {
                 return "<fold>"
             }
             return menuItem.attributedTitle?.string ?? menuItem.title
         }
+    }
+
+    @MainActor
+    private func menuItem(named title: String, in menu: NSMenu) -> NSMenuItem? {
+        menu.items.first { menuItem in
+            (menuItem.representedObject as? MenuLineParameters)?.title == title
+        }
+    }
+
+    @MainActor
+    private func menuItemTitle(_ item: NSMenuItem) -> String {
+        item.attributedTitle?.string ?? item.title
     }
 
     @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
@@ -2068,6 +2081,86 @@ struct FoldMenuItemBuildTests {
         #expect(item.statusBarMenu.items[updatedFoldIndex + 1].isHidden == false)
     }
 
+    @MainActor @Test func testIncrementalUpdate_preservesNestedSubmenuFoldWithoutFullRebuild() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section
+        --Nested Fold | fold=true
+        ----Deep A
+        ----Deep B
+        Status: OK
+        """)
+        item.menuWillOpen(item.statusBarMenu)
+
+        let sectionItem = try #require(menuItem(named: "Section", in: item.statusBarMenu))
+        let nestedFold = try #require(sectionItem.submenu?.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(nestedFold)
+        #expect(sectionItem.submenu?.items[1].isHidden == false)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section
+        --Nested Fold | fold=true
+        ----Deep A
+        ----Deep B
+        Status: Updated
+        """)
+
+        let updatedSectionItem = try #require(menuItem(named: "Section", in: item.statusBarMenu))
+        let updatedNestedFold = try #require(updatedSectionItem.submenu?.items.first { $0.view is FoldableMenuItemView })
+        #expect(updatedSectionItem === sectionItem)
+        #expect(updatedNestedFold === nestedFold)
+        #expect(updatedSectionItem.submenu?.items[1].isHidden == false)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_rebuildsItemWhenFoldFlagChanges() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section | fold=true
+        --Child A
+        --Child B
+        """)
+
+        let foldSection = try #require(menuItem(named: "Section", in: item.statusBarMenu))
+        #expect(foldSection.view is FoldableMenuItemView)
+        #expect(menuItem(named: "Child A", in: item.statusBarMenu) != nil)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section
+        --Child A
+        --Child B
+        """)
+
+        let submenuSection = try #require(menuItem(named: "Section", in: item.statusBarMenu))
+        #expect(submenuSection === foldSection)
+        #expect(submenuSection.view == nil)
+        #expect(submenuSection.submenu?.items.count == 2)
+        #expect(menuItem(named: "Child A", in: item.statusBarMenu) == nil)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section | fold=true
+        --Child A
+        --Child B
+        """)
+
+        let rebuiltFoldSection = try #require(menuItem(named: "Section", in: item.statusBarMenu))
+        #expect(rebuiltFoldSection === foldSection)
+        #expect(rebuiltFoldSection.view is FoldableMenuItemView)
+        #expect(rebuiltFoldSection.submenu == nil)
+        #expect(menuItem(named: "Child A", in: item.statusBarMenu) != nil)
+    }
+
     @MainActor @Test func testNestedFold_outerToggleHidesInnerChildren() throws {
         let item = makeMenuBarItem()
 
@@ -2104,5 +2197,38 @@ struct FoldMenuItemBuildTests {
         // Deep children should also be hidden
         #expect(item.statusBarMenu.items[innerIndex + 1].isHidden == true)
     }
-}
 
+    @MainActor @Test func testIncrementalUpdate_nestedFoldKeepsDirectChildrenAligned() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Outer | fold=true
+        --Inner | fold=true
+        ----Deep A
+        ----Deep B
+        --Regular Child
+        """)
+
+        let outerFold = item.statusBarMenu.items.first { $0.view is FoldableMenuItemView }!
+        item.toggleFoldItem(outerFold)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Outer | fold=true
+        --Inner | fold=true
+        ----Deep A
+        ----Deep B
+        --Regular Child Updated
+        """)
+
+        let outerIndex = item.statusBarMenu.index(of: outerFold)
+        let deepAItem = item.statusBarMenu.items[outerIndex + 2]
+        let regularChildItem = item.statusBarMenu.items[outerIndex + 4]
+
+        #expect(menuItemTitle(deepAItem) == "Deep A")
+        #expect(menuItemTitle(regularChildItem) == "Regular Child Updated")
+    }
+}
