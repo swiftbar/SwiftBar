@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CC468001000000000000C001 /* PackagedPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC468000000000000000C000 /* PackagedPlugin.swift */; };
+		CC468002000000000000C002 /* PackagedPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC468000000000000000C000 /* PackagedPlugin.swift */; };
 		CC467002000000000000A102 /* MenuItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467001000000000000A101 /* MenuItemNode.swift */; };
 		CC467003000000000000A103 /* MenuItemNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467001000000000000A101 /* MenuItemNode.swift */; };
 		CC467005000000000000A105 /* MenuDiff.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC467004000000000000A104 /* MenuDiff.swift */; };
@@ -246,6 +248,7 @@
 		FABE30D72D6FB51C00297F18 /* SwiftBarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SwiftBarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FAC3F2EC2915D88300D8F346 /* ShortcutPluginsPreferencesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShortcutPluginsPreferencesView.swift; sourceTree = "<group>"; };
 		FAC3F2F02916A61800D8F346 /* AboutSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutSettingsView.swift; sourceTree = "<group>"; };
+		CC468000000000000000C000 /* PackagedPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PackagedPlugin.swift; sourceTree = "<group>"; };
 		FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EphemeralPlugin.swift; sourceTree = "<group>"; };
 		FAC4AE4A297304F4000BED63 /* SetEphemeralPluginIntentHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetEphemeralPluginIntentHandler.swift; sourceTree = "<group>"; };
 		FAD14C042585AE1800CB7BBE /* String+ANSIColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+ANSIColor.swift"; sourceTree = "<group>"; };
@@ -405,6 +408,7 @@
 				FAD571A225A0071700623B57 /* StreamablePlugin.swift */,
 				39AF7777254613FB001D76E5 /* ExecutablePlugin.swift */,
 				FAC4AE4829722CD2000BED63 /* EphemeralPlugin.swift */,
+				CC468000000000000000C000 /* PackagedPlugin.swift */,
 				FA6E13852915B70E00BA4594 /* ShortcutPlugin.swift */,
 				39AF7771254612BF001D76E5 /* PluginMetadata.swift */,
 				39AF7774254613C9001D76E5 /* PluginManger.swift */,
@@ -839,6 +843,7 @@
 				398B86C4254DA85300DEA027 /* URL+Extension.swift in Sources */,
 				FAAFB2A52A1A567D00316F79 /* AdvancedPreferencesView.swift in Sources */,
 				FAC4AE4929722CD2000BED63 /* EphemeralPlugin.swift in Sources */,
+				CC468001000000000000C001 /* PackagedPlugin.swift in Sources */,
 				FAA14A192728C7FC0052FDB8 /* AppDelegate+Intents.swift in Sources */,
 				39AF778D2548EBA3001D76E5 /* MenuLineParameters.swift in Sources */,
 				CC467002000000000000A102 /* MenuItemNode.swift in Sources */,
@@ -921,6 +926,7 @@
 				3990DCE22602BB5B002CDCD5 /* PluginDebugInfo.swift in Sources */,
 				FA57F2A4272A307900817A79 /* PluginRepositoryAPI.swift in Sources */,
 				39224E0C25F4344600BABF21 /* StreamablePlugin.swift in Sources */,
+				CC468002000000000000C002 /* PackagedPlugin.swift in Sources */,
 				39224E0D25F4344600BABF21 /* PreferencesView.swift in Sources */,
 				39224E0E25F4344600BABF21 /* PluginMetadata.swift in Sources */,
 				39224E0F25F4344600BABF21 /* RunScript.swift in Sources */,

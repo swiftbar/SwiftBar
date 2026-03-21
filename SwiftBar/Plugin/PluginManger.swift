@@ -308,22 +308,32 @@ class PluginManager: ObservableObject {
             guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
             else { return ([], []) }
             var dirs: [URL] = []
-            let files = enumerator.compactMap { $0 as? URL }.filter { origURL in
+            var files: [URL] = []
+            for case let origURL as URL in enumerator {
                 let resolvedURL = origURL.resolvingSymlinksInPath()
                 var isDir: ObjCBool = false
-                guard fileManager.fileExists(atPath: resolvedURL.path, isDirectory: &isDir), !isDir.boolValue else {
-                    // Only add directory if we haven't processed its resolved path yet
-                    if isDir.boolValue, !processedDirs.contains(resolvedURL.path) {
-                        processedDirs.insert(resolvedURL.path)
-                        dirs.append(origURL) // Keep original URL for traversal
+                guard fileManager.fileExists(atPath: resolvedURL.path, isDirectory: &isDir) else {
+                    continue
+                }
+                if isDir.boolValue {
+                    // Treat .swiftbar directories as packaged plugin files and skip their contents
+                    if origURL.lastPathComponent.hasSuffix(".swiftbar") {
+                        files.append(origURL)
+                        enumerator.skipDescendants()
+                        continue
                     }
-                    return false
+                    // Only add directory if we haven't processed its resolved path yet
+                    if !processedDirs.contains(resolvedURL.path) {
+                        processedDirs.insert(resolvedURL.path)
+                        dirs.append(origURL)
+                    }
+                    continue
                 }
                 // Exclude .json files (used for plugin variable storage)
                 if origURL.pathExtension.lowercased() == "json" {
-                    return false
+                    continue
                 }
-                return true
+                files.append(origURL)
             }
             return (files, dirs)
         }
@@ -411,7 +421,13 @@ class PluginManager: ObservableObject {
     }
 
     func getLoadablePluginList(from pluginCandidates: [URL]) -> [URL] {
-        pluginCandidates.filter { shouldLoadPluginFile(at: $0, makePluginExecutable: prefs.makePluginExecutable) }
+        pluginCandidates.filter { url in
+            // Packaged plugins (.swiftbar directories) are validated during init, not here
+            if url.lastPathComponent.hasSuffix(".swiftbar") {
+                return true
+            }
+            return shouldLoadPluginFile(at: url, makePluginExecutable: prefs.makePluginExecutable)
+        }
     }
 
     func loadShortcutPlugins() -> [ShortcutPlugin] {
@@ -501,7 +517,16 @@ class PluginManager: ObservableObject {
     }
 
     func loadPlugin(fileURL: URL) -> Plugin {
-        StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
+        // Check if this is a packaged plugin (.swiftbar directory)
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir),
+           isDir.boolValue,
+           fileURL.lastPathComponent.hasSuffix(".swiftbar"),
+           let packagedPlugin = PackagedPlugin(packageDirectory: fileURL)
+        {
+            return packagedPlugin
+        }
+        return StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
     }
 
     func refreshAllPlugins(reason: PluginRefreshReason) {
