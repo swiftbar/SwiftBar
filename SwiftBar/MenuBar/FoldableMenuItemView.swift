@@ -4,6 +4,26 @@ import Cocoa
 /// When an NSMenuItem has a `view` set, clicking it does NOT close the menu,
 /// which enables accordion/fold behavior in the dropdown.
 class FoldableMenuItemView: NSView {
+    // MARK: - Layout Constants
+
+    private enum Layout {
+        static let itemHeight: CGFloat = 22
+        static let iconSize = NSSize(width: 18, height: 16)
+        static let chevronSize = NSSize(width: 10, height: 12)
+        static let leadingPadding: CGFloat = 18
+        static let iconTrailingSpacing: CGFloat = 4
+        static let chevronLeadingSpacing: CGFloat = 8
+        static let trailingPadding: CGFloat = 12
+        static let highlightInsetX: CGFloat = 4
+        static let highlightInsetY: CGFloat = 1
+        static let highlightCornerRadius: CGFloat = 4
+        static let chevronPointSize: CGFloat = 10
+    }
+
+    private static let chevronSymbolConfig = NSImage.SymbolConfiguration(pointSize: Layout.chevronPointSize, weight: .semibold)
+
+    // MARK: - Views
+
     private let titleField = NSTextField(labelWithString: "")
     private let chevronView = NSImageView()
     private let iconView = NSImageView()
@@ -19,8 +39,12 @@ class FoldableMenuItemView: NSView {
 
     init(attributedTitle: NSAttributedString, image: NSImage?, isFolded: Bool) {
         self.isFolded = isFolded
-        super.init(frame: NSRect(x: 0, y: 0, width: 0, height: 22))
+        super.init(frame: NSRect(x: 0, y: 0, width: 0, height: Layout.itemHeight))
         autoresizingMask = [.width]
+        setAccessibilityRole(.button)
+        setAccessibilitySubrole(.toggle)
+        setAccessibilityLabel(attributedTitle.string)
+        setAccessibilityValue(isFolded ? "collapsed" : "expanded")
 
         setupViews(attributedTitle: attributedTitle, image: image)
         updateChevron()
@@ -59,29 +83,29 @@ class FoldableMenuItemView: NSView {
         iconView.image = image
         iconView.isHidden = !hasImage
 
-        let iconWidth: CGFloat = hasImage ? 18 : 0
-        let iconTrailingPad: CGFloat = hasImage ? 4 : 0
+        let iconWidth: CGFloat = hasImage ? Layout.iconSize.width : 0
+        let iconTrailingPad: CGFloat = hasImage ? Layout.iconTrailingSpacing : 0
 
         let iconWidthConstraint = iconView.widthAnchor.constraint(equalToConstant: iconWidth)
         iconWidthConstraint.priority = .defaultHigh
-        let iconHeightConstraint = iconView.heightAnchor.constraint(equalToConstant: 16)
+        let iconHeightConstraint = iconView.heightAnchor.constraint(equalToConstant: Layout.iconSize.height)
         iconHeightConstraint.priority = .defaultHigh
-        let chevronWidthConstraint = chevronView.widthAnchor.constraint(equalToConstant: 10)
+        let chevronWidthConstraint = chevronView.widthAnchor.constraint(equalToConstant: Layout.chevronSize.width)
         chevronWidthConstraint.priority = .defaultHigh
-        let chevronHeightConstraint = chevronView.heightAnchor.constraint(equalToConstant: 12)
+        let chevronHeightConstraint = chevronView.heightAnchor.constraint(equalToConstant: Layout.chevronSize.height)
         chevronHeightConstraint.priority = .defaultHigh
 
         NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 18),
+            iconView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Layout.leadingPadding),
             iconView.centerYAnchor.constraint(equalTo: centerYAnchor),
             iconWidthConstraint,
             iconHeightConstraint,
 
             titleField.leadingAnchor.constraint(equalTo: iconView.trailingAnchor, constant: iconTrailingPad),
             titleField.centerYAnchor.constraint(equalTo: centerYAnchor),
-            titleField.trailingAnchor.constraint(lessThanOrEqualTo: chevronView.leadingAnchor, constant: -8),
+            titleField.trailingAnchor.constraint(lessThanOrEqualTo: chevronView.leadingAnchor, constant: -Layout.chevronLeadingSpacing),
 
-            chevronView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            chevronView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Layout.trailingPadding),
             chevronView.centerYAnchor.constraint(equalTo: centerYAnchor),
             chevronWidthConstraint,
             chevronHeightConstraint,
@@ -89,35 +113,35 @@ class FoldableMenuItemView: NSView {
     }
 
     private func updateChevron() {
-        // Use the same chevron SF Symbol as standard submenu indicators
         let symbolName = isFolded ? "chevron.right" : "chevron.down"
-        if let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil) {
-            let config = NSImage.SymbolConfiguration(pointSize: 10, weight: .semibold)
-            chevronView.image = symbol.withSymbolConfiguration(config)
+        if let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: isFolded ? "collapsed" : "expanded") {
+            chevronView.image = symbol.withSymbolConfiguration(Self.chevronSymbolConfig)
             chevronView.contentTintColor = isHighlighted ? .white : .tertiaryLabelColor
         }
+        setAccessibilityValue(isFolded ? "collapsed" : "expanded")
     }
 
     // MARK: - Layout
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: NSView.noIntrinsicMetric, height: 22)
+        NSSize(width: NSView.noIntrinsicMetric, height: Layout.itemHeight)
     }
 
     // MARK: - Tracking & Highlighting
 
     override func updateTrackingAreas() {
         super.updateTrackingAreas()
-        if let trackingArea {
-            removeTrackingArea(trackingArea)
+        if let existing = trackingArea {
+            removeTrackingArea(existing)
         }
-        trackingArea = NSTrackingArea(
+        let area = NSTrackingArea(
             rect: bounds,
             options: [.mouseEnteredAndExited, .activeAlways],
             owner: self,
             userInfo: nil
         )
-        addTrackingArea(trackingArea!)
+        addTrackingArea(area)
+        trackingArea = area
     }
 
     override func mouseEntered(with event: NSEvent) {
@@ -135,7 +159,8 @@ class FoldableMenuItemView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         if isHighlighted {
             NSColor.selectedContentBackgroundColor.setFill()
-            let path = NSBezierPath(roundedRect: bounds.insetBy(dx: 4, dy: 1), xRadius: 4, yRadius: 4)
+            let inset = bounds.insetBy(dx: Layout.highlightInsetX, dy: Layout.highlightInsetY)
+            let path = NSBezierPath(roundedRect: inset, xRadius: Layout.highlightCornerRadius, yRadius: Layout.highlightCornerRadius)
             path.fill()
             titleField.textColor = .white
         } else {
@@ -160,11 +185,24 @@ class FoldableMenuItemView: NSView {
         }
     }
 
+    override func keyDown(with event: NSEvent) {
+        // Space or Enter toggles the fold
+        if event.keyCode == 36 || event.keyCode == 49 {
+            isFolded.toggle()
+            onToggle?()
+        } else {
+            super.keyDown(with: event)
+        }
+    }
+
+    override var acceptsFirstResponder: Bool { true }
+
     // MARK: - Update
 
     /// Update the view's title and image without replacing the view.
     func update(attributedTitle: NSAttributedString, image: NSImage?) {
         titleField.attributedStringValue = attributedTitle
+        setAccessibilityLabel(attributedTitle.string)
         iconView.image = image
         iconView.isHidden = image == nil
     }
