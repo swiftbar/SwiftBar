@@ -305,6 +305,10 @@ struct MenuLineParameters: Codable, Equatable {
         params["alternate"]?.lowercased() == "true"
     }
 
+    var fold: Bool {
+        params["fold"]?.lowercased() == "true"
+    }
+
     func getSFConfig() -> SFConfig? {
         guard let base64 = params["sfconfig"]?.data(using: .utf8),
               let decodedData = Data(base64Encoded: base64),
