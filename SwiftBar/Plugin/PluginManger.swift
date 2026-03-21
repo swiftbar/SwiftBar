@@ -16,18 +16,27 @@ enum PluginFileSkipReason: String {
     case notExecutable = "not executable while auto-make-executable is disabled"
 }
 
-func packagedPluginDirectory(for fileURL: URL, fileManager: FileManager = .default) -> URL? {
+func packagedPluginDirectory(for fileURL: URL) -> URL? {
+    if fileURL.lastPathComponent.hasSuffix(".swiftbar") {
+        return fileURL
+    }
+
+    let parentDirectory = fileURL.deletingLastPathComponent()
+    if parentDirectory.lastPathComponent.hasSuffix(".swiftbar") {
+        return parentDirectory
+    }
+
     let resolvedFileURL = fileURL.resolvingSymlinksInPath()
     if resolvedFileURL.lastPathComponent.hasSuffix(".swiftbar") {
         return resolvedFileURL
     }
 
-    let parentDirectory = resolvedFileURL.deletingLastPathComponent()
-    return parentDirectory.lastPathComponent.hasSuffix(".swiftbar") ? parentDirectory : nil
+    let resolvedParentDirectory = resolvedFileURL.deletingLastPathComponent()
+    return resolvedParentDirectory.lastPathComponent.hasSuffix(".swiftbar") ? resolvedParentDirectory : nil
 }
 
 func pluginSyncPath(for fileURL: URL, fileManager: FileManager = .default) -> String {
-    packagedPluginDirectory(for: fileURL, fileManager: fileManager)?.path ?? fileURL.resolvingSymlinksInPath().path
+    packagedPluginDirectory(for: fileURL)?.path ?? fileURL.resolvingSymlinksInPath().path
 }
 
 func pluginSyncPath(for plugin: Plugin, fileManager: FileManager = .default) -> String {
@@ -79,7 +88,7 @@ private func packagedPluginFileState(for packageURL: URL, fileManager: FileManag
 }
 
 func pluginFileState(for fileURL: URL, fileManager: FileManager = .default) -> PluginFileState? {
-    if let packageDirectory = packagedPluginDirectory(for: fileURL, fileManager: fileManager) {
+    if let packageDirectory = packagedPluginDirectory(for: fileURL) {
         return packagedPluginFileState(for: packageDirectory, fileManager: fileManager)
     }
 

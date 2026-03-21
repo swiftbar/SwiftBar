@@ -18,7 +18,7 @@ class PersistentShortcutPlugin: Codable, Identifiable {
     }
 }
 
-class ShortcutPlugin: Plugin, Identifiable, ObservableObject {
+class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     var id: PluginID
     var type: PluginType = .Shortcut
     var name: String

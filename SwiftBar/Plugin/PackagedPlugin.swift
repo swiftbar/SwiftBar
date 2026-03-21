@@ -4,7 +4,7 @@ import os
 
 /// Represents a packaged plugin — a `.swiftbar` directory containing a main
 /// executable script (`plugin.*`) alongside supporting files (libraries, assets, etc.).
-class PackagedPlugin: Plugin {
+class PackagedPlugin: TimerArmingPlugin {
     var id: PluginID
     var type: PluginType = .Executable
     var name: String
@@ -83,8 +83,9 @@ class PackagedPlugin: Plugin {
         makeScriptExecutable(file: file)
         refreshPluginMetadata()
 
-        if let metadata, metadata.type == .Streamable {
-            type = .Streamable
+        if metadata?.type == .Streamable {
+            os_log("Ignoring unsupported streamable metadata for packaged plugin %{public}@",
+                   log: Log.plugin, type: .info, packageDirectory.path)
         }
 
         let nameComponents = mainExecutable.lastPathComponent.components(separatedBy: ".")
@@ -108,7 +109,12 @@ class PackagedPlugin: Plugin {
         }
 
         let fileManager = FileManager.default
-        guard let contents = try? fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil) else {
+        let contents: [URL]
+        do {
+            contents = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+        } catch {
+            os_log("Failed to read packaged plugin directory %{public}@: %{public}@",
+                   log: Log.plugin, type: .error, directory.path, error.localizedDescription)
             return nil
         }
 

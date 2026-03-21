@@ -2,7 +2,7 @@ import Combine
 import Foundation
 import os
 
-class ExecutablePlugin: Plugin {
+class ExecutablePlugin: TimerArmingPlugin {
     var id: PluginID
     let type: PluginType = .Executable
     let name: String

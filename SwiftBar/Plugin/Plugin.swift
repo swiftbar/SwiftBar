@@ -87,6 +87,10 @@ protocol Plugin: AnyObject {
     func writeStdin(_ input: String) throws
 }
 
+protocol TimerArmingPlugin: Plugin {
+    func enableTimer()
+}
+
 extension Plugin {
     var description: String {
         """

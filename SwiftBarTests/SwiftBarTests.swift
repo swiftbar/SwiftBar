@@ -45,6 +45,46 @@ final class TestPlugin: Plugin {
     func writeStdin(_ input: String) throws {}
 }
 
+final class TimedTestPlugin: TimerArmingPlugin {
+    let id: PluginID
+    let type: PluginType = .Executable
+    let name: String
+    let file: String
+    let enabled = true
+    var metadata: PluginMetadata?
+    var contentUpdatePublisher = PassthroughSubject<String?, Never>()
+    var updateInterval: Double = 60
+    var lastUpdated: Date?
+    var lastState: PluginState = .Loading
+    var lastRefreshReason: PluginRefreshReason = .FirstLaunch
+    var content: String?
+    var error: Error?
+    var debugInfo = PluginDebugInfo()
+    var refreshEnv: [String: String] = [:]
+    var enableTimerCallCount = 0
+    let invokeResult: String?
+
+    init(id: PluginID, file: String, invokeResult: String?) {
+        self.id = id
+        name = id
+        self.file = file
+        self.invokeResult = invokeResult
+    }
+
+    func refresh(reason: PluginRefreshReason) {}
+    func enable() {}
+    func disable() {}
+    func start() {}
+    func terminate() {}
+    func invoke() -> String? { invokeResult }
+    func makeScriptExecutable(file: String) {}
+    func refreshPluginMetadata() {}
+    func writeStdin(_ input: String) throws {}
+    func enableTimer() {
+        enableTimerCallCount += 1
+    }
+}
+
 struct SwiftBarTests {
     @Test func testShouldShowDefaultBarItem_whenNoVisiblePluginsAndNotInStealthMode() async throws {
         #expect(shouldShowDefaultBarItem(hasVisiblePlugins: false, stealthMode: false))
@@ -95,6 +135,15 @@ struct SwiftBarTests {
 
         #expect(pluginFileState(for: symlinkURL) != nil)
         #expect(shouldLoadPluginFile(at: symlinkURL, makePluginExecutable: false))
+    }
+
+    @Test func testRunPluginOperation_rearmsTimersForTimerArmingPlugins() async throws {
+        let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
+
+        RunPluginOperation(plugin: plugin).main()
+
+        #expect(plugin.content == "updated")
+        #expect(plugin.enableTimerCallCount == 1)
     }
 
     @Test func testMenuItemActionKinds_includeHrefAndRefreshTogether() async throws {
@@ -672,6 +721,51 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
+    @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let packageTargetURL = tempDirectory.appendingPathComponent("weather-package", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
+
+        let mainExecutableURL = packageTargetURL.appendingPathComponent("plugin.sh")
+        try Data("#!/bin/zsh\necho weather\n".utf8).write(to: mainExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: mainExecutableURL.path)
+
+        let symlinkedPackageURL = tempDirectory.appendingPathComponent("weather.swiftbar", isDirectory: true)
+        try FileManager.default.createSymbolicLink(atPath: symlinkedPackageURL.path, withDestinationPath: packageTargetURL.path)
+
+        let existingPlugin = TestPlugin(
+            id: "weather-package",
+            file: symlinkedPackageURL.appendingPathComponent("plugin.sh").path,
+            content: "weather",
+            lastState: .Success
+        )
+        let packageState = try #require(pluginFileState(for: symlinkedPackageURL))
+        let packageSyncPath = pluginSyncPath(for: symlinkedPackageURL)
+        var loadCallCount = 0
+
+        #expect(packageSyncPath == symlinkedPackageURL.path)
+        #expect(pluginSyncPath(for: existingPlugin) == symlinkedPackageURL.path)
+
+        let syncResult = syncFilePlugins(
+            existingFilePlugins: [existingPlugin],
+            freshFilePlugins: [symlinkedPackageURL],
+            previousFileStates: [packageSyncPath: packageState],
+            discoveredFilePlugins: [symlinkedPackageURL]
+        ) { _ in
+            loadCallCount += 1
+            return nil
+        }
+
+        #expect(syncResult.removedPluginIDs.isEmpty)
+        #expect(syncResult.modifiedPluginIDs.isEmpty)
+        #expect(syncResult.loadedPlugins.isEmpty)
+        #expect(syncResult.freshFileStates[packageSyncPath] == packageState)
+        #expect(loadCallCount == 0)
+    }
+
     @Test func testMergePluginsPreservingOrder_replacesModifiedPluginsInPlace() async throws {
         let firstPlugin = TestPlugin(id: "first", file: "/tmp/first.5s.sh")
         let modifiedPlugin = TestPlugin(id: "modified", file: "/tmp/modified.5s.sh")
@@ -787,6 +881,29 @@ struct SwiftBarIntegrationTests {
 
         #expect(loadablePlugins.isEmpty)
         #expect(manager.loadPlugin(fileURL: packageURL) == nil)
+    }
+
+    @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let packageURL = tempDirectory.appendingPathComponent("streaming.swiftbar", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageURL, withIntermediateDirectories: true)
+
+        let mainExecutableURL = packageURL.appendingPathComponent("plugin.sh")
+        try Data("""
+        #!/bin/zsh
+        <swiftbar.type>Streamable</swiftbar.type>
+        echo hi
+        """.utf8).write(to: mainExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: mainExecutableURL.path)
+
+        let plugin = try #require(PackagedPlugin(packageDirectory: packageURL))
+        plugin.operation?.cancel()
+        plugin.terminate()
+
+        #expect(plugin.type == .Executable)
     }
 
     @Test func testShouldImportOpenedPluginFile_onlyAcceptsValidLocalPlugins() async throws {
