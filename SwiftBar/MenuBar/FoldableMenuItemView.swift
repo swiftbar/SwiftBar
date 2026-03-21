@@ -13,7 +13,7 @@ class FoldableMenuItemView: NSView {
         static let leadingPadding: CGFloat = 18
         static let iconTrailingSpacing: CGFloat = 4
         static let chevronLeadingSpacing: CGFloat = 8
-        static let trailingPadding: CGFloat = 12
+        static let trailingPadding: CGFloat = 16
         static let highlightInsetX: CGFloat = 4
         static let highlightInsetY: CGFloat = 1
         static let highlightCornerRadius: CGFloat = 4
