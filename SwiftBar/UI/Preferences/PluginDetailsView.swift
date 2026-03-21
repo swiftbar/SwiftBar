@@ -99,26 +99,22 @@ struct PluginDetailsView: View {
 
                 // Plugin Variables Section
                 if !md.variables.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Plugin Variables:")
-                                .font(.headline)
-                            Spacer()
-                        }
-                        .padding(.horizontal)
-                        .padding(.top, 8)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Plugin Variables")
+                            .font(.headline)
+                            .padding(.horizontal)
+                            .padding(.top, 8)
 
                         ForEach(md.variables) { variable in
                             PluginVariableEditorView(
                                 variable: variable,
-                                value: bindingForVariable(variable),
-                                width: width * screenProportion
+                                value: bindingForVariable(variable)
                             )
                             .padding(.horizontal)
                         }
 
                         Divider()
-                            .padding(.top, 8)
+                            .padding(.top, 4)
                     }
                 }
 
@@ -176,56 +172,66 @@ struct PluginDetailsView: View {
 struct PluginVariableEditorView: View {
     let variable: PluginVariable
     @Binding var value: String
-    let width: CGFloat
 
     // Local state for text editing to avoid refreshing on every keystroke
     @State private var editingText: String = ""
     @State private var debounceWorkItem: DispatchWorkItem?
 
-    var body: some View {
-        HStack {
-            HStack {
-                Spacer()
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("\(variable.name):")
-                    if !variable.description.isEmpty {
-                        Text(variable.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-            }.frame(width: width)
+    /// Display label: use description if available, otherwise humanize the variable name
+    private var displayLabel: String {
+        if !variable.description.isEmpty {
+            return variable.description
+        }
+        return Self.humanizeVariableName(variable.name)
+    }
 
-            switch variable.type {
-            case .boolean:
-                Toggle("", isOn: Binding(
-                    get: { value.lowercased() == "true" },
-                    set: { value = $0 ? "true" : "false" }
-                ))
-                Spacer()
-            case .select:
-                Picker("", selection: $value) {
-                    ForEach(variable.options, id: \.self) { option in
-                        Text(option).tag(option)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(displayLabel)
+                .font(.system(.body))
+            Text(variable.name)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundColor(.secondary)
+
+            controlView
+                .padding(.top, 2)
+        }
+        .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private var controlView: some View {
+        switch variable.type {
+        case .boolean:
+            Toggle(isOn: Binding(
+                get: { value.lowercased() == "true" },
+                set: { value = $0 ? "true" : "false" }
+            )) {
+                EmptyView()
+            }
+            .toggleStyle(.switch)
+        case .select:
+            Picker("", selection: $value) {
+                ForEach(variable.options, id: \.self) { option in
+                    Text(option).tag(option)
+                }
+            }
+            .labelsHidden()
+            .frame(maxWidth: 200)
+        case .string, .number:
+            TextField(variable.defaultValue, text: $editingText)
+                .textFieldStyle(.roundedBorder)
+                .onAppear { editingText = value }
+                .onChange(of: editingText) { newText in
+                    scheduleCommit(newText: newText)
+                }
+                .onChange(of: value) { newValue in
+                    // External value change - update local text if different
+                    if editingText != newValue {
+                        debounceWorkItem?.cancel()
+                        editingText = newValue
                     }
                 }
-                .frame(maxWidth: 150)
-                Spacer()
-            case .string, .number:
-                TextField("", text: $editingText)
-                    .onAppear { editingText = value }
-                    .onChange(of: editingText) { newText in
-                        scheduleCommit(newText: newText)
-                    }
-                    .onChange(of: value) { newValue in
-                        // External value change - update local text if different
-                        if editingText != newValue {
-                            debounceWorkItem?.cancel()
-                            editingText = newValue
-                        }
-                    }
-                Spacer()
-            }
         }
     }
 
@@ -238,6 +244,18 @@ struct PluginVariableEditorView: View {
         }
         debounceWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
+    }
+
+    /// Converts "VAR_REFRESH_INTERVAL" → "Refresh Interval"
+    static func humanizeVariableName(_ name: String) -> String {
+        var cleaned = name
+        if cleaned.hasPrefix("VAR_") {
+            cleaned = String(cleaned.dropFirst(4))
+        }
+        return cleaned
+            .split(separator: "_")
+            .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+            .joined(separator: " ")
     }
 }
 
