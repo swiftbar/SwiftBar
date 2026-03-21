@@ -5,6 +5,13 @@ import os
 import SwiftUI
 import UserNotifications
 
+extension URL {
+    /// Whether this URL represents a SwiftBar packaged plugin directory (`.swiftbar` bundle).
+    var isSwiftBarPackage: Bool {
+        lastPathComponent.hasSuffix(".swiftbar")
+    }
+}
+
 struct PluginFileState: Equatable {
     let size: UInt64
     let modificationDate: Date?
@@ -16,7 +23,88 @@ enum PluginFileSkipReason: String {
     case notExecutable = "not executable while auto-make-executable is disabled"
 }
 
+/// Returns the packaged plugin directory for a file URL, if the URL is inside
+/// (or is itself) a `.swiftbar` bundle. Handles both direct paths and symlinks,
+/// so that packaged plugins are treated as a single atomic unit during sync.
+func packagedPluginDirectory(for fileURL: URL) -> URL? {
+    if fileURL.isSwiftBarPackage {
+        return fileURL
+    }
+
+    let parentDirectory = fileURL.deletingLastPathComponent()
+    if parentDirectory.isSwiftBarPackage {
+        return parentDirectory
+    }
+
+    let resolvedFileURL = fileURL.resolvingSymlinksInPath()
+    if resolvedFileURL.isSwiftBarPackage {
+        return resolvedFileURL
+    }
+
+    let resolvedParentDirectory = resolvedFileURL.deletingLastPathComponent()
+    return resolvedParentDirectory.isSwiftBarPackage ? resolvedParentDirectory : nil
+}
+
+/// Returns a canonical path used to identify a plugin across sync cycles.
+/// For packaged plugins this is the bundle directory path; for regular plugins
+/// it is the symlink-resolved file path.
+func pluginSyncPath(for fileURL: URL) -> String {
+    packagedPluginDirectory(for: fileURL)?.path ?? fileURL.resolvingSymlinksInPath().path
+}
+
+func pluginSyncPath(for plugin: Plugin) -> String {
+    pluginSyncPath(for: URL(fileURLWithPath: plugin.file))
+}
+
+private func packagedPluginFileState(for packageURL: URL, fileManager: FileManager = .default) -> PluginFileState? {
+    let resolvedPackageURL = packageURL.resolvingSymlinksInPath()
+    guard PackagedPlugin.findMainExecutable(in: resolvedPackageURL) != nil,
+          let enumerator = fileManager.enumerator(at: resolvedPackageURL, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
+    else {
+        return nil
+    }
+
+    var totalSize: UInt64 = 0
+    var latestModificationDate = (try? fileManager.attributesOfItem(atPath: resolvedPackageURL.path)[.modificationDate] as? Date) ?? nil
+    var hasRegularFile = false
+
+    for case let entryURL as URL in enumerator {
+        let resolvedEntryURL = entryURL.resolvingSymlinksInPath()
+        guard let attributes = try? fileManager.attributesOfItem(atPath: resolvedEntryURL.path),
+              let fileType = attributes[.type] as? FileAttributeType
+        else {
+            continue
+        }
+
+        if fileType == .typeDirectory {
+            continue
+        }
+
+        hasRegularFile = true
+
+        if let fileSize = attributes[.size] as? NSNumber {
+            totalSize += fileSize.uint64Value
+        }
+
+        if let modificationDate = attributes[.modificationDate] as? Date,
+           latestModificationDate.map({ modificationDate > $0 }) ?? true
+        {
+            latestModificationDate = modificationDate
+        }
+    }
+
+    guard hasRegularFile else {
+        return nil
+    }
+
+    return PluginFileState(size: totalSize, modificationDate: latestModificationDate)
+}
+
 func pluginFileState(for fileURL: URL, fileManager: FileManager = .default) -> PluginFileState? {
+    if let packageDirectory = packagedPluginDirectory(for: fileURL) {
+        return packagedPluginFileState(for: packageDirectory, fileManager: fileManager)
+    }
+
     let resolvedFileURL = fileURL.resolvingSymlinksInPath()
 
     guard let attributes = try? fileManager.attributesOfItem(atPath: resolvedFileURL.path),
@@ -69,38 +157,43 @@ struct FilePluginSyncResult {
     let freshFileStates: [String: PluginFileState]
 }
 
-func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], previousFileStates: [String: PluginFileState], discoveredFilePlugins: [URL]? = nil, fileManager: FileManager = .default, loadPlugin: (URL) -> Plugin) -> FilePluginSyncResult {
+func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], previousFileStates: [String: PluginFileState], discoveredFilePlugins: [URL]? = nil, fileManager: FileManager = .default, loadPlugin: (URL) -> Plugin?) -> FilePluginSyncResult {
     let discoveredFilePlugins = discoveredFilePlugins ?? freshFilePlugins
+    let discoveredPluginPaths = Set(discoveredFilePlugins.map { pluginSyncPath(for: $0) })
+    let existingPluginPaths = Set(existingFilePlugins.map { pluginSyncPath(for: $0) })
 
     // 1. Build fresh file state map from current disk contents
     let freshFileStates = Dictionary(uniqueKeysWithValues: freshFilePlugins.compactMap { fileURL in
-        pluginFileState(for: fileURL, fileManager: fileManager).map { (fileURL.path, $0) }
+        let syncPath = pluginSyncPath(for: fileURL)
+        return pluginFileState(for: fileURL, fileManager: fileManager).map { (syncPath, $0) }
     })
 
     // 2. Find removed plugins (present in existing but absent from fresh list)
     let removedPlugins = existingFilePlugins.filter { plugin in
-        !discoveredFilePlugins.contains(where: { $0.path == plugin.file })
+        !discoveredPluginPaths.contains(pluginSyncPath(for: plugin))
     }
 
     // 3. Find modified plugins (state on disk differs from previously recorded state)
     let modifiedPlugins = existingFilePlugins.filter { plugin in
-        guard let freshState = freshFileStates[plugin.file] else { return false }
-        return previousFileStates[plugin.file] != freshState
+        let syncPath = pluginSyncPath(for: plugin)
+        guard let freshState = freshFileStates[syncPath] else { return false }
+        return previousFileStates[syncPath] != freshState
     }
+    let modifiedPluginPaths = Set(modifiedPlugins.map { pluginSyncPath(for: $0) })
 
     // 4. Determine which files need (re)loading: new files + modified files
     let filesToLoad = Set(
         freshFilePlugins
             .filter { fileURL in
-                !existingFilePlugins.contains(where: { $0.file == fileURL.path }) ||
-                    modifiedPlugins.contains(where: { $0.file == fileURL.path })
+                let syncPath = pluginSyncPath(for: fileURL)
+                return !existingPluginPaths.contains(syncPath) || modifiedPluginPaths.contains(syncPath)
             }
-            .map(\.path)
+            .map { pluginSyncPath(for: $0) }
     )
 
     let loadedPlugins = freshFilePlugins
-        .filter { filesToLoad.contains($0.path) }
-        .map(loadPlugin)
+        .filter { filesToLoad.contains(pluginSyncPath(for: $0)) }
+        .compactMap(loadPlugin)
 
     return FilePluginSyncResult(
         removedPluginIDs: Set(removedPlugins.map(\.id)),
@@ -111,26 +204,27 @@ func syncFilePlugins(existingFilePlugins: [Plugin], freshFilePlugins: [URL], pre
 }
 
 func mergePluginsPreservingOrder(existingPlugins: [Plugin], removedPluginIDs: Set<PluginID>, reloadedFilePlugins: [Plugin], newShortcutPlugins: [ShortcutPlugin]) -> [Plugin] {
-    let reloadedPluginsByFile = Dictionary(uniqueKeysWithValues: reloadedFilePlugins.map { ($0.file, $0) })
-    let reloadedPluginFiles = Set(reloadedFilePlugins.map(\.file))
+    let reloadedPluginsBySyncPath = Dictionary(uniqueKeysWithValues: reloadedFilePlugins.map { (pluginSyncPath(for: $0), $0) })
+    let reloadedPluginSyncPaths = Set(reloadedFilePlugins.map { pluginSyncPath(for: $0) })
     var consumedReloadedFiles = Set<String>()
     var mergedPlugins: [Plugin] = []
 
     // Only file-backed plugins (Executable/Streamable) are eligible for in-place replacement.
     for plugin in existingPlugins where !removedPluginIDs.contains(plugin.id) {
+        let syncPath = pluginSyncPath(for: plugin)
         guard (plugin.type == .Executable || plugin.type == .Streamable),
-              reloadedPluginFiles.contains(plugin.file),
-              let replacementPlugin = reloadedPluginsByFile[plugin.file]
+              reloadedPluginSyncPaths.contains(syncPath),
+              let replacementPlugin = reloadedPluginsBySyncPath[syncPath]
         else {
             mergedPlugins.append(plugin)
             continue
         }
 
         mergedPlugins.append(replacementPlugin)
-        consumedReloadedFiles.insert(plugin.file)
+        consumedReloadedFiles.insert(syncPath)
     }
 
-    let appendedFilePlugins = reloadedFilePlugins.filter { !consumedReloadedFiles.contains($0.file) }
+    let appendedFilePlugins = reloadedFilePlugins.filter { !consumedReloadedFiles.contains(pluginSyncPath(for: $0)) }
     mergedPlugins.append(contentsOf: appendedFilePlugins)
     mergedPlugins.append(contentsOf: newShortcutPlugins)
 
@@ -308,22 +402,32 @@ class PluginManager: ObservableObject {
             guard let enumerator = FileManager.default.enumerator(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
             else { return ([], []) }
             var dirs: [URL] = []
-            let files = enumerator.compactMap { $0 as? URL }.filter { origURL in
+            var files: [URL] = []
+            for case let origURL as URL in enumerator {
                 let resolvedURL = origURL.resolvingSymlinksInPath()
                 var isDir: ObjCBool = false
-                guard fileManager.fileExists(atPath: resolvedURL.path, isDirectory: &isDir), !isDir.boolValue else {
-                    // Only add directory if we haven't processed its resolved path yet
-                    if isDir.boolValue, !processedDirs.contains(resolvedURL.path) {
-                        processedDirs.insert(resolvedURL.path)
-                        dirs.append(origURL) // Keep original URL for traversal
+                guard fileManager.fileExists(atPath: resolvedURL.path, isDirectory: &isDir) else {
+                    continue
+                }
+                if isDir.boolValue {
+                    // Treat .swiftbar directories as packaged plugin files and skip their contents
+                    if origURL.isSwiftBarPackage {
+                        files.append(origURL)
+                        enumerator.skipDescendants()
+                        continue
                     }
-                    return false
+                    // Only add directory if we haven't processed its resolved path yet
+                    if !processedDirs.contains(resolvedURL.path) {
+                        processedDirs.insert(resolvedURL.path)
+                        dirs.append(origURL)
+                    }
+                    continue
                 }
                 // Exclude .json files (used for plugin variable storage)
                 if origURL.pathExtension.lowercased() == "json" {
-                    return false
+                    continue
                 }
-                return true
+                files.append(origURL)
             }
             return (files, dirs)
         }
@@ -411,7 +515,16 @@ class PluginManager: ObservableObject {
     }
 
     func getLoadablePluginList(from pluginCandidates: [URL]) -> [URL] {
-        pluginCandidates.filter { shouldLoadPluginFile(at: $0, makePluginExecutable: prefs.makePluginExecutable) }
+        pluginCandidates.filter { url in
+            if url.isSwiftBarPackage {
+                guard PackagedPlugin.findMainExecutable(in: url) != nil else {
+                    os_log("Skipping packaged plugin candidate %{public}@ (missing plugin.* entry point)", log: Log.plugin, type: .info, url.path)
+                    return false
+                }
+                return true
+            }
+            return shouldLoadPluginFile(at: url, makePluginExecutable: prefs.makePluginExecutable)
+        }
     }
 
     func loadShortcutPlugins() -> [ShortcutPlugin] {
@@ -500,8 +613,20 @@ class PluginManager: ObservableObject {
         filePluginStates = fileSyncResult.freshFileStates
     }
 
-    func loadPlugin(fileURL: URL) -> Plugin {
-        StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
+    func loadPlugin(fileURL: URL) -> Plugin? {
+        // Check if this is a packaged plugin (.swiftbar directory)
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: fileURL.path, isDirectory: &isDir),
+           isDir.boolValue,
+           fileURL.isSwiftBarPackage
+        {
+            if let packagedPlugin = PackagedPlugin(packageDirectory: fileURL) {
+                return packagedPlugin
+            }
+            os_log("Failed to load packaged plugin at %{public}@", log: Log.plugin, type: .error, fileURL.path)
+            return nil
+        }
+        return StreamablePlugin(fileURL: fileURL) ?? ExecutablePlugin(fileURL: fileURL)
     }
 
     func refreshAllPlugins(reason: PluginRefreshReason) {
@@ -564,21 +689,72 @@ class PluginManager: ObservableObject {
         case importFail
     }
 
+    private func installImportedPlugin(from sourceURL: URL, moveItem: Bool, completionHandler: ((Result<Any, ImportPluginError>) -> Void)? = nil) {
+        guard let pluginDirectoryURL = pluginDirectoryURL else {
+            completionHandler?(.failure(.badURL))
+            return
+        }
+
+        let targetURL = pluginDirectoryURL.appendingPathComponent(sourceURL.lastPathComponent)
+        if sourceURL.resolvingSymlinksInPath().path == targetURL.resolvingSymlinksInPath().path {
+            completionHandler?(.success(true))
+            return
+        }
+
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: sourceURL.path, isDirectory: &isDirectory) else {
+            completionHandler?(.failure(.badURL))
+            return
+        }
+
+        do {
+            if moveItem {
+                try FileManager.default.moveItem(at: sourceURL, to: targetURL)
+            } else {
+                try FileManager.default.copyItem(at: sourceURL, to: targetURL)
+            }
+
+            if !isDirectory.boolValue {
+                try runScript(to: "chmod", args: ["+x", "\(targetURL.path.escaped())"])
+            }
+
+            completionHandler?(.success(true))
+        } catch {
+            completionHandler?(.failure(.importFail))
+            os_log("Failed to import plugin from %{public}@ \n%{public}@", log: Log.plugin, type: .error, sourceURL.absoluteString, error.localizedDescription)
+        }
+    }
+
     func importPlugin(from url: URL, completionHandler: ((Result<Any, ImportPluginError>) -> Void)? = nil) {
         os_log("Starting plugin import from %{public}@", log: Log.plugin, url.absoluteString)
+        if url.isFileURL {
+            let accessedSecurityScopedResource = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessedSecurityScopedResource {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+
+            installImportedPlugin(from: url, moveItem: false, completionHandler: completionHandler)
+            return
+        }
+
         let downloadTask = URLSession.shared.downloadTask(with: url) { fileURL, _, _ in
-            guard let fileURL, let pluginDirectoryURL = self.pluginDirectoryURL else {
+            guard let fileURL else {
                 completionHandler?(.failure(.badURL))
                 return
             }
+
+            let renamedDownloadURL = fileURL.deletingLastPathComponent().appendingPathComponent(url.lastPathComponent)
             do {
-                let targetURL = pluginDirectoryURL.appendingPathComponent(url.lastPathComponent)
-                try FileManager.default.moveItem(atPath: fileURL.path, toPath: targetURL.path)
-                try runScript(to: "chmod", args: ["+x", "\(targetURL.path.escaped())"])
-                completionHandler?(.success(true))
+                if FileManager.default.fileExists(atPath: renamedDownloadURL.path) {
+                    try FileManager.default.removeItem(at: renamedDownloadURL)
+                }
+                try FileManager.default.moveItem(at: fileURL, to: renamedDownloadURL)
+                self.installImportedPlugin(from: renamedDownloadURL, moveItem: true, completionHandler: completionHandler)
             } catch {
                 completionHandler?(.failure(.importFail))
-                os_log("Failed to import plugin from %{public}@ \n%{public}@", log: Log.plugin, type: .error, url.absoluteString, error.localizedDescription)
+                os_log("Failed to prepare imported plugin from %{public}@ \n%{public}@", log: Log.plugin, type: .error, url.absoluteString, error.localizedDescription)
             }
         }
         downloadTask.resume()

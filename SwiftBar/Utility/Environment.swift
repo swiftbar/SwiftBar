@@ -17,6 +17,7 @@ class Environment {
         case osVersionMinor = "OS_VERSION_MINOR"
         case osVersionPatch = "OS_VERSION_PATCH"
         case osAppearance = "OS_APPEARANCE"
+        case swiftBarPluginPackagePath = "SWIFTBAR_PLUGIN_PACKAGE_PATH"
         case osLastSleepTime = "OS_LAST_SLEEP_TIME"
         case osLastWakeTime = "OS_LAST_WAKE_TIME"
     }

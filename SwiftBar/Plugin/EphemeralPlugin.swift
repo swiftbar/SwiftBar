@@ -12,7 +12,7 @@ class EphemeralPlugin: Plugin {
     let file: String = "none"
     var refreshEnv: [String: String] = [:]
 
-    var updateInterval: Double = 60 * 60 * 24 * 100 {
+    var updateInterval: Double = pluginNeverUpdateInterval {
         didSet {
             cancellable.forEach { $0.cancel() }
             cancellable.removeAll()

@@ -37,7 +37,6 @@ final class RunPluginOperation<T: Plugin>: Operation {
         // Check again after invoke - operation may have been cancelled while script was running
         guard !isCancelled else { return }
         plugin?.content = result
-        (plugin as? ExecutablePlugin)?.enableTimer()
-        (plugin as? ShortcutPlugin)?.enableTimer()
+        (plugin as? TimerArmingPlugin)?.enableTimer()
     }
 }
