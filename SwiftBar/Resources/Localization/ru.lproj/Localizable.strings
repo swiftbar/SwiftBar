@@ -17,6 +17,8 @@
 "MB_GET_PLUGINS" = "Загрузить плагины...";
 "MB_SEND_FEEDBACK" = "Отправить фидбек...";
 "MB_SHOW_ERROR" = "Показать ошибку";
+"MB_COPY_SYSTEM_REPORT" = "Copy System Report";
+"MB_OPEN_SYSTEM_REPORT" = "Open System Report...";
 
 //Preferences strings
 "PF_PREFERENCES" = "Настройки";

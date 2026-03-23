@@ -137,6 +137,7 @@ class AppShared: NSObject {
         PreferencesStore.shared.pluginDirectoryPath = url.path
         delegate.pluginManager.terminateAllPlugins()
         delegate.pluginManager.loadPlugins()
+        delegate.pluginManager.persistLatestSystemReport(reason: "plugin-folder-changed")
     }
 
     public static func getPlugins() {

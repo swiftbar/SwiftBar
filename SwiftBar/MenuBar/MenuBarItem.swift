@@ -199,6 +199,13 @@ class MenubarItem: NSObject {
         let visibilityChanged = barItem.isVisible != isVisible
         barItem.isVisible = isVisible
 
+        if plugin != nil {
+            let removedKeys = removeStatusItemVisibilityKeys()
+            for key in removedKeys {
+                os_log("Removed NSStatusItem visibility key after menu item visibility change: %{public}@", log: Log.diagnostics, type: .info, key)
+            }
+        }
+
         guard visibilityChanged else { return }
         visibilityDidChange?(isVisible)
     }
@@ -273,10 +280,12 @@ extension MenubarItem {
         let changePluginFolderItem = NSMenuItem(title: Localizable.MenuBar.ChangePluginsFolder.localized, action: #selector(changePluginFolder), keyEquivalent: "")
         let getPluginsItem = NSMenuItem(title: Localizable.MenuBar.GetPlugins.localized, action: #selector(getPlugins), keyEquivalent: "")
         let sendFeedbackItem = NSMenuItem(title: Localizable.MenuBar.SendFeedback.localized, action: #selector(sendFeedback), keyEquivalent: "")
+        let copySystemReportItem = NSMenuItem(title: Localizable.MenuBar.CopySystemReport.localized, action: #selector(copySystemReport), keyEquivalent: "")
+        let openSystemReportItem = NSMenuItem(title: Localizable.MenuBar.OpenSystemReport.localized, action: #selector(openSystemReport), keyEquivalent: "")
         let aboutSwiftbarItem = NSMenuItem(title: Localizable.MenuBar.AboutPlugin.localized, action: #selector(aboutSwiftBar), keyEquivalent: "")
         let quitItem = NSMenuItem(title: Localizable.App.Quit.localized, action: #selector(quit), keyEquivalent: "q")
         let showErrorItem = NSMenuItem(title: Localizable.MenuBar.ShowError.localized, action: #selector(showErrorPopover), keyEquivalent: "")
-        for item in [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, terminatePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem] {
+        for item in [refreshAllItem, enableAllItem, disableAllItem, preferencesItem, openPluginFolderItem, changePluginFolderItem, getPluginsItem, quitItem, disablePluginItem, debugPluginItem, terminatePluginItem, aboutItem, aboutSwiftbarItem, runInTerminalItem, showErrorItem, sendFeedbackItem, copySystemReportItem, openSystemReportItem] {
             item.target = self
             item.attributedTitle = NSAttributedString(string: item.title, attributes: [.font: NSFont.menuBarFont(ofSize: 0)])
         }
@@ -291,6 +300,8 @@ extension MenubarItem {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(aboutSwiftbarItem)
         menu.addItem(preferencesItem)
+        menu.addItem(copySystemReportItem)
+        menu.addItem(openSystemReportItem)
         menu.addItem(sendFeedbackItem)
         menu.addItem(quitItem)
 
@@ -361,6 +372,14 @@ extension MenubarItem {
 
     @objc func sendFeedback() {
         NSWorkspace.shared.open(URL(string: "https://github.com/swiftbar/SwiftBar/issues")!)
+    }
+
+    @objc func copySystemReport() {
+        _ = delegate.pluginManager.copyLatestSystemReportToPasteboard()
+    }
+
+    @objc func openSystemReport() {
+        delegate.pluginManager.openLatestSystemReport()
     }
 
     @objc func quit() {

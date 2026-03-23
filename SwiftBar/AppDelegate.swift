@@ -26,6 +26,21 @@ func statusItemVisibilityKeys(in defaults: [String: Any]) -> [String] {
     defaults.keys.filter { $0.hasPrefix("NSStatusItem Visible") }.sorted()
 }
 
+@discardableResult
+func removeStatusItemVisibilityKeys(userDefaults: UserDefaults = .standard) -> [String] {
+    let keysToRemove = statusItemVisibilityKeys(in: userDefaults.dictionaryRepresentation())
+
+    for key in keysToRemove {
+        userDefaults.removeObject(forKey: key)
+    }
+
+    if !keysToRemove.isEmpty {
+        userDefaults.synchronize()
+    }
+
+    return keysToRemove
+}
+
 func shouldImportOpenedPluginFile(at url: URL, makePluginExecutable: Bool, fileManager: FileManager = .default) -> Bool {
     guard url.isFileURL else {
         return false
@@ -97,6 +112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         // Instance of Plugin Manager must be created after app launch
         pluginManager = PluginManager.shared
         pluginManager.loadPlugins()
+        pluginManager.persistLatestSystemReport(reason: "application-did-finish-launching")
 
         while PreferencesStore.shared.pluginDirectoryPath == nil {
             let alert = NSAlert()
@@ -239,6 +255,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                                href: url.queryParameters?["href"],
                                                commandParams: MenuLineParameters(line: "|\(paramsString)").json,
                                                silent: url.queryParameters?["silent"] == "true")
+            case "copysystemreport":
+                pluginManager.copyLatestSystemReportToPasteboard()
+            case "opensystemreport":
+                pluginManager.openLatestSystemReport()
             default:
                 os_log("Unsupported URL scheme \n %{public}@", log: Log.plugin, type: .error, url.absoluteString)
             }
@@ -288,17 +308,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     /// when plugins have no output or fail to load. We clear those keys at launch
     /// while keeping Preferred Position keys intact.
     private func cleanupStatusItemVisibility() {
-        let defaults = UserDefaults.standard
         // Clear visibility persistence while keeping Preferred Position keys so user ordering survives restarts.
-        let keysToRemove = statusItemVisibilityKeys(in: defaults.dictionaryRepresentation())
+        let keysToRemove = removeStatusItemVisibilityKeys()
         
         for key in keysToRemove {
-            defaults.removeObject(forKey: key)
             os_log("Removed NSStatusItem persistence key: %{public}@", log: Log.plugin, type: .info, key)
-        }
-        
-        if !keysToRemove.isEmpty {
-            defaults.synchronize()
         }
     }
 }

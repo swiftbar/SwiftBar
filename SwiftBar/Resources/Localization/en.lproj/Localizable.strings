@@ -17,6 +17,8 @@
 "MB_GET_PLUGINS" = "Get Plugins...";
 "MB_SEND_FEEDBACK" = "Send Feedback...";
 "MB_SHOW_ERROR" = "Show Error";
+"MB_COPY_SYSTEM_REPORT" = "Copy System Report";
+"MB_OPEN_SYSTEM_REPORT" = "Open System Report…";
 
 //Preferences strings
 "PF_PREFERENCES" = "Preferences";

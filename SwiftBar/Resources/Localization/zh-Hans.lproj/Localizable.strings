@@ -17,6 +17,8 @@
 "MB_GET_PLUGINS" = "获取插件...";
 "MB_SEND_FEEDBACK" = "发送反馈...";
 "MB_SHOW_ERROR" = "展示错误信息";
+"MB_COPY_SYSTEM_REPORT" = "Copy System Report";
+"MB_OPEN_SYSTEM_REPORT" = "Open System Report...";
 
 //Preferences strings
 "PF_PREFERENCES" = "偏好设置";

@@ -17,6 +17,8 @@
 "MB_GET_PLUGINS" = "Plug-ins verkrijgen…";
 "MB_SEND_FEEDBACK" = "Stuur feedback…";
 "MB_SHOW_ERROR" = "Toon foutmelding";
+"MB_COPY_SYSTEM_REPORT" = "Copy System Report";
+"MB_OPEN_SYSTEM_REPORT" = "Open System Report...";
 
 //Preferences strings
 "PF_PREFERENCES" = "Voorkeuren";

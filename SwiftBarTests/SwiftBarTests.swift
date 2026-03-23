@@ -221,6 +221,67 @@ struct SwiftBarTests {
         ])
     }
 
+    @Test func testStatusItemPersistenceEntries_includeAllStatusItemKeys() async throws {
+        let entries = statusItemPersistenceEntries(in: [
+            "NSStatusItem Visible Item-0": 0,
+            "NSStatusItem Preferred Position com.example.one": 12,
+            "UnrelatedKey": true,
+        ])
+
+        #expect(entries == [
+            "NSStatusItem Preferred Position com.example.one = 12",
+            "NSStatusItem Visible Item-0 = 0",
+        ])
+    }
+
+    @Test func testRemoveStatusItemVisibilityKeys_onlyRemovesVisibilityKeys() async throws {
+        let suiteName = "SwiftBarTests.\(UUID().uuidString)"
+        let defaults = try #require(UserDefaults(suiteName: suiteName))
+        defaults.set(0, forKey: "NSStatusItem Visible Item-0")
+        defaults.set(12, forKey: "NSStatusItem Preferred Position com.example.one")
+        defaults.set(true, forKey: "UnrelatedKey")
+
+        let removedKeys = removeStatusItemVisibilityKeys(userDefaults: defaults)
+
+        #expect(removedKeys == ["NSStatusItem Visible Item-0"])
+        #expect(defaults.object(forKey: "NSStatusItem Visible Item-0") == nil)
+        #expect((defaults.object(forKey: "NSStatusItem Preferred Position com.example.one") as? Int) == 12)
+        #expect((defaults.object(forKey: "UnrelatedKey") as? Bool) == true)
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    @Test func testKnownMenuBarManagerMatches_detectsKnownManagersCaseInsensitively() async throws {
+        let matches = knownMenuBarManagerMatches(in: [
+            "Finder",
+            "ICE",
+            "bartender 5",
+            "Terminal",
+        ])
+
+        #expect(matches == ["Ice", "Bartender"])
+    }
+
+    @Test func testSystemReportCandidateStatus_reportsPackagedPluginWithoutEntryPoint() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let packageURL = tempDirectory.appendingPathComponent("weather.swiftbar")
+        try FileManager.default.createDirectory(at: packageURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        #expect(systemReportCandidateStatus(for: packageURL, makePluginExecutable: true) == "skipped: packaged plugin missing plugin.* entry point")
+    }
+
+    @Test func testSystemReportCandidateStatus_reportsLoadableExecutableFile() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let fileURL = tempDirectory.appendingPathComponent("hello.1m.sh")
+        try Data("#!/bin/zsh\necho hi\n".utf8).write(to: fileURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fileURL.path)
+
+        #expect(systemReportCandidateStatus(for: fileURL, makePluginExecutable: false) == "loadable file plugin")
+    }
+
     @Test func testBuildTerminalCommand_quotesMultiWordBashCArgument() async throws {
         let command = buildTerminalCommand(
             script: "bash",

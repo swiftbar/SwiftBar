@@ -17,6 +17,8 @@
 "MB_GET_PLUGINS" = "Preuzmi dodatak …";
 "MB_SEND_FEEDBACK" = "Pošalji povratne informacije …";
 "MB_SHOW_ERROR" = "Prikaži grešku";
+"MB_COPY_SYSTEM_REPORT" = "Copy System Report";
+"MB_OPEN_SYSTEM_REPORT" = "Open System Report...";
 
 //Preferences strings
 "PF_PREFERENCES" = "Postavke";

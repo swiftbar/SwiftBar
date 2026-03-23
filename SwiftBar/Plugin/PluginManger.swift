@@ -150,6 +150,46 @@ func shouldShowDefaultBarItem(hasVisiblePlugins: Bool, stealthMode: Bool) -> Boo
     !stealthMode && !hasVisiblePlugins
 }
 
+private let knownMenuBarManagerNames = [
+    "Ice",
+    "Bartender",
+    "Hidden Bar",
+    "Dozer",
+    "Vanilla",
+    "Barbee",
+]
+
+func knownMenuBarManagerMatches(in applicationNames: [String]) -> [String] {
+    let normalizedNames = applicationNames.map { $0.lowercased() }
+
+    return knownMenuBarManagerNames.filter { knownName in
+        normalizedNames.contains { $0.contains(knownName.lowercased()) }
+    }
+}
+
+func statusItemPersistenceEntries(in defaults: [String: Any]) -> [String] {
+    defaults.keys
+        .filter { $0.hasPrefix("NSStatusItem ") }
+        .sorted()
+        .map { key in
+            "\(key) = \(String(describing: defaults[key] ?? ""))"
+        }
+}
+
+func systemReportCandidateStatus(for fileURL: URL, makePluginExecutable: Bool, fileManager: FileManager = .default) -> String {
+    if fileURL.isSwiftBarPackage {
+        return PackagedPlugin.findMainExecutable(in: fileURL) != nil
+            ? "loadable packaged plugin"
+            : "skipped: packaged plugin missing plugin.* entry point"
+    }
+
+    if let skipReason = pluginFileSkipReason(for: fileURL, makePluginExecutable: makePluginExecutable, fileManager: fileManager) {
+        return "skipped: \(skipReason.rawValue)"
+    }
+
+    return "loadable file plugin"
+}
+
 struct FilePluginSyncResult {
     let removedPluginIDs: Set<PluginID>
     let modifiedPluginIDs: Set<PluginID>
@@ -337,6 +377,7 @@ class PluginManager: ObservableObject {
         }
 
         updateDefaultBarItemVisibility()
+        persistLatestSystemReport(reason: "plugins-did-change")
     }
 
     func updateDefaultBarItemVisibility() {
@@ -356,6 +397,7 @@ class PluginManager: ObservableObject {
         }
 
         shouldShowDefaultBarItem(hasVisiblePlugins: hasVisiblePlugins, stealthMode: prefs.stealthMode) ? barItem.show() : barItem.hide()
+        persistLatestSystemReport(reason: "default-bar-item-visibility")
     }
 
     func getPluginByNameOrID(identifier: String) -> Plugin? {
@@ -571,6 +613,7 @@ class PluginManager: ObservableObject {
             // Preserve the original escape hatch: if everything is gone, show SwiftBar
             // even in stealth mode so the user can recover.
             barItem.show()
+            persistLatestSystemReport(reason: "no-loadable-plugins")
             return
         }
 
@@ -611,6 +654,7 @@ class PluginManager: ObservableObject {
             newShortcutPlugins: newShortcutPlugins
         )
         filePluginStates = fileSyncResult.freshFileStates
+        persistLatestSystemReport(reason: "load-plugins")
     }
 
     func loadPlugin(fileURL: URL) -> Plugin? {
@@ -783,6 +827,329 @@ class PluginManager: ObservableObject {
 }
 
 extension PluginManager {
+    private var diagnosticsDirectoryURL: URL? {
+        guard let appName = Bundle.main.infoDictionary?[kCFBundleNameKey as String] as? String,
+              let applicationSupportURL = try? FileManager.default.url(for: .applicationSupportDirectory,
+                                                                       in: .userDomainMask,
+                                                                       appropriateFor: nil,
+                                                                       create: true)
+        else {
+            return nil
+        }
+
+        return applicationSupportURL
+            .appendingPathComponent(appName)
+            .appendingPathComponent("Diagnostics")
+    }
+
+    func latestSystemReportURL(createDirectory: Bool = false) -> URL? {
+        guard let diagnosticsDirectoryURL else {
+            return nil
+        }
+
+        if createDirectory {
+            do {
+                try FileManager.default.createDirectory(at: diagnosticsDirectoryURL, withIntermediateDirectories: true)
+            } catch {
+                os_log("Failed to create diagnostics directory %{public}@: %{public}@",
+                       log: Log.diagnostics, type: .error, diagnosticsDirectoryURL.path, error.localizedDescription)
+                return nil
+            }
+        }
+
+        return diagnosticsDirectoryURL.appendingPathComponent("latest-system-report.txt")
+    }
+
+    private func boolString(_ value: Bool) -> String {
+        value ? "yes" : "no"
+    }
+
+    private func stringValue(_ value: String?) -> String {
+        guard let value,
+              !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        else {
+            return "none"
+        }
+
+        return value
+    }
+
+    private func dateString(_ date: Date?) -> String {
+        guard let date else {
+            return "never"
+        }
+
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.string(from: date)
+    }
+
+    private func activationPolicyString() -> String {
+        switch NSApp.activationPolicy() {
+        case .regular:
+            return "regular"
+        case .accessory:
+            return "accessory"
+        case .prohibited:
+            return "prohibited"
+        @unknown default:
+            return "unknown"
+        }
+    }
+
+    private func byteCountString(for url: URL) -> String {
+        guard let state = pluginFileState(for: url) else {
+            return "unknown"
+        }
+
+        return ByteCountFormatter.string(fromByteCount: Int64(state.size), countStyle: .file)
+    }
+
+    private func fileExistsDescription(for url: URL) -> String {
+        var isDirectory: ObjCBool = false
+        let exists = FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory)
+        guard exists else {
+            return "missing"
+        }
+
+        return isDirectory.boolValue ? "directory" : "file"
+    }
+
+    private func isSymbolicLink(_ url: URL) -> Bool {
+        (try? url.resourceValues(forKeys: [.isSymbolicLinkKey]).isSymbolicLink) ?? false
+    }
+
+    private func quarantineAttribute(for url: URL) -> String? {
+        guard let output = try? runScript(to: "/usr/bin/xattr",
+                                          args: ["-p", "com.apple.quarantine", url.path],
+                                          runInBash: false).out
+        else {
+            return nil
+        }
+
+        let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private func errorPreview(_ error: Error?) -> String {
+        guard let error else {
+            return "none"
+        }
+
+        let preview = error.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !preview.isEmpty else {
+            return String(describing: error)
+        }
+
+        if preview.count <= 500 {
+            return preview
+        }
+
+        return String(preview.prefix(500)) + "…"
+    }
+
+    private func contentStateDescription(for plugin: Plugin) -> String {
+        if plugin.lastState == .Loading {
+            return "loading"
+        }
+
+        guard let content = plugin.content else {
+            return "nil"
+        }
+
+        let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return "empty"
+        }
+
+        return "non-empty (\(trimmed.count) chars)"
+    }
+
+    func currentSystemReport(reason: String = "manual") -> String {
+        if !Thread.isMainThread {
+            return DispatchQueue.main.sync {
+                currentSystemReport(reason: reason)
+            }
+        }
+
+        let bundleURL = Bundle.main.bundleURL
+        let resolvedBundleURL = bundleURL.resolvingSymlinksInPath()
+        let pluginDirectoryURL = prefs.pluginDirectoryResolvedURL
+        let discoveredPluginCandidates = getPluginList()
+        let statusItemEntries = statusItemPersistenceEntries(in: UserDefaults.standard.dictionaryRepresentation())
+        let runningMenuBarManagers = knownMenuBarManagerMatches(in: NSWorkspace.shared.runningApplications.compactMap(\.localizedName))
+        let reportPath = latestSystemReportURL()?.path ?? "unavailable"
+
+        var lines: [String] = [
+            "SwiftBar System Report",
+            "Generated: \(dateString(Date()))",
+            "Reason: \(reason)",
+            "Privacy note: local paths and configuration are included; secret environment values are intentionally omitted.",
+            "Latest report path: \(reportPath)",
+            "",
+            "== App ==",
+            "Bundle ID: \(Bundle.main.bundleIdentifier ?? "unknown")",
+            "Version: \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "unknown") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "unknown"))",
+            "macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)",
+            "PID: \(ProcessInfo.processInfo.processIdentifier)",
+            "User: \(NSUserName())",
+            "Time Zone: \(TimeZone.current.identifier)",
+            "Activation Policy: \(activationPolicyString())",
+            "Bundle Path: \(bundleURL.path)",
+            "Resolved Bundle Path: \(resolvedBundleURL.path)",
+            "Running Translocated: \(boolString(bundleURL.path.contains("/AppTranslocation/") || resolvedBundleURL.path.contains("/AppTranslocation/")))",
+            "Quarantine Attribute: \(stringValue(quarantineAttribute(for: bundleURL)))",
+            "Known Menu Bar Managers: \(runningMenuBarManagers.isEmpty ? "none" : runningMenuBarManagers.joined(separator: ", "))",
+            "",
+            "== Preferences ==",
+            "Plugin Directory: \(stringValue(prefs.pluginDirectoryPath))",
+            "Resolved Plugin Directory: \(stringValue(pluginDirectoryURL?.path))",
+            "Plugin Directory Exists: \(pluginDirectoryURL.map { boolString(FileManager.default.fileExists(atPath: $0.path)) } ?? "no")",
+            "Plugin Directory Is Symlink: \(pluginDirectoryURL.map { boolString(isSymbolicLink($0)) } ?? "no")",
+            "Detected Login Shell: \(sharedEnv.userLoginShell)",
+            "Environment SHELL: \(stringValue(ProcessInfo.processInfo.environment["SHELL"]))",
+            "Configured Shell: \(prefs.shell.rawValue)",
+            "Configured Terminal: \(prefs.terminal.rawValue)",
+            "Make Plugin Executable: \(boolString(prefs.makePluginExecutable))",
+            "Hide SwiftBar Icon: \(boolString(prefs.swiftBarIconIsHidden))",
+            "Stealth Mode: \(boolString(prefs.stealthMode))",
+            "Include Beta Updates: \(boolString(prefs.includeBetaUpdates))",
+            "Plugin Debug Mode: \(boolString(prefs.pluginDebugMode))",
+            "Debug Logging Enabled: \(boolString(prefs.debugLoggingEnabled))",
+            "Disabled Plugins: \(prefs.disabledPlugins.isEmpty ? "none" : prefs.disabledPlugins.joined(separator: ", "))",
+            "",
+            "== Status Item Persistence ==",
+        ]
+
+        if statusItemEntries.isEmpty {
+            lines.append("No NSStatusItem persistence keys found.")
+        } else {
+            lines.append(contentsOf: statusItemEntries.map { "- \($0)" })
+        }
+
+        lines.append("")
+        lines.append("== Plugin Directory Candidates ==")
+
+        if discoveredPluginCandidates.isEmpty {
+            lines.append("No plugin candidates discovered.")
+        } else {
+            for candidate in discoveredPluginCandidates.sorted(by: { $0.path < $1.path }) {
+                let resolvedPath = candidate.resolvingSymlinksInPath().path
+                let status = systemReportCandidateStatus(for: candidate, makePluginExecutable: prefs.makePluginExecutable)
+                let executable = candidate.isSwiftBarPackage ? "n/a" : boolString(FileManager.default.isExecutableFile(atPath: candidate.path))
+                lines.append("- \(candidate.path)")
+                lines.append("  resolved: \(resolvedPath)")
+                lines.append("  status: \(status)")
+                lines.append("  exists: \(fileExistsDescription(for: candidate))")
+                lines.append("  executable: \(executable)")
+                lines.append("  size: \(byteCountString(for: candidate))")
+            }
+        }
+
+        lines.append("")
+        lines.append("== Runtime Plugins ==")
+        lines.append("Loaded Plugins: \(plugins.count)")
+        lines.append("Enabled Plugins: \(enabledPlugins.count)")
+        lines.append("Fallback SwiftBar Item Visible: \(boolString(barItem.barItem.isVisible))")
+
+        if plugins.isEmpty {
+            lines.append("No runtime plugins loaded.")
+        } else {
+            for plugin in plugins.sorted(by: { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }) {
+                let menuBarItem = menuBarItems[plugin.id]
+                let pluginFileURL = URL(fileURLWithPath: plugin.file)
+                let metadata = plugin.metadata
+                lines.append("- \(plugin.name)")
+                lines.append("  id: \(plugin.id)")
+                lines.append("  type: \(plugin.type.rawValue)")
+                lines.append("  enabled: \(boolString(plugin.enabled))")
+                lines.append("  file: \(plugin.file)")
+                lines.append("  resolved file: \(pluginFileURL.resolvingSymlinksInPath().path)")
+                lines.append("  file exists: \(fileExistsDescription(for: pluginFileURL))")
+                lines.append("  menu item visible: \(boolString(menuBarItem?.barItem.isVisible == true))")
+                lines.append("  autosave name: \(stringValue(menuBarItem?.barItem.autosaveName))")
+                lines.append("  last state: \(String(describing: plugin.lastState))")
+                lines.append("  last refresh reason: \(plugin.lastRefreshReason.rawValue)")
+                lines.append("  last updated: \(dateString(plugin.lastUpdated))")
+                lines.append("  update interval: \(plugin.updateInterval)")
+                lines.append("  content state: \(contentStateDescription(for: plugin))")
+                lines.append("  error: \(errorPreview(plugin.error))")
+                lines.append("  metadata type: \(metadata?.type.rawValue ?? "none")")
+                lines.append("  metadata alwaysVisible: \(boolString(metadata?.alwaysVisible == true))")
+                lines.append("  metadata refreshOnOpen: \(boolString(metadata?.refreshOnOpen == true))")
+                lines.append("  metadata runInBash: \(boolString(metadata?.shouldRunInBash ?? true))")
+                lines.append("  metadata persistentWebView: \(boolString(metadata?.persistentWebView == true))")
+                lines.append("  metadata schedule: \(stringValue(metadata?.schedule))")
+                lines.append("  metadata variables: \(metadata?.variables.count ?? 0)")
+            }
+        }
+
+        if let ignoreFileContent, !ignoreFileContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            lines.append("")
+            lines.append("== .swiftbarignore ==")
+            lines.append(ignoreFileContent)
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    @discardableResult
+    func persistLatestSystemReport(reason: String = "manual") -> URL? {
+        if !Thread.isMainThread {
+            return DispatchQueue.main.sync {
+                persistLatestSystemReport(reason: reason)
+            }
+        }
+
+        guard let reportURL = latestSystemReportURL(createDirectory: true) else {
+            return nil
+        }
+
+        let report = currentSystemReport(reason: reason)
+
+        do {
+            try report.write(to: reportURL, atomically: true, encoding: .utf8)
+            os_log("Persisted system report to %{public}@", log: Log.diagnostics, type: .info, reportURL.path)
+            return reportURL
+        } catch {
+            os_log("Failed to persist system report to %{public}@: %{public}@",
+                   log: Log.diagnostics, type: .error, reportURL.path, error.localizedDescription)
+            return nil
+        }
+    }
+
+    @discardableResult
+    func copyLatestSystemReportToPasteboard() -> String? {
+        if !Thread.isMainThread {
+            return DispatchQueue.main.sync {
+                copyLatestSystemReportToPasteboard()
+            }
+        }
+
+        let report = currentSystemReport(reason: "manual-copy")
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let success = pasteboard.setString(report, forType: .string)
+        _ = persistLatestSystemReport(reason: "manual-copy")
+        os_log("Copied system report to pasteboard (success=%{public}@)", log: Log.diagnostics, type: .info, boolString(success))
+        return success ? report : nil
+    }
+
+    func openLatestSystemReport() {
+        if !Thread.isMainThread {
+            DispatchQueue.main.async { [weak self] in
+                self?.openLatestSystemReport()
+            }
+            return
+        }
+
+        guard let reportURL = persistLatestSystemReport(reason: "manual-open") else {
+            return
+        }
+
+        NSWorkspace.shared.open(reportURL)
+    }
+
     func showNotification(plugin: Plugin, title: String?, subtitle: String?, body: String?, href: String?, commandParams: String?, silent: Bool = false) {
         let content = UNMutableNotificationContent()
         content.title = title ?? ""

@@ -32,6 +32,8 @@ enum Localizable {
         case SendFeedback = "MB_SEND_FEEDBACK"
         case ShowError = "MB_SHOW_ERROR"
         case TerminateEphemeralPlugin = "MB_TERMINATE_EPH"
+        case CopySystemReport = "MB_COPY_SYSTEM_REPORT"
+        case OpenSystemReport = "MB_OPEN_SYSTEM_REPORT"
     }
 
     enum Preferences: String {
