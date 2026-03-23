@@ -2206,13 +2206,33 @@ struct FoldMenuItemBuildTests {
     @MainActor
     private func menuItem(named title: String, in menu: NSMenu) -> NSMenuItem? {
         menu.items.first { menuItem in
-            (menuItem.representedObject as? MenuLineParameters)?.title == title
+            if let params = menuItem.representedObject as? MenuLineParameters,
+               params.title.trimmingCharacters(in: .whitespacesAndNewlines) == title
+            {
+                return true
+            }
+
+            return menuItemTitle(menuItem).trimmingCharacters(in: .whitespacesAndNewlines) == title
         }
     }
 
     @MainActor
     private func menuItemTitle(_ item: NSMenuItem) -> String {
         item.attributedTitle?.string ?? item.title
+    }
+
+    @MainActor
+    private func makeBase64PNG(size: NSSize) throws -> String {
+        let image = NSImage(size: size)
+        image.lockFocus()
+        NSColor.systemBlue.setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
+        image.unlockFocus()
+
+        let tiffData = try #require(image.tiffRepresentation)
+        let bitmapRep = try #require(NSBitmapImageRep(data: tiffData))
+        let pngData = try #require(bitmapRep.representation(using: .png, properties: [:]))
+        return pngData.base64EncodedString()
     }
 
     @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
@@ -2271,6 +2291,46 @@ struct FoldMenuItemBuildTests {
 
         #expect(childItem1.isHidden == true)
         #expect(childItem2.isHidden == true)
+    }
+
+    @MainActor @Test func testFullBuild_foldItemViewCarriesBadgeAndNormalizedIconSize() throws {
+        let item = makeMenuBarItem()
+        let imageBase64 = try makeBase64PNG(size: NSSize(width: 54, height: 54))
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true badge=99 image=\(imageBase64)
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let foldView = try #require(foldParent.view as? FoldableMenuItemView)
+
+        #expect(foldView.displayedBadgeText == "99")
+        #expect(foldView.displayedIconSize == NSSize(width: 16, height: 16))
+    }
+
+    @MainActor @Test func testMenuHighlight_updatesFoldViewHighlightState() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        Status
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let foldView = try #require(foldParent.view as? FoldableMenuItemView)
+        let statusItem = try #require(menuItem(named: "Status", in: item.statusBarMenu))
+
+        item.menu(item.statusBarMenu, willHighlight: foldParent)
+        #expect(foldView.isShowingHighlightedAppearance == true)
+
+        item.menu(item.statusBarMenu, willHighlight: statusItem)
+        #expect(foldView.isShowingHighlightedAppearance == false)
     }
 
     @MainActor @Test func testFullBuild_nonFoldItemUsesSubmenu() throws {

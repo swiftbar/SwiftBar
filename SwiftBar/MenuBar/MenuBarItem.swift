@@ -59,6 +59,7 @@ class MenubarItem: NSObject {
     private var expandedFoldLines: Set<String> = []
     /// NSMenuItems injected as fold children, keyed by parent NSMenuItem identity.
     private var foldChildItems: [ObjectIdentifier: [NSMenuItem]] = [:]
+    private weak var highlightedFoldItem: NSMenuItem?
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
@@ -229,11 +230,15 @@ extension MenubarItem: NSMenuDelegate {
         reapplyOpenMenuStateIfNeeded()
     }
 
-    func menuDidClose(_: NSMenu) {
+    func menuDidClose(_ menu: NSMenu) {
         isOpen = false
         showsAllStandardItemsWhileOpen = false
         setMenuTitle(title: currentTitleLine)
         hotKeys.forEach { $0.isPaused = false }
+        if let foldView = highlightedFoldItem?.view as? FoldableMenuItemView {
+            foldView.setHighlighted(false)
+        }
+        highlightedFoldItem = nil
 
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
@@ -262,6 +267,16 @@ extension MenubarItem: NSMenuDelegate {
         {
             params.params.removeValue(forKey: "color")
             item?.attributedTitle = atributedTitle(with: params).title
+        }
+
+        if let previousFoldView = highlightedFoldItem?.view as? FoldableMenuItemView {
+            previousFoldView.setHighlighted(false)
+        }
+        if let nextFoldView = item?.view as? FoldableMenuItemView {
+            nextFoldView.setHighlighted(true)
+            highlightedFoldItem = item
+        } else {
+            highlightedFoldItem = nil
         }
     }
 }
@@ -816,8 +831,13 @@ extension MenubarItem {
             let newParams = MenuLineParameters(line: newNode.workingLine)
             if !oldNode.contentEqual(to: newNode) {
                 if let foldView = existingItem.view as? FoldableMenuItemView, newParams.fold {
-                    let titleInfo = atributedTitle(with: newParams)
-                    foldView.update(attributedTitle: titleInfo.title, image: newParams.image)
+                    let titleInfo = foldableTitleInfo(with: newParams)
+                    foldView.update(
+                        attributedTitle: titleInfo.normal,
+                        highlightedTitle: titleInfo.highlighted,
+                        image: newParams.image,
+                        badge: newParams.badge
+                    )
                 } else {
                     patchMenuItem(existingItem, with: newParams)
                 }
@@ -858,13 +878,17 @@ extension MenubarItem {
     /// (and thus fold expansion state).
     private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, in menu: NSMenu) {
         let key = ObjectIdentifier(item)
-        let isExpanded = expandedFoldItems.contains(key)
 
         // Update the fold parent's view
         let params = MenuLineParameters(line: newNode.workingLine)
         if let foldView = item.view as? FoldableMenuItemView {
-            let titleInfo = atributedTitle(with: params)
-            foldView.update(attributedTitle: titleInfo.title, image: params.image)
+            let titleInfo = foldableTitleInfo(with: params)
+            foldView.update(
+                attributedTitle: titleInfo.normal,
+                highlightedTitle: titleInfo.highlighted,
+                image: params.image,
+                badge: params.badge
+            )
         }
 
         guard let existingChildren = foldChildItems[key] else {
@@ -904,8 +928,13 @@ extension MenubarItem {
 
                 let childParams = MenuLineParameters(line: newChild.workingLine)
                 if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
-                    let titleInfo = atributedTitle(with: childParams)
-                    foldView.update(attributedTitle: titleInfo.title, image: childParams.image)
+                    let titleInfo = foldableTitleInfo(with: childParams)
+                    foldView.update(
+                        attributedTitle: titleInfo.normal,
+                        highlightedTitle: titleInfo.highlighted,
+                        image: childParams.image,
+                        badge: childParams.badge
+                    )
                 } else if existingChild.view == nil {
                     patchMenuItem(existingChild, with: childParams)
                 }
@@ -963,6 +992,19 @@ extension MenubarItem {
         if #available(macOS 14.0, *) {
             item.badge = params.badge.isEmpty ? nil : NSMenuItemBadge(string: params.badge)
         }
+    }
+
+    private func foldableTitleInfo(with params: MenuLineParameters) -> (normal: NSAttributedString, highlighted: NSAttributedString) {
+        let normalTitle = atributedTitle(with: params).title
+        guard !params.ansi else { return (normalTitle, normalTitle) }
+
+        let highlightedTitle = NSMutableAttributedString(attributedString: normalTitle)
+        highlightedTitle.addAttribute(
+            .foregroundColor,
+            value: NSColor.selectedMenuItemTextColor,
+            range: NSRange(location: 0, length: highlightedTitle.length)
+        )
+        return (normalTitle, highlightedTitle)
     }
 
     private func syncHotKeys() {
@@ -1091,10 +1133,12 @@ extension MenubarItem {
         }
 
         // Attach the foldable view to the parent item
-        let titleInfo = atributedTitle(with: params)
+        let titleInfo = foldableTitleInfo(with: params)
         let foldView = FoldableMenuItemView(
-            attributedTitle: titleInfo.title,
+            attributedTitle: titleInfo.normal,
+            highlightedTitle: titleInfo.highlighted,
             image: params.image,
+            badge: params.badge,
             isFolded: !isExpanded
         )
         foldView.onToggle = { [weak self] in
@@ -1147,6 +1191,9 @@ extension MenubarItem {
     func toggleFoldItem(_ item: NSMenuItem) {
         let key = ObjectIdentifier(item)
         let wasExpanded = expandedFoldItems.contains(key)
+        if let foldView = item.view as? FoldableMenuItemView {
+            foldView.isFolded = wasExpanded
+        }
 
         if wasExpanded {
             expandedFoldItems.remove(key)
