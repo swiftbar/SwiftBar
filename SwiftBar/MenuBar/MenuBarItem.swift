@@ -704,6 +704,21 @@ extension MenubarItem {
 
         // Diff body items and patch in-place
         let changes = diffMenuNodes(old: currentMenuTree, new: newTree)
+
+        // The positional diff can misalign items when inserts/removes shift indices,
+        // causing item properties (e.g. large images) to be patched onto the wrong
+        // NSMenuItem. This leads to stale layout heights and visual corruption.
+        // Fall back to a full rebuild when the structure changes.
+        let hasStructuralChange = changes.contains { change in
+            if case .insert = change { return true }
+            if case .remove = change { return true }
+            return false
+        }
+        if hasStructuralChange {
+            fullRebuildMenu(content: content)
+            return
+        }
+
         applyDiff(changes, oldTree: currentMenuTree, newTree: newTree, to: statusBarMenu, baseIndex: bodyBaseIndex)
 
         // Update tracking state
