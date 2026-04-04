@@ -28,6 +28,7 @@ class MenubarItem: NSObject {
     }()
 
     let statusBarMenu = NSMenu(title: "")
+    let defaultTabStop: CGFloat = 150
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
@@ -1413,6 +1414,7 @@ extension MenubarItem {
 
         let style = NSMutableParagraphStyle()
         style.alignment = pad ? .center : .left
+        style.tabStops = [NSTextTab(textAlignment: .right, location: defaultTabStop, options: [:])]
 
         // Configure tab stops for proper tab alignment (issue #455)
         // Add tab stops every 100 points to support tab-aligned text
