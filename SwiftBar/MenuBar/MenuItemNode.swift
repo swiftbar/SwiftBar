@@ -17,6 +17,54 @@ struct MenuItemNode: Equatable {
     }
 }
 
+// MARK: - Shape Fingerprint
+
+/// A structural fingerprint that identifies the "role" of a menu item,
+/// independent of volatile content like numbers, colors, or image data.
+/// Used by the diff algorithm to match items across position shifts.
+struct ShapeFingerprint: Hashable {
+    let isSeparator: Bool
+    let hasImage: Bool
+    let fontName: String?
+    let titleKey: String
+    let hasChildren: Bool
+}
+
+extension MenuItemNode {
+    /// Compute a shape fingerprint for diffing. Two nodes with the same fingerprint
+    /// are considered the "same item" even if their content changed.
+    var shapeFingerprint: ShapeFingerprint {
+        if isSeparator {
+            return ShapeFingerprint(isSeparator: true, hasImage: false, fontName: nil, titleKey: "", hasChildren: false)
+        }
+        let params = MenuLineParameters(line: workingLine)
+        return ShapeFingerprint(
+            isSeparator: false,
+            hasImage: params.params["image"] != nil || params.params["templateimage"] != nil,
+            fontName: params.font,
+            titleKey: Self.extractTitleKey(from: params.title),
+            hasChildren: !children.isEmpty
+        )
+    }
+
+    /// Extract the stable "key" portion of a title.
+    /// "Battery: 78% ████████░░" → "Battery:"
+    /// "Climate: On  Set: 72°F" → "Climate:"
+    /// "Home" → "Home"
+    /// "" (image-only) → ""
+    static func extractTitleKey(from title: String) -> String {
+        let trimmed = title.trimmingCharacters(in: .whitespaces)
+        if trimmed.isEmpty { return "" }
+        // If title contains a colon, take everything up to and including it
+        if let colonIdx = trimmed.firstIndex(of: ":") {
+            return String(trimmed[...colonIdx])
+        }
+        // Otherwise take the first word
+        let firstWord = trimmed.prefix(while: { !$0.isWhitespace })
+        return String(firstWord)
+    }
+}
+
 // MARK: - Line Parsing
 
 extension MenuItemNode {

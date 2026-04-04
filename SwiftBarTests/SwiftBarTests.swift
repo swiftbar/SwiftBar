@@ -2082,10 +2082,10 @@ struct MenuDiffTests {
         let changes = diffMenuNodes(old: old, new: new)
 
         #expect(changes.count == 3)
-        #expect(changes[0] == .unchanged(oldIndex: 0, newIndex: 0))
-        // Removals in reverse index order
-        #expect(changes[1] == .remove(oldIndex: 2))
-        #expect(changes[2] == .remove(oldIndex: 1))
+        // Removals come first in reverse index order, then non-removals
+        #expect(changes[0] == .remove(oldIndex: 2))
+        #expect(changes[1] == .remove(oldIndex: 1))
+        #expect(changes[2] == .unchanged(oldIndex: 0, newIndex: 0))
     }
 
     @Test func testDiff_allChanged() throws {
