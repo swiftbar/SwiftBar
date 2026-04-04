@@ -26,7 +26,6 @@ struct ShapeFingerprint: Hashable {
     let isSeparator: Bool
     let hasImage: Bool
     let fontName: String?
-    let hasFold: Bool
     let titleKey: String
     let hasChildren: Bool
 }
@@ -36,14 +35,13 @@ extension MenuItemNode {
     /// are considered the "same item" even if their content changed.
     var shapeFingerprint: ShapeFingerprint {
         if isSeparator {
-            return ShapeFingerprint(isSeparator: true, hasImage: false, fontName: nil, hasFold: false, titleKey: "", hasChildren: false)
+            return ShapeFingerprint(isSeparator: true, hasImage: false, fontName: nil, titleKey: "", hasChildren: false)
         }
         let params = MenuLineParameters(line: workingLine)
         return ShapeFingerprint(
             isSeparator: false,
             hasImage: params.params["image"] != nil || params.params["templateimage"] != nil,
             fontName: params.font,
-            hasFold: params.fold,
             titleKey: Self.extractTitleKey(from: params.title),
             hasChildren: !children.isEmpty
         )
