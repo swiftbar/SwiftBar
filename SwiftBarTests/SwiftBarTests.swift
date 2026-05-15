@@ -85,6 +85,19 @@ final class TimedTestPlugin: TimerArmingPlugin {
     }
 }
 
+final class TestDirectoryPluginManager: PluginManager {
+    private let testPluginDirectoryURL: URL
+
+    init(pluginDirectoryURL: URL) {
+        testPluginDirectoryURL = pluginDirectoryURL
+        super.init()
+    }
+
+    override var pluginDirectoryURL: URL? {
+        testPluginDirectoryURL
+    }
+}
+
 struct SwiftBarTests {
     @Test func testShouldShowDefaultBarItem_whenNoVisiblePluginsAndNotInStealthMode() async throws {
         #expect(shouldShowDefaultBarItem(hasVisiblePlugins: false, stealthMode: false))
@@ -797,18 +810,16 @@ struct SwiftBarIntegrationTests {
         let symlinkedPackageURL = tempDirectory.appendingPathComponent("weather.swiftbar", isDirectory: true)
         try FileManager.default.createSymbolicLink(atPath: symlinkedPackageURL.path, withDestinationPath: packageTargetURL.path)
 
-        let existingPlugin = TestPlugin(
-            id: "weather-package",
-            file: symlinkedPackageURL.appendingPathComponent("plugin.sh").path,
-            content: "weather",
-            lastState: .Success
-        )
+        let existingPlugin = try #require(PackagedPlugin(packageDirectory: symlinkedPackageURL))
+        existingPlugin.operation?.cancel()
+        defer { existingPlugin.terminate() }
         let packageState = try #require(pluginFileState(for: symlinkedPackageURL))
         let packageSyncPath = pluginSyncPath(for: symlinkedPackageURL)
         var loadCallCount = 0
 
         #expect(packageSyncPath == symlinkedPackageURL.path)
         #expect(pluginSyncPath(for: existingPlugin) == symlinkedPackageURL.path)
+        #expect(existingPlugin.mainExecutable.path == symlinkedPackageURL.appendingPathComponent("plugin.sh").path)
 
         let syncResult = syncFilePlugins(
             existingFilePlugins: [existingPlugin],
@@ -825,6 +836,70 @@ struct SwiftBarIntegrationTests {
         #expect(syncResult.loadedPlugins.isEmpty)
         #expect(syncResult.freshFileStates[packageSyncPath] == packageState)
         #expect(loadCallCount == 0)
+    }
+
+    @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let packageTargetURL = tempDirectory.appendingPathComponent("package-target", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
+
+        let targetExecutableURL = packageTargetURL.appendingPathComponent("plugin.sh")
+        try Data("#!/bin/zsh\necho weather\n".utf8).write(to: targetExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: targetExecutableURL.path)
+
+        let packageAliasURL = tempDirectory.appendingPathComponent("weather.swiftbar", isDirectory: true)
+        try FileManager.default.createSymbolicLink(atPath: packageAliasURL.path, withDestinationPath: packageTargetURL.path)
+
+        let plugin = try #require(PackagedPlugin(packageDirectory: packageAliasURL))
+        plugin.operation?.cancel()
+        defer { plugin.terminate() }
+
+        #expect(plugin.mainExecutable.path == packageAliasURL.appendingPathComponent("plugin.sh").path)
+        #expect(plugin.file == packageAliasURL.appendingPathComponent("plugin.sh").path)
+        #expect(pluginSyncPath(for: plugin) == packageAliasURL.path)
+    }
+
+    @Test func testGetPluginList_deduplicatesSymlinkedPackageAndInTreeTarget() async throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let externalDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: externalDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: externalDirectory) }
+
+        let packageTargetURL = tempDirectory.appendingPathComponent("package-target", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
+
+        let targetExecutableURL = packageTargetURL.appendingPathComponent("plugin.sh")
+        try Data("#!/bin/zsh\necho weather\n".utf8).write(to: targetExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: targetExecutableURL.path)
+
+        let nestedPackageURL = packageTargetURL.appendingPathComponent("nested.swiftbar", isDirectory: true)
+        try FileManager.default.createDirectory(at: nestedPackageURL, withIntermediateDirectories: true)
+        let nestedExecutableURL = nestedPackageURL.appendingPathComponent("plugin.sh")
+        try Data("#!/bin/zsh\necho nested\n".utf8).write(to: nestedExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: nestedExecutableURL.path)
+
+        let externalExecutableURL = externalDirectory.appendingPathComponent("external.sh")
+        try Data("#!/bin/zsh\necho external\n".utf8).write(to: externalExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: externalExecutableURL.path)
+        let externalSymlinkURL = packageTargetURL.appendingPathComponent("external-link.sh")
+        try FileManager.default.createSymbolicLink(atPath: externalSymlinkURL.path, withDestinationPath: externalExecutableURL.path)
+
+        let packageAliasURL = tempDirectory.appendingPathComponent("weather.swiftbar", isDirectory: true)
+        try FileManager.default.createSymbolicLink(atPath: packageAliasURL.path, withDestinationPath: packageTargetURL.path)
+
+        let manager = TestDirectoryPluginManager(pluginDirectoryURL: tempDirectory)
+
+        let plugins = manager.getPluginList()
+
+        #expect(plugins.count == 1)
+        #expect(plugins.first?.lastPathComponent == packageAliasURL.lastPathComponent)
+        #expect(plugins.first?.isSwiftBarPackage == true)
     }
 
     @Test func testMergePluginsPreservingOrder_replacesModifiedPluginsInPlace() async throws {

@@ -108,10 +108,14 @@ class PackagedPlugin: TimerArmingPlugin {
             return nil
         }
 
+        // contentsOfDirectory(at:) does not follow a directory-typed URL that is
+        // a symlink (it returns ENOTDIR), so resolve the link before enumerating.
+        // The `.swiftbar` extension check above already used the unresolved URL.
         let fileManager = FileManager.default
+        let enumerationURL = directory.resolvingSymlinksInPath()
         let contents: [URL]
         do {
-            contents = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil)
+            contents = try fileManager.contentsOfDirectory(at: enumerationURL, includingPropertiesForKeys: nil)
         } catch {
             os_log("Failed to read packaged plugin directory %{public}@: %{public}@",
                    log: Log.plugin, type: .error, directory.path, error.localizedDescription)
@@ -135,8 +139,13 @@ class PackagedPlugin: TimerArmingPlugin {
         }
 
         if let pluginFile = candidates.first {
-            os_log("Found plugin entry point: %{public}@", log: Log.plugin, type: .debug, pluginFile.path)
-            return pluginFile
+            // Keep the caller's package path (including a `.swiftbar` symlink)
+            // as the public identity of the entry point. Returning the resolved
+            // target path would make sync treat the same package as a new plugin
+            // on every directory scan.
+            let entryPoint = directory.appendingPathComponent(pluginFile.lastPathComponent)
+            os_log("Found plugin entry point: %{public}@", log: Log.plugin, type: .debug, entryPoint.path)
+            return entryPoint
         }
 
         os_log("No plugin.* entry point found in %{public}@", log: Log.plugin, type: .error, directory.path)

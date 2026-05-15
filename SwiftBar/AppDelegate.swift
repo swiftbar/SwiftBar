@@ -80,14 +80,30 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         var softwareUpdater: SPUUpdater!
     #endif
 
+    /// True when SwiftBar is hosting an XCTest / Swift Testing bundle.
+    /// Set by the test runner via the `XCTestConfigurationFilePath` env var.
+    static var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil ||
+            NSClassFromString("XCTestCase") != nil
+    }
+
     func applicationDidFinishLaunching(_: Notification) {
+        // Wire up the plugin manager so tests that reference
+        // `delegate.pluginManager` have a usable instance, then bail out before
+        // touching anything that keeps the runloop alive (Sparkle, the
+        // missing-folder modal, file-system observers). Without this the test
+        // host never reaches application termination and the test process hangs
+        // indefinitely after the last @Test finishes.
+        pluginManager = PluginManager.shared
+        if Self.isRunningTests { return }
+
         preferencesWindowController.window?.delegate = self
         setupToolbar()
-        
+
         // Clean up any corrupted NSStatusItem visibility states from UserDefaults
         // This fixes issues where menubar items disappear after initial setup
         cleanupStatusItemVisibility()
-        
+
         let hostBundle = Bundle.main
         #if !MAC_APP_STORE
             let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)
@@ -109,8 +125,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             prefs.pluginDirectoryPath = nil
         }
 
-        // Instance of Plugin Manager must be created after app launch
-        pluginManager = PluginManager.shared
         pluginManager.loadPlugins()
         pluginManager.persistLatestSystemReport(reason: "application-did-finish-launching")
 

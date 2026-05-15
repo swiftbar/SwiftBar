@@ -57,8 +57,12 @@ func pluginSyncPath(for plugin: Plugin) -> String {
 }
 
 private func packagedPluginFileState(for packageURL: URL, fileManager: FileManager = .default) -> PluginFileState? {
+    // `findMainExecutable` requires the `.swiftbar` extension, which only the
+    // unresolved URL is guaranteed to have when the package is reached through
+    // a symlink. The enumerator still needs the resolved path so we can read
+    // file attributes off the real directory.
     let resolvedPackageURL = packageURL.resolvingSymlinksInPath()
-    guard PackagedPlugin.findMainExecutable(in: resolvedPackageURL) != nil,
+    guard PackagedPlugin.findMainExecutable(in: packageURL) != nil,
           let enumerator = fileManager.enumerator(at: resolvedPackageURL, includingPropertiesForKeys: nil, options: [.skipsHiddenFiles])
     else {
         return nil
@@ -541,12 +545,23 @@ class PluginManager: ObservableObject {
             }
         }
 
-        // Deduplicate files based on resolved paths
+        // A `.swiftbar` symlink makes its resolved target an atomic package.
+        // Do not also load files reached through an in-tree target directory as
+        // standalone plugins, or the package entry point would execute twice.
+        let resolvedPackagePaths = files
+            .filter(\.isSwiftBarPackage)
+            .map { $0.resolvingSymlinksInPath().standardizedFileURL.path + "/" }
+
+        // Deduplicate files based on resolved paths.
         var uniqueFiles: [URL] = []
         var seenPaths = Set<String>()
 
         for file in files {
-            let resolvedPath = file.resolvingSymlinksInPath().path
+            let lexicalPath = file.standardizedFileURL.path
+            let resolvedPath = file.resolvingSymlinksInPath().standardizedFileURL.path
+            if resolvedPackagePaths.contains(where: { lexicalPath.hasPrefix($0) || resolvedPath.hasPrefix($0) }) {
+                continue
+            }
             if !seenPaths.contains(resolvedPath) {
                 seenPaths.insert(resolvedPath)
                 uniqueFiles.append(file)
