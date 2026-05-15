@@ -65,6 +65,8 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     }
 
     var cancellable: Set<AnyCancellable> = []
+    var timerGeneration: UInt = 0
+    var timerArmingEnabled = true
 
     let shortcutsManager = ShortcutsManager.shared
 
@@ -108,6 +110,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
         }
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         debugInfo.addEvent(type: .PluginRefresh, value: "Requesting manual refresh")
+        beginTimerArmingCycle()
         disableTimer()
         operation?.cancel()
 
@@ -123,6 +126,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
 
     func disable() {
         lastState = .Disabled
+        stopTimerArming()
         disableTimer()
         prefs.disabledPlugins.append(id)
     }
@@ -132,6 +136,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     }
 
     func terminate() {
+        stopTimerArming()
         disableTimer()
     }
 

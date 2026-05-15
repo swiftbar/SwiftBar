@@ -50,6 +50,8 @@ class ExecutablePlugin: TimerArmingPlugin {
     var cronTimer: Timer?
 
     var cancellable: Set<AnyCancellable> = []
+    var timerGeneration: UInt = 0
+    var timerArmingEnabled = true
 
     let prefs = PreferencesStore.shared
 
@@ -100,11 +102,13 @@ class ExecutablePlugin: TimerArmingPlugin {
 
     func disable() {
         lastState = .Disabled
+        stopTimerArming()
         disableTimer()
         prefs.disabledPlugins.append(id)
     }
 
     func terminate() {
+        stopTimerArming()
         disableTimer()
     }
 
@@ -114,6 +118,7 @@ class ExecutablePlugin: TimerArmingPlugin {
     }
 
     func start() {
+        beginTimerArmingCycle()
         // Check if this is a wake from sleep event by checking if lastUpdated exists
         if lastUpdated != nil {
             // Handle wake from sleep differently - check if it's time to update based on schedule
@@ -150,6 +155,7 @@ class ExecutablePlugin: TimerArmingPlugin {
         }
         os_log("Requesting manual refresh for plugin\n%{public}@", log: Log.plugin, description)
         debugInfo.addEvent(type: .PluginRefresh, value: "Requesting manual refresh")
+        beginTimerArmingCycle()
         disableTimer()
         operation?.cancel()
 

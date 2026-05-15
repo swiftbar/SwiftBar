@@ -62,6 +62,8 @@ final class TimedTestPlugin: TimerArmingPlugin {
     var debugInfo = PluginDebugInfo()
     var refreshEnv: [String: String] = [:]
     var enableTimerCallCount = 0
+    var timerGeneration: UInt = 0
+    var timerArmingEnabled = true
     let invokeResult: String?
 
     init(id: PluginID, file: String, invokeResult: String?) {
@@ -150,13 +152,63 @@ struct SwiftBarTests {
         #expect(shouldLoadPluginFile(at: symlinkURL, makePluginExecutable: false))
     }
 
-    @Test func testRunPluginOperation_rearmsTimersForTimerArmingPlugins() async throws {
+    @Test func testRunPluginOperation_rearmsTimersForTimerArmingPlugins() {
         let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
+        let operation = RunPluginOperation(plugin: plugin)
+        let queue = OperationQueue()
 
-        RunPluginOperation(plugin: plugin).main()
+        #expect(plugin.enableTimerCallCount == 0)
+        queue.addOperations([operation], waitUntilFinished: true)
 
         #expect(plugin.content == "updated")
         #expect(plugin.enableTimerCallCount == 1)
+    }
+
+    @Test func testRunPluginOperation_rearmsTimerWhenCancelledBeforeMain() {
+        // Issue #488: refresh() disables the timer before scheduling a new
+        // RunPluginOperation. If that operation is cancelled before main() can
+        // re-arm the timer (e.g. pluginInvokeQueue.cancelAllOperations()), the
+        // plugin would be left without a scheduled refresh and stay dormant
+        // until the SwiftBar process is restarted.
+        let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
+        let op = RunPluginOperation(plugin: plugin)
+        let queue = OperationQueue()
+        queue.isSuspended = true
+        queue.addOperation(op)
+        op.cancel()
+        queue.isSuspended = false
+        queue.waitUntilAllOperationsAreFinished()
+
+        #expect(plugin.content == nil)
+        #expect(plugin.enableTimerCallCount == 1)
+    }
+
+    @Test func testRunPluginOperation_doesNotRearmAfterTimerCycleStops() {
+        let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
+        let operation = RunPluginOperation(plugin: plugin)
+        let queue = OperationQueue()
+        queue.isSuspended = true
+        queue.addOperation(operation)
+
+        plugin.stopTimerArming()
+        operation.cancel()
+        queue.isSuspended = false
+        queue.waitUntilAllOperationsAreFinished()
+
+        #expect(plugin.content == nil)
+        #expect(plugin.enableTimerCallCount == 0)
+    }
+
+    @Test func testRunPluginOperation_doesNotRearmStaleTimerGeneration() {
+        let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
+        let operation = RunPluginOperation(plugin: plugin)
+        let queue = OperationQueue()
+
+        plugin.beginTimerArmingCycle()
+        queue.addOperations([operation], waitUntilFinished: true)
+
+        #expect(plugin.content == "updated")
+        #expect(plugin.enableTimerCallCount == 0)
     }
 
     @Test func testMenuItemActionKinds_includeHrefAndRefreshTogether() async throws {
@@ -795,7 +847,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() async throws {
+    @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -812,6 +864,7 @@ struct SwiftBarIntegrationTests {
 
         let existingPlugin = try #require(PackagedPlugin(packageDirectory: symlinkedPackageURL))
         existingPlugin.operation?.cancel()
+        existingPlugin.operation?.waitUntilFinished()
         defer { existingPlugin.terminate() }
         let packageState = try #require(pluginFileState(for: symlinkedPackageURL))
         let packageSyncPath = pluginSyncPath(for: symlinkedPackageURL)
@@ -838,7 +891,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() async throws {
+    @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -855,6 +908,7 @@ struct SwiftBarIntegrationTests {
 
         let plugin = try #require(PackagedPlugin(packageDirectory: packageAliasURL))
         plugin.operation?.cancel()
+        plugin.operation?.waitUntilFinished()
         defer { plugin.terminate() }
 
         #expect(plugin.mainExecutable.path == packageAliasURL.appendingPathComponent("plugin.sh").path)
@@ -1019,7 +1073,7 @@ struct SwiftBarIntegrationTests {
         #expect(manager.loadPlugin(fileURL: packageURL) == nil)
     }
 
-    @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() async throws {
+    @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1037,6 +1091,7 @@ struct SwiftBarIntegrationTests {
 
         let plugin = try #require(PackagedPlugin(packageDirectory: packageURL))
         plugin.operation?.cancel()
+        plugin.operation?.waitUntilFinished()
         plugin.terminate()
 
         #expect(plugin.type == .Executable)

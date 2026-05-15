@@ -96,7 +96,21 @@ protocol Plugin: AnyObject {
 /// Conforming types can be generically re-armed by `RunPluginOperation`
 /// after each invocation, without the caller knowing the concrete plugin type.
 protocol TimerArmingPlugin: Plugin {
+    var timerGeneration: UInt { get set }
+    var timerArmingEnabled: Bool { get set }
     func enableTimer()
+}
+
+extension TimerArmingPlugin {
+    func beginTimerArmingCycle() {
+        timerArmingEnabled = true
+        timerGeneration &+= 1
+    }
+
+    func stopTimerArming() {
+        timerArmingEnabled = false
+        timerGeneration &+= 1
+    }
 }
 
 extension Plugin {

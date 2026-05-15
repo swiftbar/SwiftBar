@@ -53,6 +53,8 @@ class PackagedPlugin: TimerArmingPlugin {
     var cronTimer: Timer?
 
     var cancellable: Set<AnyCancellable> = []
+    var timerGeneration: UInt = 0
+    var timerArmingEnabled = true
 
     let prefs = PreferencesStore.shared
 
@@ -184,11 +186,13 @@ class PackagedPlugin: TimerArmingPlugin {
 
     func disable() {
         lastState = .Disabled
+        stopTimerArming()
         disableTimer()
         prefs.disabledPlugins.append(id)
     }
 
     func terminate() {
+        stopTimerArming()
         disableTimer()
     }
 
@@ -198,6 +202,7 @@ class PackagedPlugin: TimerArmingPlugin {
     }
 
     func start() {
+        beginTimerArmingCycle()
         if lastUpdated != nil {
             if let metadata, metadata.nextDate != nil {
                 refreshPluginMetadata()
@@ -226,6 +231,7 @@ class PackagedPlugin: TimerArmingPlugin {
         }
         os_log("Requesting refresh for packaged plugin\n%{public}@", log: Log.plugin, description)
         debugInfo.addEvent(type: .PluginRefresh, value: "Requesting refresh")
+        beginTimerArmingCycle()
         disableTimer()
         operation?.cancel()
 

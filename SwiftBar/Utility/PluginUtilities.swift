@@ -25,18 +25,47 @@ func parseRefreshInterval(intervalStr: String, baseUpdateinterval: Double) -> Do
 
 final class RunPluginOperation<T: Plugin>: Operation {
     weak var plugin: T?
+    private let scheduledTimerGeneration: UInt?
+    private let timerRearmLock = NSLock()
+    private var timerRearmHandled = false
 
     init(plugin: T) {
         self.plugin = plugin
+        scheduledTimerGeneration = (plugin as? TimerArmingPlugin)?.timerGeneration
         super.init()
     }
 
+    override func cancel() {
+        super.cancel()
+        if !isExecuting {
+            rearmTimerIfCurrent()
+        }
+    }
+
     override func main() {
+        defer { rearmTimerIfCurrent() }
         guard !isCancelled else { return }
         let result = plugin?.invoke()
         // Check again after invoke - operation may have been cancelled while script was running
         guard !isCancelled else { return }
         plugin?.content = result
-        (plugin as? TimerArmingPlugin)?.enableTimer()
+    }
+
+    private func rearmTimerIfCurrent() {
+        timerRearmLock.lock()
+        guard !timerRearmHandled else {
+            timerRearmLock.unlock()
+            return
+        }
+        timerRearmHandled = true
+        timerRearmLock.unlock()
+
+        guard let timerPlugin = plugin as? TimerArmingPlugin,
+              timerPlugin.timerArmingEnabled,
+              timerPlugin.timerGeneration == scheduledTimerGeneration
+        else {
+            return
+        }
+        timerPlugin.enableTimer()
     }
 }
