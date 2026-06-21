@@ -7,7 +7,7 @@ struct AboutPluginView: View {
         ScrollView(showsIndicators: true) {
             VStack(alignment: .leading, spacing: 8) {
                 if !md.name.isEmpty {
-                    VStack {
+                    VStack(alignment: .leading) {
                         Text(md.name)
                             .font(.largeTitle)
                             .fixedSize()
