@@ -189,6 +189,11 @@ class AppShared: NSObject {
     }
 
     public static func showAbout() {
+        if #available(macOS 14.0, *) {
+            NSApp.activate()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+        }
         NSApp.orderFrontStandardAboutPanel()
     }
 
