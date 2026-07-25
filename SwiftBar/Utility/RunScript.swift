@@ -4,6 +4,56 @@ import os
 
 let sharedEnv = Environment.shared
 
+struct UTF8ChunkDecoder {
+    private var pendingBytes: [UInt8] = []
+
+    mutating func decode(_ data: Data) -> String {
+        pendingBytes.append(contentsOf: data)
+
+        let completeBytesEnd = incompleteSequenceStart() ?? pendingBytes.endIndex
+        let decoded = String(decoding: pendingBytes[..<completeBytesEnd], as: UTF8.self)
+        pendingBytes = Array(pendingBytes[completeBytesEnd...])
+        return decoded
+    }
+
+    mutating func finish() -> String {
+        defer { pendingBytes.removeAll() }
+        return String(decoding: pendingBytes, as: UTF8.self)
+    }
+
+    private func incompleteSequenceStart() -> Int? {
+        guard !pendingBytes.isEmpty else { return nil }
+
+        var sequenceStart = pendingBytes.index(before: pendingBytes.endIndex)
+        while sequenceStart > pendingBytes.startIndex,
+              pendingBytes[sequenceStart] & 0b1100_0000 == 0b1000_0000
+        {
+            sequenceStart = pendingBytes.index(before: sequenceStart)
+        }
+
+        let expectedLength: Int
+        switch pendingBytes[sequenceStart] {
+        case 0b1100_0010 ... 0b1101_1111:
+            expectedLength = 2
+        case 0b1110_0000 ... 0b1110_1111:
+            expectedLength = 3
+        case 0b1111_0000 ... 0b1111_0100:
+            expectedLength = 4
+        default:
+            return nil
+        }
+
+        let actualLength = pendingBytes.distance(from: sequenceStart, to: pendingBytes.endIndex)
+        guard actualLength < expectedLength else { return nil }
+        guard pendingBytes[pendingBytes.index(after: sequenceStart)...]
+            .allSatisfy({ $0 & 0b1100_0000 == 0b1000_0000 })
+        else {
+            return nil
+        }
+        return sequenceStart
+    }
+}
+
 func getEnvExportString(env: [String: String]) -> String {
     let dict = sharedEnv.systemEnvStr.merging(env) { current, _ in current }
     let shell = sharedEnv.userLoginShell.lowercased()
@@ -131,12 +181,16 @@ private extension Process {
         }
 
         let outputQueue = DispatchQueue(label: "bash-output-queue")
+        var outputDecoder = UTF8ChunkDecoder()
 
         outputPipe.fileHandleForReading.readabilityHandler = { handler in
             let data = handler.availableData
             outputQueue.async {
                 outputData.append(data)
-                onOutputUpdate(String(data: data, encoding: .utf8))
+                let decoded = data.isEmpty ? outputDecoder.finish() : outputDecoder.decode(data)
+                if !decoded.isEmpty {
+                    onOutputUpdate(decoded)
+                }
             }
         }
 
