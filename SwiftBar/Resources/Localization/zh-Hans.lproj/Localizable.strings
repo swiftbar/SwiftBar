@@ -83,6 +83,10 @@
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "哇！看起来你选择了一个包含很多文件的文件夹，请选择另一个。如果有插件依赖的 node_modules 文件夹，请将其隐藏。";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "设置 SwiftBar 插件位置";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "选择一个目录来储存插件仓库";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar 已在运行";
+"APP_MENU_BAR_RECOVERY_INFO" = "如果看不到 SwiftBar 的菜单栏项目，可能是 macOS 将其隐藏了。请打开“系统设置”→“菜单栏”，然后在“允许在菜单栏中显示”下开启 SwiftBar。";
+"APP_OPEN_MENU_BAR_SETTINGS" = "打开菜单栏设置";
+"APP_DISMISS" = "关闭";
 "APP_QUIT" = "退出 SwiftBar";
 "OK" = "确定";
 "CANCEL" = "取消";

@@ -83,6 +83,10 @@
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "Ого! В этой папке реально дофига файлов! Если вам реально нужна папка node_modules в папке с плагином, скройте ее.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Установить папку с плагинами SwiftBar";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Выбрать папку для хранения репозитория с плагинами";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar уже запущен";
+"APP_MENU_BAR_RECOVERY_INFO" = "Если элементы SwiftBar не видны в строке меню, возможно, macOS скрывает их. Откройте Системные настройки → Строка меню и включите SwiftBar в разделе «Разрешить в строке меню».";
+"APP_OPEN_MENU_BAR_SETTINGS" = "Открыть настройки строки меню";
+"APP_DISMISS" = "Закрыть";
 "APP_QUIT" = "Выход";
 "OK" = "OK";
 "CANCEL" = "Отмена";

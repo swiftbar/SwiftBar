@@ -83,6 +83,10 @@
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "AJME! Odabrao/la si mapu s PUNO DATOTEKA. Odaberi jednu drugu mapu. Ako imaš mapu node_modules koja ti treba za dodatak, sakrij ju.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Odredi mjesto za SwiftBar dodatke";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Odaberi mapu za spremanje repozitorija dodataka";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar je već pokrenut";
+"APP_MENU_BAR_RECOVERY_INFO" = "Ako ne vidiš njegove stavke na traci izbornika, macOS ih možda skriva. Otvori Postavke sustava → Traka izbornika i uključi SwiftBar pod „Dopusti na traci izbornika”.";
+"APP_OPEN_MENU_BAR_SETTINGS" = "Otvori postavke trake izbornika";
+"APP_DISMISS" = "Zatvori";
 "APP_QUIT" = "Zatvori SwiftBar";
 "OK" = "U redu";
 "CANCEL" = "Odustani";
