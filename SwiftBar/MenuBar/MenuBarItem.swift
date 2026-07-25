@@ -27,7 +27,7 @@ class MenubarItem: NSObject {
         return item
     }()
 
-    let statusBarMenu = NSMenu(title: "")
+    let statusBarMenu: NSMenu
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
@@ -102,8 +102,9 @@ class MenubarItem: NSObject {
 
     lazy var menuUpdateQueue: OperationQueue = delegate.pluginManager.menuUpdateQueue
 
-    init(title: String, plugin: Plugin? = nil, visibilityDidChange: ((Bool) -> Void)? = nil) {
+    init(title: String, plugin: Plugin? = nil, visibilityDidChange: ((Bool) -> Void)? = nil, statusBarMenu: NSMenu = NSMenu(title: "")) {
         self.visibilityDidChange = visibilityDidChange
+        self.statusBarMenu = statusBarMenu
         super.init()
         barItem.button?.action = #selector(barItemClicked)
         barItem.button?.target = self
@@ -1049,6 +1050,7 @@ extension MenubarItem {
         guard isOpen else { return }
         hotKeys.forEach { $0.isPaused = true }
         updateOpenMenuItemVisibility()
+        statusBarMenu.update()
     }
 
     private func updateOpenMenuItemVisibility() {

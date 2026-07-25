@@ -1808,11 +1808,20 @@ struct RefreshReasonContentSyncTests {
     }
 }
 
+private final class UpdateTrackingMenu: NSMenu {
+    var updateCallCount = 0
+
+    override func update() {
+        updateCallCount += 1
+        super.update()
+    }
+}
+
 struct MenubarItemIncrementalUpdateTests {
     @MainActor
-    private func makeMenuBarItem() -> MenubarItem {
+    private func makeMenuBarItem(statusBarMenu: NSMenu = NSMenu(title: "")) -> MenubarItem {
         let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh", content: nil, lastState: .Success)
-        let item = MenubarItem(title: "Test")
+        let item = MenubarItem(title: "Test", statusBarMenu: statusBarMenu)
         item.plugin = plugin
         item.statusBarMenu.delegate = item
         return item
@@ -1996,6 +2005,51 @@ struct MenubarItemIncrementalUpdateTests {
 
         #expect(item.hotKeys.count == 1)
         #expect(item.hotKeys.allSatisfy { $0.isPaused })
+    }
+
+    @MainActor @Test func testIncrementalUpdate_keepsSubmenuParentsEnabledAfterMiddleRemoval() throws {
+        let trackingMenu = UpdateTrackingMenu(title: "")
+        let item = makeMenuBarItem(statusBarMenu: trackingMenu)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Formulas (5):
+        alpha
+        --Run | refresh=true
+        beta
+        --Run | refresh=true
+        gamma
+        --Run | refresh=true
+        delta
+        --Run | refresh=true
+        epsilon
+        --Run | refresh=true
+        """)
+
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+        item._updateMenu(content: """
+        Title
+        ---
+        Formulas (4):
+        alpha
+        --Run | refresh=true
+        beta
+        --Run | refresh=true
+        delta
+        --Run | refresh=true
+        epsilon
+        --Run | refresh=true
+        """)
+
+        #expect(trackingMenu.updateCallCount > 0)
+
+        for title in ["alpha", "beta", "delta", "epsilon"] {
+            let formulaItem = try #require(item.statusBarMenu.items.first { $0.title == title })
+            #expect(formulaItem.submenu != nil)
+            #expect(formulaItem.isEnabled)
+        }
     }
 }
 
