@@ -974,7 +974,13 @@ extension MenubarItem {
     /// Patch an existing NSMenuItem's visible properties to match new parameters.
     private func patchMenuItem(_ item: NSMenuItem, with params: MenuLineParameters) {
         let needsAction = params.hasAction || params.color != nil
-        item.action = needsAction ? #selector(perfomMenutItemAction) : nil
+        item.action = if needsAction {
+            #selector(perfomMenutItemAction)
+        } else if params.fold {
+            #selector(toggleFoldItem(_:))
+        } else {
+            nil
+        }
         item.representedObject = params
 
         let title = atributedTitle(with: params)
@@ -1190,7 +1196,7 @@ extension MenubarItem {
     }
 
     /// Toggle the fold state of a menu item.
-    func toggleFoldItem(_ item: NSMenuItem) {
+    @objc func toggleFoldItem(_ item: NSMenuItem) {
         let key = ObjectIdentifier(item)
         let wasExpanded = expandedFoldItems.contains(key)
         if let foldView = item.view as? FoldableMenuItemView {
@@ -1454,8 +1460,15 @@ extension MenubarItem {
         // Assign action when color is set so macOS renders the item as enabled,
         // allowing the custom color to display instead of the disabled grey.
         let needsAction = params.hasAction || params.color != nil
+        let action: Selector? = if needsAction {
+            #selector(perfomMenutItemAction)
+        } else if params.fold {
+            #selector(toggleFoldItem(_:))
+        } else {
+            nil
+        }
         let item = NSMenuItem(title: params.title,
-                              action: needsAction ? #selector(perfomMenutItemAction) : nil,
+                              action: action,
                               keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)

@@ -2516,6 +2516,22 @@ struct FoldMenuItemBuildTests {
         #expect(childItem2.attributedTitle?.string == "Ethernet: Off")
     }
 
+    @MainActor @Test func testMenuWillOpen_keepsActionlessFoldParentEnabled() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(foldParent.isEnabled)
+    }
+
     @MainActor @Test func testFullBuild_foldItemExpandsOnToggle() throws {
         let item = makeMenuBarItem()
 
