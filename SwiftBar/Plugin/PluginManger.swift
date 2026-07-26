@@ -821,10 +821,19 @@ class PluginManager: ObservableObject {
 
     #if !MAC_APP_STORE
         func configureDirectoryObserver() {
-            if let url = pluginDirectoryURL {
-                directoryObserver = DirectoryObserver(url: url, block: { [weak self] in
+            guard let url = pluginDirectoryURL else {
+                directoryObserver = nil
+                return
+            }
+
+            do {
+                directoryObserver = try DirectoryObserver(url: url, block: { [weak self] in
                     self?.directoryChanged()
                 })
+            } catch {
+                directoryObserver = nil
+                os_log("Failed to configure plugin directory observer: %{public}@",
+                       log: Log.plugin, type: .error, error.localizedDescription)
             }
         }
     #endif
