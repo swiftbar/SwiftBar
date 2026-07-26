@@ -26,6 +26,25 @@ func statusItemVisibilityKeys(in defaults: [String: Any]) -> [String] {
     defaults.keys.filter { $0.hasPrefix("NSStatusItem Visible") }.sorted()
 }
 
+let menuBarSettingsURL = URL(string: "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension")!
+
+func shouldShowMenuBarRecovery(
+    hasVisibleAppWindows: Bool,
+    operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
+) -> Bool {
+    operatingSystemVersion.majorVersion >= 26 && !hasVisibleAppWindows
+}
+
+func controlCenterVisibilityReportLine(
+    operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
+) -> String? {
+    guard operatingSystemVersion.majorVersion >= 26 else {
+        return nil
+    }
+
+    return "Control Center Allow in the Menu Bar: unavailable to applications"
+}
+
 @discardableResult
 func removeStatusItemVisibilityKeys(userDefaults: UserDefaults = .standard) -> [String] {
     let keysToRemove = statusItemVisibilityKeys(in: userDefaults.dictionaryRepresentation())
@@ -199,6 +218,54 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     func applicationWillTerminate(_: Notification) {
         pluginManager.terminateAllPlugins()
+    }
+
+    func applicationShouldHandleReopen(_: NSApplication, hasVisibleWindows _: Bool) -> Bool {
+        // AppKit counts NSStatusBarWindow instances as visible windows, even when
+        // Control Center does not place their status items onscreen. Only actual
+        // SwiftBar windows should prevent the recovery alert.
+        let hasVisibleAppWindows =
+            preferencesWindowController.window?.isVisible == true ||
+            repositoryWindowController?.window?.isVisible == true
+
+        guard shouldShowMenuBarRecovery(hasVisibleAppWindows: hasVisibleAppWindows) else {
+            return true
+        }
+
+        showMenuBarRecoveryAlert()
+        return false
+    }
+
+    private func showMenuBarRecoveryAlert() {
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+        defer {
+            changePresentationType()
+        }
+
+        let alert = NSAlert()
+        alert.messageText = Localizable.App.MenuBarRecoveryTitle.localized
+        alert.informativeText = Localizable.App.MenuBarRecoveryInfo.localized
+        alert.addButton(withTitle: Localizable.App.OpenMenuBarSettings.localized)
+        alert.addButton(withTitle: Localizable.App.DismissButton.localized)
+
+        guard alert.runModal() == .alertFirstButtonReturn else {
+            return
+        }
+
+        openMenuBarSettings()
+    }
+
+    private func openMenuBarSettings() {
+        if NSWorkspace.shared.open(menuBarSettingsURL) {
+            return
+        }
+
+        guard let systemSettingsURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.systempreferences") else {
+            return
+        }
+
+        NSWorkspace.shared.open(systemSettingsURL)
     }
 
     func getPluginFromURL(url: URL) -> Plugin? {

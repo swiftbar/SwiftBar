@@ -82,6 +82,10 @@
 "APP_FOLDER_NOT_ALLOWED_ACTION" = "Choose New Location";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Set SwiftBar Plugins Location";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Select a folder to store the plugins repository";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar wird bereits ausgeführt";
+"APP_MENU_BAR_RECOVERY_INFO" = "Wenn du die Menüleistenelemente nicht siehst, werden sie möglicherweise von macOS ausgeblendet. Öffne Systemeinstellungen → Menüleiste und aktiviere SwiftBar unter „In der Menüleiste erlauben“.";
+"APP_OPEN_MENU_BAR_SETTINGS" = "Menüleisteneinstellungen öffnen";
+"APP_DISMISS" = "Schließen";
 "APP_QUIT" = "Quit SwiftBar";
 "OK" = "Ok";
 "CANCEL" = "Cancel";

@@ -83,6 +83,10 @@
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "Wauw! De map die je hebt gekozen bevat heel veel bestanden. Kies een andere map, alsjeblieft. Als je een map genaamd 'node_modules' hebt die vereist is voor een plug-in, verberg die dan.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Kies een locatie voor SwiftBar plug-ins";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Selecteer een map voor de plug-inverzameling";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar is al actief";
+"APP_MENU_BAR_RECOVERY_INFO" = "Als je de menubalkonderdelen niet ziet, verbergt macOS ze mogelijk. Open Systeeminstellingen → Menubalk en schakel SwiftBar in onder ‘Sta toe in de menubalk’.";
+"APP_OPEN_MENU_BAR_SETTINGS" = "Menubalkinstellingen openen";
+"APP_DISMISS" = "Sluiten";
 "APP_QUIT" = "Stop SwiftBar";
 "OK" = "OK";
 "CANCEL" = "Annuleer";

@@ -1050,6 +1050,9 @@ extension PluginManager {
         } else {
             lines.append(contentsOf: statusItemEntries.map { "- \($0)" })
         }
+        if let controlCenterVisibilityLine = controlCenterVisibilityReportLine() {
+            lines.append(controlCenterVisibilityLine)
+        }
 
         lines.append("")
         lines.append("== Plugin Directory Candidates ==")
@@ -1074,7 +1077,7 @@ extension PluginManager {
         lines.append("== Runtime Plugins ==")
         lines.append("Loaded Plugins: \(plugins.count)")
         lines.append("Enabled Plugins: \(enabledPlugins.count)")
-        lines.append("Fallback SwiftBar Item Visible: \(boolString(barItem.barItem.isVisible))")
+        lines.append("Fallback SwiftBar Item Requested Visible: \(boolString(barItem.barItem.isVisible))")
 
         if plugins.isEmpty {
             lines.append("No runtime plugins loaded.")
@@ -1090,7 +1093,7 @@ extension PluginManager {
                 lines.append("  file: \(plugin.file)")
                 lines.append("  resolved file: \(pluginFileURL.resolvingSymlinksInPath().path)")
                 lines.append("  file exists: \(fileExistsDescription(for: pluginFileURL))")
-                lines.append("  menu item visible: \(boolString(menuBarItem?.barItem.isVisible == true))")
+                lines.append("  menu item requested visible: \(boolString(menuBarItem?.barItem.isVisible == true))")
                 lines.append("  autosave name: \(stringValue(menuBarItem?.barItem.autosaveName))")
                 lines.append("  last state: \(String(describing: plugin.lastState))")
                 lines.append("  last refresh reason: \(plugin.lastRefreshReason.rawValue)")

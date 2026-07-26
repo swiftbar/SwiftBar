@@ -272,6 +272,40 @@ struct SwiftBarTests {
         #expect(parseUserShell(from: output) == nil)
     }
 
+    @Test func testShouldShowMenuBarRecovery_onMacOS26WithoutVisibleWindows() {
+        let macOS26 = OperatingSystemVersion(majorVersion: 26, minorVersion: 0, patchVersion: 0)
+
+        #expect(shouldShowMenuBarRecovery(hasVisibleAppWindows: false, operatingSystemVersion: macOS26))
+    }
+
+    @Test func testShouldShowMenuBarRecovery_doesNotInterruptVisibleWindows() {
+        let macOS26 = OperatingSystemVersion(majorVersion: 26, minorVersion: 0, patchVersion: 0)
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: true, operatingSystemVersion: macOS26))
+    }
+
+    @Test func testShouldShowMenuBarRecovery_isUnavailableBeforeMacOS26() {
+        let macOS15 = OperatingSystemVersion(majorVersion: 15, minorVersion: 6, patchVersion: 0)
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, operatingSystemVersion: macOS15))
+    }
+
+    @Test func testMenuBarSettingsURL_targetsControlCenterSettings() {
+        #expect(menuBarSettingsURL.absoluteString == "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension")
+    }
+
+    @Test func testControlCenterVisibilityReportLine_explainsUnavailableStateOnMacOS26() {
+        let macOS26 = OperatingSystemVersion(majorVersion: 26, minorVersion: 0, patchVersion: 0)
+
+        #expect(controlCenterVisibilityReportLine(operatingSystemVersion: macOS26) == "Control Center Allow in the Menu Bar: unavailable to applications")
+    }
+
+    @Test func testControlCenterVisibilityReportLine_isOmittedBeforeMacOS26() {
+        let macOS15 = OperatingSystemVersion(majorVersion: 15, minorVersion: 6, patchVersion: 0)
+
+        #expect(controlCenterVisibilityReportLine(operatingSystemVersion: macOS15) == nil)
+    }
+
     @Test func testStatusItemVisibilityKeys_preservesPreferredPositionKeys() async throws {
         let keysToRemove = statusItemVisibilityKeys(in: [
             "NSStatusItem Visible com.example.one": 0,

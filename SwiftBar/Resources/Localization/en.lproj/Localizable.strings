@@ -83,6 +83,10 @@
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "WOW! Looks like you chose a folder with a LOT OF FILES, please choose another one. If you have node_modules folder that you need for a plugin, please make it hidden.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Set SwiftBar Plugins Location";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Select a folder to store the plugins repository";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar is already running";
+"APP_MENU_BAR_RECOVERY_INFO" = "If you can’t see its menu bar items, macOS may be hiding them. Open System Settings → Menu Bar and turn on SwiftBar under “Allow in the Menu Bar.”";
+"APP_OPEN_MENU_BAR_SETTINGS" = "Open Menu Bar Settings";
+"APP_DISMISS" = "Dismiss";
 "APP_QUIT" = "Quit SwiftBar";
 "OK" = "OK";
 "CANCEL" = "Cancel";

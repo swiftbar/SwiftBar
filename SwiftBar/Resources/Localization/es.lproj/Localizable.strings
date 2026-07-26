@@ -83,6 +83,10 @@
 "APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "GUAU! Tal parece que la carpeta elegida posee DEMASIADO ARCHIVOS, por favor elegir otra. Si un complemento necesita de una carpeta node_modules, hágala oculta.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Establecer la ubicación de los complementos de SwiftBar";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Seleccionar una carpeta para guardar los repositorios de los complementos";
+"APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar ya está en ejecución";
+"APP_MENU_BAR_RECOVERY_INFO" = "Si no ves sus elementos en la barra de menús, puede que macOS los esté ocultando. Abre Ajustes del Sistema → Barra de menús y activa SwiftBar en “Permitir en la barra de menús”.";
+"APP_OPEN_MENU_BAR_SETTINGS" = "Abrir ajustes de la barra de menús";
+"APP_DISMISS" = "Cerrar";
 "APP_QUIT" = "Salir de SwiftBar";
 "OK" = "OK";
 "CANCEL" = "Cancelar";
