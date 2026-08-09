@@ -317,7 +317,7 @@ struct MenuLineParameters: Codable, Equatable {
         return sfmc
     }
 
-    func getImage(isMenuBarItem: Bool = false) -> NSImage? {
+    func getImage(isMenuBarItem: Bool = false, menuBarAppearance: NSAppearance? = nil) -> NSImage? {
         if #available(OSX 11.0, *) {
             if let sfString = params["sfimage"] {
                 // Handle comma-separated SF symbols for light/dark themes
@@ -326,7 +326,7 @@ struct MenuLineParameters: Codable, Equatable {
                 let darkSymbol = sfSymbols.count > 1 ? sfSymbols.last?.trimmingCharacters(in: .whitespaces) : lightSymbol
 
                 // Choose symbol based on theme context
-                let shouldUseDarkSymbol = isMenuBarItem ? AppShared.isDarkStatusBar : AppShared.isDarkTheme
+                let shouldUseDarkSymbol = isMenuBarItem ? AppShared.isDarkStatusBar(appearance: menuBarAppearance) : AppShared.isDarkTheme
                 let symbolToUse = (shouldUseDarkSymbol && darkSymbol != lightSymbol) ? darkSymbol : lightSymbol
 
                 guard let finalSymbol = symbolToUse else { return nil }
@@ -366,7 +366,7 @@ struct MenuLineParameters: Codable, Equatable {
             let darkImage = images?.last
 
             // Use isDarkStatusBar for menu bar items, isDarkTheme for dropdown items
-            let shouldUseDarkImage = isMenuBarItem ? AppShared.isDarkStatusBar : AppShared.isDarkTheme
+            let shouldUseDarkImage = isMenuBarItem ? AppShared.isDarkStatusBar(appearance: menuBarAppearance) : AppShared.isDarkTheme
             return resizedImageIfRequested(NSImage.createImage(from: shouldUseDarkImage || darkImage == nil ? lightImage : darkImage, isTemplate: false))
         }
 

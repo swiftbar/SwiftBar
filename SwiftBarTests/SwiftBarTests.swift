@@ -2318,6 +2318,42 @@ struct MenuDiffTests {
     }
 }
 
+// MARK: - Menu Bar Image Appearance Tests
+
+struct MenuBarImageAppearanceTests {
+    @MainActor
+    private func makeBase64PNG(color: NSColor) throws -> String {
+        let size = NSSize(width: 2, height: 2)
+        let image = NSImage(size: size)
+        image.lockFocus()
+        color.setFill()
+        NSBezierPath(rect: NSRect(origin: .zero, size: size)).fill()
+        image.unlockFocus()
+
+        let tiffData = try #require(image.tiffRepresentation)
+        let bitmapRep = try #require(NSBitmapImageRep(data: tiffData))
+        let pngData = try #require(bitmapRep.representation(using: .png, properties: [:]))
+        return pngData.base64EncodedString()
+    }
+
+    @MainActor @Test func testMenuBarPairedImageFollowsStatusButtonAppearance() throws {
+        let aquaImage = try makeBase64PNG(color: .systemRed)
+        let darkAquaImage = try makeBase64PNG(color: .systemBlue)
+        let item = MenubarItem(title: "Test")
+        let title = "Test | image=\(aquaImage),\(darkAquaImage)"
+
+        item.barItem.button?.appearance = NSAppearance(named: .aqua)
+        item.setMenuTitle(title: title)
+        let aquaRepresentation = try #require(item.barItem.button?.image?.tiffRepresentation)
+
+        item.barItem.button?.appearance = NSAppearance(named: .darkAqua)
+        item.setMenuTitle(title: title)
+        let darkAquaRepresentation = try #require(item.barItem.button?.image?.tiffRepresentation)
+
+        #expect(aquaRepresentation != darkAquaRepresentation)
+    }
+}
+
 // MARK: - Fold Parameter Tests
 
 struct FoldParameterTests {
