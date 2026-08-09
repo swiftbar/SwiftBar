@@ -80,10 +80,11 @@
 "APP_CHOOSE_PLUGIN_FOLDER_TITLE" = "Plugin-Ordner wählen";
 "APP_FOLDER_NOT_ALLOWED_MESSAGE" = "Dieser Ordner kann nicht als Speicherort für SwiftBar-Plugins verwendet werden";
 "APP_FOLDER_NOT_ALLOWED_ACTION" = "Neuen Speicherort wählen";
+"APP_FOLDER_HAS_TOO_MANY_FILES_MESSAGE" = "WOW! Anscheinend hast du einen Ordner mit SEHR VIELEN DATEIEN ausgewählt. Bitte wähle einen anderen. Wenn du für ein Plugin einen node_modules-Ordner benötigst, blende ihn bitte aus.";
 "APP_CHOOSE_PLUGIN_FOLDER_MESSAGE" = "Speicherort für SwiftBar-Plugins festlegen";
 "APP_CHOOSE_PLUGIN_FOLDER_INFO" = "Wähle einen Ordner, um das Plugin-Repository zu speichern";
 "APP_MENU_BAR_RECOVERY_TITLE" = "SwiftBar wird bereits ausgeführt";
-"APP_MENU_BAR_RECOVERY_INFO" = "Wenn du die Menüleistenelemente nicht siehst, werden sie möglicherweise von macOS ausgeblendet. Öffne Systemeinstellungen → Menüleiste und aktiviere SwiftBar unter „In der Menüleiste erlauben".";
+"APP_MENU_BAR_RECOVERY_INFO" = "Wenn du die Menüleistenelemente nicht siehst, werden sie möglicherweise von macOS ausgeblendet. Öffne Systemeinstellungen → Menüleiste und aktiviere SwiftBar unter „In der Menüleiste erlauben“.";
 "APP_OPEN_MENU_BAR_SETTINGS" = "Menüleisteneinstellungen öffnen";
 "APP_DISMISS" = "Schließen";
 "APP_QUIT" = "SwiftBar beenden";
