@@ -1808,12 +1808,23 @@ struct RefreshReasonContentSyncTests {
     }
 }
 
-private final class UpdateTrackingMenu: NSMenu {
-    var updateCallCount = 0
+/// Models the presentation state AppKit keeps separately from the NSMenu tree
+/// while tracking. A structural removal makes the displayed parents stale;
+/// update() reconciles regular submenu parents, while fold parents still need
+/// an actionable target for AppKit validation to enable them.
+private final class StalePresentationMenu: NSMenu {
+    override func removeItem(at index: Int) {
+        super.removeItem(at: index)
+        for item in items where item.submenu != nil || item.view is FoldableMenuItemView {
+            item.isEnabled = false
+        }
+    }
 
     override func update() {
-        updateCallCount += 1
         super.update()
+        for item in items where item.submenu != nil {
+            item.isEnabled = true
+        }
     }
 }
 
@@ -2007,23 +2018,22 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(item.hotKeys.allSatisfy { $0.isPaused })
     }
 
-    @MainActor @Test func testIncrementalUpdate_keepsSubmenuParentsEnabledAfterMiddleRemoval() throws {
-        let trackingMenu = UpdateTrackingMenu(title: "")
-        let item = makeMenuBarItem(statusBarMenu: trackingMenu)
+    @MainActor @Test func testIncrementalUpdate_revalidatesPresentedSubmenuAndFoldParentsAfterMiddleRemoval() throws {
+        let presentationMenu = StalePresentationMenu(title: "")
+        let item = makeMenuBarItem(statusBarMenu: presentationMenu)
 
         item._updateMenu(content: """
         Title
         ---
-        Formulas (5):
         alpha
         --Run | refresh=true
+        Network | fold=true
+        --Wi-Fi: Connected
         beta
         --Run | refresh=true
         gamma
         --Run | refresh=true
         delta
-        --Run | refresh=true
-        epsilon
         --Run | refresh=true
         """)
 
@@ -2032,24 +2042,32 @@ struct MenubarItemIncrementalUpdateTests {
         item._updateMenu(content: """
         Title
         ---
-        Formulas (4):
         alpha
         --Run | refresh=true
+        Network | fold=true
+        --Wi-Fi: Connected
         beta
         --Run | refresh=true
         delta
         --Run | refresh=true
-        epsilon
-        --Run | refresh=true
         """)
 
-        #expect(trackingMenu.updateCallCount > 0)
-
-        for title in ["alpha", "beta", "delta", "epsilon"] {
+        for title in ["alpha", "beta", "delta"] {
             let formulaItem = try #require(item.statusBarMenu.items.first { $0.title == title })
             #expect(formulaItem.submenu != nil)
             #expect(formulaItem.isEnabled)
         }
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let foldIndex = item.statusBarMenu.index(of: foldParent)
+        let foldChild = item.statusBarMenu.items[foldIndex + 1]
+
+        #expect(foldParent.action == #selector(MenubarItem.toggleFoldItem(_:)))
+        #expect(foldParent.target === item)
+        #expect(foldParent.isEnabled)
+        #expect(foldChild.isHidden)
+        #expect(NSApp.sendAction(try #require(foldParent.action), to: foldParent.target, from: foldParent))
+        #expect(!foldChild.isHidden)
     }
 }
 
@@ -2516,7 +2534,7 @@ struct FoldMenuItemBuildTests {
         #expect(childItem2.attributedTitle?.string == "Ethernet: Off")
     }
 
-    @MainActor @Test func testMenuWillOpen_keepsActionlessFoldParentEnabled() throws {
+    @MainActor @Test func testMenuWillOpen_revalidatesFoldParentAction() throws {
         let item = makeMenuBarItem()
 
         item._updateMenu(content: """
@@ -2527,8 +2545,11 @@ struct FoldMenuItemBuildTests {
         """)
 
         let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        foldParent.isEnabled = false
         item.menuWillOpen(item.statusBarMenu)
 
+        #expect(foldParent.action == #selector(MenubarItem.toggleFoldItem(_:)))
+        #expect(foldParent.target === item)
         #expect(foldParent.isEnabled)
     }
 
