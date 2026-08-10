@@ -27,7 +27,7 @@ class MenubarItem: NSObject {
         return item
     }()
 
-    let statusBarMenu = NSMenu(title: "")
+    let statusBarMenu: NSMenu
     let titleCylleInterval: Double = 5
     var contentUpdateCancellable: AnyCancellable?
     var titleCycleCancellable: AnyCancellable?
@@ -102,8 +102,9 @@ class MenubarItem: NSObject {
 
     lazy var menuUpdateQueue: OperationQueue = delegate.pluginManager.menuUpdateQueue
 
-    init(title: String, plugin: Plugin? = nil, visibilityDidChange: ((Bool) -> Void)? = nil) {
+    init(title: String, plugin: Plugin? = nil, visibilityDidChange: ((Bool) -> Void)? = nil, statusBarMenu: NSMenu = NSMenu(title: "")) {
         self.visibilityDidChange = visibilityDidChange
+        self.statusBarMenu = statusBarMenu
         super.init()
         barItem.button?.action = #selector(barItemClicked)
         barItem.button?.target = self
@@ -973,7 +974,13 @@ extension MenubarItem {
     /// Patch an existing NSMenuItem's visible properties to match new parameters.
     private func patchMenuItem(_ item: NSMenuItem, with params: MenuLineParameters) {
         let needsAction = params.hasAction || params.color != nil
-        item.action = needsAction ? #selector(perfomMenutItemAction) : nil
+        item.action = if needsAction {
+            #selector(perfomMenutItemAction)
+        } else if params.fold {
+            #selector(toggleFoldItem(_:))
+        } else {
+            nil
+        }
         item.representedObject = params
 
         let title = atributedTitle(with: params)
@@ -1049,6 +1056,7 @@ extension MenubarItem {
         guard isOpen else { return }
         hotKeys.forEach { $0.isPaused = true }
         updateOpenMenuItemVisibility()
+        statusBarMenu.update()
     }
 
     private func updateOpenMenuItemVisibility() {
@@ -1188,7 +1196,7 @@ extension MenubarItem {
     }
 
     /// Toggle the fold state of a menu item.
-    func toggleFoldItem(_ item: NSMenuItem) {
+    @objc func toggleFoldItem(_ item: NSMenuItem) {
         let key = ObjectIdentifier(item)
         let wasExpanded = expandedFoldItems.contains(key)
         if let foldView = item.view as? FoldableMenuItemView {
@@ -1452,8 +1460,15 @@ extension MenubarItem {
         // Assign action when color is set so macOS renders the item as enabled,
         // allowing the custom color to display instead of the disabled grey.
         let needsAction = params.hasAction || params.color != nil
+        let action: Selector? = if needsAction {
+            #selector(perfomMenutItemAction)
+        } else if params.fold {
+            #selector(toggleFoldItem(_:))
+        } else {
+            nil
+        }
         let item = NSMenuItem(title: params.title,
-                              action: needsAction ? #selector(perfomMenutItemAction) : nil,
+                              action: action,
                               keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)

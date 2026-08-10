@@ -1808,11 +1808,31 @@ struct RefreshReasonContentSyncTests {
     }
 }
 
+/// Models the presentation state AppKit keeps separately from the NSMenu tree
+/// while tracking. A structural removal makes the displayed parents stale;
+/// update() reconciles regular submenu parents, while fold parents still need
+/// an actionable target for AppKit validation to enable them.
+private final class StalePresentationMenu: NSMenu {
+    override func removeItem(at index: Int) {
+        super.removeItem(at: index)
+        for item in items where item.submenu != nil || item.view is FoldableMenuItemView {
+            item.isEnabled = false
+        }
+    }
+
+    override func update() {
+        super.update()
+        for item in items where item.submenu != nil {
+            item.isEnabled = true
+        }
+    }
+}
+
 struct MenubarItemIncrementalUpdateTests {
     @MainActor
-    private func makeMenuBarItem() -> MenubarItem {
+    private func makeMenuBarItem(statusBarMenu: NSMenu = NSMenu(title: "")) -> MenubarItem {
         let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh", content: nil, lastState: .Success)
-        let item = MenubarItem(title: "Test")
+        let item = MenubarItem(title: "Test", statusBarMenu: statusBarMenu)
         item.plugin = plugin
         item.statusBarMenu.delegate = item
         return item
@@ -1996,6 +2016,58 @@ struct MenubarItemIncrementalUpdateTests {
 
         #expect(item.hotKeys.count == 1)
         #expect(item.hotKeys.allSatisfy { $0.isPaused })
+    }
+
+    @MainActor @Test func testIncrementalUpdate_revalidatesPresentedSubmenuAndFoldParentsAfterMiddleRemoval() throws {
+        let presentationMenu = StalePresentationMenu(title: "")
+        let item = makeMenuBarItem(statusBarMenu: presentationMenu)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        alpha
+        --Run | refresh=true
+        Network | fold=true
+        --Wi-Fi: Connected
+        beta
+        --Run | refresh=true
+        gamma
+        --Run | refresh=true
+        delta
+        --Run | refresh=true
+        """)
+
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+        item._updateMenu(content: """
+        Title
+        ---
+        alpha
+        --Run | refresh=true
+        Network | fold=true
+        --Wi-Fi: Connected
+        beta
+        --Run | refresh=true
+        delta
+        --Run | refresh=true
+        """)
+
+        for title in ["alpha", "beta", "delta"] {
+            let formulaItem = try #require(item.statusBarMenu.items.first { $0.title == title })
+            #expect(formulaItem.submenu != nil)
+            #expect(formulaItem.isEnabled)
+        }
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let foldIndex = item.statusBarMenu.index(of: foldParent)
+        let foldChild = item.statusBarMenu.items[foldIndex + 1]
+
+        #expect(foldParent.action == #selector(MenubarItem.toggleFoldItem(_:)))
+        #expect(foldParent.target === item)
+        #expect(foldParent.isEnabled)
+        #expect(foldChild.isHidden)
+        #expect(NSApp.sendAction(try #require(foldParent.action), to: foldParent.target, from: foldParent))
+        #expect(!foldChild.isHidden)
     }
 }
 
@@ -2460,6 +2532,25 @@ struct FoldMenuItemBuildTests {
         #expect(childItem2.isHidden == true)
         #expect(childItem1.attributedTitle?.string == "Wi-Fi: Connected")
         #expect(childItem2.attributedTitle?.string == "Ethernet: Off")
+    }
+
+    @MainActor @Test func testMenuWillOpen_revalidatesFoldParentAction() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        foldParent.isEnabled = false
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(foldParent.action == #selector(MenubarItem.toggleFoldItem(_:)))
+        #expect(foldParent.target === item)
+        #expect(foldParent.isEnabled)
     }
 
     @MainActor @Test func testFullBuild_foldItemExpandsOnToggle() throws {
