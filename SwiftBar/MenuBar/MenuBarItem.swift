@@ -1038,33 +1038,20 @@ extension MenubarItem {
             item.attributedTitle = title
             item.image = image
         case .attributed:
-            item.attributedTitle = menuTitle(
-                title,
-                image: image,
-                usesExplicitSize: params.params["width"].flatMap(Double.init) != nil
-                    && params.params["height"].flatMap(Double.init) != nil
-            )
+            item.attributedTitle = menuTitle(title, image: image)
             item.image = nil
         }
     }
 
     private func menuTitle(
         _ title: NSAttributedString,
-        image: NSImage?,
-        usesExplicitSize: Bool
+        image: NSImage?
     ) -> NSAttributedString {
         guard let image else { return title }
 
-        let icon: NSImage
-        if !usesExplicitSize, image.size.width > 16 || image.size.height > 16 {
-            let scale = min(16 / image.size.width, 16 / image.size.height)
-            icon = image.resizedCopy(w: image.size.width * scale, h: image.size.height * scale)
-        } else {
-            icon = image
-        }
         let font = title.length > 0 ? title.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
         let menuFont = font ?? .menuFont(ofSize: 0)
-        let result = NSMutableAttributedString(attachment: .centeredMenuImage(with: icon, and: menuFont))
+        let result = NSMutableAttributedString(attachment: .centeredMenuImage(with: image, and: menuFont))
         result.append(NSAttributedString(string: "  "))
         result.append(title)
         return result

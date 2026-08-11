@@ -2549,6 +2549,32 @@ struct FoldMenuItemBuildTests {
     }
 
     @MainActor
+    private func makeBase64PNG(pixelSize: NSSize, pointSize: NSSize, color: NSColor) throws -> String {
+        let bitmapRep = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(pixelSize.width),
+            pixelsHigh: Int(pixelSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ))
+        bitmapRep.size = pointSize
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        color.setFill()
+        NSRect(origin: .zero, size: pointSize).fill()
+        NSGraphicsContext.restoreGraphicsState()
+
+        let pngData = try #require(bitmapRep.representation(using: .png, properties: [:]))
+        return pngData.base64EncodedString()
+    }
+
+    @MainActor
     private func attachmentCell(from item: NSMenuItem) throws -> NSTextAttachmentCell {
         let title = try #require(item.attributedTitle)
         let attachment = try #require(title.attribute(.attachment, at: 0, effectiveRange: nil) as? NSTextAttachment)
@@ -2581,27 +2607,46 @@ struct FoldMenuItemBuildTests {
         return try #require(canvas.tiffRepresentation)
     }
 
-    @MainActor @Test func testFullBuild_embedsTemplateImageWithPreservedAspectRatioOnMacOS26AndLater() throws {
+    @MainActor @Test func testFullBuild_preservesReporterImagePointSizeOnMacOS26AndLater() throws {
         let item = makeMenuBarItem()
-        let image = try makeBase64PNG(size: NSSize(width: 54, height: 27))
+        let templateImage = try makeBase64PNG(
+            pixelSize: NSSize(width: 54, height: 54),
+            pointSize: NSSize(width: 27, height: 27),
+            color: .black
+        )
+        let colorImage = try makeBase64PNG(
+            pixelSize: NSSize(width: 54, height: 54),
+            pointSize: NSSize(width: 27, height: 27),
+            color: .systemBlue
+        )
+
+        let decodedImage = try #require(NSImage.createImage(from: templateImage, isTemplate: true))
+        #expect(decodedImage.size == NSSize(width: 27, height: 27))
+        #expect(decodedImage.representations.first?.pixelsWide == 54)
+        #expect(decodedImage.representations.first?.pixelsHigh == 54)
 
         item._updateMenu(content: """
         Title
         ---
-        Image | templateImage=\(image)
+        Template | templateImage=\(templateImage)
+        Color | image=\(colorImage)
         """)
 
-        let imageItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
+        let templateItem = try #require(menuItem(named: "Template", in: item.statusBarMenu))
+        let colorItem = try #require(menuItem(named: "Color", in: item.statusBarMenu))
         if #available(macOS 26.0, *) {
-            #expect(imageItem.image == nil)
-            #expect(imageItem.attributedTitle?.string.hasSuffix("Image") == true)
-            let attachedImage = try attachedImage(from: imageItem)
-            #expect(attachedImage.size == NSSize(width: 16, height: 8))
-            #expect(attachedImage.isTemplate)
+            #expect(templateItem.image == nil)
+            #expect(colorItem.image == nil)
+            #expect(templateItem.attributedTitle?.string.hasSuffix("Template") == true)
+            #expect(try attachedImage(from: templateItem).size == NSSize(width: 27, height: 27))
+            #expect(try attachedImage(from: templateItem).isTemplate)
+            #expect(try attachedImage(from: colorItem).size == NSSize(width: 27, height: 27))
+            #expect(try !attachedImage(from: colorItem).isTemplate)
         } else {
-            let menuImage = try #require(imageItem.image)
-            #expect(menuImage.size == NSSize(width: 54, height: 27))
-            #expect(menuImage.isTemplate)
+            #expect(templateItem.image?.size == NSSize(width: 27, height: 27))
+            #expect(templateItem.image?.isTemplate == true)
+            #expect(colorItem.image?.size == NSSize(width: 27, height: 27))
+            #expect(colorItem.image?.isTemplate == false)
         }
     }
 
@@ -2628,42 +2673,79 @@ struct FoldMenuItemBuildTests {
         }
     }
 
-    @MainActor @Test func testIncrementalRefresh_replacesAttributedColorImageInPlaceOnMacOS26AndLater() throws {
+    @MainActor @Test func testIncrementalRefresh_preservesReporterImagePointSizeAndReplacesInPlace() throws {
+        let redImage = try makeBase64PNG(
+            pixelSize: NSSize(width: 54, height: 54),
+            pointSize: NSSize(width: 27, height: 27),
+            color: .systemRed
+        )
+        let blueImage = try makeBase64PNG(
+            pixelSize: NSSize(width: 54, height: 54),
+            pointSize: NSSize(width: 27, height: 27),
+            color: .systemBlue
+        )
+
+        for (parameter, isTemplate) in [("image", false), ("templateImage", true)] {
+            let item = makeMenuBarItem()
+            item._updateMenu(content: """
+            Title
+            ---
+            Image | \(parameter)=\(redImage)
+            """)
+            let originalItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
+            let originalRepresentation = if #available(macOS 26.0, *) {
+                try #require(try attachedImage(from: originalItem).tiffRepresentation)
+            } else {
+                try #require(originalItem.image?.tiffRepresentation)
+            }
+
+            item._updateMenu(content: """
+            Title
+            ---
+            Image | \(parameter)=\(blueImage)
+            """)
+
+            let refreshedItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
+            #expect(refreshedItem === originalItem)
+            let refreshedImage: NSImage
+            if #available(macOS 26.0, *) {
+                #expect(refreshedItem.image == nil)
+                refreshedImage = try attachedImage(from: refreshedItem)
+            } else {
+                refreshedImage = try #require(refreshedItem.image)
+            }
+            #expect(refreshedImage.size == NSSize(width: 27, height: 27))
+            #expect(refreshedImage.isTemplate == isTemplate)
+            #expect(try #require(refreshedImage.tiffRepresentation) != originalRepresentation)
+        }
+    }
+
+    @MainActor @Test func testAttributedPresentation_preservesIntrinsicSizeForIncompleteOrInvalidDimensions() throws {
         let item = makeMenuBarItem()
-        let redImage = try makeBase64PNG(size: NSSize(width: 32, height: 16), color: .systemRed)
-        let blueImage = try makeBase64PNG(size: NSSize(width: 24, height: 12), color: .systemBlue)
+        let image = try makeBase64PNG(
+            pixelSize: NSSize(width: 54, height: 54),
+            pointSize: NSSize(width: 27, height: 27),
+            color: .systemBlue
+        )
 
-        item._updateMenu(content: """
-        Title
-        ---
-        Image | image=\(redImage)
-        """)
-        let originalItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
-        let originalRepresentation = if #available(macOS 26.0, *) {
-            try #require(try attachedImage(from: originalItem).tiffRepresentation)
-        } else {
-            try #require(originalItem.image?.tiffRepresentation)
+        for line in [
+            "Image | image=\(image)",
+            "Image | image=\(image) width=12",
+            "Image | image=\(image) width=invalid height=12",
+        ] {
+            let params = MenuLineParameters(line: line)
+            let menuItem = NSMenuItem()
+
+            item.configureMenuImage(
+                on: menuItem,
+                title: NSAttributedString(string: "Image"),
+                params: params,
+                presentation: .attributed
+            )
+
+            #expect(params.image?.size == NSSize(width: 27, height: 27))
+            #expect(try attachedImage(from: menuItem).size == NSSize(width: 27, height: 27))
         }
-
-        item._updateMenu(content: """
-        Title
-        ---
-        Image | image=\(blueImage)
-        """)
-
-        let refreshedItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
-        #expect(refreshedItem === originalItem)
-        let refreshedImage: NSImage
-        if #available(macOS 26.0, *) {
-            #expect(refreshedItem.image == nil)
-            refreshedImage = try attachedImage(from: refreshedItem)
-            #expect(refreshedImage.size == NSSize(width: 16, height: 8))
-        } else {
-            refreshedImage = try #require(refreshedItem.image)
-            #expect(refreshedImage.size == NSSize(width: 24, height: 12))
-        }
-        #expect(!refreshedImage.isTemplate)
-        #expect(try #require(refreshedImage.tiffRepresentation) != originalRepresentation)
     }
 
     @MainActor @Test func testAttributedTemplateImageSupportsAppearanceAndHighlightTint() throws {
@@ -2691,7 +2773,11 @@ struct FoldMenuItemBuildTests {
 
     @MainActor @Test func testLegacyPresentation_usesNativeMenuImageWithoutAttachment() throws {
         let item = makeMenuBarItem()
-        let image = try makeBase64PNG(size: NSSize(width: 21, height: 9))
+        let image = try makeBase64PNG(
+            pixelSize: NSSize(width: 54, height: 54),
+            pointSize: NSSize(width: 27, height: 27),
+            color: .black
+        )
         let params = MenuLineParameters(line: "Image | templateImage=\(image)")
         let menuItem = NSMenuItem()
 
@@ -2705,7 +2791,7 @@ struct FoldMenuItemBuildTests {
         #expect(menuItem.attributedTitle?.string == "Image")
         #expect(menuItem.attributedTitle?.attribute(.attachment, at: 0, effectiveRange: nil) == nil)
         let nativeImage = try #require(menuItem.image)
-        #expect(nativeImage.size == NSSize(width: 21, height: 9))
+        #expect(nativeImage.size == NSSize(width: 27, height: 27))
         #expect(nativeImage.isTemplate)
     }
 
