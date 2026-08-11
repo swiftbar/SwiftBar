@@ -644,7 +644,6 @@ extension MenubarItem {
             if node.isSeparator {
                 statusBarMenu.addItem(NSMenuItem.separator())
             } else if let item = buildMenuItem(params: MenuLineParameters(line: node.workingLine)) {
-                item.target = self
                 statusBarMenu.addItem(item)
                 buildSubmenuItems(for: item, from: node, into: statusBarMenu)
             }
@@ -823,7 +822,6 @@ extension MenubarItem {
         } else if existingItem.isSeparatorItem {
             menu.removeItem(at: menuIndex)
             if let newItem = buildMenuItem(params: MenuLineParameters(line: newNode.workingLine)) {
-                newItem.target = self
                 menu.insertItem(newItem, at: menuIndex)
                 buildSubmenuItems(for: newItem, from: newNode, into: menu)
             }
@@ -859,6 +857,7 @@ extension MenubarItem {
                     updateSubmenu(of: existingItem, oldChildren: oldNode.children, newChildren: newNode.children)
                 }
             }
+            configureAction(on: existingItem, for: newParams)
         }
     }
 
@@ -868,7 +867,6 @@ extension MenubarItem {
         if newNode.isSeparator {
             menu.insertItem(NSMenuItem.separator(), at: clampedIndex)
         } else if let newItem = buildMenuItem(params: MenuLineParameters(line: newNode.workingLine)) {
-            newItem.target = self
             menu.insertItem(newItem, at: clampedIndex)
             buildSubmenuItems(for: newItem, from: newNode, into: menu)
         }
@@ -971,16 +969,32 @@ extension MenubarItem {
         }
     }
 
+    private func configureAction(on item: NSMenuItem, for params: MenuLineParameters) {
+        if params.hasAction || params.color != nil {
+            item.target = self
+            item.action = #selector(perfomMenutItemAction)
+        } else if params.fold {
+            item.target = self
+            item.action = #selector(toggleFoldItem(_:))
+        } else if let submenu = item.submenu {
+            // AppKit owns actionless submenu routing. Reattaching restores its
+            // submenuAction/target pair after a SwiftBar action is removed.
+            let isAppKitOwned = item.target === submenu
+                && item.action.map(NSStringFromSelector) == "submenuAction:"
+            guard !isAppKitOwned else { return }
+            item.submenu = nil
+            item.target = nil
+            item.action = nil
+            item.submenu = submenu
+        } else {
+            item.target = nil
+            item.action = nil
+        }
+    }
+
     /// Patch an existing NSMenuItem's visible properties to match new parameters.
     private func patchMenuItem(_ item: NSMenuItem, with params: MenuLineParameters) {
-        let needsAction = params.hasAction || params.color != nil
-        item.action = if needsAction {
-            #selector(perfomMenutItemAction)
-        } else if params.fold {
-            #selector(toggleFoldItem(_:))
-        } else {
-            nil
-        }
+        configureAction(on: item, for: params)
         item.representedObject = params
 
         let title = atributedTitle(with: params)
@@ -1164,7 +1178,6 @@ extension MenubarItem {
                 if child.isSeparator {
                     submenu.addItem(NSMenuItem.separator())
                 } else if let childItem = buildMenuItem(params: MenuLineParameters(line: child.workingLine)) {
-                    childItem.target = self
                     submenu.addItem(childItem)
                     buildSubmenuItems(for: childItem, from: child, into: submenu)
                 }
@@ -1208,7 +1221,6 @@ extension MenubarItem {
             if child.isSeparator {
                 childItem = NSMenuItem.separator()
             } else if let built = buildMenuItem(params: MenuLineParameters(line: child.workingLine)) {
-                built.target = self
                 childItem = built
             } else {
                 continue
@@ -1336,7 +1348,6 @@ extension MenubarItem {
         }
 
         if let item = isSeparator ? NSMenuItem.separator() : buildMenuItem(params: MenuLineParameters(line: workingLine)) {
-            item.target = self
             (submenu ?? statusBarMenu)?.addItem(item)
             lastMenuItem = item
             prevLevel = currentLevel
@@ -1500,19 +1511,10 @@ extension MenubarItem {
     func buildMenuItem(params: MenuLineParameters) -> NSMenuItem? {
         guard params.dropdown else { return nil }
 
-        // Assign action when color is set so macOS renders the item as enabled,
-        // allowing the custom color to display instead of the disabled grey.
-        let needsAction = params.hasAction || params.color != nil
-        let action: Selector? = if needsAction {
-            #selector(perfomMenutItemAction)
-        } else if params.fold {
-            #selector(toggleFoldItem(_:))
-        } else {
-            nil
-        }
         let item = NSMenuItem(title: params.title,
-                              action: action,
+                              action: nil,
                               keyEquivalent: "")
+        configureAction(on: item, for: params)
         item.representedObject = params
         let title = atributedTitle(with: params)
         configureMenuImage(on: item, title: title.title, params: params)
