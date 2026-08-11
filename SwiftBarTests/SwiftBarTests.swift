@@ -101,6 +101,16 @@ final class TestDirectoryPluginManager: PluginManager {
 }
 
 struct SwiftBarTests {
+    @Test func testSwiftBarPackageDetection_usesPathExtension() {
+        let barePluginRoot = URL(fileURLWithPath: "/tmp/.swiftbar", isDirectory: true)
+        let package = URL(fileURLWithPath: "/tmp/weather.swiftbar", isDirectory: true)
+        let hiddenPackage = URL(fileURLWithPath: "/tmp/.weather.swiftbar", isDirectory: true)
+
+        #expect(!barePluginRoot.isSwiftBarPackage)
+        #expect(package.isSwiftBarPackage)
+        #expect(hiddenPackage.isSwiftBarPackage)
+    }
+
     @Test func testShouldShowDefaultBarItem_whenNoVisiblePluginsAndNotInStealthMode() async throws {
         #expect(shouldShowDefaultBarItem(hasVisiblePlugins: false, stealthMode: false))
     }
@@ -988,6 +998,37 @@ struct SwiftBarIntegrationTests {
         #expect(plugins.count == 1)
         #expect(plugins.first?.lastPathComponent == packageAliasURL.lastPathComponent)
         #expect(plugins.first?.isSwiftBarPackage == true)
+    }
+
+    @Test func testGetLoadablePluginList_loadsFilesFromBareSwiftBarRoot() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let pluginRoot = tempDirectory.appendingPathComponent(".swiftbar", isDirectory: true)
+        try FileManager.default.createDirectory(at: pluginRoot, withIntermediateDirectories: true)
+
+        let scriptURL = pluginRoot.appendingPathComponent("script.1m.sh")
+        try Data("#!/bin/zsh\necho script\n".utf8).write(to: scriptURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+
+        let binaryURL = pluginRoot.appendingPathComponent("native-binary")
+        try FileManager.default.copyItem(at: URL(fileURLWithPath: "/usr/bin/true"), to: binaryURL)
+
+        let symlinkTargetURL = tempDirectory.appendingPathComponent("symlink-target.py")
+        try Data("#!/usr/bin/env python3\nprint('symlink')\n".utf8).write(to: symlinkTargetURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: symlinkTargetURL.path)
+        let symlinkURL = pluginRoot.appendingPathComponent("symlink.py")
+        try FileManager.default.createSymbolicLink(atPath: symlinkURL.path, withDestinationPath: symlinkTargetURL.path)
+
+        let manager = TestDirectoryPluginManager(pluginDirectoryURL: pluginRoot)
+        let candidates = manager.getPluginList()
+        let loadablePlugins = manager.getLoadablePluginList(from: candidates)
+        let expectedNames: Set<String> = ["native-binary", "script.1m.sh", "symlink.py"]
+
+        #expect(Set(candidates.map(\.lastPathComponent)) == expectedNames)
+        #expect(Set(loadablePlugins.map(\.lastPathComponent)) == expectedNames)
+        #expect(loadablePlugins.allSatisfy { pluginFileState(for: $0) != nil })
     }
 
     @Test func testMergePluginsPreservingOrder_replacesModifiedPluginsInPlace() async throws {

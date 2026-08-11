@@ -8,7 +8,7 @@ import UserNotifications
 extension URL {
     /// Whether this URL represents a SwiftBar packaged plugin directory (`.swiftbar` bundle).
     var isSwiftBarPackage: Bool {
-        lastPathComponent.hasSuffix(".swiftbar")
+        pathExtension == "swiftbar"
     }
 }
 
