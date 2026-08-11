@@ -58,6 +58,13 @@ extension NSTextAttachment {
         imageAttachment.attachmentCell = ImageAttachmentCell(imageCell: image)
         return imageAttachment
     }
+
+    static func centeredMenuImage(with image: NSImage, and font: NSFont) -> NSTextAttachment {
+        let imageAttachment = NSTextAttachment()
+        imageAttachment.bounds = CGRect(x: 0, y: (font.capHeight - image.size.height).rounded() / 2, width: image.size.width, height: image.size.height)
+        imageAttachment.attachmentCell = MenuImageAttachmentCell(imageCell: image)
+        return imageAttachment
+    }
 }
 
 class ImageAttachmentCell: NSTextAttachmentCell {
@@ -65,5 +72,21 @@ class ImageAttachmentCell: NSTextAttachmentCell {
         var baseline = super.cellBaselineOffset()
         baseline.y = baseline.y - 3 - (image!.size.height - 16) / 2
         return baseline
+    }
+}
+
+final class MenuImageAttachmentCell: ImageAttachmentCell {
+    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
+        guard let image else { return }
+
+        let drawImage = {
+            let color: NSColor = self.isHighlighted ? .selectedMenuItemTextColor : .labelColor
+            image.tintedImage(color: color).draw(in: cellFrame)
+        }
+        if let appearance = controlView?.effectiveAppearance {
+            appearance.performAsCurrentDrawingAppearance(drawImage)
+        } else {
+            drawImage()
+        }
     }
 }
