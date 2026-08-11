@@ -984,7 +984,7 @@ extension MenubarItem {
         item.representedObject = params
 
         let title = atributedTitle(with: params)
-        item.attributedTitle = title.title
+        configureMenuImage(on: item, title: title.title, params: params)
 
         item.toolTip = params.tooltip?.replacingOccurrences(of: "\\n", with: "\n")
         if let length = params.length, length < title.title.string.count {
@@ -993,7 +993,6 @@ extension MenubarItem {
 
         item.isAlternate = params.alternate
 
-        item.image = params.image
         item.state = params.checked ? .on : .off
 
         if #available(macOS 14.0, *) {
@@ -1012,6 +1011,63 @@ extension MenubarItem {
             range: NSRange(location: 0, length: highlightedTitle.length)
         )
         return (normalTitle, highlightedTitle)
+    }
+
+    enum MenuImagePresentation {
+        case native
+        case attributed
+    }
+
+    func configureMenuImage(
+        on item: NSMenuItem,
+        title: NSAttributedString,
+        params: MenuLineParameters,
+        presentation: MenuImagePresentation? = nil
+    ) {
+        let resolvedPresentation: MenuImagePresentation = if let presentation {
+            presentation
+        } else if #available(macOS 26.0, *) {
+            .attributed
+        } else {
+            .native
+        }
+
+        let image = params.image
+        switch resolvedPresentation {
+        case .native:
+            item.attributedTitle = title
+            item.image = image
+        case .attributed:
+            item.attributedTitle = menuTitle(
+                title,
+                image: image,
+                usesExplicitSize: params.params["width"].flatMap(Double.init) != nil
+                    && params.params["height"].flatMap(Double.init) != nil
+            )
+            item.image = nil
+        }
+    }
+
+    private func menuTitle(
+        _ title: NSAttributedString,
+        image: NSImage?,
+        usesExplicitSize: Bool
+    ) -> NSAttributedString {
+        guard let image else { return title }
+
+        let icon: NSImage
+        if !usesExplicitSize, image.size.width > 16 || image.size.height > 16 {
+            let scale = min(16 / image.size.width, 16 / image.size.height)
+            icon = image.resizedCopy(w: image.size.width * scale, h: image.size.height * scale)
+        } else {
+            icon = image
+        }
+        let font = title.length > 0 ? title.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
+        let menuFont = font ?? .menuFont(ofSize: 0)
+        let result = NSMutableAttributedString(attachment: .centeredMenuImage(with: icon, and: menuFont))
+        result.append(NSAttributedString(string: "  "))
+        result.append(title)
+        return result
     }
 
     private func syncHotKeys() {
@@ -1472,7 +1528,7 @@ extension MenubarItem {
                               keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)
-        item.attributedTitle = title.title
+        configureMenuImage(on: item, title: title.title, params: params)
 
         item.toolTip = params.tooltip?.replacingOccurrences(of: "\\n", with: "\n")
 
@@ -1483,10 +1539,6 @@ extension MenubarItem {
         if params.alternate {
             item.isAlternate = true
             item.keyEquivalentModifierMask = NSEvent.ModifierFlags.option
-        }
-
-        if let image = params.image {
-            item.image = image
         }
 
         if params.checked {
