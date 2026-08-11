@@ -2507,6 +2507,29 @@ struct FoldMenuItemBuildTests {
         return pngData.base64EncodedString()
     }
 
+    @MainActor @Test func testFullBuild_embedsImageInTitleOnTahoe() throws {
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 54, height: 54))
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Image | templateImage=\(image)
+        """)
+
+        let imageItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
+        if #available(macOS 26.0, *) {
+            #expect(imageItem.image == nil)
+            let title = try #require(imageItem.attributedTitle)
+            #expect(title.string.hasSuffix("Image"))
+            #expect(title.attribute(.attachment, at: 0, effectiveRange: nil) is NSTextAttachment)
+        } else {
+            let menuImage = try #require(imageItem.image)
+            #expect(menuImage.size == NSSize(width: 54, height: 54))
+            #expect(menuImage.isTemplate)
+        }
+    }
+
     @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
         let item = makeMenuBarItem()
 

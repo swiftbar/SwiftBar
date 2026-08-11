@@ -984,7 +984,7 @@ extension MenubarItem {
         item.representedObject = params
 
         let title = atributedTitle(with: params)
-        item.attributedTitle = title.title
+        item.attributedTitle = menuTitle(title.title, image: params.image)
 
         item.toolTip = params.tooltip?.replacingOccurrences(of: "\\n", with: "\n")
         if let length = params.length, length < title.title.string.count {
@@ -993,7 +993,11 @@ extension MenubarItem {
 
         item.isAlternate = params.alternate
 
-        item.image = params.image
+        if #available(macOS 26.0, *), params.image != nil {
+            item.image = nil
+        } else {
+            item.image = params.image
+        }
         item.state = params.checked ? .on : .off
 
         if #available(macOS 14.0, *) {
@@ -1012,6 +1016,18 @@ extension MenubarItem {
             range: NSRange(location: 0, length: highlightedTitle.length)
         )
         return (normalTitle, highlightedTitle)
+    }
+
+    private func menuTitle(_ title: NSAttributedString, image: NSImage?) -> NSAttributedString {
+        guard #available(macOS 26.0, *), let image else { return title }
+
+        let icon = image.resizedCopy(w: 16, h: 16).tintedImage(color: .labelColor)
+        let font = title.length > 0 ? title.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
+        let menuFont = font ?? .menuFont(ofSize: 0)
+        let result = NSMutableAttributedString(attachment: .centeredImage(with: icon, and: menuFont))
+        result.append(NSAttributedString(string: "  "))
+        result.append(title)
+        return result
     }
 
     private func syncHotKeys() {
@@ -1472,7 +1488,7 @@ extension MenubarItem {
                               keyEquivalent: "")
         item.representedObject = params
         let title = atributedTitle(with: params)
-        item.attributedTitle = title.title
+        item.attributedTitle = menuTitle(title.title, image: params.image)
 
         item.toolTip = params.tooltip?.replacingOccurrences(of: "\\n", with: "\n")
 
@@ -1485,7 +1501,7 @@ extension MenubarItem {
             item.keyEquivalentModifierMask = NSEvent.ModifierFlags.option
         }
 
-        if let image = params.image {
+        if #unavailable(macOS 26.0), let image = params.image {
             item.image = image
         }
 
