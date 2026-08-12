@@ -2161,6 +2161,28 @@ struct MenubarItemActionOwnershipTests {
         return lines.joined(separator: "\n")
     }
 
+    private func issue512Output(childCount: Int) -> String {
+        var lines = [
+            "REPRO",
+            "---",
+            "Parent ( \(childCount) ) | sfimage=list.clipboard",
+            "--A | bash=/usr/bin/true terminal=false",
+        ]
+        if childCount == 3 {
+            lines += [
+                "-----",
+                "--B | bash=/usr/bin/true terminal=false",
+                "-----",
+                "--C | bash=/usr/bin/true terminal=false",
+            ]
+        }
+        lines += [
+            "---",
+            "Ouvrir | bash=/usr/bin/true terminal=false",
+        ]
+        return lines.joined(separator: "\n")
+    }
+
     private func output(body: [String]) -> String {
         (["Title", "---"] + body).joined(separator: "\n")
     }
@@ -2247,6 +2269,47 @@ struct MenubarItemActionOwnershipTests {
             #expect(updatedParent.isEnabled)
             try expectAppKitOwnership(updatedParent)
         }
+    }
+
+    @MainActor @Test func exactIssue512FlatFixtureRecoversAcrossThreeOneThree() throws {
+        let menubarItem = makeMenuBarItem()
+        menubarItem._updateMenu(content: issue512Output(childCount: 3))
+
+        let originalParent = try item(named: "Parent ( 3 )", in: menubarItem.statusBarMenu)
+        let originalSubmenu = try #require(originalParent.submenu)
+        try expectAppKitOwnership(originalParent)
+        #expect(originalParent.isEnabled)
+
+        menubarItem.hotkeyTrigger = true
+        menubarItem.menuWillOpen(menubarItem.statusBarMenu)
+
+        for (childCount, expectedChildren) in [
+            (1, ["A"]),
+            (3, ["A", "<separator>", "B", "<separator>", "C"]),
+        ] {
+            menubarItem._updateMenu(content: issue512Output(childCount: childCount))
+
+            let parent = try item(named: "Parent ( \(childCount) )", in: menubarItem.statusBarMenu)
+            let submenu = try #require(parent.submenu)
+            let children = submenu.items.map { child in
+                child.isSeparatorItem
+                    ? "<separator>"
+                    : ((child.representedObject as? MenuLineParameters)?.title ?? child.title)
+                        .trimmingCharacters(in: .whitespaces)
+            }
+
+            #expect(parent === originalParent)
+            #expect(submenu === originalSubmenu)
+            #expect(submenu.supermenu === menubarItem.statusBarMenu)
+            #expect(children == expectedChildren)
+            try expectAppKitOwnership(parent)
+
+            menubarItem.statusBarMenu.update()
+            #expect(parent.isEnabled)
+            try expectAppKitOwnership(parent)
+        }
+
+        menubarItem.menuDidClose(menubarItem.statusBarMenu)
     }
 
     @MainActor @Test func noChangeAndChildOnlyControlsKeepAppKitOwnership() throws {
