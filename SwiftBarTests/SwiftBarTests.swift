@@ -7,9 +7,10 @@ import Testing
 
 final class TestPlugin: Plugin {
     let id: PluginID
-    let type: PluginType = .Executable
+    let type: PluginType
     let name: String
     let file: String
+    let supportDirectoryNameOverride: String?
     let enabled: Bool
     var metadata: PluginMetadata?
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
@@ -23,10 +24,24 @@ final class TestPlugin: Plugin {
     var refreshEnv: [String: String] = [:]
     var terminateCallCount = 0
 
-    init(id: PluginID, file: String, content: String? = "...", enabled: Bool = true, lastState: PluginState = .Loading) {
+    var supportDirectoryName: String {
+        supportDirectoryNameOverride ?? (file as NSString).lastPathComponent
+    }
+
+    init(
+        id: PluginID,
+        file: String,
+        type: PluginType = .Executable,
+        supportDirectoryName: String? = nil,
+        content: String? = "...",
+        enabled: Bool = true,
+        lastState: PluginState = .Loading
+    ) {
         self.id = id
         self.name = id
         self.file = file
+        self.type = type
+        supportDirectoryNameOverride = supportDirectoryName
         self.content = content
         self.enabled = enabled
         self.lastState = lastState
@@ -101,6 +116,183 @@ final class TestDirectoryPluginManager: PluginManager {
 }
 
 struct SwiftBarTests {
+    @Test func supportDirectories_restoreLegacyBasenameForAbsoluteExecutableID() throws {
+        let dataRoot = URL(fileURLWithPath: "/isolated/Application Support/SwiftBar/Plugins", isDirectory: true)
+        let cacheRoot = URL(fileURLWithPath: "/isolated/Caches/com.ameba.SwiftBar/Plugins", isDirectory: true)
+        let absolutePluginPath = "/Users/example/SwiftBar/plugins/nested/weather.1m.sh"
+        let plugin = TestPlugin(id: absolutePluginPath, file: absolutePluginPath)
+
+        let dataDirectory = try #require(plugin.supportDirectory(in: dataRoot))
+        let cacheDirectory = try #require(plugin.supportDirectory(in: cacheRoot))
+
+        #expect(dataDirectory.path == dataRoot.appendingPathComponent("weather.1m.sh").path)
+        #expect(cacheDirectory.path == cacheRoot.appendingPathComponent("weather.1m.sh").path)
+        #expect(dataDirectory.lastPathComponent == cacheDirectory.lastPathComponent)
+        #expect(dataDirectory.deletingLastPathComponent().path == dataRoot.path)
+        #expect(cacheDirectory.deletingLastPathComponent().path == cacheRoot.path)
+    }
+
+    @Test func supportDirectories_useLexicalBasenameForStreamablePlugin() throws {
+        let base = URL(fileURLWithPath: "/isolated/Plugins", isDirectory: true)
+        let plugin = TestPlugin(
+            id: "stream.1m.sh",
+            file: "/Users/example/plugins/nested/stream.1m.sh",
+            type: .Streamable
+        )
+
+        #expect(try #require(plugin.supportDirectory(in: base)).path == base.appendingPathComponent("stream.1m.sh").path)
+    }
+
+    @Test func supportDirectory_rejectsUnsafeComponents() {
+        let base = URL(fileURLWithPath: "/isolated/Plugins", isDirectory: true)
+        let unsafeComponents = [
+            "/tmp/plugin.sh",
+            "../plugin.sh",
+            "nested/plugin.sh",
+            ".",
+            "..",
+            "",
+            "plugin\0.sh",
+        ]
+
+        for component in unsafeComponents {
+            let plugin = TestPlugin(id: "../../malformed-id", file: "/tmp/plugin.sh", supportDirectoryName: component)
+            #expect(plugin.supportDirectory(in: base) == nil)
+        }
+
+        let malformedIdentity = TestPlugin(id: "../../malformed-id", file: "/tmp/safe.sh")
+        #expect(malformedIdentity.supportDirectory(in: base)?.path == base.appendingPathComponent("safe.sh").path)
+    }
+
+    @Test func supportDirectory_recoversRegressedDataByCopyWithoutOverwrite() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let base = tempDirectory.appendingPathComponent("Plugins", isDirectory: true)
+        let absolutePluginPath = "/Users/example/plugins/weather.1m.sh"
+        let regressedDirectory = base.appendingPathComponent("Users/example/plugins/weather.1m.sh", isDirectory: true)
+        try FileManager.default.createDirectory(at: regressedDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let regressedData = regressedDirectory.appendingPathComponent("settings.json")
+        try Data("from-2.1".utf8).write(to: regressedData)
+
+        let plugin = TestPlugin(id: absolutePluginPath, file: absolutePluginPath)
+        plugin.createSupportDirectory(in: base)
+
+        let compatibleDirectory = try #require(plugin.supportDirectory(in: base))
+        let compatibleData = compatibleDirectory.appendingPathComponent("settings.json")
+        #expect(try String(contentsOf: compatibleData, encoding: .utf8) == "from-2.1")
+        #expect(FileManager.default.fileExists(atPath: regressedData.path))
+
+        try Data("newer-regressed-value".utf8).write(to: regressedData)
+        plugin.createSupportDirectory(in: base)
+
+        #expect(try String(contentsOf: compatibleData, encoding: .utf8) == "from-2.1")
+        #expect(try String(contentsOf: regressedData, encoding: .utf8) == "newer-regressed-value")
+    }
+
+    @Test func supportDirectory_doesNotPublishPartialRecoveryAfterCopyFailure() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let base = tempDirectory.appendingPathComponent("Plugins", isDirectory: true)
+        let absolutePluginPath = "/Users/example/plugins/weather.1m.sh"
+        let regressedDirectory = base.appendingPathComponent("Users/example/plugins/weather.1m.sh", isDirectory: true)
+        try FileManager.default.createDirectory(at: regressedDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let regularFile = regressedDirectory.appendingPathComponent("a-settings.json")
+        try Data("settings".utf8).write(to: regularFile)
+        let unsupportedFile = regressedDirectory.appendingPathComponent("z-fifo")
+        try #require(mkfifo(unsupportedFile.path, 0o600) == 0)
+
+        let plugin = TestPlugin(id: absolutePluginPath, file: absolutePluginPath)
+        plugin.createSupportDirectory(in: base)
+
+        let compatibleDirectory = try #require(plugin.supportDirectory(in: base))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: compatibleDirectory.path).isEmpty)
+        #expect(FileManager.default.fileExists(atPath: regularFile.path))
+        #expect(FileManager.default.fileExists(atPath: unsupportedFile.path))
+        #expect(try FileManager.default.contentsOfDirectory(atPath: base.path).allSatisfy {
+            !$0.hasPrefix(".swiftbar-support-recovery-")
+        })
+    }
+
+    @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let targetURL = tempDirectory.appendingPathComponent("target.1m.sh")
+        try Data("#!/bin/zsh\necho target\n".utf8).write(to: targetURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: targetURL.path)
+
+        let aliasURL = tempDirectory.appendingPathComponent("alias.1m.sh")
+        try FileManager.default.createSymbolicLink(atPath: aliasURL.path, withDestinationPath: targetURL.path)
+
+        let plugin = ExecutablePlugin(fileURL: aliasURL, createSupportDirectories: false)
+        plugin.operation?.cancel()
+        plugin.operation?.waitUntilFinished()
+        defer { plugin.terminate() }
+
+        #expect(plugin.id == targetURL.resolvingSymlinksInPath().path)
+        #expect(plugin.supportDirectoryName == aliasURL.lastPathComponent)
+    }
+
+    @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let firstDirectory = tempDirectory.appendingPathComponent("first", isDirectory: true)
+        let secondDirectory = tempDirectory.appendingPathComponent("second", isDirectory: true)
+        try FileManager.default.createDirectory(at: firstDirectory, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: secondDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let firstURL = firstDirectory.appendingPathComponent("duplicate.1m.sh")
+        let secondURL = secondDirectory.appendingPathComponent("duplicate.1m.sh")
+        for url in [firstURL, secondURL] {
+            try Data("#!/bin/zsh\necho duplicate\n".utf8).write(to: url)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+        }
+
+        let firstPlugin = ExecutablePlugin(fileURL: firstURL, createSupportDirectories: false)
+        let secondPlugin = ExecutablePlugin(fileURL: secondURL, createSupportDirectories: false)
+        for plugin in [firstPlugin, secondPlugin] {
+            plugin.operation?.cancel()
+            plugin.operation?.waitUntilFinished()
+        }
+        defer {
+            firstPlugin.terminate()
+            secondPlugin.terminate()
+        }
+
+        #expect(firstPlugin.id != secondPlugin.id)
+        #expect(firstPlugin.id == firstURL.resolvingSymlinksInPath().path)
+        #expect(secondPlugin.id == secondURL.resolvingSymlinksInPath().path)
+        #expect(firstPlugin.supportDirectoryName == "duplicate.1m.sh")
+        #expect(secondPlugin.supportDirectoryName == "duplicate.1m.sh")
+    }
+
+    @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let packageTargetURL = tempDirectory.appendingPathComponent("package-target", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let executableURL = packageTargetURL.appendingPathComponent("plugin.sh")
+        try Data("#!/bin/zsh\necho packaged\n".utf8).write(to: executableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: executableURL.path)
+
+        let packageAliasURL = tempDirectory.appendingPathComponent("weather.swiftbar", isDirectory: true)
+        try FileManager.default.createSymbolicLink(atPath: packageAliasURL.path, withDestinationPath: packageTargetURL.path)
+
+        let plugin = try #require(PackagedPlugin(packageDirectory: packageAliasURL, createSupportDirectories: false))
+        plugin.operation?.cancel()
+        plugin.operation?.waitUntilFinished()
+        defer { plugin.terminate() }
+
+        let base = URL(fileURLWithPath: "/isolated/Plugins", isDirectory: true)
+        #expect(plugin.id == packageTargetURL.resolvingSymlinksInPath().path)
+        #expect(plugin.supportDirectoryName == "weather.swiftbar")
+        #expect(try #require(plugin.supportDirectory(in: base)).path == base.appendingPathComponent("weather.swiftbar").path)
+    }
+
     @Test func testSwiftBarPackageDetection_usesPathExtension() {
         let barePluginRoot = URL(fileURLWithPath: "/tmp/.swiftbar", isDirectory: true)
         let package = URL(fileURLWithPath: "/tmp/weather.swiftbar", isDirectory: true)

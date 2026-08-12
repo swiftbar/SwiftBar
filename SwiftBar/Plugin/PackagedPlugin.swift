@@ -11,6 +11,10 @@ class PackagedPlugin: TimerArmingPlugin {
     var file: String
     let packageDirectory: URL
     let mainExecutable: URL
+    var supportDirectoryName: String {
+        packageDirectory.lastPathComponent
+    }
+
     var updateInterval: Double = pluginNeverUpdateInterval
     var refreshEnv: [String: String] = [:]
 
@@ -61,7 +65,7 @@ class PackagedPlugin: TimerArmingPlugin {
     // MARK: - Initialization
 
     /// Initialize with a `.swiftbar` directory URL.
-    init?(packageDirectory: URL) {
+    init?(packageDirectory: URL, createSupportDirectories: Bool = true) {
         guard packageDirectory.isSwiftBarPackage else {
             os_log("Directory %{public}@ is not a valid packaged plugin (must end with .swiftbar)",
                    log: Log.plugin, type: .error, packageDirectory.path)
@@ -97,7 +101,9 @@ class PackagedPlugin: TimerArmingPlugin {
                 .reduce(updateInterval, min)
         }
 
-        createSupportDirs()
+        if createSupportDirectories {
+            createSupportDirs()
+        }
         os_log("Initialized packaged plugin\n%{public}@", log: Log.plugin, description)
         refresh(reason: .FirstLaunch)
     }
