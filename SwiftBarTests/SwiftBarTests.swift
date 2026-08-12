@@ -2112,6 +2112,447 @@ struct MenubarItemIncrementalUpdateTests {
     }
 }
 
+private final class UpdateCountingMenu: NSMenu {
+    var updateCallCount = 0
+
+    override func update() {
+        updateCallCount += 1
+        super.update()
+    }
+}
+
+struct MenubarItemActionOwnershipTests {
+    @MainActor
+    private func makeMenuBarItem() -> MenubarItem {
+        let plugin = TestPlugin(id: "issue-514", file: "/tmp/repro.10s.sh", content: nil, lastState: .Success)
+        let item = MenubarItem(title: "Issue 514")
+        item.plugin = plugin
+        item.statusBarMenu.delegate = item
+        return item
+    }
+
+    private func reporterOutput(
+        childCount: Int,
+        title: String = "REPRO",
+        includesCounter: Bool = true,
+        parentHasAction: Bool = false
+    ) -> String {
+        let parentTitle = includesCounter ? "Parent ( \(childCount) )" : "Parent"
+        let parentAction = parentHasAction ? " bash=/usr/bin/true terminal=false" : ""
+        var lines = [
+            title,
+            "---",
+            "Logs",
+            "--\(parentTitle) | sfimage=list.clipboard\(parentAction)",
+            "----A | bash=/usr/bin/true terminal=false",
+        ]
+        if childCount == 3 {
+            lines += [
+                "-------",
+                "----B | bash=/usr/bin/true terminal=false",
+                "-------",
+                "----C | bash=/usr/bin/true terminal=false",
+            ]
+        }
+        lines += [
+            "-----",
+            "--Ouvrir | bash=/usr/bin/true terminal=false",
+        ]
+        return lines.joined(separator: "\n")
+    }
+
+    private func issue512Output(childCount: Int) -> String {
+        var lines = [
+            "REPRO",
+            "---",
+            "Parent ( \(childCount) ) | sfimage=list.clipboard",
+            "--A | bash=/usr/bin/true terminal=false",
+        ]
+        if childCount == 3 {
+            lines += [
+                "-----",
+                "--B | bash=/usr/bin/true terminal=false",
+                "-----",
+                "--C | bash=/usr/bin/true terminal=false",
+            ]
+        }
+        lines += [
+            "---",
+            "Ouvrir | bash=/usr/bin/true terminal=false",
+        ]
+        return lines.joined(separator: "\n")
+    }
+
+    private func output(body: [String]) -> String {
+        (["Title", "---"] + body).joined(separator: "\n")
+    }
+
+    private func nestedOutput(depth: Int, parentTitle: String, parentHasAction: Bool) -> String {
+        var body: [String] = []
+        if depth > 1 {
+            for level in 0 ..< (depth - 1) {
+                body.append("\(String(repeating: "--", count: level))Level \(level + 1)")
+            }
+        }
+        let parentPrefix = String(repeating: "--", count: depth - 1)
+        let childPrefix = String(repeating: "--", count: depth)
+        let parentAction = parentHasAction ? " | bash=/usr/bin/true terminal=false" : ""
+        body.append("\(parentPrefix)\(parentTitle)\(parentAction)")
+        body.append("\(childPrefix)Child | bash=/usr/bin/true terminal=false")
+        return output(body: body)
+    }
+
+    @MainActor
+    private func item(named title: String, in menu: NSMenu) throws -> NSMenuItem {
+        try #require(menu.items.first { menuItem in
+            let representedTitle = (menuItem.representedObject as? MenuLineParameters)?.title
+                .trimmingCharacters(in: .whitespaces)
+            return representedTitle == title
+                || menuItem.attributedTitle?.string.trimmingCharacters(in: .whitespaces) == title
+                || menuItem.title.trimmingCharacters(in: .whitespaces) == title
+        })
+    }
+
+    @MainActor
+    private func item(at path: [String], in rootMenu: NSMenu) throws -> (item: NSMenuItem, containingMenu: NSMenu) {
+        var menu = rootMenu
+        let finalTitle = try #require(path.last)
+        for title in path.dropLast() {
+            menu = try #require(item(named: title, in: menu).submenu)
+        }
+        return (try item(named: finalTitle, in: menu), menu)
+    }
+
+    @MainActor
+    private func expectAppKitOwnership(_ item: NSMenuItem) throws {
+        let submenu = try #require(item.submenu)
+        #expect(item.action.map(NSStringFromSelector) == "submenuAction:")
+        #expect(item.target === submenu)
+    }
+
+    @MainActor
+    private func expectSwiftBarOwnership(_ item: NSMenuItem, owner: MenubarItem, action: Selector) {
+        #expect(item.action == action)
+        #expect(item.target === owner)
+    }
+
+    @MainActor @Test func exactReporterFixturesKeepAppKitOwnedParentEnabledInBothDirections() throws {
+        for (fixtureTitle, initialCount, updatedCount) in [
+            ("REPRO", 3, 1),
+            ("REPRO515", 1, 3),
+        ] {
+            let menubarItem = makeMenuBarItem()
+            menubarItem._updateMenu(content: reporterOutput(childCount: initialCount, title: fixtureTitle))
+
+            let logs = try item(named: "Logs", in: menubarItem.statusBarMenu)
+            let logsMenu = try #require(logs.submenu)
+            let originalParent = try item(named: "Parent ( \(initialCount) )", in: logsMenu)
+            let originalSubmenu = try #require(originalParent.submenu)
+
+            try expectAppKitOwnership(originalParent)
+            #expect(originalParent.isEnabled)
+
+            menubarItem._updateMenu(content: reporterOutput(childCount: updatedCount, title: fixtureTitle))
+
+            let updatedParent = try item(named: "Parent ( \(updatedCount) )", in: logsMenu)
+            let updatedSubmenu = try #require(updatedParent.submenu)
+            let expectedChildCount = updatedCount == 3 ? 5 : 1
+
+            #expect(updatedParent === originalParent)
+            #expect(updatedSubmenu === originalSubmenu)
+            #expect(updatedSubmenu.supermenu === logsMenu)
+            #expect(updatedSubmenu.items.count == expectedChildCount)
+            try expectAppKitOwnership(updatedParent)
+
+            logsMenu.update()
+
+            #expect(updatedParent.isEnabled)
+            try expectAppKitOwnership(updatedParent)
+        }
+    }
+
+    @MainActor @Test func exactIssue512FlatFixtureRecoversAcrossThreeOneThree() throws {
+        let menubarItem = makeMenuBarItem()
+        menubarItem._updateMenu(content: issue512Output(childCount: 3))
+
+        let originalParent = try item(named: "Parent ( 3 )", in: menubarItem.statusBarMenu)
+        let originalSubmenu = try #require(originalParent.submenu)
+        try expectAppKitOwnership(originalParent)
+        #expect(originalParent.isEnabled)
+
+        menubarItem.hotkeyTrigger = true
+        menubarItem.menuWillOpen(menubarItem.statusBarMenu)
+
+        for (childCount, expectedChildren) in [
+            (1, ["A"]),
+            (3, ["A", "<separator>", "B", "<separator>", "C"]),
+        ] {
+            menubarItem._updateMenu(content: issue512Output(childCount: childCount))
+
+            let parent = try item(named: "Parent ( \(childCount) )", in: menubarItem.statusBarMenu)
+            let submenu = try #require(parent.submenu)
+            let children = submenu.items.map { child in
+                child.isSeparatorItem
+                    ? "<separator>"
+                    : ((child.representedObject as? MenuLineParameters)?.title ?? child.title)
+                        .trimmingCharacters(in: .whitespaces)
+            }
+
+            #expect(parent === originalParent)
+            #expect(submenu === originalSubmenu)
+            #expect(submenu.supermenu === menubarItem.statusBarMenu)
+            #expect(children == expectedChildren)
+            try expectAppKitOwnership(parent)
+
+            menubarItem.statusBarMenu.update()
+            #expect(parent.isEnabled)
+            try expectAppKitOwnership(parent)
+        }
+
+        menubarItem.menuDidClose(menubarItem.statusBarMenu)
+    }
+
+    @MainActor @Test func noChangeAndChildOnlyControlsKeepAppKitOwnership() throws {
+        for (includesCounter, initialCount, updatedCount) in [
+            (true, 3, 3),
+            (false, 3, 1),
+        ] {
+            let menubarItem = makeMenuBarItem()
+            menubarItem._updateMenu(content: reporterOutput(childCount: initialCount, includesCounter: includesCounter))
+
+            let logs = try item(named: "Logs", in: menubarItem.statusBarMenu)
+            let logsMenu = try #require(logs.submenu)
+            let parentTitle = includesCounter ? "Parent ( \(initialCount) )" : "Parent"
+            let originalParent = try item(named: parentTitle, in: logsMenu)
+            let originalSubmenu = try #require(originalParent.submenu)
+
+            menubarItem._updateMenu(content: reporterOutput(childCount: updatedCount, includesCounter: includesCounter))
+
+            let updatedTitle = includesCounter ? "Parent ( \(updatedCount) )" : "Parent"
+            let updatedParent = try item(named: updatedTitle, in: logsMenu)
+            #expect(updatedParent === originalParent)
+            #expect(updatedParent.submenu === originalSubmenu)
+            #expect(updatedParent.submenu?.items.count == (updatedCount == 3 ? 5 : 1))
+            try expectAppKitOwnership(updatedParent)
+
+            logsMenu.update()
+            #expect(updatedParent.isEnabled)
+        }
+    }
+
+    @MainActor @Test func nestedParentsUseTheCorrectOwnerAtDepthsOneThroughThree() throws {
+        for depth in 1 ... 3 {
+            for parentHasAction in [false, true] {
+                let menubarItem = makeMenuBarItem()
+                menubarItem._updateMenu(content: nestedOutput(depth: depth, parentTitle: "Parent", parentHasAction: parentHasAction))
+
+                let path = (depth > 1 ? (1 ..< depth).map { "Level \($0)" } : []) + ["Parent"]
+                let original = try item(at: path, in: menubarItem.statusBarMenu)
+                let originalSubmenu = try #require(original.item.submenu)
+
+                menubarItem._updateMenu(content: nestedOutput(depth: depth, parentTitle: "Parent Updated", parentHasAction: parentHasAction))
+
+                let updated = try item(at: Array(path.dropLast()) + ["Parent Updated"], in: menubarItem.statusBarMenu)
+                #expect(updated.item === original.item)
+                #expect(updated.item.submenu === originalSubmenu)
+                if parentHasAction {
+                    expectSwiftBarOwnership(updated.item, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+                } else {
+                    try expectAppKitOwnership(updated.item)
+                }
+
+                updated.containingMenu.update()
+                #expect(updated.item.isEnabled)
+            }
+        }
+    }
+
+    @MainActor @Test func submenuActionOwnershipTransitionsInPlace() throws {
+        let menubarItem = makeMenuBarItem()
+        menubarItem._updateMenu(content: output(body: [
+            "Parent",
+            "--Child | bash=/usr/bin/true terminal=false",
+        ]))
+
+        let originalParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+        let originalSubmenu = try #require(originalParent.submenu)
+        try expectAppKitOwnership(originalParent)
+
+        menubarItem._updateMenu(content: output(body: [
+            "Parent | bash=/usr/bin/true terminal=false",
+            "--Child | bash=/usr/bin/true terminal=false",
+        ]))
+
+        let actionableParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+        #expect(actionableParent === originalParent)
+        #expect(actionableParent.submenu === originalSubmenu)
+        expectSwiftBarOwnership(actionableParent, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+
+        menubarItem._updateMenu(content: output(body: [
+            "Parent",
+            "--Child | bash=/usr/bin/true terminal=false",
+        ]))
+
+        let restoredParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+        #expect(restoredParent === originalParent)
+        #expect(restoredParent.submenu === originalSubmenu)
+        try expectAppKitOwnership(restoredParent)
+        menubarItem.statusBarMenu.update()
+        #expect(restoredParent.isEnabled)
+    }
+
+    @MainActor @Test func leafAndSubmenuTransitionsPreserveTheExpectedOwner() throws {
+        for hasAction in [false, true] {
+            let action = hasAction ? " | bash=/usr/bin/true terminal=false" : ""
+            let menubarItem = makeMenuBarItem()
+            menubarItem._updateMenu(content: output(body: [
+                "Parent\(action)",
+                "--Child | bash=/usr/bin/true terminal=false",
+            ]))
+
+            let originalParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+
+            menubarItem._updateMenu(content: output(body: ["Parent\(action)"]))
+
+            let leaf = try item(named: "Parent", in: menubarItem.statusBarMenu)
+            #expect(leaf !== originalParent)
+            #expect(leaf.submenu == nil)
+            if hasAction {
+                expectSwiftBarOwnership(leaf, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+            } else {
+                #expect(leaf.action == nil)
+                #expect(leaf.target == nil)
+            }
+
+            menubarItem.statusBarMenu.update()
+            #expect(leaf.isEnabled == hasAction)
+
+            menubarItem._updateMenu(content: output(body: [
+                "Parent\(action)",
+                "--Child | bash=/usr/bin/true terminal=false",
+            ]))
+
+            let submenuParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+            #expect(submenuParent !== leaf)
+            if hasAction {
+                expectSwiftBarOwnership(submenuParent, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+            } else {
+                try expectAppKitOwnership(submenuParent)
+            }
+            menubarItem.statusBarMenu.update()
+            #expect(submenuParent.isEnabled)
+        }
+    }
+
+    @MainActor @Test func foldAndSubmenuTransitionsPreserveTheirOwners() throws {
+        let menubarItem = makeMenuBarItem()
+        menubarItem._updateMenu(content: output(body: [
+            "Parent",
+            "--Child | bash=/usr/bin/true terminal=false",
+        ]))
+        let originalParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+
+        menubarItem._updateMenu(content: output(body: [
+            "Parent | fold=true",
+            "--Child | bash=/usr/bin/true terminal=false",
+        ]))
+
+        let foldParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+        #expect(foldParent === originalParent)
+        #expect(foldParent.submenu == nil)
+        #expect(foldParent.view is FoldableMenuItemView)
+        expectSwiftBarOwnership(foldParent, owner: menubarItem, action: #selector(MenubarItem.toggleFoldItem(_:)))
+
+        menubarItem._updateMenu(content: output(body: [
+            "Parent",
+            "--Child | bash=/usr/bin/true terminal=false",
+        ]))
+
+        let submenuParent = try item(named: "Parent", in: menubarItem.statusBarMenu)
+        #expect(submenuParent === originalParent)
+        #expect(submenuParent.view == nil)
+        try expectAppKitOwnership(submenuParent)
+        menubarItem.statusBarMenu.update()
+        #expect(submenuParent.isEnabled)
+    }
+
+    @MainActor @Test func leafActionsWebViewsColorsAndSeparatorsKeepExistingContracts() throws {
+        let menubarItem = makeMenuBarItem()
+        menubarItem._updateMenu(content: output(body: [
+            "Plain",
+            "Web | href=https://example.com webview=true",
+            "Color | color=red",
+            "---",
+        ]))
+
+        let plain = try item(named: "Plain", in: menubarItem.statusBarMenu)
+        let web = try item(named: "Web", in: menubarItem.statusBarMenu)
+        let color = try item(named: "Color", in: menubarItem.statusBarMenu)
+        let separator = try #require(menubarItem.statusBarMenu.items.first { $0.isSeparatorItem })
+
+        #expect(plain.action == nil)
+        #expect(plain.target == nil)
+        expectSwiftBarOwnership(web, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+        expectSwiftBarOwnership(color, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+        #expect(separator.action == nil)
+        #expect(separator.target == nil)
+
+        menubarItem.statusBarMenu.update()
+        #expect(!plain.isEnabled)
+        #expect(web.isEnabled)
+        #expect(color.isEnabled)
+
+        menubarItem._updateMenu(content: output(body: [
+            "Plain | bash=/usr/bin/true terminal=false",
+            "Web | href=https://example.com webview=true",
+            "Color | color=red",
+            "---",
+        ]))
+        expectSwiftBarOwnership(plain, owner: menubarItem, action: #selector(MenubarItem.perfomMenutItemAction))
+
+        menubarItem._updateMenu(content: output(body: [
+            "Plain",
+            "Web | href=https://example.com webview=true",
+            "Color | color=red",
+            "---",
+        ]))
+        #expect(plain.action == nil)
+        #expect(plain.target == nil)
+    }
+
+    @MainActor @Test func reporterFixtureNeedsNoRecursiveSubmenuUpdateAfterOwnershipRepair() throws {
+        let menubarItem = makeMenuBarItem()
+        menubarItem._updateMenu(content: reporterOutput(childCount: 3, title: "REPRO515"))
+
+        let logs = try item(named: "Logs", in: menubarItem.statusBarMenu)
+        let logsMenu = try #require(logs.submenu)
+        let parent = try item(named: "Parent ( 3 )", in: logsMenu)
+        let originalSubmenu = try #require(parent.submenu)
+        let trackingSubmenu = UpdateCountingMenu(title: "")
+        for child in originalSubmenu.items {
+            originalSubmenu.removeItem(child)
+            trackingSubmenu.addItem(child)
+        }
+        parent.submenu = trackingSubmenu
+
+        menubarItem.hotkeyTrigger = true
+        menubarItem.menuWillOpen(menubarItem.statusBarMenu)
+        menubarItem._updateMenu(content: reporterOutput(childCount: 1, title: "REPRO515"))
+
+        let updatedParent = try item(named: "Parent ( 1 )", in: logsMenu)
+        #expect(updatedParent === parent)
+        #expect(updatedParent.submenu === trackingSubmenu)
+        #expect(trackingSubmenu.items.count == 1)
+        #expect(trackingSubmenu.updateCallCount == 0)
+        try expectAppKitOwnership(updatedParent)
+
+        logsMenu.update()
+
+        #expect(trackingSubmenu.updateCallCount == 0)
+        #expect(updatedParent.isEnabled)
+    }
+}
+
 // MARK: - MenuItemNode Tree Building Tests
 
 struct MenuItemNodeParsingTests {
