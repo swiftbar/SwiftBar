@@ -60,6 +60,7 @@ class MenubarItem: NSObject {
     /// NSMenuItems injected as fold children, keyed by parent NSMenuItem identity.
     private var foldChildItems: [ObjectIdentifier: [NSMenuItem]] = [:]
     private weak var highlightedFoldItem: NSMenuItem?
+    private weak var highlightedAttributedTitleItem: NSMenuItem?
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
@@ -240,6 +241,7 @@ extension MenubarItem: NSMenuDelegate {
             foldView.setHighlighted(false)
         }
         highlightedFoldItem = nil
+        clearTrackedAttributedTitleHighlight()
 
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
@@ -254,20 +256,31 @@ extension MenubarItem: NSMenuDelegate {
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
-        if let highlitedItem = menu.highlightedItem,
-           highlitedItem.attributedTitle != nil,
-           let params = highlitedItem.representedObject as? MenuLineParameters,
-           params.color != nil
-        {
-            highlitedItem.attributedTitle = atributedTitle(with: params).title
-        }
+        if Self.shouldRewriteAttributedTitlesDuringMenuTracking() {
+            if let highlitedItem = menu.highlightedItem,
+               highlitedItem.attributedTitle != nil,
+               let params = highlitedItem.representedObject as? MenuLineParameters,
+               params.color != nil
+            {
+                highlitedItem.attributedTitle = atributedTitle(with: params).title
+            }
 
-        if var params = item?.representedObject as? MenuLineParameters,
-           item?.attributedTitle != nil,
-           params.color != nil
-        {
-            params.params.removeValue(forKey: "color")
-            item?.attributedTitle = atributedTitle(with: params).title
+            if var params = item?.representedObject as? MenuLineParameters,
+               item?.attributedTitle != nil,
+               params.color != nil
+            {
+                params.params.removeValue(forKey: "color")
+                item?.attributedTitle = atributedTitle(with: params).title
+            }
+        } else {
+            clearTrackedAttributedTitleHighlight()
+
+            if let item,
+               let title = item.attributedTitle as? MenuTrackingAttributedTitle
+            {
+                title.isHighlighted = true
+                highlightedAttributedTitleItem = item
+            }
         }
 
         if let previousFoldView = highlightedFoldItem?.view as? FoldableMenuItemView {
@@ -279,6 +292,19 @@ extension MenubarItem: NSMenuDelegate {
         } else {
             highlightedFoldItem = nil
         }
+    }
+
+    static func shouldRewriteAttributedTitlesDuringMenuTracking(
+        on operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
+    ) -> Bool {
+        // Replacing an attributed title while AppKit is tracking a macOS 26+
+        // menu can clip its final row. It also removes inline image attachments.
+        operatingSystemVersion.majorVersion < 26
+    }
+
+    private func clearTrackedAttributedTitleHighlight() {
+        (highlightedAttributedTitleItem?.attributedTitle as? MenuTrackingAttributedTitle)?.isHighlighted = false
+        highlightedAttributedTitleItem = nil
     }
 }
 
@@ -1052,7 +1078,12 @@ extension MenubarItem {
             item.attributedTitle = title
             item.image = image
         case .attributed:
-            item.attributedTitle = menuTitle(title, image: image)
+            let titleWithImage = menuTitle(title, image: image)
+            item.attributedTitle = if params.color != nil, !params.ansi {
+                MenuTrackingAttributedTitle(titleWithImage)
+            } else {
+                titleWithImage
+            }
             item.image = nil
         }
     }
@@ -1692,6 +1723,42 @@ extension MenubarItem {
     @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
         guard let params = sender.representedObject as? MenuLineParameters else { return }
         performItemAction(params: params)
+    }
+}
+
+private final class MenuTrackingAttributedTitle: NSAttributedString {
+    private let backing: NSAttributedString
+    var isHighlighted = false
+
+    init(_ backing: NSAttributedString) {
+        self.backing = backing
+        super.init()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    @available(*, unavailable)
+    required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
+        fatalError("init(pasteboardPropertyList:ofType:) has not been implemented")
+    }
+
+    override var string: String {
+        backing.string
+    }
+
+    override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key: Any] {
+        var attributes = backing.attributes(at: location, effectiveRange: range)
+        if isHighlighted {
+            attributes[.foregroundColor] = NSColor.selectedMenuItemTextColor
+        }
+        return attributes
+    }
+
+    override func copy(with zone: NSZone? = nil) -> Any {
+        self
     }
 }
 
