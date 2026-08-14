@@ -66,6 +66,7 @@ typealias PluginID = String
 
 protocol Plugin: AnyObject {
     var id: PluginID { get }
+    var supportDirectoryName: String { get }
     var type: PluginType { get }
     var name: String { get }
     var file: String { get }
@@ -181,8 +182,89 @@ extension Plugin {
         }
     }
 
+    /// Support directories retain the pre-2.1 file-name contract independently
+    /// of the plugin ID. Duplicate file names therefore share support storage,
+    /// while resolved absolute IDs continue to distinguish the plugins themselves.
+    var supportDirectoryName: String {
+        (file as NSString).lastPathComponent
+    }
+
+    func supportDirectory(in baseDirectory: URL?) -> URL? {
+        guard let baseDirectory,
+              !supportDirectoryName.isEmpty,
+              supportDirectoryName != ".",
+              supportDirectoryName != "..",
+              !supportDirectoryName.contains("/"),
+              !supportDirectoryName.unicodeScalars.contains("\0")
+        else {
+            return nil
+        }
+        return baseDirectory.appendingPathComponent(supportDirectoryName, isDirectory: true)
+    }
+
+    /// Locates support data written by 2.1.x when an absolute plugin ID was
+    /// mistakenly appended below the support root. This is only a recovery
+    /// source; plugins are never given this path.
+    func regressedSupportDirectory(in baseDirectory: URL?) -> URL? {
+        guard let baseDirectory,
+              id.hasPrefix("/"),
+              !id.unicodeScalars.contains("\0")
+        else {
+            return nil
+        }
+
+        let components = id.split(separator: "/", omittingEmptySubsequences: true)
+        guard !components.isEmpty,
+              components.allSatisfy({ $0 != "." && $0 != ".." })
+        else {
+            return nil
+        }
+
+        let candidate = components.reduce(baseDirectory) {
+            $0.appendingPathComponent(String($1), isDirectory: true)
+        }
+        let resolvedBase = baseDirectory.resolvingSymlinksInPath().standardizedFileURL.path
+        let resolvedCandidate = candidate.resolvingSymlinksInPath().standardizedFileURL.path
+        guard resolvedCandidate.hasPrefix(resolvedBase + "/") else { return nil }
+        return candidate
+    }
+
+    func createSupportDirectory(in baseDirectory: URL?, fileManager: FileManager = .default) {
+        guard let directory = supportDirectory(in: baseDirectory) else { return }
+
+        if !fileManager.fileExists(atPath: directory.path),
+           let regressedDirectory = regressedSupportDirectory(in: baseDirectory)
+        {
+            var isDirectory: ObjCBool = false
+            if fileManager.fileExists(atPath: regressedDirectory.path, isDirectory: &isDirectory),
+               isDirectory.boolValue
+            {
+                let stagingDirectory = baseDirectory?.appendingPathComponent(
+                    ".swiftbar-support-recovery-\(UUID().uuidString)",
+                    isDirectory: true
+                )
+                if let stagingDirectory {
+                    defer { try? fileManager.removeItem(at: stagingDirectory) }
+                    do {
+                        try fileManager.copyItem(at: regressedDirectory, to: stagingDirectory)
+                        // Publish only a complete copy and never replace a destination
+                        // another launch or same-named plugin has already created.
+                        if !fileManager.fileExists(atPath: directory.path) {
+                            try fileManager.moveItem(at: stagingDirectory, to: directory)
+                        }
+                    } catch {
+                        // The source remains untouched; the plugin receives a new,
+                        // empty safe directory instead of a partial recovery.
+                    }
+                }
+            }
+        }
+
+        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true, attributes: nil)
+    }
+
     var cacheDirectory: URL? {
-        AppShared.cacheDirectory?.appendingPathComponent(id)
+        supportDirectory(in: AppShared.cacheDirectory)
     }
 
     var cacheDirectoryPath: String {
@@ -190,7 +272,7 @@ extension Plugin {
     }
 
     var dataDirectory: URL? {
-        AppShared.dataDirectory?.appendingPathComponent(id)
+        supportDirectory(in: AppShared.dataDirectory)
     }
 
     var dataDirectoryPath: String {
@@ -198,12 +280,8 @@ extension Plugin {
     }
 
     func createSupportDirs() {
-        if let cacheURL = cacheDirectory {
-            try? FileManager.default.createDirectory(at: cacheURL, withIntermediateDirectories: true, attributes: nil)
-        }
-        if let dataURL = dataDirectory {
-            try? FileManager.default.createDirectory(at: dataURL, withIntermediateDirectories: true, attributes: nil)
-        }
+        createSupportDirectory(in: AppShared.cacheDirectory)
+        createSupportDirectory(in: AppShared.dataDirectory)
     }
 
     var env: [String: String] {

@@ -55,7 +55,7 @@ class ExecutablePlugin: TimerArmingPlugin {
 
     let prefs = PreferencesStore.shared
 
-    init(fileURL: URL) {
+    init(fileURL: URL, createSupportDirectories: Bool = true) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
         // Use resolved path as ID to ensure uniqueness even with symlinks
         id = fileURL.resolvingSymlinksInPath().path
@@ -69,7 +69,9 @@ class ExecutablePlugin: TimerArmingPlugin {
         if metadata?.nextDate == nil, nameComponents.count > 2 {
             updateInterval = nameComponents.dropFirst().compactMap { parseRefreshInterval(intervalStr: $0, baseUpdateinterval: updateInterval) }.reduce(updateInterval, min)
         }
-        createSupportDirs()
+        if createSupportDirectories {
+            createSupportDirs()
+        }
         os_log("Initialized executable plugin\n%{public}@", log: Log.plugin, description)
         refresh(reason: .FirstLaunch)
     }
