@@ -32,13 +32,14 @@ final class TestPlugin: Plugin {
         id: PluginID,
         file: String,
         type: PluginType = .Executable,
+        name: String? = nil,
         supportDirectoryName: String? = nil,
         content: String? = "...",
         enabled: Bool = true,
         lastState: PluginState = .Loading
     ) {
         self.id = id
-        self.name = id
+        self.name = name ?? id
         self.file = file
         self.type = type
         supportDirectoryNameOverride = supportDirectoryName
@@ -949,6 +950,130 @@ struct SwiftBarTests {
 
 @Suite(.serialized)
 struct SwiftBarIntegrationTests {
+    @MainActor @Test func testURLPluginLookup_acceptsLegacyFileNamesWithoutChangingPriority() throws {
+        let manager = PluginManager()
+        defer {
+            manager.plugins.removeAll()
+            manager.menuBarItems.removeAll()
+            manager.directoryObserver = nil
+        }
+
+        let regularPlugin = TestPlugin(
+            id: "/resolved/plugins/weather.1m.sh",
+            file: "/plugins/weather.1m.sh",
+            name: "weather",
+            enabled: false
+        )
+        let symlinkedPlugin = TestPlugin(
+            id: "/outside/real-target.1h.sh",
+            file: "/plugins/linked.1h.sh",
+            name: "linked",
+            enabled: false
+        )
+        let firstDuplicate = TestPlugin(
+            id: "/plugins/one/duplicate.1h.sh",
+            file: "/plugins/one/duplicate.1h.sh",
+            name: "first-duplicate",
+            enabled: false
+        )
+        let secondDuplicate = TestPlugin(
+            id: "/plugins/two/duplicate.1h.sh",
+            file: "/plugins/two/duplicate.1h.sh",
+            name: "second-duplicate",
+            enabled: false
+        )
+        let nameCollision = TestPlugin(
+            id: "shortcut-id",
+            file: "none",
+            type: .Shortcut,
+            name: "weather.1m.sh",
+            enabled: false
+        )
+        let firstNameDuplicate = TestPlugin(
+            id: "/plugins/one/shared-name.1h.sh",
+            file: "/plugins/one/shared-name.1h.sh",
+            name: "shared-name",
+            enabled: false
+        )
+        let secondNameDuplicate = TestPlugin(
+            id: "/plugins/two/shared-name.5m.sh",
+            file: "/plugins/two/shared-name.5m.sh",
+            name: "shared-name",
+            enabled: false
+        )
+        manager.plugins = [
+            regularPlugin,
+            symlinkedPlugin,
+            firstDuplicate,
+            secondDuplicate,
+            nameCollision,
+            firstNameDuplicate,
+            secondNameDuplicate,
+        ]
+
+        #expect(manager.getPluginByNameOrID(identifier: regularPlugin.id) === regularPlugin)
+        #expect(manager.getPluginByNameOrID(identifier: "weather") === regularPlugin)
+        #expect(manager.getPluginByNameOrID(identifier: "WEATHER.1M.SH") === nameCollision)
+        #expect(manager.getPluginByNameOrID(identifier: "linked.1h.sh") === symlinkedPlugin)
+        #expect(manager.getPluginByNameOrID(identifier: "duplicate.1h.sh") === firstDuplicate)
+        #expect(manager.getPluginByNameOrID(identifier: "shared-name") === firstNameDuplicate)
+        #expect(manager.getPluginByNameOrID(identifier: "none") == nil)
+        #expect(manager.getPluginByNameOrID(identifier: "missing.1m.sh") == nil)
+    }
+
+    @MainActor @Test func testURLPluginLookup_decodesCompleteFileName() throws {
+        let manager = PluginManager()
+        defer {
+            manager.plugins.removeAll()
+            manager.menuBarItems.removeAll()
+            manager.directoryObserver = nil
+        }
+
+        let plugin = TestPlugin(
+            id: "/plugins/space name.1m.sh",
+            file: "/plugins/space name.1m.sh",
+            name: "space name",
+            enabled: false
+        )
+        manager.plugins = [plugin]
+        let appDelegate = AppDelegate()
+        appDelegate.pluginManager = manager
+
+        let nameURL = try #require(URL(string: "swiftbar://refreshplugin?name=space%20name.1m.sh"))
+        let pluginURL = try #require(URL(string: "swiftbar://refreshplugin?plugin=space%20name.1m.sh"))
+
+        #expect(appDelegate.getPluginFromURL(url: nameURL) === plugin)
+        #expect(appDelegate.getPluginFromURL(url: pluginURL) === plugin)
+    }
+
+    @MainActor @Test func testURLPluginLookup_acceptsPackagedPluginFileName() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        let packageURL = tempDirectory.appendingPathComponent("bundle name.swiftbar", isDirectory: true)
+        try FileManager.default.createDirectory(at: packageURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let mainExecutableURL = packageURL.appendingPathComponent("plugin.1h.sh")
+        try Data("#!/bin/zsh\necho package\n".utf8).write(to: mainExecutableURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: mainExecutableURL.path)
+
+        let plugin = try #require(PackagedPlugin(packageDirectory: packageURL, createSupportDirectories: false))
+        plugin.operation?.waitUntilFinished()
+        defer { plugin.terminate() }
+
+        let manager = PluginManager()
+        defer {
+            manager.plugins.removeAll()
+            manager.menuBarItems.removeAll()
+            manager.directoryObserver = nil
+        }
+        manager.plugins = [plugin]
+
+        #expect(manager.getPluginByNameOrID(identifier: "bundle name") === plugin)
+        #expect(manager.getPluginByNameOrID(identifier: "bundle name.swiftbar") === plugin)
+        #expect(manager.getPluginByNameOrID(identifier: plugin.id) === plugin)
+        #expect(manager.getPluginByNameOrID(identifier: "plugin.1h.sh") == nil)
+    }
+
     @Test func testPluginFileState_changesWhenFileContentChanges() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)

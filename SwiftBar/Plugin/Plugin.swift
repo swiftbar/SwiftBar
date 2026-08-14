@@ -70,6 +70,7 @@ protocol Plugin: AnyObject {
     var type: PluginType { get }
     var name: String { get }
     var file: String { get }
+    var urlSchemeFileName: String? { get }
     var enabled: Bool { get }
     var metadata: PluginMetadata? { get set }
     var contentUpdatePublisher: PassthroughSubject<String?, Never> { get set }
@@ -115,6 +116,11 @@ extension TimerArmingPlugin {
 }
 
 extension Plugin {
+    var urlSchemeFileName: String? {
+        guard type == .Executable || type == .Streamable else { return nil }
+        return (file as NSString).lastPathComponent
+    }
+
     var description: String {
         """
         id: \(id)

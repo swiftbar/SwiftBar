@@ -405,8 +405,10 @@ class PluginManager: ObservableObject {
     }
 
     func getPluginByNameOrID(identifier: String) -> Plugin? {
-        plugins.first(where: { $0.id.lowercased() == identifier.lowercased() }) ??
-            plugins.first(where: { $0.name.lowercased() == identifier.lowercased() })
+        let normalizedIdentifier = identifier.lowercased()
+        return plugins.first(where: { $0.id.lowercased() == normalizedIdentifier }) ??
+            plugins.first(where: { $0.name.lowercased() == normalizedIdentifier }) ??
+            plugins.first(where: { $0.urlSchemeFileName?.lowercased() == normalizedIdentifier })
     }
 
     func disablePlugin(plugin: Plugin) {
