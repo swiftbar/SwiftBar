@@ -3553,6 +3553,81 @@ struct FoldMenuItemBuildTests {
         #expect(nativeImage.isTemplate)
     }
 
+    @MainActor @Test func testPlainHighlightPreservesMenuItemsAndAttributedTitlesOnMacOS26AndLater() throws {
+        guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
+
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(name: "Issue 519 Probe")
+        item._updateMenu(content: """
+        Title
+        ---
+        Colored | color=#0a0a14 refresh=true
+        Alternate | color=#0a0a14 refresh=true alternate=true
+        """)
+
+        let highlightedItem = try #require(menuItem(named: "Colored", in: item.statusBarMenu))
+        let alternateItem = try #require(menuItem(named: "Alternate", in: item.statusBarMenu))
+        let originalItems = item.statusBarMenu.items
+        let originalTitles = originalItems.map(\.attributedTitle)
+        let finalItem = try #require(originalItems.last)
+        #expect(finalItem === item.aboutItem)
+
+        item.menu(item.statusBarMenu, willHighlight: highlightedItem)
+        #expect(highlightedItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+        item.menuDidClose(item.statusBarMenu)
+
+        #expect(item.statusBarMenu.items.count == originalItems.count)
+        #expect(zip(item.statusBarMenu.items, originalItems).allSatisfy { $0 === $1 })
+        #expect(zip(item.statusBarMenu.items.map(\.attributedTitle), originalTitles).allSatisfy { $0 === $1 })
+        #expect(item.statusBarMenu.items.last === finalItem)
+        #expect(highlightedItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
+        #expect((highlightedItem.representedObject as? MenuLineParameters)?.refresh == true)
+        #expect(highlightedItem.action == #selector(MenubarItem.perfomMenutItemAction))
+        #expect(highlightedItem.target === item)
+        #expect(alternateItem.isAlternate)
+        #expect(alternateItem.action == #selector(MenubarItem.perfomMenutItemAction))
+        #expect(alternateItem.target === item)
+    }
+
+    @Test func testHighlightTitleRewriteStopsAtMacOS26Boundary() {
+        #expect(MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking(
+            on: OperatingSystemVersion(majorVersion: 15, minorVersion: 6, patchVersion: 0)
+        ))
+        #expect(!MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking(
+            on: OperatingSystemVersion(majorVersion: 26, minorVersion: 0, patchVersion: 0)
+        ))
+        #expect(!MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking(
+            on: OperatingSystemVersion(majorVersion: 27, minorVersion: 0, patchVersion: 0)
+        ))
+    }
+
+    @MainActor @Test func testPlainHighlightPreservesAttributedImageOnMacOS26AndLater() throws {
+        guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
+
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 30, height: 30), color: .systemBlue)
+        item._updateMenu(content: """
+        Title
+        ---
+        Image\\nsubtitle | color=#0a0a14 image=\(image) refresh=true
+        Alternate\\nsubtitle | color=#0a0a14 image=\(image) refresh=true alternate=true
+        """)
+
+        let imageItem = try #require(menuItem(named: "Image\\nsubtitle", in: item.statusBarMenu))
+        let originalTitle = try #require(imageItem.attributedTitle)
+        let originalImage = try attachedImage(from: imageItem)
+        let textLocation = (originalTitle.string as NSString).range(of: "Image").location
+
+        item.menu(item.statusBarMenu, willHighlight: imageItem)
+        #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+        item.menu(item.statusBarMenu, willHighlight: nil)
+
+        #expect(imageItem.attributedTitle === originalTitle)
+        #expect(try attachedImage(from: imageItem) === originalImage)
+        #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
+        #expect(imageItem.image == nil)
+    }
+
     @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
         let item = makeMenuBarItem()
 
