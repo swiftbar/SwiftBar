@@ -11,6 +11,7 @@ class PackagedPlugin: TimerArmingPlugin {
     var file: String
     let packageDirectory: URL
     let mainExecutable: URL
+    var urlSchemeFileName: String? { packageDirectory.lastPathComponent }
     var supportDirectoryName: String {
         packageDirectory.lastPathComponent
     }
