@@ -61,6 +61,7 @@ class MenubarItem: NSObject {
     private var foldChildItems: [ObjectIdentifier: [NSMenuItem]] = [:]
     private weak var highlightedFoldItem: NSMenuItem?
     private weak var highlightedAttributedTitleItem: NSMenuItem?
+    private var highlightedAttributedTitle: MenuTrackingAttributedTitle?
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
@@ -273,13 +274,14 @@ extension MenubarItem: NSMenuDelegate {
                 item?.attributedTitle = atributedTitle(with: params).title
             }
         } else {
-            clearTrackedAttributedTitleHighlight()
-
-            if let item,
-               let title = item.attributedTitle as? MenuTrackingAttributedTitle
-            {
-                title.isHighlighted = true
-                highlightedAttributedTitleItem = item
+            let trackedTitle = item?.attributedTitle as? MenuTrackingAttributedTitle
+            if highlightedAttributedTitleItem !== item || highlightedAttributedTitle !== trackedTitle {
+                clearTrackedAttributedTitleHighlight()
+                if let item, let trackedTitle {
+                    setTrackedAttributedTitleHighlight(trackedTitle, on: item, to: true)
+                    highlightedAttributedTitleItem = item
+                    highlightedAttributedTitle = trackedTitle
+                }
             }
         }
 
@@ -303,8 +305,20 @@ extension MenubarItem: NSMenuDelegate {
     }
 
     private func clearTrackedAttributedTitleHighlight() {
-        (highlightedAttributedTitleItem?.attributedTitle as? MenuTrackingAttributedTitle)?.isHighlighted = false
+        if let item = highlightedAttributedTitleItem, let title = highlightedAttributedTitle {
+            setTrackedAttributedTitleHighlight(title, on: item, to: false)
+        }
         highlightedAttributedTitleItem = nil
+        highlightedAttributedTitle = nil
+    }
+
+    private func setTrackedAttributedTitleHighlight(
+        _ title: MenuTrackingAttributedTitle,
+        on item: NSMenuItem,
+        to highlighted: Bool
+    ) {
+        title.isHighlighted = highlighted
+        item.menu?.itemChanged(item)
     }
 }
 

@@ -3255,6 +3255,16 @@ struct FoldParameterTests {
 
 struct FoldMenuItemBuildTests {
     @MainActor
+    private final class TrackingMenu: NSMenu {
+        var changedItems: [NSMenuItem] = []
+
+        override func itemChanged(_ item: NSMenuItem) {
+            changedItems.append(item)
+            super.itemChanged(item)
+        }
+    }
+
+    @MainActor
     private func makeMenuBarItem() -> MenubarItem {
         let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh", content: nil, lastState: .Success)
         let item = MenubarItem(title: "Test")
@@ -3646,6 +3656,66 @@ struct FoldMenuItemBuildTests {
         #expect(alternateItem.isAlternate)
         #expect(alternateItem.action == #selector(MenubarItem.perfomMenutItemAction))
         #expect(alternateItem.target === item)
+    }
+
+    @MainActor @Test func testPlainHighlightInvalidatesTrackedColorWithoutReplacingTitle() throws {
+        guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
+
+        let item = makeMenuBarItem()
+        let menu = TrackingMenu(title: "Issue 533 Color")
+        let colorItem = try #require(item.buildMenuItem(params: MenuLineParameters(
+            line: "PDF telecharge aujourd'hui : 0 PDF | color=green"
+        )))
+        menu.addItem(colorItem)
+        menu.changedItems.removeAll()
+
+        let originalTitle = try #require(colorItem.attributedTitle)
+        #expect(colorItem.isEnabled)
+
+        item.menu(menu, willHighlight: colorItem)
+        #expect(menu.changedItems.count == 1)
+        #expect(menu.changedItems.first === colorItem)
+        #expect(colorItem.attributedTitle === originalTitle)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+
+        item.menu(menu, willHighlight: colorItem)
+        #expect(menu.changedItems.count == 1)
+
+        item.menu(menu, willHighlight: nil)
+        #expect(menu.changedItems.count == 2)
+        #expect(menu.changedItems.last === colorItem)
+        #expect(colorItem.attributedTitle === originalTitle)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "green"))
+
+        item.menu(menu, willHighlight: nil)
+        #expect(menu.changedItems.count == 2)
+    }
+
+    @MainActor @Test func testPlainHighlightTracksIncrementallyReplacedTitle() throws {
+        guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
+
+        let item = makeMenuBarItem()
+        item._updateMenu(content: """
+        Title
+        ---
+        Count: 1 | color=green
+        """)
+        let colorItem = try #require(menuItem(named: "Count: 1", in: item.statusBarMenu))
+
+        item.menu(item.statusBarMenu, willHighlight: colorItem)
+        let originalTitle = try #require(colorItem.attributedTitle)
+        #expect(originalTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Count: 2 | color=green
+        """)
+        #expect(menuItem(named: "Count: 2", in: item.statusBarMenu) === colorItem)
+        #expect(colorItem.attributedTitle !== originalTitle)
+
+        item.menu(item.statusBarMenu, willHighlight: colorItem)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
     }
 
     @Test func testHighlightTitleRewriteStopsAtMacOS26Boundary() {
