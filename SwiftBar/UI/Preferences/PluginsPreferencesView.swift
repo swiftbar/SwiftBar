@@ -74,7 +74,10 @@ struct PluginRowView: View {
             } else {
                 Text(label)
             }
-        }.onAppear {
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .onAppear {
             enabled = plugin.enabled
         }.padding(5)
     }
