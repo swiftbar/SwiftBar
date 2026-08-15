@@ -3345,6 +3345,21 @@ struct FoldMenuItemBuildTests {
     }
 
     @MainActor
+    private func textBounds(_ text: String, in title: NSAttributedString) -> NSRect {
+        let textStorage = NSTextStorage(attributedString: title)
+        let layoutManager = NSLayoutManager()
+        let textContainer = NSTextContainer(size: NSSize(width: 2_000, height: 2_000))
+        textContainer.lineFragmentPadding = 0
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+        layoutManager.ensureLayout(for: textContainer)
+
+        let characterRange = (title.string as NSString).range(of: text)
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: characterRange, actualCharacterRange: nil)
+        return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+    }
+
+    @MainActor
     private func renderedAttachment(
         from item: NSMenuItem,
         appearance: NSAppearance.Name,
@@ -3429,6 +3444,50 @@ struct FoldMenuItemBuildTests {
             #expect(menuImage.size == NSSize(width: 30, height: 12))
             #expect(!menuImage.isTemplate)
         }
+    }
+
+    @MainActor @Test func testAttributedPresentation_alignsMultilineTitleAfterImage() throws {
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 30, height: 30))
+        let params = MenuLineParameters(line: "First line\\nSecond line\\nThird line | image=\(image)")
+        let menuItem = NSMenuItem()
+
+        item.configureMenuImage(
+            on: menuItem,
+            title: item.atributedTitle(with: params).title,
+            params: params,
+            presentation: .attributed
+        )
+
+        let title = try #require(menuItem.attributedTitle)
+        let firstLine = textBounds("First line", in: title)
+        let secondLine = textBounds("Second line", in: title)
+        let thirdLine = textBounds("Third line", in: title)
+
+        #expect(firstLine.minX > 0)
+        #expect(abs(firstLine.minX - secondLine.minX) < 0.01)
+        #expect(abs(firstLine.minX - thirdLine.minX) < 0.01)
+        #expect(try attachedImage(from: menuItem).size == NSSize(width: 30, height: 30))
+    }
+
+    @MainActor @Test func testAttributedPresentation_doesNotIndentMultilineTitleWithoutImage() throws {
+        let item = makeMenuBarItem()
+        let params = MenuLineParameters(line: "First line\\nSecond line")
+        let menuItem = NSMenuItem()
+
+        item.configureMenuImage(
+            on: menuItem,
+            title: item.atributedTitle(with: params).title,
+            params: params,
+            presentation: .attributed
+        )
+
+        let title = try #require(menuItem.attributedTitle)
+        let firstLine = textBounds("First line", in: title)
+        let secondLine = textBounds("Second line", in: title)
+
+        #expect(abs(firstLine.minX - secondLine.minX) < 0.01)
+        #expect(firstLine.minX < 0.01)
     }
 
     @MainActor @Test func testIncrementalRefresh_preservesReporterImagePointSizeAndReplacesInPlace() throws {
