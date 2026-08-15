@@ -3255,6 +3255,16 @@ struct FoldParameterTests {
 
 struct FoldMenuItemBuildTests {
     @MainActor
+    private final class TrackingMenu: NSMenu {
+        var changedItems: [NSMenuItem] = []
+
+        override func itemChanged(_ item: NSMenuItem) {
+            changedItems.append(item)
+            super.itemChanged(item)
+        }
+    }
+
+    @MainActor
     private func makeMenuBarItem() -> MenubarItem {
         let plugin = TestPlugin(id: "test-plugin", file: "/tmp/test-plugin.5s.sh", content: nil, lastState: .Success)
         let item = MenubarItem(title: "Test")
@@ -3350,6 +3360,21 @@ struct FoldMenuItemBuildTests {
     @MainActor
     private func attachedImage(from item: NSMenuItem) throws -> NSImage {
         try #require(attachmentCell(from: item).image)
+    }
+
+    @MainActor
+    private func textBounds(_ text: String, in title: NSAttributedString) -> NSRect {
+        let textStorage = NSTextStorage(attributedString: title)
+        let layoutManager = NSLayoutManager()
+        let textContainer = NSTextContainer(size: NSSize(width: 2_000, height: 2_000))
+        textContainer.lineFragmentPadding = 0
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+        layoutManager.ensureLayout(for: textContainer)
+
+        let characterRange = (title.string as NSString).range(of: text)
+        let glyphRange = layoutManager.glyphRange(forCharacterRange: characterRange, actualCharacterRange: nil)
+        return layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
     }
 
     @MainActor
@@ -3469,6 +3494,50 @@ struct FoldMenuItemBuildTests {
             #expect(menuImage.size == NSSize(width: 30, height: 12))
             #expect(!menuImage.isTemplate)
         }
+    }
+
+    @MainActor @Test func testAttributedPresentation_alignsMultilineTitleAfterImage() throws {
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 30, height: 30))
+        let params = MenuLineParameters(line: "First line\\nSecond line\\nThird line | image=\(image)")
+        let menuItem = NSMenuItem()
+
+        item.configureMenuImage(
+            on: menuItem,
+            title: item.atributedTitle(with: params).title,
+            params: params,
+            presentation: .attributed
+        )
+
+        let title = try #require(menuItem.attributedTitle)
+        let firstLine = textBounds("First line", in: title)
+        let secondLine = textBounds("Second line", in: title)
+        let thirdLine = textBounds("Third line", in: title)
+
+        #expect(firstLine.minX > 0)
+        #expect(abs(firstLine.minX - secondLine.minX) < 0.01)
+        #expect(abs(firstLine.minX - thirdLine.minX) < 0.01)
+        #expect(try attachedImage(from: menuItem).size == NSSize(width: 30, height: 30))
+    }
+
+    @MainActor @Test func testAttributedPresentation_doesNotIndentMultilineTitleWithoutImage() throws {
+        let item = makeMenuBarItem()
+        let params = MenuLineParameters(line: "First line\\nSecond line")
+        let menuItem = NSMenuItem()
+
+        item.configureMenuImage(
+            on: menuItem,
+            title: item.atributedTitle(with: params).title,
+            params: params,
+            presentation: .attributed
+        )
+
+        let title = try #require(menuItem.attributedTitle)
+        let firstLine = textBounds("First line", in: title)
+        let secondLine = textBounds("Second line", in: title)
+
+        #expect(abs(firstLine.minX - secondLine.minX) < 0.01)
+        #expect(firstLine.minX < 0.01)
     }
 
     @MainActor @Test func testIncrementalRefresh_preservesReporterImagePointSizeAndReplacesInPlace() throws {
@@ -3755,6 +3824,66 @@ struct FoldMenuItemBuildTests {
         #expect(alternateItem.isAlternate)
         #expect(alternateItem.action == #selector(MenubarItem.perfomMenutItemAction))
         #expect(alternateItem.target === item)
+    }
+
+    @MainActor @Test func testPlainHighlightInvalidatesTrackedColorWithoutReplacingTitle() throws {
+        guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
+
+        let item = makeMenuBarItem()
+        let menu = TrackingMenu(title: "Issue 533 Color")
+        let colorItem = try #require(item.buildMenuItem(params: MenuLineParameters(
+            line: "PDF telecharge aujourd'hui : 0 PDF | color=green"
+        )))
+        menu.addItem(colorItem)
+        menu.changedItems.removeAll()
+
+        let originalTitle = try #require(colorItem.attributedTitle)
+        #expect(colorItem.isEnabled)
+
+        item.menu(menu, willHighlight: colorItem)
+        #expect(menu.changedItems.count == 1)
+        #expect(menu.changedItems.first === colorItem)
+        #expect(colorItem.attributedTitle === originalTitle)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+
+        item.menu(menu, willHighlight: colorItem)
+        #expect(menu.changedItems.count == 1)
+
+        item.menu(menu, willHighlight: nil)
+        #expect(menu.changedItems.count == 2)
+        #expect(menu.changedItems.last === colorItem)
+        #expect(colorItem.attributedTitle === originalTitle)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "green"))
+
+        item.menu(menu, willHighlight: nil)
+        #expect(menu.changedItems.count == 2)
+    }
+
+    @MainActor @Test func testPlainHighlightTracksIncrementallyReplacedTitle() throws {
+        guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
+
+        let item = makeMenuBarItem()
+        item._updateMenu(content: """
+        Title
+        ---
+        Count: 1 | color=green
+        """)
+        let colorItem = try #require(menuItem(named: "Count: 1", in: item.statusBarMenu))
+
+        item.menu(item.statusBarMenu, willHighlight: colorItem)
+        let originalTitle = try #require(colorItem.attributedTitle)
+        #expect(originalTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Count: 2 | color=green
+        """)
+        #expect(menuItem(named: "Count: 2", in: item.statusBarMenu) === colorItem)
+        #expect(colorItem.attributedTitle !== originalTitle)
+
+        item.menu(item.statusBarMenu, willHighlight: colorItem)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
     }
 
     @Test func testHighlightTitleRewriteStopsAtMacOS26Boundary() {
