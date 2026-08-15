@@ -3549,6 +3549,8 @@ struct FoldMenuItemBuildTests {
     @MainActor @Test func testSFConfigImagesRemainColoredWhilePlainAndInvalidConfigsRemainTemplates() throws {
         let palette = try sfConfig(renderingMode: "Palette", colors: ["#FF3B30", "#34C759"])
         let hierarchical = try sfConfig(renderingMode: "Hierarchical", colors: ["#AF52DE"])
+        let colorlessHierarchical = try sfConfig(renderingMode: "Hierarchical", colors: [])
+        let invalidColorHierarchical = try sfConfig(renderingMode: "Hierarchical", colors: ["not-a-color"])
 
         for config in [palette, hierarchical] {
             let image = try #require(MenuLineParameters(
@@ -3561,9 +3563,28 @@ struct FoldMenuItemBuildTests {
             "Image | sfimage=inset.filled.circle",
             "Image | sfimage=inset.filled.circle sfconfig=not-base64",
             "Image | sfimage=inset.filled.circle sfconfig=e30=",
+            "Image | sfimage=inset.filled.circle sfconfig=\(colorlessHierarchical) width=20 height=20",
+            "Image | sfimage=inset.filled.circle sfconfig=\(invalidColorHierarchical) width=20 height=20",
         ] {
             #expect(try #require(MenuLineParameters(line: line).image).isTemplate)
         }
+
+        let item = makeMenuBarItem()
+        let params = MenuLineParameters(
+            line: "Image | sfimage=inset.filled.circle sfconfig=\(colorlessHierarchical) width=20 height=20"
+        )
+        let menuItem = NSMenuItem()
+        item.configureMenuImage(
+            on: menuItem,
+            title: NSAttributedString(string: "Image"),
+            params: params,
+            presentation: .attributed
+        )
+        let aqua = try renderedAttachment(from: menuItem, appearance: .aqua, highlighted: false)
+        let darkAqua = try renderedAttachment(from: menuItem, appearance: .darkAqua, highlighted: false)
+        let highlighted = try renderedAttachment(from: menuItem, appearance: .aqua, highlighted: true)
+        #expect(aqua != darkAqua)
+        #expect(aqua != highlighted)
     }
 
     @MainActor @Test func testFullBuildAndIncrementalRefreshPreserveSFConfigRendering() throws {
