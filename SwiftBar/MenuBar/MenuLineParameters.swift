@@ -332,13 +332,14 @@ struct MenuLineParameters: Codable, Equatable {
                 guard let finalSymbol = symbolToUse else { return nil }
 
                 let sfmc = getSFConfig()
+                let configuredColors = sfmc?.getColors() ?? []
                 var config = NSImage.SymbolConfiguration(scale: .large)
                 if #available(OSX 12.0, *), let sfmc {
                     switch sfmc.renderingMode {
                     case .Hierarchical:
-                        config = config.applying(NSImage.SymbolConfiguration(hierarchicalColor: sfmc.getColors().first ?? NSColor(Color.primary)))
+                        config = config.applying(NSImage.SymbolConfiguration(hierarchicalColor: configuredColors.first ?? NSColor(Color.primary)))
                     case .Palette:
-                        config = config.applying(NSImage.SymbolConfiguration(paletteColors: sfmc.getColors()))
+                        config = config.applying(NSImage.SymbolConfiguration(paletteColors: configuredColors))
                     }
                     config = config.applying(NSImage.SymbolConfiguration(pointSize: 0, weight: sfmc.getWeight(), scale: sfmc.getScale()))
                 }
@@ -355,7 +356,7 @@ struct MenuLineParameters: Codable, Equatable {
                     image = NSImage(systemSymbolName: finalSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
                 }
 
-                image?.isTemplate = true
+                image?.isTemplate = configuredColors.isEmpty
                 return resizedImageIfRequested(image)
             }
         }
