@@ -3332,6 +3332,14 @@ struct FoldMenuItemBuildTests {
         return pngData.base64EncodedString()
     }
 
+    private func sfConfig(renderingMode: String, colors: [String]) throws -> String {
+        let data = try JSONSerialization.data(withJSONObject: [
+            "renderingMode": renderingMode,
+            "colors": colors,
+        ])
+        return data.base64EncodedString()
+    }
+
     @MainActor
     private func attachmentCell(from item: NSMenuItem) throws -> NSTextAttachmentCell {
         let title = try #require(item.attributedTitle)
@@ -3363,6 +3371,38 @@ struct FoldMenuItemBuildTests {
         canvas.unlockFocus()
 
         return try #require(canvas.tiffRepresentation)
+    }
+
+    @MainActor
+    private func renderedImage(
+        _ image: NSImage,
+        appearance: NSAppearance.Name
+    ) throws -> Data {
+        let canvas = NSImage(size: NSSize(width: 20, height: 20))
+        let drawImage = {
+            NSColor.clear.setFill()
+            NSRect(origin: .zero, size: canvas.size).fill()
+            image.draw(in: NSRect(x: 2, y: 2, width: 16, height: 16))
+        }
+
+        canvas.lockFocus()
+        if let drawingAppearance = NSAppearance(named: appearance) {
+            drawingAppearance.performAsCurrentDrawingAppearance(drawImage)
+        } else {
+            drawImage()
+        }
+        canvas.unlockFocus()
+
+        return try #require(canvas.tiffRepresentation)
+    }
+
+    @MainActor
+    private func menuItem(attaching image: NSImage) -> NSMenuItem {
+        let item = NSMenuItem()
+        item.attributedTitle = NSAttributedString(
+            attachment: .centeredMenuImage(with: image, and: .menuFont(ofSize: 0))
+        )
+        return item
     }
 
     @MainActor @Test func testFullBuild_preservesReporterImagePointSizeOnMacOS26AndLater() throws {
@@ -3506,6 +3546,100 @@ struct FoldMenuItemBuildTests {
         }
     }
 
+    @MainActor @Test func testSFConfigImagesRemainColoredWhilePlainAndInvalidConfigsRemainTemplates() throws {
+        let palette = try sfConfig(renderingMode: "Palette", colors: ["#FF3B30", "#34C759"])
+        let hierarchical = try sfConfig(renderingMode: "Hierarchical", colors: ["#AF52DE"])
+
+        for config in [palette, hierarchical] {
+            let image = try #require(MenuLineParameters(
+                line: "Image | sfimage=inset.filled.circle sfconfig=\(config) width=20 height=20"
+            ).image)
+            #expect(!image.isTemplate)
+        }
+
+        for line in [
+            "Image | sfimage=inset.filled.circle",
+            "Image | sfimage=inset.filled.circle sfconfig=not-base64",
+            "Image | sfimage=inset.filled.circle sfconfig=e30=",
+        ] {
+            #expect(try #require(MenuLineParameters(line: line).image).isTemplate)
+        }
+    }
+
+    @MainActor @Test func testFullBuildAndIncrementalRefreshPreserveSFConfigRendering() throws {
+        let item = makeMenuBarItem()
+        let palette = try sfConfig(renderingMode: "Palette", colors: ["#FF3B30", "#34C759"])
+        let hierarchical = try sfConfig(renderingMode: "Hierarchical", colors: ["#AF52DE"])
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Image | sfimage=inset.filled.circle sfconfig=\(palette)
+        """)
+
+        let originalItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
+        if #available(macOS 26.0, *) {
+            let paletteImage = try #require((originalItem.representedObject as? MenuLineParameters)?.image)
+            for appearance in [NSAppearance.Name.aqua, .darkAqua] {
+                let expected = try renderedImage(paletteImage, appearance: appearance)
+                #expect(try renderedAttachment(from: originalItem, appearance: appearance, highlighted: false) == expected)
+                #expect(try renderedAttachment(from: originalItem, appearance: appearance, highlighted: true) == expected)
+            }
+        }
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Image | sfimage=inset.filled.circle sfconfig=\(hierarchical)
+        """)
+
+        let refreshedItem = try #require(menuItem(named: "Image", in: item.statusBarMenu))
+        #expect(refreshedItem === originalItem)
+        if #available(macOS 26.0, *) {
+            let hierarchicalImage = try #require((refreshedItem.representedObject as? MenuLineParameters)?.image)
+            let expected = try renderedImage(hierarchicalImage, appearance: .aqua)
+            #expect(try renderedAttachment(from: refreshedItem, appearance: .aqua, highlighted: false) == expected)
+            #expect(try renderedAttachment(from: refreshedItem, appearance: .aqua, highlighted: true) == expected)
+        }
+    }
+
+    @MainActor @Test func testAttributedColorBase64ImageIgnoresAppearanceAndHighlightTint() throws {
+        let colorImage = try makeBase64PNG(size: NSSize(width: 16, height: 16), color: .systemRed)
+        let params = MenuLineParameters(line: "Image | image=\(colorImage)")
+        let menuItem = NSMenuItem()
+
+        makeMenuBarItem().configureMenuImage(
+            on: menuItem,
+            title: NSAttributedString(string: "Image"),
+            params: params,
+            presentation: .attributed
+        )
+
+        let image = try attachedImage(from: menuItem)
+        #expect(!image.isTemplate)
+        for appearance in [NSAppearance.Name.aqua, .darkAqua] {
+            let expected = try renderedImage(image, appearance: appearance)
+            #expect(try renderedAttachment(from: menuItem, appearance: appearance, highlighted: false) == expected)
+            #expect(try renderedAttachment(from: menuItem, appearance: appearance, highlighted: true) == expected)
+        }
+    }
+
+    @MainActor @Test func testAttributedMulticolorSymbolIgnoresAppearanceAndHighlightTint() throws {
+        let configuration = NSImage.SymbolConfiguration.preferringMulticolor()
+        let image = try #require(
+            NSImage(systemSymbolName: "externaldrive.badge.icloud", accessibilityDescription: nil)?
+                .withSymbolConfiguration(configuration)
+        )
+        #expect(!image.isTemplate)
+        let menuItem = menuItem(attaching: image)
+
+        for appearance in [NSAppearance.Name.aqua, .darkAqua] {
+            let expected = try renderedImage(image, appearance: appearance)
+            #expect(try renderedAttachment(from: menuItem, appearance: appearance, highlighted: false) == expected)
+            #expect(try renderedAttachment(from: menuItem, appearance: appearance, highlighted: true) == expected)
+        }
+    }
+
     @MainActor @Test func testAttributedTemplateImageSupportsAppearanceAndHighlightTint() throws {
         let item = makeMenuBarItem()
         let image = try makeBase64PNG(size: NSSize(width: 16, height: 16))
@@ -3551,6 +3685,19 @@ struct FoldMenuItemBuildTests {
         let nativeImage = try #require(menuItem.image)
         #expect(nativeImage.size == NSSize(width: 27, height: 27))
         #expect(nativeImage.isTemplate)
+
+        let palette = try sfConfig(renderingMode: "Palette", colors: ["#FF3B30", "#34C759"])
+        let coloredParams = MenuLineParameters(
+            line: "Image | sfimage=inset.filled.circle sfconfig=\(palette)"
+        )
+        let coloredItem = NSMenuItem()
+        item.configureMenuImage(
+            on: coloredItem,
+            title: NSAttributedString(string: "Image"),
+            params: coloredParams,
+            presentation: .native
+        )
+        #expect(try !#require(coloredItem.image).isTemplate)
     }
 
     @MainActor @Test func testPlainHighlightPreservesMenuItemsAndAttributedTitlesOnMacOS26AndLater() throws {

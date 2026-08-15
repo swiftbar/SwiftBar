@@ -355,7 +355,7 @@ struct MenuLineParameters: Codable, Equatable {
                     image = NSImage(systemSymbolName: finalSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
                 }
 
-                image?.isTemplate = true
+                image?.isTemplate = sfmc == nil
                 return resizedImageIfRequested(image)
             }
         }
