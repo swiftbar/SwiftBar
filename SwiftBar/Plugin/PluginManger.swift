@@ -171,6 +171,39 @@ func knownMenuBarManagerMatches(in applicationNames: [String]) -> [String] {
     }
 }
 
+/// Translates a `.swiftbarignore` glob into a regex.
+///
+/// `escapedPattern(for:)` escapes `/` as `\/`, so the `**/` token has to be matched in its
+/// escaped spelling. Matching the unescaped spelling silently turns `**` into two adjacent
+/// `[^/]*`, which pins the pattern to one fixed directory depth instead of any depth.
+func swiftBarIgnoreRegexPattern(for pattern: String) -> String {
+    let escaped = NSRegularExpression.escapedPattern(for: pattern)
+        .replacingOccurrences(of: "\\*\\*\\/", with: "(.*/)?") // ** matches any directory depth
+        .replacingOccurrences(of: "\\*\\*/", with: "(.*/)?") // ...also when `/` is left unescaped
+        .replacingOccurrences(of: "\\*", with: "[^/]*") // * matches within directory
+        .replacingOccurrences(of: "\\?", with: "[^/]") // ? matches single character
+    return "^\(escaped)$"
+}
+
+/// Whether a single `.swiftbarignore` pattern matches an entry, by filename or by the path
+/// relative to the plugin directory.
+func swiftBarIgnorePatternMatches(pattern: String, filename: String, relativePath: String) -> Bool {
+    // Direct filename match
+    if filename == pattern || relativePath == pattern {
+        return true
+    }
+
+    guard let regex = try? NSRegularExpression(pattern: swiftBarIgnoreRegexPattern(for: pattern), options: []) else {
+        return false
+    }
+
+    // Try to match against both filename and relative path
+    let filenameRange = NSRange(location: 0, length: filename.utf16.count)
+    let pathRange = NSRange(location: 0, length: relativePath.utf16.count)
+    return regex.firstMatch(in: filename, options: [], range: filenameRange) != nil
+        || regex.firstMatch(in: relativePath, options: [], range: pathRange) != nil
+}
+
 func statusItemPersistenceEntries(in defaults: [String: Any]) -> [String] {
     defaults.keys
         .filter { $0.hasPrefix("NSStatusItem ") }
@@ -496,31 +529,9 @@ class PluginManager: ObservableObject {
                 let relativePath = url.path.replacingOccurrences(of: baseURL.path + "/", with: "")
                 let filename = url.lastPathComponent
 
-                for pattern in patterns {
-                    // Direct filename match
-                    if filename == pattern || relativePath == pattern {
-                        return true
-                    }
-
-                    // Convert glob pattern to regex
-                    let escapedPattern = NSRegularExpression.escapedPattern(for: pattern)
-                        .replacingOccurrences(of: "\\*\\*/", with: "(.*/)?") // ** matches any directory depth
-                        .replacingOccurrences(of: "\\*", with: "[^/]*") // * matches within directory
-                        .replacingOccurrences(of: "\\?", with: "[^/]") // ? matches single character
-
-                    // Try to match against both filename and relative path
-                    if let regex = try? NSRegularExpression(pattern: "^\(escapedPattern)$", options: []) {
-                        let filenameRange = NSRange(location: 0, length: filename.utf16.count)
-                        let pathRange = NSRange(location: 0, length: relativePath.utf16.count)
-
-                        if regex.firstMatch(in: filename, options: [], range: filenameRange) != nil ||
-                            regex.firstMatch(in: relativePath, options: [], range: pathRange) != nil
-                        {
-                            return true
-                        }
-                    }
+                return patterns.contains { pattern in
+                    swiftBarIgnorePatternMatches(pattern: pattern, filename: filename, relativePath: relativePath)
                 }
-                return false
             }
 
             let filteredFiles = files.filter { !shouldBeIgnored(url: $0, patterns: ignorePatterns, baseURL: url) }

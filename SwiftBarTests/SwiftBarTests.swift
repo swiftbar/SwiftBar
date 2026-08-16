@@ -355,6 +355,58 @@ struct SwiftBarTests {
         #expect(shouldLoadPluginFile(at: symlinkURL, makePluginExecutable: false))
     }
 
+    // MARK: - .swiftbarignore glob matching
+
+    @Test func testSwiftBarIgnoreRegexPattern_expandsDoubleStarToAnyDepth() {
+        // `escapedPattern(for:)` escapes `/` as `\/`. If the `**/` token is only replaced in
+        // its unescaped spelling the substitution silently no-ops and `**` decays into two
+        // adjacent `[^/]*`, pinning the pattern to one fixed depth.
+        #expect(swiftBarIgnoreRegexPattern(for: "__pycache__/**/*") == "^__pycache__\\/(.*/)?[^/]*$")
+        #expect(swiftBarIgnoreRegexPattern(for: "**/node_modules") == "^(.*/)?node_modules$")
+        #expect(!swiftBarIgnoreRegexPattern(for: "__pycache__/**/*").contains("[^/]*[^/]*"))
+    }
+
+    @Test func testSwiftBarIgnorePatternMatches_globSemantics() {
+        // (pattern, path relative to the plugin directory, should be ignored)
+        let cases: [(pattern: String, relativePath: String, expected: Bool)] = [
+            // `**/` spans any number of directories, including none at all
+            ("__pycache__/**/*", "__pycache__/mod.cpython-314.pyc", true),
+            ("__pycache__/**/*", "__pycache__/sub/mod.cpython-314.pyc", true),
+            ("__pycache__/**/*", "__pycache__/a/b/mod.cpython-314.pyc", true),
+            ("__pycache__/**/*", "src/mod.cpython-314.pyc", false),
+            ("**/node_modules", "node_modules", true),
+            ("**/node_modules", "vendor/node_modules", true),
+            ("**/node_modules", "a/b/node_modules", true),
+            ("**/node_modules", "node_modules_backup", false),
+            // a bare `*` stays inside a single path component
+            ("build/*", "build/out.sh", true),
+            ("build/*", "build/sub/out.sh", false),
+            // a filename-only glob matches at any depth, via the filename arm
+            ("*.pyc", "mod.pyc", true),
+            ("*.pyc", "sub/deeper/mod.pyc", true),
+            ("*.pyc", "mod.py", false),
+            // `?` is exactly one non-separator character
+            ("plugin.?m.sh", "plugin.5m.sh", true),
+            ("plugin.?m.sh", "plugin.15m.sh", false),
+            ("plugin.?m.sh", "plugin./m.sh", false),
+            // regex metacharacters inside patterns stay literal
+            ("weather (*).sh", "weather (1).sh", true),
+            ("a+b.sh", "aab.sh", false),
+            ("report.txt", "report.txt", true),
+            ("docs/report.txt", "docs/report.txt", true),
+        ]
+
+        for testCase in cases {
+            let filename = (testCase.relativePath as NSString).lastPathComponent
+            let matched = swiftBarIgnorePatternMatches(
+                pattern: testCase.pattern,
+                filename: filename,
+                relativePath: testCase.relativePath
+            )
+            #expect(matched == testCase.expected, "\(testCase.pattern) vs \(testCase.relativePath)")
+        }
+    }
+
     @Test func testRunPluginOperation_rearmsTimersForTimerArmingPlugins() {
         let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
         let operation = RunPluginOperation(plugin: plugin)
