@@ -60,8 +60,6 @@ class MenubarItem: NSObject {
     /// NSMenuItems injected as fold children, keyed by parent NSMenuItem identity.
     private var foldChildItems: [ObjectIdentifier: [NSMenuItem]] = [:]
     private weak var highlightedFoldItem: NSMenuItem?
-    private weak var highlightedAttributedTitleItem: NSMenuItem?
-    private var highlightedAttributedTitle: MenuTrackingAttributedTitle?
 
     private var aboutPopover = NSPopover()
     private var errorPopover = NSPopover()
@@ -242,7 +240,6 @@ extension MenubarItem: NSMenuDelegate {
             foldView.setHighlighted(false)
         }
         highlightedFoldItem = nil
-        clearTrackedAttributedTitleHighlight()
 
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
@@ -273,17 +270,13 @@ extension MenubarItem: NSMenuDelegate {
                 params.params.removeValue(forKey: "color")
                 item?.attributedTitle = atributedTitle(with: params).title
             }
-        } else {
-            let trackedTitle = item?.attributedTitle as? MenuTrackingAttributedTitle
-            if highlightedAttributedTitleItem !== item || highlightedAttributedTitle !== trackedTitle {
-                clearTrackedAttributedTitleHighlight()
-                if let item, let trackedTitle {
-                    setTrackedAttributedTitleHighlight(trackedTitle, on: item, to: true)
-                    highlightedAttributedTitleItem = item
-                    highlightedAttributedTitle = trackedTitle
-                }
-            }
         }
+        // On macOS 26 and later a colored attributed title is left alone while
+        // the menu tracks. Swapping its foreground color for the highlight and
+        // calling itemChanged(_:) made AppKit redraw the row in the default
+        // label color once the highlight moved on, and only reopening the menu
+        // brought the color back (#541). A plain attributed title keeps its
+        // color through the highlight instead, the way an ansi= row already does.
 
         if let previousFoldView = highlightedFoldItem?.view as? FoldableMenuItemView {
             previousFoldView.setHighlighted(false)
@@ -302,23 +295,6 @@ extension MenubarItem: NSMenuDelegate {
         // Replacing an attributed title while AppKit is tracking a macOS 26+
         // menu can clip its final row. It also removes inline image attachments.
         operatingSystemVersion.majorVersion < 26
-    }
-
-    private func clearTrackedAttributedTitleHighlight() {
-        if let item = highlightedAttributedTitleItem, let title = highlightedAttributedTitle {
-            setTrackedAttributedTitleHighlight(title, on: item, to: false)
-        }
-        highlightedAttributedTitleItem = nil
-        highlightedAttributedTitle = nil
-    }
-
-    private func setTrackedAttributedTitleHighlight(
-        _ title: MenuTrackingAttributedTitle,
-        on item: NSMenuItem,
-        to highlighted: Bool
-    ) {
-        title.isHighlighted = highlighted
-        item.menu?.itemChanged(item)
     }
 }
 
@@ -1092,12 +1068,7 @@ extension MenubarItem {
             item.attributedTitle = title
             item.image = image
         case .attributed:
-            let titleWithImage = menuTitle(title, image: image)
-            item.attributedTitle = if params.color != nil, !params.ansi {
-                MenuTrackingAttributedTitle(titleWithImage)
-            } else {
-                titleWithImage
-            }
+            item.attributedTitle = menuTitle(title, image: image)
             item.image = nil
         }
     }
@@ -1755,42 +1726,6 @@ extension MenubarItem {
     @objc func perfomMenutItemAction(_ sender: NSMenuItem) {
         guard let params = sender.representedObject as? MenuLineParameters else { return }
         performItemAction(params: params)
-    }
-}
-
-private final class MenuTrackingAttributedTitle: NSAttributedString {
-    private let backing: NSAttributedString
-    var isHighlighted = false
-
-    init(_ backing: NSAttributedString) {
-        self.backing = backing
-        super.init()
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
-    @available(*, unavailable)
-    required init?(pasteboardPropertyList propertyList: Any, ofType type: NSPasteboard.PasteboardType) {
-        fatalError("init(pasteboardPropertyList:ofType:) has not been implemented")
-    }
-
-    override var string: String {
-        backing.string
-    }
-
-    override func attributes(at location: Int, effectiveRange range: NSRangePointer?) -> [NSAttributedString.Key: Any] {
-        var attributes = backing.attributes(at: location, effectiveRange: range)
-        if isHighlighted {
-            attributes[.foregroundColor] = NSColor.selectedMenuItemTextColor
-        }
-        return attributes
-    }
-
-    override func copy(with zone: NSZone? = nil) -> Any {
-        self
     }
 }
 

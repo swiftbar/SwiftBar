@@ -3810,7 +3810,7 @@ struct FoldMenuItemBuildTests {
         #expect(finalItem === item.aboutItem)
 
         item.menu(item.statusBarMenu, willHighlight: highlightedItem)
-        #expect(highlightedItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+        #expect(highlightedItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
         item.menuDidClose(item.statusBarMenu)
 
         #expect(item.statusBarMenu.items.count == originalItems.count)
@@ -3826,11 +3826,11 @@ struct FoldMenuItemBuildTests {
         #expect(alternateItem.target === item)
     }
 
-    @MainActor @Test func testPlainHighlightInvalidatesTrackedColorWithoutReplacingTitle() throws {
+    @MainActor @Test func testPlainHighlightLeavesColoredTitleUntouched() throws {
         guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
 
         let item = makeMenuBarItem()
-        let menu = TrackingMenu(title: "Issue 533 Color")
+        let menu = TrackingMenu(title: "Issue 541 Color")
         let colorItem = try #require(item.buildMenuItem(params: MenuLineParameters(
             line: "PDF telecharge aujourd'hui : 0 PDF | color=green"
         )))
@@ -3841,25 +3841,17 @@ struct FoldMenuItemBuildTests {
         #expect(colorItem.isEnabled)
 
         item.menu(menu, willHighlight: colorItem)
-        #expect(menu.changedItems.count == 1)
-        #expect(menu.changedItems.first === colorItem)
-        #expect(colorItem.attributedTitle === originalTitle)
-        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
-
-        item.menu(menu, willHighlight: colorItem)
-        #expect(menu.changedItems.count == 1)
-
-        item.menu(menu, willHighlight: nil)
-        #expect(menu.changedItems.count == 2)
-        #expect(menu.changedItems.last === colorItem)
+        #expect(menu.changedItems.isEmpty)
         #expect(colorItem.attributedTitle === originalTitle)
         #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "green"))
 
         item.menu(menu, willHighlight: nil)
-        #expect(menu.changedItems.count == 2)
+        #expect(menu.changedItems.isEmpty)
+        #expect(colorItem.attributedTitle === originalTitle)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "green"))
     }
 
-    @MainActor @Test func testPlainHighlightTracksIncrementallyReplacedTitle() throws {
+    @MainActor @Test func testPlainHighlightKeepsColorOnIncrementallyReplacedTitle() throws {
         guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
 
         let item = makeMenuBarItem()
@@ -3872,7 +3864,7 @@ struct FoldMenuItemBuildTests {
 
         item.menu(item.statusBarMenu, willHighlight: colorItem)
         let originalTitle = try #require(colorItem.attributedTitle)
-        #expect(originalTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+        #expect(originalTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "green"))
 
         item._updateMenu(content: """
         Title
@@ -3883,7 +3875,7 @@ struct FoldMenuItemBuildTests {
         #expect(colorItem.attributedTitle !== originalTitle)
 
         item.menu(item.statusBarMenu, willHighlight: colorItem)
-        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+        #expect(colorItem.attributedTitle?.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "green"))
     }
 
     @Test func testHighlightTitleRewriteStopsAtMacOS26Boundary() {
@@ -3916,7 +3908,7 @@ struct FoldMenuItemBuildTests {
         let textLocation = (originalTitle.string as NSString).range(of: "Image").location
 
         item.menu(item.statusBarMenu, willHighlight: imageItem)
-        #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == .selectedMenuItemTextColor)
+        #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
         item.menu(item.statusBarMenu, willHighlight: nil)
 
         #expect(imageItem.attributedTitle === originalTitle)
