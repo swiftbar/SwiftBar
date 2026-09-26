@@ -587,7 +587,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/copy-helper-swiftpm.sh\"\n";
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/copy-helper-swiftpm.sh\"\n\n# Give the login item helper a user-facing name so the Login Items pane in\n# System Settings shows \"SwiftBar\" instead of the code signing identity.\n# See https://github.com/swiftbar/SwiftBar/issues/553\nhelper_app=\"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/Library/LoginItems/LaunchAtLoginHelper.app\"\ndefaults write \"${helper_app}/Contents/Info\" CFBundleName -string \"SwiftBar\"\ndefaults write \"${helper_app}/Contents/Info\" CFBundleDisplayName -string \"SwiftBar\"\n\n# Editing Info.plist invalidates the helper's signature, so re-sign it the\n# same way copy-helper-swiftpm.sh does.\nif [ -n \"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" ]; then\n    entitlements=\"${BUILT_PRODUCTS_DIR}/LaunchAtLogin_LaunchAtLogin.bundle/Contents/Resources/LaunchAtLogin.entitlements\"\n    if [ -n \"${CODE_SIGN_ENTITLEMENTS}\" ]; then\n        codesign --force --entitlements=\"${entitlements}\" --deep --options=runtime --sign=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" \"${helper_app}\"\n    else\n        codesign --force --deep --options=runtime --sign=\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\" \"${helper_app}\"\n    fi\nfi\n";
 		};
 		FA3864F42589AB61000C6C97 /* Swift Format */ = {
 			isa = PBXShellScriptBuildPhase;
