@@ -4020,6 +4020,72 @@ struct FoldMenuItemBuildTests {
         #expect(foldView.displayedIconSize == NSSize(width: 16, height: 16))
     }
 
+    @MainActor @Test func testFullBuild_foldItemBadgeTextIsCenteredInPill() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        apt | fold=true badge=3
+        --apparmor 5.0.0
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let foldView = try #require(foldParent.view as? FoldableMenuItemView)
+        foldView.appearance = NSAppearance(named: .aqua)
+        foldView.frame = NSRect(x: 0, y: 0, width: 220, height: 22)
+        foldView.layoutSubtreeIfNeeded()
+
+        let badgeFrame = foldView.displayedBadgeFrame
+        #expect(badgeFrame.width > 0)
+
+        let scale = 4
+        let rep = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(foldView.bounds.width) * scale,
+            pixelsHigh: Int(foldView.bounds.height) * scale,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ))
+        rep.size = foldView.bounds.size
+        foldView.cacheDisplay(in: foldView.bounds, to: rep)
+
+        // Scan the badge's horizontal span: the pill background renders at a
+        // low alpha and the badge text at a distinctly higher alpha, so the
+        // two can be told apart to measure the text's ink extent in the pill.
+        let scanMinX = max(Int(badgeFrame.minX) * scale, 0)
+        let scanMaxX = min(Int(ceil(badgeFrame.maxX)) * scale, rep.pixelsWide)
+        var pillMinX = Int.max
+        var pillMaxX = -1
+        var textMinX = Int.max
+        var textMaxX = -1
+        for y in 0 ..< rep.pixelsHigh {
+            for x in scanMinX ..< scanMaxX {
+                guard let color = rep.colorAt(x: x, y: y) else { continue }
+                let alpha = color.alphaComponent
+                if alpha > 0.3 {
+                    textMinX = min(textMinX, x)
+                    textMaxX = max(textMaxX, x)
+                } else if alpha > 0.05 {
+                    pillMinX = min(pillMinX, x)
+                    pillMaxX = max(pillMaxX, x)
+                }
+            }
+        }
+
+        #expect(pillMaxX > pillMinX)
+        #expect(textMaxX > textMinX)
+
+        let leftGap = Double(textMinX - pillMinX) / Double(scale)
+        let rightGap = Double(pillMaxX - textMaxX) / Double(scale)
+        #expect(abs(leftGap - rightGap) <= 1.0, "badge text should be centered in the pill, left gap \(leftGap)pt vs right gap \(rightGap)pt")
+    }
+
     @MainActor @Test func testMenuHighlight_updatesFoldViewHighlightState() throws {
         let item = makeMenuBarItem()
 
