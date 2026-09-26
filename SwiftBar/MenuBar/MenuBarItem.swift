@@ -45,6 +45,12 @@ class MenubarItem: NSObject {
     var hotKeys: [HotKey] = []
     var hotkeyTrigger: Bool = false
     var showsAllStandardItemsWhileOpen = false
+    /// Reads the live hardware modifier state. `NSApp.currentEvent` is not
+    /// reliable in `menuWillOpen`: during status-item menu tracking on
+    /// macOS 27 it holds an unrelated event (e.g. mouse-moved) whose flags
+    /// never contain `.option`, so option-click detection must query
+    /// `NSEvent.modifierFlags` instead. Injectable for tests.
+    var optionKeyIsPressed: () -> Bool = { NSEvent.modifierFlags.contains(.option) }
 
     /// Tracks the current tree of parsed menu nodes for incremental diffing.
     var currentMenuTree: [MenuItemNode] = []
@@ -216,7 +222,7 @@ class MenubarItem: NSObject {
 extension MenubarItem: NSMenuDelegate {
     func menuWillOpen(_: NSMenu) {
         isOpen = true
-        showsAllStandardItemsWhileOpen = !hotkeyTrigger && (NSApp.currentEvent?.modifierFlags.contains(.option) ?? false)
+        showsAllStandardItemsWhileOpen = !hotkeyTrigger && optionKeyIsPressed()
 
         if #available(macOS 12, *) {
             // nothing todo here
