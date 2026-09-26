@@ -84,11 +84,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         }
     }
 
-    lazy var preferencesWindowController = PreferencesWindowController(
-        panes: preferencePanes,
-        style: .toolbarItems,
-        animated: false
-    )
+    lazy var preferencesWindowController: PreferencesWindowController = {
+        let controller = PreferencesWindowController(
+            panes: preferencePanes,
+            style: .toolbarItems,
+            animated: false
+        )
+        // The Preferences library creates a fixed-size window; allow resizing
+        // so panes with overflowing content (e.g. plugin variables) can be revealed.
+        controller.window?.styleMask.insert(.resizable)
+        return controller
+    }()
 
     var repositoryToolbarSearchItem: NSToolbarItem?
 

@@ -10,6 +10,15 @@ struct PluginDetailsView: View {
     let screenProportion: CGFloat = 0.3
     let width: CGFloat = 400
     var body: some View {
+        if #available(macOS 13.0, *) {
+            detailsScrollView
+                .scrollIndicators(.visible)
+        } else {
+            detailsScrollView
+        }
+    }
+
+    private var detailsScrollView: some View {
         ScrollView {
             VStack(spacing: 0) {
                 Preferences.Container(contentWidth: 500) {

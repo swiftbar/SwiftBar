@@ -13,7 +13,7 @@ struct PluginsPreferencesView: View {
             } else {
                 PluginsView(plugin: pluginManager.plugins.first!, plugins: pluginManager.plugins.filter { $0.type == .Streamable || $0.type == .Executable })
             }
-        }.frame(width: 750, height: 400)
+        }.frame(minWidth: 750, idealWidth: 750, maxWidth: .infinity, minHeight: 400, idealHeight: 400, maxHeight: .infinity)
     }
 }
 
