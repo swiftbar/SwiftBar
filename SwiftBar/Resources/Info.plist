@@ -52,12 +52,16 @@
 	</dict>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Allow SwiftBar to run plugin in Terminal</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Allow SwiftBar to access your Calendar. This is required by one of your plugins.</string>
 	<key>NSCalendarsUsageDescription</key>
 	<string>Allow SwiftBar to access your Calendar. This is required by one of your plugins.</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright ©2020-2026 Ameba Labs. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Allow SwiftBar to access your Reminders. This is required by one of your plugins.</string>
 	<key>NSRemindersUsageDescription</key>
 	<string>Allow SwiftBar to access your Reminders. This is required by one of your plugins.</string>
 	<key>NSUserActivityTypes</key>
