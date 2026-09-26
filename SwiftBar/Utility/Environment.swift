@@ -30,6 +30,11 @@ class Environment {
 
     var userLoginShell = "/bin/zsh"
 
+    /// The moment the machine last woke from sleep. The plugin refresh
+    /// scheduler is paused while the machine sleeps, so staleness checks
+    /// use this as a floor to avoid counting sleep time against plugins.
+    private(set) var lastWakeDate: Date?
+
     private var systemEnv: [Variables: String] = [
         .swiftBar: "1",
         .swiftBarVersion: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "",
@@ -58,6 +63,7 @@ class Environment {
     }
 
     func updateWakeTime(date: Date) {
+        lastWakeDate = date
         systemEnv[.osLastWakeTime] = dateFormatter.string(from: date)
     }
 }
