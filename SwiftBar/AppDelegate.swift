@@ -28,11 +28,46 @@ func statusItemVisibilityKeys(in defaults: [String: Any]) -> [String] {
 
 let menuBarSettingsURL = URL(string: "x-apple.systempreferences:com.apple.ControlCenter-Settings.extension")!
 
+/// macOS 26 delivers reopen (`rapp`) Apple events to the running process for
+/// several seconds after every wake from sleep, with no user interaction.
+let menuBarRecoveryWakeSuppressionInterval: TimeInterval = 60
+
+/// A reopen event trails the `GURL` event of every swiftbar:// URL open and
+/// follows notification clicks; those activations are handled elsewhere.
+let menuBarRecoveryHandledEventSuppressionInterval: TimeInterval = 10
+
+/// macOS can queue several reopen events; without a debounce each dismissed
+/// alert is immediately followed by the next one.
+let menuBarRecoveryRepeatSuppressionInterval: TimeInterval = 60
+
 func shouldShowMenuBarRecovery(
     hasVisibleAppWindows: Bool,
+    at date: Date = Date(),
+    lastWakeDate: Date? = nil,
+    lastHandledEventDate: Date? = nil,
+    lastRecoveryAlertDate: Date? = nil,
     operatingSystemVersion: OperatingSystemVersion = ProcessInfo.processInfo.operatingSystemVersion
 ) -> Bool {
-    operatingSystemVersion.majorVersion >= 26 && !hasVisibleAppWindows
+    guard operatingSystemVersion.majorVersion >= 26, !hasVisibleAppWindows else {
+        return false
+    }
+
+    // Ignore system-generated reopens that follow a wake from sleep.
+    if let lastWakeDate, date.timeIntervalSince(lastWakeDate) < menuBarRecoveryWakeSuppressionInterval {
+        return false
+    }
+
+    // Ignore reopens trailing a swiftbar:// URL open or a notification click.
+    if let lastHandledEventDate, date.timeIntervalSince(lastHandledEventDate) < menuBarRecoveryHandledEventSuppressionInterval {
+        return false
+    }
+
+    // Debounce repeats so queued reopen events do not stack alerts.
+    if let lastRecoveryAlertDate, date.timeIntervalSince(lastRecoveryAlertDate) < menuBarRecoveryRepeatSuppressionInterval {
+        return false
+    }
+
+    return true
 }
 
 func controlCenterVisibilityReportLine(
@@ -95,6 +130,15 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     var pluginManager: PluginManager!
     let prefs = PreferencesStore.shared
     let sharedEnv = Environment.shared
+
+    /// When SwiftBar last handled a swiftbar:// URL or a notification
+    /// response. macOS 26 delivers a trailing reopen event for both, which
+    /// must not trigger the menu bar recovery alert.
+    private var lastHandledEventDate: Date?
+
+    /// When the menu bar recovery alert was last shown, used to debounce
+    /// queued reopen events.
+    private var lastRecoveryAlertDate: Date?
     #if !MAC_APP_STORE
         var softwareUpdater: SPUUpdater!
     #endif
@@ -228,7 +272,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             preferencesWindowController.window?.isVisible == true ||
             repositoryWindowController?.window?.isVisible == true
 
-        guard shouldShowMenuBarRecovery(hasVisibleAppWindows: hasVisibleAppWindows) else {
+        guard shouldShowMenuBarRecovery(
+            hasVisibleAppWindows: hasVisibleAppWindows,
+            lastWakeDate: sharedEnv.lastWakeDate,
+            lastHandledEventDate: lastHandledEventDate,
+            lastRecoveryAlertDate: lastRecoveryAlertDate
+        ) else {
             return true
         }
 
@@ -237,9 +286,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     private func showMenuBarRecoveryAlert() {
+        lastRecoveryAlertDate = Date()
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         defer {
+            // Restart the debounce window on dismissal so reopen events queued
+            // behind a long-lived modal do not immediately re-alert.
+            lastRecoveryAlertDate = Date()
             changePresentationType()
         }
 
@@ -281,6 +334,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func application(_: NSApplication, open urls: [URL]) {
+        lastHandledEventDate = Date()
         for url in urls {
             if shouldImportOpenedPluginFile(at: url, makePluginExecutable: prefs.makePluginExecutable) {
                 pluginManager.importPlugin(from: url)
@@ -347,6 +401,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func userNotificationCenter(_: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        lastHandledEventDate = Date()
         let payload = response.notification.request.content.userInfo
 
         guard let pluginID = payload[SystemNotificationName.pluginID] as? String,
