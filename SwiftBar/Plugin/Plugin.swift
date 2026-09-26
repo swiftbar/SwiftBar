@@ -131,7 +131,16 @@ extension Plugin {
     }
 
     var isStale: Bool {
-        // Check if plugin has timed updates and hasn't updated within 2x the interval
+        isStale(at: Date(), lastWakeDate: Environment.shared.lastWakeDate)
+    }
+
+    /// Check if plugin has timed updates and hasn't updated within 2x the interval.
+    ///
+    /// The refresh scheduler is paused while the machine sleeps, so a plugin has
+    /// no chance to update during that gap. Staleness is therefore measured from
+    /// the last wake when it is more recent than the last update — a plugin only
+    /// counts as stale once it misses updates while the machine is awake.
+    func isStale(at date: Date, lastWakeDate: Date?) -> Bool {
         guard updateInterval > 0,
               updateInterval < pluginNeverUpdateInterval,
               let lastUpdated
@@ -139,7 +148,12 @@ extension Plugin {
             return false
         }
 
-        let timeSinceLastUpdate = Date().timeIntervalSince(lastUpdated)
+        var referenceDate = lastUpdated
+        if let lastWakeDate, lastWakeDate > referenceDate {
+            referenceDate = lastWakeDate
+        }
+
+        let timeSinceLastUpdate = date.timeIntervalSince(referenceDate)
         return timeSinceLastUpdate > (updateInterval * 2)
     }
 

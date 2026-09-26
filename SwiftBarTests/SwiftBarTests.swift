@@ -4260,3 +4260,96 @@ struct FoldMenuItemBuildTests {
         #expect(menuItemTitle(regularChildItem) == "Regular Child Updated")
     }
 }
+
+// MARK: - Plugin Staleness Tests
+
+struct PluginStalenessTests {
+    private func makePlugin(updateInterval: Double = 30) -> TestPlugin {
+        let plugin = TestPlugin(id: "staleness.30s.sh", file: "staleness.30s.sh")
+        plugin.updateInterval = updateInterval
+        return plugin
+    }
+
+    @Test func freshlyUpdatedPluginIsNotStale() {
+        let plugin = makePlugin()
+        let now = Date()
+        plugin.lastUpdated = now.addingTimeInterval(-10)
+
+        #expect(!plugin.isStale(at: now, lastWakeDate: nil))
+    }
+
+    @Test func pluginMissingUpdatesWhileAwakeIsStale() {
+        let plugin = makePlugin()
+        let now = Date()
+        plugin.lastUpdated = now.addingTimeInterval(-90)
+
+        #expect(plugin.isStale(at: now, lastWakeDate: nil))
+    }
+
+    @Test func sleepGapDoesNotCountTowardStaleness() {
+        // Machine slept for an hour, woke up seconds ago; last update
+        // predates the sleep. The plugin had no chance to refresh, so
+        // it must not be reported as stale right after wake.
+        let plugin = makePlugin()
+        let now = Date()
+        plugin.lastUpdated = now.addingTimeInterval(-3600)
+        let wake = now.addingTimeInterval(-2)
+
+        #expect(!plugin.isStale(at: now, lastWakeDate: wake))
+    }
+
+    @Test func pluginBecomesStaleIfItMissesUpdatesAfterWake() {
+        // Woke long enough ago that the plugin should have refreshed
+        // twice, but it never did — that is genuine staleness.
+        let plugin = makePlugin()
+        let now = Date()
+        plugin.lastUpdated = now.addingTimeInterval(-3600)
+        let wake = now.addingTimeInterval(-90)
+
+        #expect(plugin.isStale(at: now, lastWakeDate: wake))
+    }
+
+    @Test func wakeOlderThanLastUpdateDoesNotMaskStaleness() {
+        // Wake happened before the last update, so the last update
+        // remains the staleness reference.
+        let plugin = makePlugin()
+        let now = Date()
+        plugin.lastUpdated = now.addingTimeInterval(-90)
+        let wake = now.addingTimeInterval(-3600)
+
+        #expect(plugin.isStale(at: now, lastWakeDate: wake))
+    }
+
+    @Test func successfulRefreshAfterWakeClearsStaleness() {
+        let plugin = makePlugin()
+        let now = Date()
+        let wake = now.addingTimeInterval(-120)
+        plugin.lastUpdated = now.addingTimeInterval(-5)
+
+        #expect(!plugin.isStale(at: now, lastWakeDate: wake))
+    }
+
+    @Test func neverUpdatingPluginIsNotStale() {
+        let plugin = makePlugin(updateInterval: pluginNeverUpdateInterval)
+        let now = Date()
+        plugin.lastUpdated = now.addingTimeInterval(-3600)
+
+        #expect(!plugin.isStale(at: now, lastWakeDate: nil))
+    }
+
+    @Test func pluginWithoutLastUpdatedIsNotStale() {
+        let plugin = makePlugin()
+
+        #expect(!plugin.isStale(at: Date(), lastWakeDate: nil))
+    }
+
+    @Test func environmentRecordsLastWakeDate() {
+        let environment = Environment()
+        #expect(environment.lastWakeDate == nil)
+
+        let wake = Date()
+        environment.updateWakeTime(date: wake)
+
+        #expect(environment.lastWakeDate == wake)
+    }
+}
