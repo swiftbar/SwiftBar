@@ -54,6 +54,7 @@ enum PluginMetadataOption: String, CaseIterable {
     case environment
     case runInBash
     case refreshOnOpen
+    case collapseOnClose
     case persistentWebView
     case useTrailingStreamSeparator
     case alwaysVisible
@@ -62,7 +63,7 @@ enum PluginMetadataOption: String, CaseIterable {
         switch self {
         case .title, .version, .author, .github, .desc, .about, .image, .dependencies:
             [.bitbar, .xbar]
-        case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar, .refreshOnOpen, .persistentWebView, .useTrailingStreamSeparator, .alwaysVisible:
+        case .runInBash, .environment, .droptypes, .schedule, .type, .hideAbout, .hideRunInTerminal, .hideLastUpdated, .hideDisablePlugin, .hideSwiftBar, .refreshOnOpen, .collapseOnClose, .persistentWebView, .useTrailingStreamSeparator, .alwaysVisible:
             [.swiftbar]
         }
     }
@@ -88,6 +89,7 @@ class PluginMetadata: ObservableObject {
     @Published var environment: [String: String]
     @Published var runInBash: Bool
     @Published var refreshOnOpen: Bool
+    @Published var collapseOnClose: Bool
     @Published var persistentWebView: Bool
     @Published var useTrailingStreamSeparator: Bool
     @Published var alwaysVisible: Bool
@@ -110,7 +112,7 @@ class PluginMetadata: ObservableObject {
         return date == Date.distantFuture ? nil : date
     }
 
-    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:], runInBash: Bool = true, refreshOnOpen: Bool = false, persistentWebView: Bool = false, useTrailingStreamSeparator: Bool = false, alwaysVisible: Bool = false, variables: [PluginVariable] = []) {
+    init(name: String = "", version: String = "", author: String = "", github: String = "", desc: String = "", previewImageURL: URL? = nil, dependencies: [String] = [], aboutURL: URL? = nil, dropTypes: [String] = [], schedule: String = "", type: PluginType = .Executable, hideAbout: Bool = false, hideRunInTerminal: Bool = false, hideLastUpdated: Bool = false, hideDisablePlugin: Bool = false, hideSwiftBar: Bool = false, environment: [String: String] = [:], runInBash: Bool = true, refreshOnOpen: Bool = false, collapseOnClose: Bool = false, persistentWebView: Bool = false, useTrailingStreamSeparator: Bool = false, alwaysVisible: Bool = false, variables: [PluginVariable] = []) {
         self.name = name
         self.version = version
         self.author = author
@@ -130,6 +132,7 @@ class PluginMetadata: ObservableObject {
         self.environment = environment
         self.runInBash = runInBash
         self.refreshOnOpen = refreshOnOpen
+        self.collapseOnClose = collapseOnClose
         self.persistentWebView = persistentWebView
         self.useTrailingStreamSeparator = useTrailingStreamSeparator
         self.alwaysVisible = alwaysVisible
@@ -300,6 +303,7 @@ class PluginMetadata: ObservableObject {
                               environment: environment,
                               runInBash: getTagValue(tag: .runInBash) == "false" ? false : true,
                               refreshOnOpen: getTagValue(tag: .refreshOnOpen) == "true" ? true : false,
+                              collapseOnClose: getTagValue(tag: .collapseOnClose) == "true",
                               persistentWebView: getTagValue(tag: .persistentWebView) == "true" ? true : false,
                               useTrailingStreamSeparator: getTagValue(tag: .useTrailingStreamSeparator) == "true" ? true : false,
                               alwaysVisible: getTagValue(tag: .alwaysVisible) == "true",
@@ -375,6 +379,8 @@ class PluginMetadata: ObservableObject {
                 value = runInBash ? "" : "false"
             case .refreshOnOpen:
                 value = refreshOnOpen ? "true" : ""
+            case .collapseOnClose:
+                value = collapseOnClose ? "true" : ""
             case .persistentWebView:
                 value = persistentWebView ? "true" : ""
             case .useTrailingStreamSeparator:

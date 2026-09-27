@@ -247,6 +247,13 @@ extension MenubarItem: NSMenuDelegate {
         }
         highlightedFoldItem = nil
 
+        // Plugins can opt out of fold state persistence with the
+        // collapseOnClose metadata flag: every fold section returns to
+        // collapsed when the menu closes, so the next open starts compact.
+        if plugin?.metadata?.collapseOnClose == true {
+            collapseAllFolds(in: statusBarMenu)
+        }
+
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
             menuUpdateQueue.addOperation { [weak self] in
@@ -1343,6 +1350,17 @@ extension MenubarItem {
             if let nestedChildren = foldChildItems[key] {
                 nestedChildren.forEach { $0.isHidden = true }
                 collapseNestedFolds(in: nestedChildren)
+            }
+        }
+    }
+
+    /// Collapse every fold section in the menu, including folds nested in
+    /// submenus, clearing both identity- and line-based expansion state.
+    private func collapseAllFolds(in menu: NSMenu) {
+        collapseNestedFolds(in: menu.items)
+        for item in menu.items {
+            if let submenu = item.submenu {
+                collapseAllFolds(in: submenu)
             }
         }
     }
