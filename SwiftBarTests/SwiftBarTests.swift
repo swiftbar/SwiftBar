@@ -432,6 +432,40 @@ struct SwiftBarTests {
         #expect(MenubarItem.actionKinds(for: params) == [.refresh])
     }
 
+    @Test func testShouldAttachMenuToBarItem_attachesWhenClicksNeedNoInterception() async throws {
+        #expect(MenubarItem.shouldAttachMenuToBarItem(titleHasAction: false, refreshesOnOpen: false))
+    }
+
+    @Test func testShouldAttachMenuToBarItem_detachesWhenTitleHasAction() async throws {
+        #expect(!MenubarItem.shouldAttachMenuToBarItem(titleHasAction: true, refreshesOnOpen: false))
+    }
+
+    @Test func testShouldAttachMenuToBarItem_detachesWhenPluginRefreshesOnOpen() async throws {
+        #expect(!MenubarItem.shouldAttachMenuToBarItem(titleHasAction: false, refreshesOnOpen: true))
+        #expect(!MenubarItem.shouldAttachMenuToBarItem(titleHasAction: true, refreshesOnOpen: true))
+    }
+
+    @Test func testShouldAttachMenuToBarItem_attachesForPlainTitleLine() async throws {
+        let params = MenuLineParameters(line: "Test")
+        let titleHasAction = !MenubarItem.actionKinds(for: params).isEmpty
+
+        #expect(MenubarItem.shouldAttachMenuToBarItem(titleHasAction: titleHasAction, refreshesOnOpen: false))
+    }
+
+    @Test func testShouldAttachMenuToBarItem_detachesForTitleLineWithBashAction() async throws {
+        let params = MenuLineParameters(line: "Test | bash=/usr/bin/touch param1=/tmp/file terminal=false")
+        let titleHasAction = !MenubarItem.actionKinds(for: params).isEmpty
+
+        #expect(!MenubarItem.shouldAttachMenuToBarItem(titleHasAction: titleHasAction, refreshesOnOpen: false))
+    }
+
+    @Test func testShouldAttachMenuToBarItem_attachesForTitleLineWithPlaceholderHref() async throws {
+        let params = MenuLineParameters(line: "Test | href=.")
+        let titleHasAction = !MenubarItem.actionKinds(for: params).isEmpty
+
+        #expect(MenubarItem.shouldAttachMenuToBarItem(titleHasAction: titleHasAction, refreshesOnOpen: false))
+    }
+
     @Test func testHasAction_falseWithNoActionParams() async throws {
         let params = MenuLineParameters(line: "Status | color=red")
         #expect(!params.hasAction)

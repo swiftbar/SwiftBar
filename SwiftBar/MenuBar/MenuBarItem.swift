@@ -117,6 +117,7 @@ class MenubarItem: NSObject {
         guard plugin != nil else {
             barItem.button?.title = title
             buildStandardMenu()
+            syncMenuAttachment()
             return
         }
         webPopover.delegate = self
@@ -255,8 +256,9 @@ extension MenubarItem: NSMenuDelegate {
                 self?.updateMenu(content: self?.plugin?.content)
             }
         }
-        // since we're handling click in barItemClicked we need to remove the menu
-        barItem.menu = nil
+        // setMenuTitle above resynced the menu attachment: items whose clicks
+        // are handled in barItemClicked get the menu detached again, everyone
+        // else keeps it attached so AppKit handles the next click natively.
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
@@ -1442,6 +1444,7 @@ extension MenubarItem {
         }
 
         barItem.button?.attributedTitle = attributedTitle
+        syncMenuAttachment()
     }
 
     func cycleThroughTitles() {
@@ -1584,6 +1587,9 @@ extension MenubarItem {
     }
 
     @objc func barItemClicked() {
+        // With the menu attached to the status item AppKit owns the whole
+        // click, including press-drag-release; nothing to intercept here.
+        guard barItem.menu == nil else { return }
         guard let eventType = NSApp.currentEvent?.type else { return }
 
         if eventType == .rightMouseDown {
@@ -1617,6 +1623,29 @@ extension MenubarItem {
         _updateMenu(content: content)
         barItem.menu = statusBarMenu
         barItem.button?.performClick(nil)
+    }
+
+    /// Attaches the status bar menu directly to the status item whenever
+    /// clicks don't need to be intercepted. With the menu attached, AppKit
+    /// owns the whole click natively, so press-drag-release on a menu item
+    /// runs its action (#559) — opening the detached menu with a simulated
+    /// `performClick(nil)` starts a tracking session that never sees the
+    /// still-held physical press and ignores the release. The menu stays
+    /// detached when the title line has its own click action (a left click
+    /// must run it instead of opening the menu) or when the plugin must
+    /// regenerate its content before the menu is shown (`refreshOnOpen`);
+    /// those keep the `barItemClicked`/`showMenu` path.
+    func syncMenuAttachment() {
+        guard !isOpen else { return }
+        let attach = Self.shouldAttachMenuToBarItem(
+            titleHasAction: !Self.actionKinds(for: MenuLineParameters(line: currentTitleLine)).isEmpty,
+            refreshesOnOpen: refreshOnOpen && plugin?.type == .Executable
+        )
+        barItem.menu = attach ? statusBarMenu : nil
+    }
+
+    static func shouldAttachMenuToBarItem(titleHasAction: Bool, refreshesOnOpen: Bool) -> Bool {
+        !titleHasAction && !refreshesOnOpen
     }
 
     func dimOnManualRefresh() {
