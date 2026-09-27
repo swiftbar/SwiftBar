@@ -2641,6 +2641,96 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(!flatTitles.contains("A"))
     }
 
+    @MainActor @Test func testIncrementalUpdate_rebuildsFromOutermostFoldWhenDeepChildSwitchesMode() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Inner | fold=true
+        ----Leafy
+        ------Value: 1 | bash=/usr/bin/true terminal=false
+        After: 1 | bash=/usr/bin/true terminal=false
+        """)
+
+        let root = try bodyItem(named: "Root", in: item.statusBarMenu)
+        let inner = try bodyItem(named: "Inner", in: item.statusBarMenu)
+        item.toggleFoldItem(root)
+        item.toggleFoldItem(inner)
+        #expect(try !bodyItem(named: "Leafy", in: item.statusBarMenu).isHidden)
+
+        // Leafy switches from submenu parent to fold parent, two fold levels
+        // deep; a following top-level row changes in the same update.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Inner | fold=true
+        ----Leafy | fold=true
+        ------Value: 2 | bash=/usr/bin/true terminal=false
+        After: 2 | bash=/usr/bin/true terminal=false
+        """)
+
+        let leafy = try bodyItem(named: "Leafy", in: item.statusBarMenu)
+        #expect(leafy.view is FoldableMenuItemView)
+        #expect(leafy.submenu == nil)
+        // The grandchild now lives as a flat sibling row
+        let value = try bodyItem(named: "Value: 2", in: item.statusBarMenu)
+
+        // The top-level row after the fold subtree still patches correctly
+        _ = try bodyItem(named: "After: 2", in: item.statusBarMenu)
+
+        // Collapsing Root must hide the rebuilt descendants too — this fails
+        // if an ancestor's foldChildItems list still points at detached items.
+        #expect(root === (try bodyItem(named: "Root", in: item.statusBarMenu)))
+        item.toggleFoldItem(root)
+        let innerAfter = try bodyItem(named: "Inner", in: item.statusBarMenu)
+        #expect(innerAfter.isHidden)
+        #expect(try bodyItem(named: "Leafy", in: item.statusBarMenu).isHidden)
+        #expect(value.isHidden)
+
+        // Removing the whole fold subtree must leave no orphan rows behind
+        item._updateMenu(content: """
+        Title
+        ---
+        After: 3 | bash=/usr/bin/true terminal=false
+        """)
+
+        let remaining = item.statusBarMenu.items.compactMap {
+            ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces)
+        }
+        #expect(!remaining.contains { $0.hasPrefix("Root") || $0.hasPrefix("Inner") || $0.hasPrefix("Leafy") || $0.hasPrefix("Value") })
+        _ = try bodyItem(named: "After: 3", in: item.statusBarMenu)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_clearsSubmenuWhenChildBecomesChildlessFold() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details
+        ----A | bash=/usr/bin/true terminal=false
+        """)
+
+        let details = try bodyItem(named: "Details", in: item.statusBarMenu)
+        #expect(details.submenu != nil)
+
+        // Details becomes fold=true with no children: not a fold parent, but
+        // the stale submenu must still be cleared.
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details | fold=true
+        """)
+
+        let updatedDetails = try bodyItem(named: "Details", in: item.statusBarMenu)
+        #expect(updatedDetails.submenu == nil)
+    }
+
     @MainActor @Test func testIncrementalUpdate_refreshesSubmenuParentInsideNestedFolds() throws {
         let item = makeMenuBarItem()
 
@@ -3300,7 +3390,7 @@ struct StreamableSubmenuParentTests {
           echo "--Child | bash=/usr/bin/true terminal=false"
           printf '~~~\\n'
           i=$((i + 1))
-          sleep 1
+          sleep 0.2
         done
         """
         try script.write(to: scriptURL, atomically: true, encoding: .utf8)

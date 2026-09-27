@@ -889,7 +889,14 @@ extension MenubarItem {
                     if foldModeChanged {
                         existingItem.submenu = nil
                     }
-                    updateFoldChildren(of: existingItem, from: newNode, oldNode: oldNode, in: menu)
+                    if updateFoldChildren(of: existingItem, from: newNode, oldNode: oldNode, in: menu) {
+                        // The fold subtree cannot be patched in place. Rebuild it
+                        // from this outermost fold item so every ancestor list in
+                        // foldChildItems is refreshed together; parent expansion
+                        // state survives via expandedFoldItems/expandedFoldLines.
+                        removeFoldChildren(of: existingItem, from: menu)
+                        buildFoldChildren(for: existingItem, from: newNode, into: menu)
+                    }
                 } else if oldParams.fold {
                     // Transitioning from fold to submenu: clean up fold children first
                     removeFoldChildren(of: existingItem, from: menu)
@@ -917,7 +924,14 @@ extension MenubarItem {
     /// Update fold children for an existing fold item when its children change.
     /// Patches existing fold child NSMenuItems in-place to preserve object identity
     /// (and thus fold expansion state).
-    private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, oldNode: MenuItemNode?, in menu: NSMenu) {
+    ///
+    /// Returns true when the subtree cannot be patched in place — a child count
+    /// changed or a child switched between fold and submenu modes, at any depth.
+    /// The caller must then rebuild from the outermost fold item: ancestors'
+    /// `foldChildItems` lists are flat and include nested grandchildren, so a
+    /// local rebuild at a nested level would strand the ancestors' references
+    /// to the replaced NSMenuItems.
+    private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, oldNode: MenuItemNode?, in menu: NSMenu) -> Bool {
         let key = ObjectIdentifier(item)
 
         // Update the fold parent's view
@@ -933,9 +947,11 @@ extension MenubarItem {
         }
 
         guard let existingChildren = foldChildItems[key] else {
-            // No existing fold children — build from scratch
+            // No existing fold children — build from scratch. This only happens
+            // for the outermost fold item (nested recursion requires an entry),
+            // so building here cannot strand ancestor bookkeeping.
             buildFoldChildren(for: item, from: newNode, into: menu)
-            return
+            return false
         }
 
         // Patch direct children in-place where possible
@@ -955,67 +971,65 @@ extension MenubarItem {
             }
         }
 
-        // Simple approach: if direct child count matches, patch in-place.
-        // Otherwise, tear down and rebuild (preserving parent expansion state).
-        if directItems.count == newDirectChildren.count {
-            for (idx, newChild) in newDirectChildren.enumerated() {
-                guard idx < directItems.count else { break }
-                let existingChild = directItems[idx]
-
-                if newChild.isSeparator {
-                    // Separators don't need patching
-                    continue
-                }
-
-                let childParams = MenuLineParameters(line: newChild.workingLine)
-                let childKey = ObjectIdentifier(existingChild)
-                let wasFoldParent = foldChildItems[childKey] != nil
-                let isFoldParent = childParams.fold && !newChild.children.isEmpty
-
-                // A nested child switching between fold and submenu modes needs
-                // the same teardown the top-level path performs. Rebuilding the
-                // whole fold subtree reuses that machinery, keeps foldChildItems
-                // bookkeeping coherent, and preserves the parent expansion state.
-                if wasFoldParent != isFoldParent {
-                    removeFoldChildren(of: item, from: menu)
-                    buildFoldChildren(for: item, from: newNode, into: menu)
-                    return
-                }
-
-                if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
-                    let titleInfo = foldableTitleInfo(with: childParams)
-                    foldView.update(
-                        attributedTitle: titleInfo.normal,
-                        highlightedTitle: titleInfo.highlighted,
-                        image: childParams.image,
-                        badge: childParams.badge
-                    )
-                } else if existingChild.view == nil {
-                    patchMenuItem(existingChild, with: childParams)
-                }
-
-                let oldChild: MenuItemNode? = if let oldNode, oldNode.children.indices.contains(idx) {
-                    oldNode.children[idx]
-                } else {
-                    nil
-                }
-
-                // Recursively update nested fold children
-                if childParams.fold, wasFoldParent {
-                    updateFoldChildren(of: existingChild, from: newChild, oldNode: oldChild, in: menu)
-                } else if !childParams.fold, let oldChild, oldChild.children != newChild.children {
-                    // A fold child can itself be a submenu parent. Mirror the
-                    // non-fold update path: refresh its submenu contents and
-                    // restore action ownership afterwards.
-                    updateSubmenu(of: existingChild, oldChildren: oldChild.children, newChildren: newChild.children)
-                    configureAction(on: existingChild, for: childParams)
-                }
-            }
-        } else {
-            // Child count changed — rebuild (but preserve parent expansion state)
-            removeFoldChildren(of: item, from: menu)
-            buildFoldChildren(for: item, from: newNode, into: menu)
+        // Child count changed — the subtree must be rebuilt from the top.
+        guard directItems.count == newDirectChildren.count else {
+            return true
         }
+
+        // Detect fold/submenu mode switches among direct children before
+        // patching anything; these also require a rebuild from the top.
+        for (idx, newChild) in newDirectChildren.enumerated() where !newChild.isSeparator {
+            let childParams = MenuLineParameters(line: newChild.workingLine)
+            let wasFoldParent = foldChildItems[ObjectIdentifier(directItems[idx])] != nil
+            let isFoldParent = childParams.fold && !newChild.children.isEmpty
+            if wasFoldParent != isFoldParent {
+                return true
+            }
+        }
+
+        for (idx, newChild) in newDirectChildren.enumerated() {
+            let existingChild = directItems[idx]
+
+            if newChild.isSeparator {
+                // Separators don't need patching
+                continue
+            }
+
+            let childParams = MenuLineParameters(line: newChild.workingLine)
+            let isFoldParent = childParams.fold && !newChild.children.isEmpty
+
+            if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
+                let titleInfo = foldableTitleInfo(with: childParams)
+                foldView.update(
+                    attributedTitle: titleInfo.normal,
+                    highlightedTitle: titleInfo.highlighted,
+                    image: childParams.image,
+                    badge: childParams.badge
+                )
+            } else if existingChild.view == nil {
+                patchMenuItem(existingChild, with: childParams)
+            }
+
+            let oldChild: MenuItemNode? = if let oldNode, oldNode.children.indices.contains(idx) {
+                oldNode.children[idx]
+            } else {
+                nil
+            }
+
+            // Recursively update nested fold children
+            if isFoldParent {
+                if updateFoldChildren(of: existingChild, from: newChild, oldNode: oldChild, in: menu) {
+                    return true
+                }
+            } else if let oldChild, oldChild.children != newChild.children {
+                // A fold child can itself be a submenu parent. Mirror the
+                // non-fold update path: refresh its submenu contents (clearing
+                // it when the children are gone) and restore action ownership.
+                updateSubmenu(of: existingChild, oldChildren: oldChild.children, newChildren: newChild.children)
+                configureAction(on: existingChild, for: childParams)
+            }
+        }
+        return false
     }
 
     /// Remove all fold children of an item from the menu.
