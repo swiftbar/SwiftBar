@@ -2557,6 +2557,42 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(item.hotKeys.allSatisfy { $0.isPaused })
     }
 
+    @MainActor @Test func testIncrementalUpdate_refreshesSubmenuOfSubmenuParentInsideFold() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details
+        ----Value: 1 | bash=/usr/bin/true terminal=false
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let foldIndex = item.statusBarMenu.index(of: foldParent)
+        let details = item.statusBarMenu.items[foldIndex + 1]
+        let submenu = try #require(details.submenu)
+        #expect((submenu.items.first?.representedObject as? MenuLineParameters)?.title
+            .trimmingCharacters(in: .whitespaces) == "Value: 1")
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details
+        ----Value: 2 | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(details.submenu === submenu)
+        let child = try #require(submenu.items.first)
+        #expect((child.representedObject as? MenuLineParameters)?.title
+            .trimmingCharacters(in: .whitespaces) == "Value: 2")
+        #expect(details.action.map(NSStringFromSelector) == "submenuAction:")
+        #expect(details.target === submenu)
+        item.statusBarMenu.update()
+        #expect(details.isEnabled)
+    }
+
     @MainActor @Test func testIncrementalUpdate_revalidatesPresentedSubmenuAndFoldParentsAfterMiddleRemoval() throws {
         let presentationMenu = StalePresentationMenu(title: "")
         let item = makeMenuBarItem(statusBarMenu: presentationMenu)

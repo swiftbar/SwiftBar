@@ -889,7 +889,7 @@ extension MenubarItem {
                     if foldModeChanged {
                         existingItem.submenu = nil
                     }
-                    updateFoldChildren(of: existingItem, from: newNode, in: menu)
+                    updateFoldChildren(of: existingItem, from: newNode, oldNode: oldNode, in: menu)
                 } else if oldParams.fold {
                     // Transitioning from fold to submenu: clean up fold children first
                     removeFoldChildren(of: existingItem, from: menu)
@@ -917,7 +917,7 @@ extension MenubarItem {
     /// Update fold children for an existing fold item when its children change.
     /// Patches existing fold child NSMenuItems in-place to preserve object identity
     /// (and thus fold expansion state).
-    private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, in menu: NSMenu) {
+    private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, oldNode: MenuItemNode?, in menu: NSMenu) {
         let key = ObjectIdentifier(item)
 
         // Update the fold parent's view
@@ -980,10 +980,22 @@ extension MenubarItem {
                     patchMenuItem(existingChild, with: childParams)
                 }
 
+                let oldChild: MenuItemNode? = if let oldNode, oldNode.children.indices.contains(idx) {
+                    oldNode.children[idx]
+                } else {
+                    nil
+                }
+
                 // Recursively update nested fold children
                 let childKey = ObjectIdentifier(existingChild)
                 if childParams.fold, foldChildItems[childKey] != nil {
-                    updateFoldChildren(of: existingChild, from: newChild, in: menu)
+                    updateFoldChildren(of: existingChild, from: newChild, oldNode: oldChild, in: menu)
+                } else if !childParams.fold, let oldChild, oldChild.children != newChild.children {
+                    // A fold child can itself be a submenu parent. Mirror the
+                    // non-fold update path: refresh its submenu contents and
+                    // restore action ownership afterwards.
+                    updateSubmenu(of: existingChild, oldChildren: oldChild.children, newChildren: newChild.children)
+                    configureAction(on: existingChild, for: childParams)
                 }
             }
         } else {
