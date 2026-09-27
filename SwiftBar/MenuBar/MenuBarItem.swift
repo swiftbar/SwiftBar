@@ -879,6 +879,10 @@ extension MenubarItem {
                         image: newParams.image,
                         badge: newParams.badge
                     )
+                    // Keep the title-keyed fold state working after a rename:
+                    // toggleFoldItem and collapseNestedFolds read the title
+                    // from representedObject.
+                    existingItem.representedObject = newParams
                 } else {
                     patchMenuItem(existingItem, with: newParams)
                 }
@@ -935,8 +939,6 @@ extension MenubarItem {
     /// state survives only via `expandedFoldLines`, which is keyed by title
     /// by design; see `transferFoldExpansionState`.
     private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, oldNode: MenuItemNode?, in menu: NSMenu) -> Bool {
-        let key = ObjectIdentifier(item)
-
         // Update the fold parent's view
         let params = MenuLineParameters(line: newNode.workingLine)
         if let foldView = item.view as? FoldableMenuItemView {
@@ -947,9 +949,10 @@ extension MenubarItem {
                 image: params.image,
                 badge: params.badge
             )
+            item.representedObject = params
         }
 
-        guard let existingChildren = foldChildItems[key] else {
+        guard let directItems = directFoldChildItems(of: item) else {
             // No existing fold children — build from scratch. This can only be
             // the outermost fold item: the caller's pre-scan rejects children
             // whose fold-parent state changed, so the recursion below is only
@@ -962,23 +965,13 @@ extension MenubarItem {
         // Patch direct children in-place where possible
         let newDirectChildren = newNode.children
 
-        // Count only direct children (not nested fold grandchildren) in existing list
-        var directItems: [NSMenuItem] = []
-        var index = 0
-        while index < existingChildren.count {
-            let child = existingChildren[index]
-            let childKey = ObjectIdentifier(child)
-            directItems.append(child)
-            if let nestedChildren = foldChildItems[childKey] {
-                index += 1 + nestedChildren.count
-            } else {
-                index += 1
-            }
-        }
-
         // Child count changed — the subtree must be rebuilt from the top.
         guard directItems.count == newDirectChildren.count else {
             return true
+        }
+
+        let newChildParams: [MenuLineParameters?] = newDirectChildren.map {
+            $0.isSeparator ? nil : MenuLineParameters(line: $0.workingLine)
         }
 
         // Detect shape changes among direct children before patching anything;
@@ -989,8 +982,7 @@ extension MenubarItem {
             if directItems[idx].isSeparatorItem != newChild.isSeparator {
                 return true
             }
-            guard !newChild.isSeparator else { continue }
-            let childParams = MenuLineParameters(line: newChild.workingLine)
+            guard let childParams = newChildParams[idx] else { continue }
             let wasFoldParent = foldChildItems[ObjectIdentifier(directItems[idx])] != nil
             let isFoldParent = childParams.fold && !newChild.children.isEmpty
             if wasFoldParent != isFoldParent {
@@ -1001,12 +993,11 @@ extension MenubarItem {
         for (idx, newChild) in newDirectChildren.enumerated() {
             let existingChild = directItems[idx]
 
-            if newChild.isSeparator {
+            guard let childParams = newChildParams[idx] else {
                 // Separators don't need patching
                 continue
             }
 
-            let childParams = MenuLineParameters(line: newChild.workingLine)
             let isFoldParent = childParams.fold && !newChild.children.isEmpty
 
             if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
@@ -1017,6 +1008,10 @@ extension MenubarItem {
                     image: childParams.image,
                     badge: childParams.badge
                 )
+                // Keep the title-keyed fold state working after a rename:
+                // toggleFoldItem and collapseNestedFolds read the title from
+                // representedObject.
+                existingChild.representedObject = childParams
             } else if existingChild.view == nil {
                 patchMenuItem(existingChild, with: childParams)
             }
@@ -1043,15 +1038,10 @@ extension MenubarItem {
         return false
     }
 
-    /// Carry fold expansion state over to renamed fold parents before a
-    /// subtree rebuild. Rebuilt NSMenuItems lose their `expandedFoldItems`
-    /// identity, so expansion survives only via the title-keyed
-    /// `expandedFoldLines` — an expanded fold whose title changes in the same
-    /// update would otherwise come back collapsed. Maps old child nodes to new
-    /// ones by position and seeds the new titles of currently expanded items.
-    private func transferFoldExpansionState(of item: NSMenuItem, from oldNode: MenuItemNode?, to newNode: MenuItemNode) {
-        guard let oldNode, let existingChildren = foldChildItems[ObjectIdentifier(item)] else { return }
-
+    /// Direct fold child NSMenuItems of a fold parent, skipping the nested
+    /// grandchildren that share the same flat `foldChildItems` list.
+    private func directFoldChildItems(of item: NSMenuItem) -> [NSMenuItem]? {
+        guard let existingChildren = foldChildItems[ObjectIdentifier(item)] else { return nil }
         var directItems: [NSMenuItem] = []
         var index = 0
         while index < existingChildren.count {
@@ -1063,15 +1053,57 @@ extension MenubarItem {
                 index += 1
             }
         }
+        return directItems
+    }
 
-        for (idx, childItem) in directItems.enumerated() {
-            guard oldNode.children.indices.contains(idx),
-                  newNode.children.indices.contains(idx) else { continue }
-            let newChild = newNode.children[idx]
-            if expandedFoldItems.contains(ObjectIdentifier(childItem)) {
-                expandedFoldLines.insert(MenuLineParameters(line: newChild.workingLine).title)
+    /// Carry fold expansion state over to renamed fold parents before a
+    /// subtree rebuild. Rebuilt NSMenuItems lose their `expandedFoldItems`
+    /// identity, so expansion survives only via the title-keyed
+    /// `expandedFoldLines` — an expanded fold whose title changes in the same
+    /// update would otherwise come back collapsed.
+    ///
+    /// Children are matched per level by equal title first; those pairs keep
+    /// their state through `expandedFoldLines` untouched. The leftovers are
+    /// treated as renames only when the unmatched old and new children pair
+    /// 1:1 in relative order; a rename amid simultaneous sibling inserts or
+    /// removals cannot be paired reliably and is left alone (best effort, the
+    /// renamed fold comes back collapsed). Renames move the title key: the
+    /// old title is evicted so it cannot pre-expand an unrelated later fold.
+    private func transferFoldExpansionState(of item: NSMenuItem, from oldNode: MenuItemNode?, to newNode: MenuItemNode) {
+        guard let oldNode, let directItems = directFoldChildItems(of: item) else { return }
+
+        var oldEntries: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
+        for (node, childItem) in zip(oldNode.children, directItems) where !node.isSeparator {
+            oldEntries.append((node, childItem, MenuLineParameters(line: node.workingLine).title))
+        }
+        let newEntries: [(node: MenuItemNode, title: String)] = newNode.children
+            .filter { !$0.isSeparator }
+            .map { ($0, MenuLineParameters(line: $0.workingLine).title) }
+
+        var matchedNewIndices = Set<Int>()
+        var unmatchedOld: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
+        for entry in oldEntries {
+            let match = newEntries.indices.first {
+                !matchedNewIndices.contains($0) && newEntries[$0].title == entry.title
             }
-            transferFoldExpansionState(of: childItem, from: oldNode.children[idx], to: newChild)
+            if let match {
+                matchedNewIndices.insert(match)
+                transferFoldExpansionState(of: entry.item, from: entry.node, to: newEntries[match].node)
+            } else {
+                unmatchedOld.append(entry)
+            }
+        }
+        let unmatchedNew = newEntries.indices
+            .filter { !matchedNewIndices.contains($0) }
+            .map { newEntries[$0] }
+
+        guard unmatchedOld.count == unmatchedNew.count else { return }
+        for (old, new) in zip(unmatchedOld, unmatchedNew) {
+            expandedFoldLines.remove(old.title)
+            if expandedFoldItems.contains(ObjectIdentifier(old.item)) {
+                expandedFoldLines.insert(new.title)
+            }
+            transferFoldExpansionState(of: old.item, from: old.node, to: new.node)
         }
     }
 

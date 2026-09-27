@@ -2737,6 +2737,117 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(try !bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
     }
 
+    @MainActor @Test func testIncrementalUpdate_keepsExpansionWhenSiblingInsertedBeforeExpandedFold() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --A | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        --B | fold=true
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+
+        item.toggleFoldItem(try bodyItem(named: "Root", in: item.statusBarMenu))
+        item.toggleFoldItem(try bodyItem(named: "A", in: item.statusBarMenu))
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+
+        // A sibling inserted before the expanded fold forces a rebuild; the
+        // expansion must stay with A, not shift onto the new first child.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --X | fold=true
+        ----Item X | bash=/usr/bin/true terminal=false
+        --A | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        --B | fold=true
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+        #expect(try bodyItem(named: "Item X", in: item.statusBarMenu).isHidden)
+        #expect(try bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_keepsRemainingFoldCollapsedAfterExpandedSiblingRemoval() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --A | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        --B | fold=true
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+
+        item.toggleFoldItem(try bodyItem(named: "Root", in: item.statusBarMenu))
+        item.toggleFoldItem(try bodyItem(named: "A", in: item.statusBarMenu))
+
+        // Removing the expanded fold must not shift its expansion onto the
+        // remaining sibling.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --B | fold=true
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(try bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
+        let titles = item.statusBarMenu.items.compactMap {
+            ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces)
+        }
+        #expect(!titles.contains("A"))
+    }
+
+    @MainActor @Test func testIncrementalUpdate_renameMovesFoldExpansionKeyWithoutLeavingOldTitle() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 1 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+
+        item.toggleFoldItem(try bodyItem(named: "Root", in: item.statusBarMenu))
+        item.toggleFoldItem(try bodyItem(named: "Tasks: 1", in: item.statusBarMenu))
+
+        // Rename with child-count change: expansion follows the rename
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 2 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+
+        // Collapse the renamed fold
+        item.toggleFoldItem(try bodyItem(named: "Tasks: 2", in: item.statusBarMenu))
+        #expect(try bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+
+        // Renaming back must come back collapsed: the original title was
+        // evicted when the expansion key moved, so it cannot pre-expand
+        // a later fold that reuses it.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 1 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+        #expect(try bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+    }
+
     @MainActor @Test func testIncrementalUpdate_rebuildsWhenFoldChildBecomesSeparator() throws {
         let item = makeMenuBarItem()
 
