@@ -2354,6 +2354,77 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(item.swiftBarItem.isHidden)
     }
 
+    @MainActor @Test func testOptionClickOpen_showsAllStandardItemsDespiteHideMetadata() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(
+            hideRunInTerminal: true,
+            hideLastUpdated: true,
+            hideDisablePlugin: true,
+            hideSwiftBar: true
+        )
+        item.plugin?.lastUpdated = Date()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        """)
+
+        item.optionKeyIsPressed = { true }
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(item.showsAllStandardItemsWhileOpen)
+        #expect(!item.lastUpdatedItem.isHidden)
+        #expect(!item.runInTerminalItem.isHidden)
+        #expect(!item.disablePluginItem.isHidden)
+        #expect(!item.swiftBarItem.isHidden)
+
+        item.menuDidClose(item.statusBarMenu)
+        #expect(!item.showsAllStandardItemsWhileOpen)
+    }
+
+    @MainActor @Test func testPlainOpen_keepsStandardItemsHiddenPerMetadata() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(
+            hideRunInTerminal: true,
+            hideLastUpdated: true,
+            hideDisablePlugin: true,
+            hideSwiftBar: true
+        )
+        item.plugin?.lastUpdated = Date()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        """)
+
+        item.optionKeyIsPressed = { false }
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(!item.showsAllStandardItemsWhileOpen)
+        #expect(item.lastUpdatedItem.isHidden)
+        #expect(item.runInTerminalItem.isHidden)
+        #expect(item.disablePluginItem.isHidden)
+        #expect(item.swiftBarItem.isHidden)
+    }
+
+    @MainActor @Test func testHotkeyTriggeredOpen_ignoresHeldOptionKey() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        """)
+
+        item.optionKeyIsPressed = { true }
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(!item.showsAllStandardItemsWhileOpen)
+    }
+
     @MainActor @Test func testIncrementalUpdate_keepsRegeneratedHotKeysPausedWhileMenuIsOpen() throws {
         let item = makeMenuBarItem()
 
