@@ -968,6 +968,20 @@ extension MenubarItem {
                 }
 
                 let childParams = MenuLineParameters(line: newChild.workingLine)
+                let childKey = ObjectIdentifier(existingChild)
+                let wasFoldParent = foldChildItems[childKey] != nil
+                let isFoldParent = childParams.fold && !newChild.children.isEmpty
+
+                // A nested child switching between fold and submenu modes needs
+                // the same teardown the top-level path performs. Rebuilding the
+                // whole fold subtree reuses that machinery, keeps foldChildItems
+                // bookkeeping coherent, and preserves the parent expansion state.
+                if wasFoldParent != isFoldParent {
+                    removeFoldChildren(of: item, from: menu)
+                    buildFoldChildren(for: item, from: newNode, into: menu)
+                    return
+                }
+
                 if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
                     let titleInfo = foldableTitleInfo(with: childParams)
                     foldView.update(
@@ -987,8 +1001,7 @@ extension MenubarItem {
                 }
 
                 // Recursively update nested fold children
-                let childKey = ObjectIdentifier(existingChild)
-                if childParams.fold, foldChildItems[childKey] != nil {
+                if childParams.fold, wasFoldParent {
                     updateFoldChildren(of: existingChild, from: newChild, oldNode: oldChild, in: menu)
                 } else if !childParams.fold, let oldChild, oldChild.children != newChild.children {
                     // A fold child can itself be a submenu parent. Mirror the

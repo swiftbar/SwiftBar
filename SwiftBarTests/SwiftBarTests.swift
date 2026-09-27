@@ -2557,6 +2557,124 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(item.hotKeys.allSatisfy { $0.isPaused })
     }
 
+    @MainActor
+    private func bodyItem(named title: String, in menu: NSMenu) throws -> NSMenuItem {
+        try #require(menu.items.first {
+            ($0.representedObject as? MenuLineParameters)?.title
+                .trimmingCharacters(in: .whitespaces) == title
+        })
+    }
+
+    @MainActor @Test func testIncrementalUpdate_rebuildsWhenNestedFoldChildBecomesSubmenuParent() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details | fold=true
+        ----A | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(try bodyItem(named: "Details", in: item.statusBarMenu).view is FoldableMenuItemView)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details
+        ----A2 | bash=/usr/bin/true terminal=false
+        """)
+
+        let details = try bodyItem(named: "Details", in: item.statusBarMenu)
+        #expect(!(details.view is FoldableMenuItemView))
+        let submenu = try #require(details.submenu)
+        #expect(submenu.items.map { ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces) } == ["A2"])
+        #expect(details.action.map(NSStringFromSelector) == "submenuAction:")
+        #expect(details.target === submenu)
+
+        // The former fold siblings must be gone from the flat menu
+        let flatTitles = item.statusBarMenu.items.compactMap {
+            ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces)
+        }
+        #expect(!flatTitles.contains("A"))
+        #expect(!flatTitles.contains("A2"))
+
+        item.statusBarMenu.update()
+        #expect(details.isEnabled)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_rebuildsWhenNestedSubmenuParentBecomesFoldChild() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details
+        ----A | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(try bodyItem(named: "Details", in: item.statusBarMenu).submenu != nil)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Details | fold=true
+        ----A2 | bash=/usr/bin/true terminal=false
+        """)
+
+        let details = try bodyItem(named: "Details", in: item.statusBarMenu)
+        #expect(details.view is FoldableMenuItemView)
+        #expect(details.submenu == nil)
+        #expect(details.action == #selector(MenubarItem.toggleFoldItem(_:)))
+        #expect(details.target === item)
+
+        // The child now lives as a (hidden) sibling row, not in a submenu
+        let sibling = try bodyItem(named: "A2", in: item.statusBarMenu)
+        #expect(sibling.isHidden)
+
+        let flatTitles = item.statusBarMenu.items.compactMap {
+            ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces)
+        }
+        #expect(!flatTitles.contains("A"))
+    }
+
+    @MainActor @Test func testIncrementalUpdate_refreshesSubmenuParentInsideNestedFolds() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Inner | fold=true
+        ----Leafy
+        ------Value: 1 | bash=/usr/bin/true terminal=false
+        """)
+
+        let leafy = try bodyItem(named: "Leafy", in: item.statusBarMenu)
+        let submenu = try #require(leafy.submenu)
+        #expect((submenu.items.first?.representedObject as? MenuLineParameters)?.title
+            .trimmingCharacters(in: .whitespaces) == "Value: 1")
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Inner | fold=true
+        ----Leafy
+        ------Value: 2 | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(try bodyItem(named: "Leafy", in: item.statusBarMenu) === leafy)
+        #expect(leafy.submenu === submenu)
+        #expect((submenu.items.first?.representedObject as? MenuLineParameters)?.title
+            .trimmingCharacters(in: .whitespaces) == "Value: 2")
+        #expect(leafy.action.map(NSStringFromSelector) == "submenuAction:")
+        #expect(leafy.target === submenu)
+    }
+
     @MainActor @Test func testIncrementalUpdate_refreshesSubmenuOfSubmenuParentInsideFold() throws {
         let item = makeMenuBarItem()
 
@@ -3192,17 +3310,35 @@ struct StreamableSubmenuParentTests {
         defer { plugin.terminate() }
         let item = MenubarItem(title: "Stream", plugin: plugin)
 
-        // Wait for the first block to render
-        try await Task.sleep(for: .seconds(2.5))
+        func poll(until condition: @MainActor () -> Bool) async throws -> Bool {
+            let deadline = Date().addingTimeInterval(15)
+            while Date() < deadline {
+                if condition() { return true }
+                try await Task.sleep(for: .milliseconds(100))
+            }
+            return condition()
+        }
 
-        let section = try #require(item.statusBarMenu.items.first { !$0.isSeparatorItem && $0.title == "Section" },
-                                   "Section item should exist after first block, got: \(item.statusBarMenu.items.map(\.title))")
+        func demoCounter() -> Int? {
+            guard let title = item.titleLines.first, title.hasPrefix("demo ") else { return nil }
+            return Int(title.dropFirst("demo ".count))
+        }
+
+        // Wait for the first block to render
+        let rendered = try await poll {
+            item.statusBarMenu.items.contains { !$0.isSeparatorItem && $0.title == "Section" }
+        }
+        try #require(rendered, "Section item should exist after first block, got: \(item.statusBarMenu.items.map(\.title))")
+
+        let section = try #require(item.statusBarMenu.items.first { !$0.isSeparatorItem && $0.title == "Section" })
         let originalSubmenu = try #require(section.submenu)
         #expect(originalSubmenu.items.count == 1)
         #expect(section.isEnabled)
+        let baseline = try #require(demoCounter(), "title should carry the block counter, got: \(item.titleLines)")
 
-        // Let at least two more blocks stream in
-        try await Task.sleep(for: .seconds(2.5))
+        // Wait until at least two more blocks have streamed in
+        let advanced = try await poll { (demoCounter() ?? baseline) >= baseline + 2 }
+        try #require(advanced, "stream did not advance two blocks past \(baseline), title: \(item.titleLines)")
 
         let updatedSection = try #require(item.statusBarMenu.items.first { !$0.isSeparatorItem && $0.title == "Section" })
         #expect(updatedSection.submenu != nil, "submenu detached after stream update")
