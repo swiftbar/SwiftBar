@@ -879,6 +879,11 @@ extension MenubarItem {
                         image: newParams.image,
                         badge: newParams.badge
                     )
+                    // Keep the title-keyed fold state working after a rename:
+                    // toggleFoldItem and collapseNestedFolds read the title
+                    // from representedObject.
+                    moveFoldExpansionKey(for: existingItem, to: newParams)
+                    existingItem.representedObject = newParams
                 } else {
                     patchMenuItem(existingItem, with: newParams)
                 }
@@ -889,7 +894,15 @@ extension MenubarItem {
                     if foldModeChanged {
                         existingItem.submenu = nil
                     }
-                    updateFoldChildren(of: existingItem, from: newNode, in: menu)
+                    if updateFoldChildren(of: existingItem, from: newNode, oldNode: oldNode, in: menu) {
+                        // The fold subtree cannot be patched in place. Rebuild it
+                        // from this outermost fold item so every ancestor list in
+                        // foldChildItems is refreshed together; parent expansion
+                        // state survives via expandedFoldItems/expandedFoldLines.
+                        transferFoldExpansionState(of: existingItem, from: oldNode, to: newNode)
+                        removeFoldChildren(of: existingItem, from: menu)
+                        buildFoldChildren(for: existingItem, from: newNode, into: menu)
+                    }
                 } else if oldParams.fold {
                     // Transitioning from fold to submenu: clean up fold children first
                     removeFoldChildren(of: existingItem, from: menu)
@@ -917,79 +930,268 @@ extension MenubarItem {
     /// Update fold children for an existing fold item when its children change.
     /// Patches existing fold child NSMenuItems in-place to preserve object identity
     /// (and thus fold expansion state).
-    private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, in menu: NSMenu) {
-        let key = ObjectIdentifier(item)
+    ///
+    /// Returns true when the subtree cannot be patched in place — a child count
+    /// changed or a child switched between fold and submenu modes, at any depth.
+    /// The caller must then rebuild from the outermost fold item: ancestors'
+    /// `foldChildItems` lists are flat and include nested grandchildren, so a
+    /// local rebuild at a nested level would strand the ancestors' references
+    /// to the replaced NSMenuItems. Across such rebuilds, nested expansion
+    /// state survives only via `expandedFoldLines`, which is keyed by title
+    /// by design; see `transferFoldExpansionState`.
+    private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, oldNode: MenuItemNode?, in menu: NSMenu) -> Bool {
+        // The item's own view is already patched by the caller: applyUpdate
+        // for the outermost fold item, the child loop below for nested ones.
 
-        // Update the fold parent's view
-        let params = MenuLineParameters(line: newNode.workingLine)
-        if let foldView = item.view as? FoldableMenuItemView {
-            let titleInfo = foldableTitleInfo(with: params)
-            foldView.update(
-                attributedTitle: titleInfo.normal,
-                highlightedTitle: titleInfo.highlighted,
-                image: params.image,
-                badge: params.badge
-            )
-        }
-
-        guard let existingChildren = foldChildItems[key] else {
-            // No existing fold children — build from scratch
+        guard let directItems = directFoldChildItems(of: item) else {
+            // No existing fold children — build from scratch. This can only be
+            // the outermost fold item: the caller's pre-scan rejects children
+            // whose fold-parent state changed, so the recursion below is only
+            // entered for children that already have an entry. Building here
+            // therefore cannot strand ancestor bookkeeping.
             buildFoldChildren(for: item, from: newNode, into: menu)
-            return
+            return false
         }
 
         // Patch direct children in-place where possible
-        let newDirectChildren = newNode.children
+        let newRendered = Self.renderableFoldChildren(of: newNode)
+        let oldRendered = oldNode.map(Self.renderableFoldChildren)
 
-        // Count only direct children (not nested fold grandchildren) in existing list
+        // Child count changed — the subtree must be rebuilt from the top.
+        guard directItems.count == newRendered.count else {
+            return true
+        }
+
+        // Detect shape changes among direct children before patching anything;
+        // these also require a rebuild from the top.
+        for (idx, entry) in newRendered.enumerated() {
+            // A child switching between separator and regular item cannot be
+            // patched in place.
+            if directItems[idx].isSeparatorItem != entry.node.isSeparator {
+                return true
+            }
+            guard let childParams = entry.params else { continue }
+            let wasFoldParent = foldChildItems[ObjectIdentifier(directItems[idx])] != nil
+            let isFoldParent = childParams.fold && !entry.node.children.isEmpty
+            if wasFoldParent != isFoldParent {
+                return true
+            }
+        }
+
+        // Expansion-key moves are batched and applied atomically after the
+        // loop, so sibling renames that exchange titles keep both keys. When
+        // the loop bails into a rebuild instead, pending moves are dropped:
+        // transferFoldExpansionState recomputes every move from the node trees.
+        var keyMoves: [(remove: String, insert: String)] = []
+
+        for (idx, entry) in newRendered.enumerated() {
+            let existingChild = directItems[idx]
+
+            guard let childParams = entry.params else {
+                // Separators don't need patching
+                continue
+            }
+
+            let newChild = entry.node
+            let isFoldParent = childParams.fold && !newChild.children.isEmpty
+
+            if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
+                let titleInfo = foldableTitleInfo(with: childParams)
+                foldView.update(
+                    attributedTitle: titleInfo.normal,
+                    highlightedTitle: titleInfo.highlighted,
+                    image: childParams.image,
+                    badge: childParams.badge
+                )
+                // Keep the title-keyed fold state working after a rename:
+                // toggleFoldItem and collapseNestedFolds read the title from
+                // representedObject.
+                if let move = foldExpansionKeyMove(for: existingChild, to: childParams) {
+                    keyMoves.append(move)
+                }
+                existingChild.representedObject = childParams
+            } else if existingChild.view == nil {
+                patchMenuItem(existingChild, with: childParams)
+            }
+
+            let oldChild: MenuItemNode? = if let oldRendered, oldRendered.indices.contains(idx) {
+                oldRendered[idx].node
+            } else {
+                nil
+            }
+
+            // Recursively update nested fold children
+            if isFoldParent {
+                if updateFoldChildren(of: existingChild, from: newChild, oldNode: oldChild, in: menu) {
+                    return true
+                }
+            } else if let oldChild, oldChild.children != newChild.children {
+                // A fold child can itself be a submenu parent. Mirror the
+                // non-fold update path: refresh its submenu contents (clearing
+                // it when the children are gone) and restore action ownership.
+                updateSubmenu(of: existingChild, oldChildren: oldChild.children, newChildren: newChild.children)
+                configureAction(on: existingChild, for: childParams)
+            }
+        }
+        applyFoldExpansionKeyMoves(keyMoves)
+        return false
+    }
+
+    /// The expansion-key move an in-place rename of a fold parent requires,
+    /// or nil when no key moves. `expandedFoldLines` must track the current
+    /// title, both so a later rebuild can restore the expansion and so
+    /// collapsing evicts the current key instead of stranding the old one.
+    /// Keys move only for expanded folds: a collapsed fold owns no key, and
+    /// removing its old title could strip the key from an unrelated expanded
+    /// fold sharing it. Must be computed before `representedObject` is
+    /// replaced — the old title is read from it.
+    private func foldExpansionKeyMove(for item: NSMenuItem, to newParams: MenuLineParameters) -> (remove: String, insert: String)? {
+        guard let oldParams = item.representedObject as? MenuLineParameters,
+              oldParams.title != newParams.title,
+              expandedFoldItems.contains(ObjectIdentifier(item))
+        else { return nil }
+        return (oldParams.title, newParams.title)
+    }
+
+    /// Apply a batch of expansion-key moves atomically: all removals first,
+    /// then all insertions, so sibling renames that exchange titles cannot
+    /// clobber a just-inserted destination key.
+    private func applyFoldExpansionKeyMoves(_ moves: [(remove: String, insert: String)]) {
+        expandedFoldLines.subtract(moves.map(\.remove))
+        expandedFoldLines.formUnion(moves.map(\.insert))
+    }
+
+    private func moveFoldExpansionKey(for item: NSMenuItem, to newParams: MenuLineParameters) {
+        guard let move = foldExpansionKeyMove(for: item, to: newParams) else { return }
+        applyFoldExpansionKeyMoves([move])
+    }
+
+    /// Collect the expansion keys owned by a departing fold subtree so they
+    /// cannot pre-expand unrelated folds that reuse the titles later.
+    private func evictFoldExpansionKeys(of item: NSMenuItem, into removals: inout Set<String>) {
+        guard let children = directFoldChildItems(of: item) else { return }
+        if expandedFoldItems.contains(ObjectIdentifier(item)),
+           let params = item.representedObject as? MenuLineParameters {
+            removals.insert(params.title)
+        }
+        for child in children {
+            evictFoldExpansionKeys(of: child, into: &removals)
+        }
+    }
+
+    /// Fold-child nodes that render as NSMenuItems, paired with their parsed
+    /// parameters (nil for separators). buildMenuTree already excludes
+    /// dropdown=false lines from the node tree, but the predicate lives in
+    /// one place so every fold update path counts children exactly as
+    /// buildFoldChildren renders them and the paths cannot drift.
+    private static func renderableFoldChildren(of node: MenuItemNode) -> [(node: MenuItemNode, params: MenuLineParameters?)] {
+        node.children.compactMap { child in
+            if child.isSeparator {
+                return (child, nil)
+            }
+            let params = MenuLineParameters(line: child.workingLine)
+            guard params.dropdown else { return nil }
+            return (child, params)
+        }
+    }
+
+    /// Direct fold child NSMenuItems of a fold parent, skipping the nested
+    /// grandchildren that share the same flat `foldChildItems` list.
+    private func directFoldChildItems(of item: NSMenuItem) -> [NSMenuItem]? {
+        guard let existingChildren = foldChildItems[ObjectIdentifier(item)] else { return nil }
         var directItems: [NSMenuItem] = []
         var index = 0
         while index < existingChildren.count {
             let child = existingChildren[index]
-            let childKey = ObjectIdentifier(child)
             directItems.append(child)
-            if let nestedChildren = foldChildItems[childKey] {
+            if let nestedChildren = foldChildItems[ObjectIdentifier(child)] {
                 index += 1 + nestedChildren.count
             } else {
                 index += 1
             }
         }
+        return directItems
+    }
 
-        // Simple approach: if direct child count matches, patch in-place.
-        // Otherwise, tear down and rebuild (preserving parent expansion state).
-        if directItems.count == newDirectChildren.count {
-            for (idx, newChild) in newDirectChildren.enumerated() {
-                guard idx < directItems.count else { break }
-                let existingChild = directItems[idx]
+    /// Carry fold expansion state over to renamed fold parents before a
+    /// subtree rebuild. Rebuilt NSMenuItems lose their `expandedFoldItems`
+    /// identity, so expansion survives only via the title-keyed
+    /// `expandedFoldLines` — an expanded fold whose title changes in the same
+    /// update would otherwise come back collapsed.
+    ///
+    /// Children are matched per level by equal title first; those pairs keep
+    /// their state through `expandedFoldLines` untouched. The leftovers are
+    /// treated as renames only when the unmatched old and new children pair
+    /// 1:1 in relative order; a rename amid simultaneous sibling inserts or
+    /// removals cannot be paired reliably, so those folds surrender their
+    /// keys and come back collapsed (best effort). One rule throughout: keys
+    /// move only for expanded folds, all removals apply before all
+    /// insertions so crossing renames cannot clobber a just-moved key, and
+    /// departing expanded folds surrender their keys so they cannot
+    /// pre-expand an unrelated later fold.
+    private func transferFoldExpansionState(of item: NSMenuItem, from oldNode: MenuItemNode?, to newNode: MenuItemNode) {
+        var removals = Set<String>()
+        var insertions = Set<String>()
+        collectFoldExpansionTransfers(of: item, from: oldNode, to: newNode, removals: &removals, insertions: &insertions)
+        expandedFoldLines.subtract(removals)
+        expandedFoldLines.formUnion(insertions)
+    }
 
-                if newChild.isSeparator {
-                    // Separators don't need patching
-                    continue
-                }
+    private func collectFoldExpansionTransfers(
+        of item: NSMenuItem,
+        from oldNode: MenuItemNode?,
+        to newNode: MenuItemNode,
+        removals: inout Set<String>,
+        insertions: inout Set<String>
+    ) {
+        guard let oldNode, let directItems = directFoldChildItems(of: item) else { return }
 
-                let childParams = MenuLineParameters(line: newChild.workingLine)
-                if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
-                    let titleInfo = foldableTitleInfo(with: childParams)
-                    foldView.update(
-                        attributedTitle: titleInfo.normal,
-                        highlightedTitle: titleInfo.highlighted,
-                        image: childParams.image,
-                        badge: childParams.badge
-                    )
-                } else if existingChild.view == nil {
-                    patchMenuItem(existingChild, with: childParams)
-                }
+        var oldEntries: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
+        for (entry, childItem) in zip(Self.renderableFoldChildren(of: oldNode), directItems) {
+            guard let params = entry.params else { continue }
+            oldEntries.append((entry.node, childItem, params.title))
+        }
+        let newEntries: [(node: MenuItemNode, title: String)] = Self.renderableFoldChildren(of: newNode)
+            .compactMap { entry in entry.params.map { (entry.node, $0.title) } }
 
-                // Recursively update nested fold children
-                let childKey = ObjectIdentifier(existingChild)
-                if childParams.fold, foldChildItems[childKey] != nil {
-                    updateFoldChildren(of: existingChild, from: newChild, in: menu)
-                }
+        var matchedNewIndices = Set<Int>()
+        var unmatchedOld: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
+        for entry in oldEntries {
+            let match = newEntries.indices.first {
+                !matchedNewIndices.contains($0) && newEntries[$0].title == entry.title
             }
-        } else {
-            // Child count changed — rebuild (but preserve parent expansion state)
-            removeFoldChildren(of: item, from: menu)
-            buildFoldChildren(for: item, from: newNode, into: menu)
+            if let match {
+                matchedNewIndices.insert(match)
+                collectFoldExpansionTransfers(of: entry.item, from: entry.node, to: newEntries[match].node,
+                                              removals: &removals, insertions: &insertions)
+            } else {
+                unmatchedOld.append(entry)
+            }
+        }
+        let unmatchedNew = newEntries.indices
+            .filter { !matchedNewIndices.contains($0) }
+            .map { newEntries[$0] }
+
+        guard unmatchedOld.count == unmatchedNew.count else {
+            // Siblings were inserted or removed: the leftovers cannot be
+            // paired reliably, so departing expanded folds surrender their
+            // keys instead of leaving them to pre-expand future look-alikes.
+            for old in unmatchedOld {
+                evictFoldExpansionKeys(of: old.item, into: &removals)
+            }
+            return
+        }
+        for (old, new) in zip(unmatchedOld, unmatchedNew) {
+            // Keys move only for expanded folds: a leaf row or collapsed fold
+            // owns no key, and evicting its title could strip the key from an
+            // unrelated expanded fold sharing it.
+            if foldChildItems[ObjectIdentifier(old.item)] != nil,
+               expandedFoldItems.contains(ObjectIdentifier(old.item)) {
+                removals.insert(old.title)
+                insertions.insert(new.title)
+            }
+            collectFoldExpansionTransfers(of: old.item, from: old.node, to: new.node,
+                                          removals: &removals, insertions: &insertions)
         }
     }
 
