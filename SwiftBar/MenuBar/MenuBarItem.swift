@@ -23,7 +23,13 @@ class MenubarItem: NSObject {
 
     var barItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
+        // The action must fire on mouse *up*: on mouse down the button cell is
+        // still inside trackMouse(_:inRect:ofView:untilMouseUp:), and an action
+        // that opens the menu from there lets the menu's tracking session
+        // consume the physical mouse-up. The cell's tracking loop then resumes
+        // waiting for a mouse-up that never arrives and silently swallows
+        // subsequent clicks until the cursor leaves the button.
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         return item
     }()
 
@@ -1592,7 +1598,7 @@ extension MenubarItem {
         guard barItem.menu == nil else { return }
         guard let eventType = NSApp.currentEvent?.type else { return }
 
-        if eventType == .rightMouseDown {
+        if Self.eventOpensMenuWithoutTitleAction(eventType) {
             showMenu()
             return
         }
@@ -1602,6 +1608,11 @@ extension MenubarItem {
         }
 
         showMenu()
+    }
+
+    /// A right click always opens the menu, never the title line's action.
+    static func eventOpensMenuWithoutTitleAction(_ eventType: NSEvent.EventType) -> Bool {
+        eventType == .rightMouseUp || eventType == .rightMouseDown
     }
 
     func showMenu() {
