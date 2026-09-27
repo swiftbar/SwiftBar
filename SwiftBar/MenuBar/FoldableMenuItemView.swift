@@ -50,6 +50,10 @@ class FoldableMenuItemView: NSView {
         badgeView.badgeText
     }
 
+    var displayedBadgeFrame: NSRect {
+        badgeView.frame
+    }
+
     var displayedIconSize: NSSize {
         NSSize(width: iconWidthConstraint?.constant ?? 0, height: iconHeightConstraint?.constant ?? 0)
     }
@@ -314,12 +318,16 @@ private final class FoldableMenuItemBadgeView: NSView {
 
     override func layout() {
         super.layout()
-        let labelSize = label.intrinsicContentSize
+        // Span the label across the full pill width and rely on the centered
+        // text alignment: sizing the label to exactly its intrinsic width makes
+        // NSTextField draw the text offset to the right of the cell's center,
+        // which pushed the badge text right of the pill's center.
+        let labelHeight = label.intrinsicContentSize.height
         label.frame = NSRect(
-            x: round((bounds.width - labelSize.width) / 2),
-            y: round((bounds.height - labelSize.height) / 2),
-            width: labelSize.width,
-            height: labelSize.height
+            x: 0,
+            y: round((bounds.height - labelHeight) / 2),
+            width: bounds.width,
+            height: labelHeight
         )
     }
 
