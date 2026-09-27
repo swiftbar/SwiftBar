@@ -1106,6 +1106,7 @@ extension PluginManager {
                 lines.append("  metadata type: \(metadata?.type.rawValue ?? "none")")
                 lines.append("  metadata alwaysVisible: \(boolString(metadata?.alwaysVisible == true))")
                 lines.append("  metadata refreshOnOpen: \(boolString(metadata?.refreshOnOpen == true))")
+                lines.append("  metadata collapseOnClose: \(boolString(metadata?.collapseOnClose == true))")
                 lines.append("  metadata runInBash: \(boolString(metadata?.shouldRunInBash ?? true))")
                 lines.append("  metadata persistentWebView: \(boolString(metadata?.persistentWebView == true))")
                 lines.append("  metadata schedule: \(stringValue(metadata?.schedule))")

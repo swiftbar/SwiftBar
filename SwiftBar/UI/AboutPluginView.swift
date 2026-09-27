@@ -61,7 +61,7 @@ struct AboutPluginView: View {
                 }
 
                 // Display additional plugin settings
-                if md.type != .Executable || md.runInBash == false || md.refreshOnOpen || md.persistentWebView {
+                if md.type != .Executable || md.runInBash == false || md.refreshOnOpen || md.collapseOnClose || md.persistentWebView {
                     Divider().padding(.vertical, 4)
                     Text("Settings:").font(.headline).padding(.top, 4)
 
@@ -79,6 +79,10 @@ struct AboutPluginView: View {
 
                     if md.refreshOnOpen {
                         LabelView(label: "Refresh on Open:", value: "true")
+                    }
+
+                    if md.collapseOnClose {
+                        LabelView(label: "Collapse on Close:", value: "true")
                     }
 
                     if md.persistentWebView {

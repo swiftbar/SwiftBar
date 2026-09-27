@@ -247,6 +247,13 @@ extension MenubarItem: NSMenuDelegate {
         }
         highlightedFoldItem = nil
 
+        // Plugins can opt out of fold state persistence with the
+        // collapseOnClose metadata flag: every fold section returns to
+        // collapsed when the menu closes, so the next open starts compact.
+        if plugin?.metadata?.collapseOnClose == true {
+            collapseAllFolds()
+        }
+
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
             menuUpdateQueue.addOperation { [weak self] in
@@ -1343,6 +1350,34 @@ extension MenubarItem {
             if let nestedChildren = foldChildItems[key] {
                 nestedChildren.forEach { $0.isHidden = true }
                 collapseNestedFolds(in: nestedChildren)
+            }
+        }
+    }
+
+    /// Collapse every fold section so the menu opens compact on the next open.
+    /// Clears the saved expansion state wholesale, including entries for fold
+    /// lines that are not present in the menu right now (a full rebuild keeps
+    /// `expandedFoldLines` for lines it dropped, and a fold that turned into a
+    /// submenu leaves no `foldChildItems` entry behind), then resets the fold
+    /// views and children that are live in the menu.
+    private func collapseAllFolds() {
+        expandedFoldItems.removeAll()
+        expandedFoldLines.removeAll()
+        foldAllFoldViews(in: statusBarMenu)
+    }
+
+    /// Fold every FoldableMenuItemView and hide its children, recursing into
+    /// submenus for fold sections nested inside regular submenu items.
+    private func foldAllFoldViews(in menu: NSMenu) {
+        for item in menu.items {
+            if let view = item.view as? FoldableMenuItemView {
+                view.isFolded = true
+            }
+            if let children = foldChildItems[ObjectIdentifier(item)] {
+                children.forEach { $0.isHidden = true }
+            }
+            if let submenu = item.submenu {
+                foldAllFoldViews(in: submenu)
             }
         }
     }

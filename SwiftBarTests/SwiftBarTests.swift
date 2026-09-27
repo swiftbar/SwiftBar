@@ -4065,6 +4065,259 @@ struct FoldMenuItemBuildTests {
         #expect(childItem2.isHidden == true)
     }
 
+    @MainActor @Test func testMenuDidClose_foldStatePersistsByDefault() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(foldParent)
+        item.menuDidClose(item.statusBarMenu)
+
+        let foldIndex = item.statusBarMenu.index(of: foldParent)
+        let foldChild = item.statusBarMenu.items[foldIndex + 1]
+        let foldView = try #require(foldParent.view as? FoldableMenuItemView)
+        #expect(foldChild.isHidden == false)
+        #expect(foldView.isFolded == false)
+    }
+
+    @MainActor @Test func testMenuDidClose_collapseOnCloseResetsFoldsToCollapsed() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(collapseOnClose: true)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        --Ethernet: Off
+        Services | fold=true
+        --Gateway: Up
+        """)
+
+        let foldParents = item.statusBarMenu.items.filter { $0.view is FoldableMenuItemView }
+        #expect(foldParents.count == 2)
+        foldParents.forEach { item.toggleFoldItem($0) }
+        item.menuDidClose(item.statusBarMenu)
+
+        for foldParent in foldParents {
+            let foldIndex = item.statusBarMenu.index(of: foldParent)
+            let foldChild = item.statusBarMenu.items[foldIndex + 1]
+            let foldView = try #require(foldParent.view as? FoldableMenuItemView)
+            #expect(foldChild.isHidden == true)
+            #expect(foldView.isFolded == true)
+        }
+
+        // The toggle state was reset too: the next toggle expands again
+        let firstFoldParent = try #require(foldParents.first)
+        item.toggleFoldItem(firstFoldParent)
+        let firstFoldChild = item.statusBarMenu.items[item.statusBarMenu.index(of: firstFoldParent) + 1]
+        #expect(firstFoldChild.isHidden == false)
+    }
+
+    @MainActor @Test func testMenuDidClose_collapseOnCloseCollapsesNestedFolds() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(collapseOnClose: true)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Interfaces | fold=true
+        ----Wi-Fi: Connected
+        """)
+
+        let outerParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(outerParent)
+        let innerParent = try #require(item.statusBarMenu.items.first { $0 !== outerParent && $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(innerParent)
+
+        let innerChild = item.statusBarMenu.items[item.statusBarMenu.index(of: innerParent) + 1]
+        #expect(innerChild.isHidden == false)
+
+        item.menuDidClose(item.statusBarMenu)
+
+        #expect(item.statusBarMenu.items[item.statusBarMenu.index(of: outerParent) + 1].isHidden == true)
+        #expect(innerChild.isHidden == true)
+        #expect(try #require(outerParent.view as? FoldableMenuItemView).isFolded == true)
+        #expect(try #require(innerParent.view as? FoldableMenuItemView).isFolded == true)
+    }
+
+    @MainActor @Test func testMenuDidClose_collapseOnCloseCollapsesFoldInsideSubmenu() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(collapseOnClose: true)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Section
+        --Network | fold=true
+        ----Wi-Fi: Connected
+        """)
+
+        let sectionItem = try #require(item.statusBarMenu.items.first { $0.submenu != nil })
+        let submenu = try #require(sectionItem.submenu)
+        let foldParent = try #require(submenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(foldParent)
+
+        let foldChild = submenu.items[submenu.index(of: foldParent) + 1]
+        #expect(foldChild.isHidden == false)
+
+        item.menuDidClose(item.statusBarMenu)
+
+        #expect(foldChild.isHidden == true)
+        #expect(try #require(foldParent.view as? FoldableMenuItemView).isFolded == true)
+    }
+
+    @MainActor @Test func testFullRebuild_collapseOnCloseClearsStateForFoldsAbsentAtClose() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(collapseOnClose: true)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(foldParent)
+
+        // A header line count change forces a full rebuild that drops the
+        // fold line while keeping its line-based expansion state
+        item._updateMenu(content: """
+        Title
+        Second Title
+        ---
+        Other
+        """)
+        #expect(item.statusBarMenu.items.allSatisfy { !($0.view is FoldableMenuItemView) })
+
+        item.menuDidClose(item.statusBarMenu)
+
+        // Another full rebuild brings the fold line back; it must not
+        // resurrect the expansion recorded before the close
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let rebuiltParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let rebuiltChild = item.statusBarMenu.items[item.statusBarMenu.index(of: rebuiltParent) + 1]
+        #expect(rebuiltChild.isHidden == true)
+        #expect(try #require(rebuiltParent.view as? FoldableMenuItemView).isFolded == true)
+    }
+
+    @MainActor @Test func testFullRebuild_foldStateSurvivesByDefault() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(foldParent)
+        item.menuDidClose(item.statusBarMenu)
+
+        // A header line count change forces a full rebuild
+        item._updateMenu(content: """
+        Title
+        Second Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let rebuiltParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let rebuiltChild = item.statusBarMenu.items[item.statusBarMenu.index(of: rebuiltParent) + 1]
+        let rebuiltView = try #require(rebuiltParent.view as? FoldableMenuItemView)
+        #expect(rebuiltChild.isHidden == false)
+        #expect(rebuiltView.isFolded == false)
+    }
+
+    @MainActor @Test func testFullRebuild_collapseOnCloseStartsCollapsedAfterMenuClose() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(collapseOnClose: true)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(foldParent)
+        item.menuDidClose(item.statusBarMenu)
+
+        // A header line count change forces a full rebuild
+        item._updateMenu(content: """
+        Title
+        Second Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let rebuiltParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let rebuiltChild = item.statusBarMenu.items[item.statusBarMenu.index(of: rebuiltParent) + 1]
+        let rebuiltView = try #require(rebuiltParent.view as? FoldableMenuItemView)
+        #expect(rebuiltChild.isHidden == true)
+        #expect(rebuiltView.isFolded == true)
+    }
+
+    @MainActor @Test func testFullRebuild_collapseOnCloseKeepsExpansionWhileMenuStaysOpen() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(collapseOnClose: true)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        item.toggleFoldItem(foldParent)
+
+        // Without a menu close in between, a full rebuild keeps the expansion
+        item._updateMenu(content: """
+        Title
+        Second Title
+        ---
+        Network | fold=true
+        --Wi-Fi: Connected
+        """)
+
+        let rebuiltParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let rebuiltChild = item.statusBarMenu.items[item.statusBarMenu.index(of: rebuiltParent) + 1]
+        #expect(rebuiltChild.isHidden == false)
+    }
+
+    @Test func testPluginMetadata_parsesCollapseOnClose() throws {
+        let script = """
+        #!/bin/bash
+        # <swiftbar.collapseOnClose>true</swiftbar.collapseOnClose>
+        """
+        let metadata = PluginMetadata.parser(script: script)
+        #expect(metadata.collapseOnClose == true)
+        #expect(metadata.genereteMetadataString().contains("<swiftbar.collapseOnClose>true</swiftbar.collapseOnClose>"))
+
+        let defaultMetadata = PluginMetadata.parser(script: "#!/bin/bash")
+        #expect(defaultMetadata.collapseOnClose == false)
+        #expect(!defaultMetadata.genereteMetadataString().contains("collapseOnClose"))
+    }
+
     @MainActor @Test func testFullBuild_foldItemViewCarriesBadgeAndNormalizedIconSize() throws {
         let item = makeMenuBarItem()
         let imageBase64 = try makeBase64PNG(size: NSSize(width: 54, height: 54))
