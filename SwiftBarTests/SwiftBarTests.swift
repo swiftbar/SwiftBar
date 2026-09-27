@@ -4353,3 +4353,79 @@ struct PluginStalenessTests {
         #expect(environment.lastWakeDate == wake)
     }
 }
+
+// MARK: - Menu Bar Recovery Gating Tests
+
+struct MenuBarRecoveryGatingTests {
+    private let macOS26 = OperatingSystemVersion(majorVersion: 26, minorVersion: 0, patchVersion: 0)
+
+    @Test func reopenRightAfterWakeIsSuppressed() {
+        // macOS 26 delivers reopen events to the running process 2-4 seconds
+        // after wake from sleep with no user interaction.
+        let now = Date()
+        let wake = now.addingTimeInterval(-3)
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastWakeDate: wake, operatingSystemVersion: macOS26))
+    }
+
+    @Test func reopenAtEdgeOfWakeWindowIsSuppressed() {
+        let now = Date()
+        let wake = now.addingTimeInterval(-(menuBarRecoveryWakeSuppressionInterval - 1))
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastWakeDate: wake, operatingSystemVersion: macOS26))
+    }
+
+    @Test func reopenLongAfterWakeIsAllowed() {
+        // A genuine user relaunch well after wake must keep the recovery path.
+        let now = Date()
+        let wake = now.addingTimeInterval(-3600)
+
+        #expect(shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastWakeDate: wake, operatingSystemVersion: macOS26))
+    }
+
+    @Test func reopenTrailingURLSchemeActivationIsSuppressed() {
+        // A reopen event trails the GURL event of every swiftbar:// URL open.
+        let now = Date()
+        let urlOpen = now.addingTimeInterval(-1)
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastHandledEventDate: urlOpen, operatingSystemVersion: macOS26))
+    }
+
+    @Test func reopenLongAfterHandledEventIsAllowed() {
+        let now = Date()
+        let urlOpen = now.addingTimeInterval(-300)
+
+        #expect(shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastHandledEventDate: urlOpen, operatingSystemVersion: macOS26))
+    }
+
+    @Test func repeatedReopenWithinDebounceWindowIsSuppressed() {
+        // Queued reopen events must not stack alerts behind each dismissal.
+        let now = Date()
+        let lastAlert = now.addingTimeInterval(-5)
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastRecoveryAlertDate: lastAlert, operatingSystemVersion: macOS26))
+    }
+
+    @Test func reopenAfterDebounceWindowIsAllowed() {
+        let now = Date()
+        let lastAlert = now.addingTimeInterval(-120)
+
+        #expect(shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: now, lastRecoveryAlertDate: lastAlert, operatingSystemVersion: macOS26))
+    }
+
+    @Test func genuineReopenWithNoPriorEventsIsAllowed() {
+        #expect(shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: Date(), operatingSystemVersion: macOS26))
+    }
+
+    @Test func visibleWindowsSuppressRegardlessOfTimestamps() {
+        let now = Date()
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: true, at: now, lastWakeDate: now.addingTimeInterval(-3600), operatingSystemVersion: macOS26))
+    }
+
+    @Test func gatingDoesNotEnableAlertBeforeMacOS26() {
+        let macOS15 = OperatingSystemVersion(majorVersion: 15, minorVersion: 6, patchVersion: 0)
+
+        #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: Date(), operatingSystemVersion: macOS15))
+    }
+}
