@@ -23,7 +23,13 @@ class MenubarItem: NSObject {
 
     var barItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.sendAction(on: [.leftMouseDown, .rightMouseDown])
+        // The action must fire on mouse *up*: on mouse down the button cell is
+        // still inside trackMouse(_:inRect:ofView:untilMouseUp:), and an action
+        // that opens the menu from there lets the menu's tracking session
+        // consume the physical mouse-up. The cell's tracking loop then resumes
+        // waiting for a mouse-up that never arrives and silently swallows
+        // subsequent clicks until the cursor leaves the button.
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         return item
     }()
 
@@ -117,6 +123,7 @@ class MenubarItem: NSObject {
         guard plugin != nil else {
             barItem.button?.title = title
             buildStandardMenu()
+            syncMenuAttachment()
             return
         }
         webPopover.delegate = self
@@ -240,6 +247,10 @@ extension MenubarItem: NSMenuDelegate {
     func menuDidClose(_ menu: NSMenu) {
         isOpen = false
         showsAllStandardItemsWhileOpen = false
+        // Also resyncs the menu attachment (isOpen is false again): items
+        // whose clicks are handled in barItemClicked get the menu detached,
+        // everyone else keeps it attached so AppKit handles the next click
+        // natively.
         setMenuTitle(title: currentTitleLine)
         hotKeys.forEach { $0.isPaused = false }
         if let foldView = highlightedFoldItem?.view as? FoldableMenuItemView {
@@ -262,8 +273,6 @@ extension MenubarItem: NSMenuDelegate {
                 self?.updateMenu(content: self?.plugin?.content)
             }
         }
-        // since we're handling click in barItemClicked we need to remove the menu
-        barItem.menu = nil
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
@@ -593,6 +602,10 @@ extension MenubarItem {
     func _updateMenu(content: String?) {
         dispatchPrecondition(condition: .onQueue(.main))
         barItem.button?.appearsDisabled = false
+        // The attachment decision depends on plugin metadata (refreshOnOpen,
+        // type), which can change without a title change — the incremental
+        // path skips setMenuTitle then, so re-sync on every content update.
+        defer { syncMenuAttachment() }
 
         if plugin?.lastState == .Failed {
             fullRebuildMenu(content: nil)
@@ -1477,6 +1490,7 @@ extension MenubarItem {
         }
 
         barItem.button?.attributedTitle = attributedTitle
+        syncMenuAttachment()
     }
 
     func cycleThroughTitles() {
@@ -1619,9 +1633,14 @@ extension MenubarItem {
     }
 
     @objc func barItemClicked() {
+        // Defensive: with the menu attached to the status item AppKit owns
+        // the whole click (including press-drag-release) and does not send
+        // the button action, so this should never fire; if it ever does,
+        // there is nothing to intercept.
+        guard barItem.menu == nil else { return }
         guard let eventType = NSApp.currentEvent?.type else { return }
 
-        if eventType == .rightMouseDown {
+        if Self.eventOpensMenuWithoutTitleAction(eventType) {
             showMenu()
             return
         }
@@ -1633,6 +1652,24 @@ extension MenubarItem {
         showMenu()
     }
 
+    /// A right click always opens the menu, never the title line's action.
+    /// The bar button dispatches its action on mouse up, but performClick-
+    /// driven opens (hotkeys) dispatch with whatever event happens to be
+    /// current — a stale right mouse down must still route to the menu.
+    static func eventOpensMenuWithoutTitleAction(_ eventType: NSEvent.EventType) -> Bool {
+        eventType == .rightMouseUp || eventType == .rightMouseDown
+    }
+
+    /// Opens the menu for items on the detached path (title line with its
+    /// own click action, or refreshOnOpen executables). Known limitation:
+    /// because the button action dispatches on mouse up, the menu opens on
+    /// release, and press-drag-release cannot select an item here — a menu
+    /// opened programmatically cannot adopt an already-held press, and
+    /// opening it during the press would let its tracking session consume
+    /// the mouse-up the button cell is waiting for, leaving the cell
+    /// swallowing every subsequent click. Only a menu attached to the
+    /// status item before the press supports the full native gesture; see
+    /// syncMenuAttachment().
     func showMenu() {
         if refreshOnOpen, plugin?.type == .Executable {
             refreshAndShowMenu()
@@ -1652,6 +1689,29 @@ extension MenubarItem {
         _updateMenu(content: content)
         barItem.menu = statusBarMenu
         barItem.button?.performClick(nil)
+    }
+
+    /// Attaches the status bar menu directly to the status item whenever
+    /// clicks don't need to be intercepted. With the menu attached, AppKit
+    /// owns the whole click natively, so press-drag-release on a menu item
+    /// runs its action (#559) — opening the detached menu with a simulated
+    /// `performClick(nil)` starts a tracking session that never sees the
+    /// still-held physical press and ignores the release. The menu stays
+    /// detached when the title line has its own click action (a left click
+    /// must run it instead of opening the menu) or when the plugin must
+    /// regenerate its content before the menu is shown (`refreshOnOpen`);
+    /// those keep the `barItemClicked`/`showMenu` path.
+    func syncMenuAttachment() {
+        guard !isOpen else { return }
+        let attach = Self.shouldAttachMenuToBarItem(
+            titleHasAction: !Self.actionKinds(for: MenuLineParameters(line: currentTitleLine)).isEmpty,
+            refreshesOnOpen: refreshOnOpen && plugin?.type == .Executable
+        )
+        barItem.menu = attach ? statusBarMenu : nil
+    }
+
+    static func shouldAttachMenuToBarItem(titleHasAction: Bool, refreshesOnOpen: Bool) -> Bool {
+        !titleHasAction && !refreshesOnOpen
     }
 
     func dimOnManualRefresh() {
