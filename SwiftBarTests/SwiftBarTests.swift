@@ -2232,6 +2232,70 @@ private final class StalePresentationMenu: NSMenu {
     }
 }
 
+struct MenubarItemMenuAttachmentTests {
+    @MainActor
+    private func makeMenuBarItem(content: String?, metadata: PluginMetadata? = nil) -> MenubarItem {
+        let plugin = TestPlugin(id: "attach-test-plugin", file: "/tmp/attach-test-plugin.5s.sh", content: content, lastState: .Success)
+        plugin.metadata = metadata
+        let item = MenubarItem(title: "Test", statusBarMenu: NSMenu(title: ""))
+        item.plugin = plugin
+        item.statusBarMenu.delegate = item
+        item._updateMenu(content: content)
+        return item
+    }
+
+    @MainActor @Test func testMenuAttachment_attachedWhenTitleHasNoAction() throws {
+        let item = makeMenuBarItem(content: "Title\n---\nRow | bash=/bin/echo")
+
+        #expect(item.barItem.menu === item.statusBarMenu)
+    }
+
+    @MainActor @Test func testMenuAttachment_detachedWhenTitleHasAction() throws {
+        let item = makeMenuBarItem(content: "Title | bash=/bin/echo\n---\nRow")
+
+        #expect(item.barItem.menu == nil)
+    }
+
+    @MainActor @Test func testMenuAttachment_detachedForRefreshOnOpenExecutable() throws {
+        let item = makeMenuBarItem(content: "Title\n---\nRow", metadata: PluginMetadata(refreshOnOpen: true))
+
+        #expect(item.barItem.menu == nil)
+    }
+
+    @MainActor @Test func testMenuAttachment_followsTitleChangesAcrossUpdates() throws {
+        let item = makeMenuBarItem(content: "Title\n---\nRow")
+        #expect(item.barItem.menu === item.statusBarMenu)
+
+        item._updateMenu(content: "Title | bash=/bin/echo\n---\nRow")
+        #expect(item.barItem.menu == nil)
+
+        item._updateMenu(content: "Title\n---\nRow")
+        #expect(item.barItem.menu === item.statusBarMenu)
+    }
+
+    @MainActor @Test func testMenuAttachment_followsRefreshOnOpenMetadataChangeWithoutTitleChange() throws {
+        let content = "Title\n---\nRow"
+        let item = makeMenuBarItem(content: content)
+        #expect(item.barItem.menu === item.statusBarMenu)
+
+        // Same content: the incremental path skips setMenuTitle, so the
+        // update itself must resync the attachment.
+        item.plugin?.metadata = PluginMetadata(refreshOnOpen: true)
+        item._updateMenu(content: content)
+        #expect(item.barItem.menu == nil)
+
+        item.plugin?.metadata = PluginMetadata(refreshOnOpen: false)
+        item._updateMenu(content: content)
+        #expect(item.barItem.menu === item.statusBarMenu)
+    }
+
+    @MainActor @Test func testMenuAttachment_attachedForDefaultItemOnInit() throws {
+        let item = MenubarItem(title: "SwiftBar")
+
+        #expect(item.barItem.menu === item.statusBarMenu)
+    }
+}
+
 struct MenubarItemIncrementalUpdateTests {
     @MainActor
     private func makeMenuBarItem(statusBarMenu: NSMenu = NSMenu(title: "")) -> MenubarItem {

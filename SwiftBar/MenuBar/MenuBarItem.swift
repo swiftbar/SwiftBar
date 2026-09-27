@@ -247,6 +247,10 @@ extension MenubarItem: NSMenuDelegate {
     func menuDidClose(_ menu: NSMenu) {
         isOpen = false
         showsAllStandardItemsWhileOpen = false
+        // Also resyncs the menu attachment (isOpen is false again): items
+        // whose clicks are handled in barItemClicked get the menu detached,
+        // everyone else keeps it attached so AppKit handles the next click
+        // natively.
         setMenuTitle(title: currentTitleLine)
         hotKeys.forEach { $0.isPaused = false }
         if let foldView = highlightedFoldItem?.view as? FoldableMenuItemView {
@@ -262,9 +266,6 @@ extension MenubarItem: NSMenuDelegate {
                 self?.updateMenu(content: self?.plugin?.content)
             }
         }
-        // setMenuTitle above resynced the menu attachment: items whose clicks
-        // are handled in barItemClicked get the menu detached again, everyone
-        // else keeps it attached so AppKit handles the next click natively.
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
@@ -594,6 +595,10 @@ extension MenubarItem {
     func _updateMenu(content: String?) {
         dispatchPrecondition(condition: .onQueue(.main))
         barItem.button?.appearsDisabled = false
+        // The attachment decision depends on plugin metadata (refreshOnOpen,
+        // type), which can change without a title change — the incremental
+        // path skips setMenuTitle then, so re-sync on every content update.
+        defer { syncMenuAttachment() }
 
         if plugin?.lastState == .Failed {
             fullRebuildMenu(content: nil)
@@ -1593,8 +1598,10 @@ extension MenubarItem {
     }
 
     @objc func barItemClicked() {
-        // With the menu attached to the status item AppKit owns the whole
-        // click, including press-drag-release; nothing to intercept here.
+        // Defensive: with the menu attached to the status item AppKit owns
+        // the whole click (including press-drag-release) and does not send
+        // the button action, so this should never fire; if it ever does,
+        // there is nothing to intercept.
         guard barItem.menu == nil else { return }
         guard let eventType = NSApp.currentEvent?.type else { return }
 
@@ -1611,10 +1618,23 @@ extension MenubarItem {
     }
 
     /// A right click always opens the menu, never the title line's action.
+    /// The bar button dispatches its action on mouse up, but performClick-
+    /// driven opens (hotkeys) dispatch with whatever event happens to be
+    /// current — a stale right mouse down must still route to the menu.
     static func eventOpensMenuWithoutTitleAction(_ eventType: NSEvent.EventType) -> Bool {
         eventType == .rightMouseUp || eventType == .rightMouseDown
     }
 
+    /// Opens the menu for items on the detached path (title line with its
+    /// own click action, or refreshOnOpen executables). Known limitation:
+    /// because the button action dispatches on mouse up, the menu opens on
+    /// release, and press-drag-release cannot select an item here — a menu
+    /// opened programmatically cannot adopt an already-held press, and
+    /// opening it during the press would let its tracking session consume
+    /// the mouse-up the button cell is waiting for, leaving the cell
+    /// swallowing every subsequent click. Only a menu attached to the
+    /// status item before the press supports the full native gesture; see
+    /// syncMenuAttachment().
     func showMenu() {
         if refreshOnOpen, plugin?.type == .Executable {
             refreshAndShowMenu()
