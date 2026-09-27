@@ -882,6 +882,7 @@ extension MenubarItem {
                     // Keep the title-keyed fold state working after a rename:
                     // toggleFoldItem and collapseNestedFolds read the title
                     // from representedObject.
+                    moveFoldExpansionKey(for: existingItem, to: newParams)
                     existingItem.representedObject = newParams
                 } else {
                     patchMenuItem(existingItem, with: newParams)
@@ -949,6 +950,7 @@ extension MenubarItem {
                 image: params.image,
                 badge: params.badge
             )
+            moveFoldExpansionKey(for: item, to: params)
             item.representedObject = params
         }
 
@@ -1011,6 +1013,7 @@ extension MenubarItem {
                 // Keep the title-keyed fold state working after a rename:
                 // toggleFoldItem and collapseNestedFolds read the title from
                 // representedObject.
+                moveFoldExpansionKey(for: existingChild, to: childParams)
                 existingChild.representedObject = childParams
             } else if existingChild.view == nil {
                 patchMenuItem(existingChild, with: childParams)
@@ -1036,6 +1039,20 @@ extension MenubarItem {
             }
         }
         return false
+    }
+
+    /// Move the title-keyed expansion state when an in-place patch renames a
+    /// fold parent. `expandedFoldLines` must track the current title, both so
+    /// a later rebuild can restore the expansion and so collapsing evicts the
+    /// current key instead of stranding the old one. Must run before
+    /// `representedObject` is replaced — the old title is read from it.
+    private func moveFoldExpansionKey(for item: NSMenuItem, to newParams: MenuLineParameters) {
+        guard let oldParams = item.representedObject as? MenuLineParameters,
+              oldParams.title != newParams.title else { return }
+        expandedFoldLines.remove(oldParams.title)
+        if expandedFoldItems.contains(ObjectIdentifier(item)) {
+            expandedFoldLines.insert(newParams.title)
+        }
     }
 
     /// Direct fold child NSMenuItems of a fold parent, skipping the nested
@@ -1072,13 +1089,21 @@ extension MenubarItem {
     private func transferFoldExpansionState(of item: NSMenuItem, from oldNode: MenuItemNode?, to newNode: MenuItemNode) {
         guard let oldNode, let directItems = directFoldChildItems(of: item) else { return }
 
+        // dropdown=false nodes render no menu items; drop them before zipping
+        // so node/item pairs stay aligned, and exclude them from matching.
+        let oldRenderedChildren = oldNode.children.filter {
+            $0.isSeparator || MenuLineParameters(line: $0.workingLine).dropdown
+        }
         var oldEntries: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
-        for (node, childItem) in zip(oldNode.children, directItems) where !node.isSeparator {
+        for (node, childItem) in zip(oldRenderedChildren, directItems) where !node.isSeparator {
             oldEntries.append((node, childItem, MenuLineParameters(line: node.workingLine).title))
         }
         let newEntries: [(node: MenuItemNode, title: String)] = newNode.children
             .filter { !$0.isSeparator }
-            .map { ($0, MenuLineParameters(line: $0.workingLine).title) }
+            .compactMap {
+                let params = MenuLineParameters(line: $0.workingLine)
+                return params.dropdown ? ($0, params.title) : nil
+            }
 
         var matchedNewIndices = Set<Int>()
         var unmatchedOld: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
@@ -1099,9 +1124,13 @@ extension MenubarItem {
 
         guard unmatchedOld.count == unmatchedNew.count else { return }
         for (old, new) in zip(unmatchedOld, unmatchedNew) {
-            expandedFoldLines.remove(old.title)
-            if expandedFoldItems.contains(ObjectIdentifier(old.item)) {
-                expandedFoldLines.insert(new.title)
+            // Only fold parents own an expansion key; evicting for a leaf row
+            // could strip the key from an unrelated fold sharing its title.
+            if foldChildItems[ObjectIdentifier(old.item)] != nil {
+                expandedFoldLines.remove(old.title)
+                if expandedFoldItems.contains(ObjectIdentifier(old.item)) {
+                    expandedFoldLines.insert(new.title)
+                }
             }
             transferFoldExpansionState(of: old.item, from: old.node, to: new.node)
         }

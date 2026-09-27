@@ -2848,6 +2848,84 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(try bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
     }
 
+    @MainActor @Test func testIncrementalUpdate_inPlaceRenameKeepsFoldExpansionAcrossLaterRebuild() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 1 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+
+        item.toggleFoldItem(try bodyItem(named: "Root", in: item.statusBarMenu))
+        item.toggleFoldItem(try bodyItem(named: "Tasks: 1", in: item.statusBarMenu))
+
+        // In-place rename: same child count, no rebuild — the expansion key
+        // must move to the new title anyway.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 2 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+
+        // A later child-count change forces a rebuild, which restores
+        // expansion from the title key.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 2 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+        #expect(try !bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_inPlaceRenameThenCollapseLeavesNoStrandedKey() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 1 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+
+        item.toggleFoldItem(try bodyItem(named: "Root", in: item.statusBarMenu))
+        item.toggleFoldItem(try bodyItem(named: "Tasks: 1", in: item.statusBarMenu))
+
+        // In-place rename, then collapse under the new title
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 2 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+        item.toggleFoldItem(try bodyItem(named: "Tasks: 2", in: item.statusBarMenu))
+        #expect(try bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+
+        // A rebuild under the original title must come back collapsed: the
+        // old key was moved on rename, not stranded.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 1 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+        #expect(try bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+        #expect(try bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
+    }
+
     @MainActor @Test func testIncrementalUpdate_rebuildsWhenFoldChildBecomesSeparator() throws {
         let item = makeMenuBarItem()
 
