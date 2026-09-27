@@ -2704,6 +2704,71 @@ struct MenubarItemIncrementalUpdateTests {
         _ = try bodyItem(named: "After: 3", in: item.statusBarMenu)
     }
 
+    @MainActor @Test func testIncrementalUpdate_keepsRenamedNestedFoldExpandedAcrossRebuild() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 1 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        """)
+
+        let root = try bodyItem(named: "Root", in: item.statusBarMenu)
+        let tasks = try bodyItem(named: "Tasks: 1", in: item.statusBarMenu)
+        item.toggleFoldItem(root)
+        item.toggleFoldItem(tasks)
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+
+        // Title and child count change in the same update, forcing a rebuild
+        // from the outermost fold; the renamed fold must stay expanded.
+        item._updateMenu(content: """
+        Title
+        ---
+        Root | fold=true
+        --Tasks: 2 | fold=true
+        ----Item A | bash=/usr/bin/true terminal=false
+        ----Item B | bash=/usr/bin/true terminal=false
+        """)
+
+        #expect(try !bodyItem(named: "Tasks: 2", in: item.statusBarMenu).isHidden)
+        #expect(try !bodyItem(named: "Item A", in: item.statusBarMenu).isHidden)
+        #expect(try !bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
+    }
+
+    @MainActor @Test func testIncrementalUpdate_rebuildsWhenFoldChildBecomesSeparator() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Alpha | bash=/usr/bin/true terminal=false
+        --Beta | bash=/usr/bin/true terminal=false
+        """)
+
+        _ = try bodyItem(named: "Alpha", in: item.statusBarMenu)
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        -----
+        --Beta | bash=/usr/bin/true terminal=false
+        """)
+
+        let titles = item.statusBarMenu.items.compactMap {
+            ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces)
+        }
+        #expect(!titles.contains("Alpha"))
+        _ = try bodyItem(named: "Beta", in: item.statusBarMenu)
+
+        let status = try bodyItem(named: "Status", in: item.statusBarMenu)
+        let statusIndex = item.statusBarMenu.index(of: status)
+        #expect(item.statusBarMenu.items[statusIndex + 1].isSeparatorItem)
+    }
+
     @MainActor @Test func testIncrementalUpdate_clearsSubmenuWhenChildBecomesChildlessFold() throws {
         let item = makeMenuBarItem()
 
@@ -3302,6 +3367,7 @@ struct MenubarItemActionOwnershipTests {
 /// often than with executable plugins. These tests pin down that such a parent
 /// keeps AppKit's `submenuAction:` ownership — and stays enabled — across
 /// stream updates that arrive while the menu is closed and while it is open.
+@Suite(.serialized)
 struct StreamableSubmenuParentTests {
     @MainActor
     private func makeStreamableMenuBarItem() -> MenubarItem {
