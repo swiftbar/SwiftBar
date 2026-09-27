@@ -3051,6 +3051,133 @@ struct MenubarItemActionOwnershipTests {
     }
 }
 
+// MARK: - Streamable Plugin Submenu Parent Tests (issue #534)
+
+/// A streamable plugin emits a fresh content block on every update, so an
+/// actionless submenu parent is exercised by the incremental diff far more
+/// often than with executable plugins. These tests pin down that such a parent
+/// keeps AppKit's `submenuAction:` ownership — and stays enabled — across
+/// stream updates that arrive while the menu is closed and while it is open.
+struct StreamableSubmenuParentTests {
+    @MainActor
+    private func makeStreamableMenuBarItem() -> MenubarItem {
+        let plugin = TestPlugin(
+            id: "stream-demo.sh",
+            file: "/tmp/stream-demo.sh",
+            type: .Streamable,
+            content: nil,
+            lastState: .Streaming
+        )
+        let item = MenubarItem(title: "Stream")
+        item.plugin = plugin
+        item.statusBarMenu.delegate = item
+        return item
+    }
+
+    /// Mirrors the content assembled by StreamablePlugin in trailing-separator
+    /// mode: each block after the first starts with the leftover newline kept
+    /// from the previous block.
+    private func demoBlock(_ counter: Int) -> String {
+        (counter == 0 ? "" : "\n") + """
+        demo \(counter)
+        ---
+        Section
+        --Child | bash=/usr/bin/true terminal=false
+        """ + "\n"
+    }
+
+    @MainActor
+    private func sectionItem(in menu: NSMenu) throws -> NSMenuItem {
+        try #require(menu.items.first { !$0.isSeparatorItem && $0.title == "Section" })
+    }
+
+    @MainActor @Test func actionlessSubmenuParentSurvivesStreamUpdates() throws {
+        let item = makeStreamableMenuBarItem()
+
+        item._updateMenu(content: demoBlock(0))
+
+        let section = try sectionItem(in: item.statusBarMenu)
+        let originalSubmenu = try #require(section.submenu)
+        #expect(section.isEnabled)
+
+        // First open, as in the issue repro
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+
+        // A block arrives while the menu is open
+        item._updateMenu(content: demoBlock(1))
+        item.menuDidClose(item.statusBarMenu)
+
+        // The next block arrives with the menu closed
+        item._updateMenu(content: demoBlock(2))
+
+        item.hotkeyTrigger = true
+        item.menuWillOpen(item.statusBarMenu)
+
+        let updatedSection = try sectionItem(in: item.statusBarMenu)
+        #expect(updatedSection === section)
+        #expect(updatedSection.submenu === originalSubmenu)
+        #expect(updatedSection.action.map(NSStringFromSelector) == "submenuAction:")
+        #expect(updatedSection.target === updatedSection.submenu)
+        item.statusBarMenu.update()
+        #expect(updatedSection.isEnabled)
+        item.menuDidClose(item.statusBarMenu)
+    }
+
+    /// End-to-end: runs the real StreamablePlugin against the issue's repro
+    /// script, covering process streaming, trailing-separator content
+    /// assembly, the content publisher, and the incremental menu update path.
+    @MainActor @Test func liveStreamKeepsActionlessSubmenuParentAlive() async throws {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("sb534-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let scriptURL = dir.appendingPathComponent("stream-demo.sh")
+        let script = """
+        #!/bin/bash
+        # <swiftbar.type>Streamable</swiftbar.type>
+        # <swiftbar.useTrailingStreamSeparator>true</swiftbar.useTrailingStreamSeparator>
+
+        i=0
+        while :; do
+          echo "demo $i"
+          echo "---"
+          echo "Section"
+          echo "--Child | bash=/usr/bin/true terminal=false"
+          printf '~~~\\n'
+          i=$((i + 1))
+          sleep 1
+        done
+        """
+        try script.write(to: scriptURL, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+
+        let plugin = try #require(StreamablePlugin(fileURL: scriptURL))
+        defer { plugin.terminate() }
+        let item = MenubarItem(title: "Stream", plugin: plugin)
+
+        // Wait for the first block to render
+        try await Task.sleep(for: .seconds(2.5))
+
+        let section = try #require(item.statusBarMenu.items.first { !$0.isSeparatorItem && $0.title == "Section" },
+                                   "Section item should exist after first block, got: \(item.statusBarMenu.items.map(\.title))")
+        let originalSubmenu = try #require(section.submenu)
+        #expect(originalSubmenu.items.count == 1)
+        #expect(section.isEnabled)
+
+        // Let at least two more blocks stream in
+        try await Task.sleep(for: .seconds(2.5))
+
+        let updatedSection = try #require(item.statusBarMenu.items.first { !$0.isSeparatorItem && $0.title == "Section" })
+        #expect(updatedSection.submenu != nil, "submenu detached after stream update")
+        #expect(updatedSection.action.map(NSStringFromSelector) == "submenuAction:",
+                "action after update: \(updatedSection.action.map(NSStringFromSelector) ?? "nil")")
+        #expect(updatedSection.target === updatedSection.submenu)
+        item.statusBarMenu.update()
+        #expect(updatedSection.isEnabled, "Section dimmed after stream update")
+    }
+}
+
 // MARK: - MenuItemNode Tree Building Tests
 
 struct MenuItemNodeParsingTests {
