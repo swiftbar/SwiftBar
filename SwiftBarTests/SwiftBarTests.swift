@@ -2926,6 +2926,47 @@ struct MenubarItemIncrementalUpdateTests {
         #expect(try bodyItem(named: "Item B", in: item.statusBarMenu).isHidden)
     }
 
+    @MainActor @Test func testIncrementalUpdate_ignoresDropdownFalseRowsInFoldChildAccounting() throws {
+        let item = makeMenuBarItem()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --Meta | dropdown=false
+        --A | bash=/usr/bin/true terminal=false
+        --B
+        ----V1 | bash=/usr/bin/true terminal=false
+        """)
+
+        item.toggleFoldItem(try bodyItem(named: "Status", in: item.statusBarMenu))
+        let b = try bodyItem(named: "B", in: item.statusBarMenu)
+        #expect(try #require(b.submenu).items.map {
+            (($0.representedObject as? MenuLineParameters)?.title ?? "").trimmingCharacters(in: .whitespaces)
+        } == ["V1"])
+
+        // The hidden row disappears and B's submenu changes: the fold child
+        // indexing must not shift onto the wrong sibling or duplicate rows.
+        item._updateMenu(content: """
+        Title
+        ---
+        Status | fold=true
+        --A | bash=/usr/bin/true terminal=false
+        --B
+        ----V2 | bash=/usr/bin/true terminal=false
+        """)
+
+        let updatedB = try bodyItem(named: "B", in: item.statusBarMenu)
+        #expect(try #require(updatedB.submenu).items.map {
+            (($0.representedObject as? MenuLineParameters)?.title ?? "").trimmingCharacters(in: .whitespaces)
+        } == ["V2"])
+        let titles = item.statusBarMenu.items.compactMap {
+            ($0.representedObject as? MenuLineParameters)?.title.trimmingCharacters(in: .whitespaces)
+        }
+        #expect(!titles.contains("Meta"))
+        _ = try bodyItem(named: "A", in: item.statusBarMenu)
+    }
+
     @MainActor @Test func testIncrementalUpdate_rebuildsWhenFoldChildBecomesSeparator() throws {
         let item = makeMenuBarItem()
 

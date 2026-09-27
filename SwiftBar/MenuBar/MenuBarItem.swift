@@ -940,19 +940,8 @@ extension MenubarItem {
     /// state survives only via `expandedFoldLines`, which is keyed by title
     /// by design; see `transferFoldExpansionState`.
     private func updateFoldChildren(of item: NSMenuItem, from newNode: MenuItemNode, oldNode: MenuItemNode?, in menu: NSMenu) -> Bool {
-        // Update the fold parent's view
-        let params = MenuLineParameters(line: newNode.workingLine)
-        if let foldView = item.view as? FoldableMenuItemView {
-            let titleInfo = foldableTitleInfo(with: params)
-            foldView.update(
-                attributedTitle: titleInfo.normal,
-                highlightedTitle: titleInfo.highlighted,
-                image: params.image,
-                badge: params.badge
-            )
-            moveFoldExpansionKey(for: item, to: params)
-            item.representedObject = params
-        }
+        // The item's own view is already patched by the caller: applyUpdate
+        // for the outermost fold item, the child loop below for nested ones.
 
         guard let directItems = directFoldChildItems(of: item) else {
             // No existing fold children — build from scratch. This can only be
@@ -965,41 +954,39 @@ extension MenubarItem {
         }
 
         // Patch direct children in-place where possible
-        let newDirectChildren = newNode.children
+        let newRendered = Self.renderableFoldChildren(of: newNode)
+        let oldRendered = oldNode.map(Self.renderableFoldChildren)
 
         // Child count changed — the subtree must be rebuilt from the top.
-        guard directItems.count == newDirectChildren.count else {
+        guard directItems.count == newRendered.count else {
             return true
-        }
-
-        let newChildParams: [MenuLineParameters?] = newDirectChildren.map {
-            $0.isSeparator ? nil : MenuLineParameters(line: $0.workingLine)
         }
 
         // Detect shape changes among direct children before patching anything;
         // these also require a rebuild from the top.
-        for (idx, newChild) in newDirectChildren.enumerated() {
+        for (idx, entry) in newRendered.enumerated() {
             // A child switching between separator and regular item cannot be
             // patched in place.
-            if directItems[idx].isSeparatorItem != newChild.isSeparator {
+            if directItems[idx].isSeparatorItem != entry.node.isSeparator {
                 return true
             }
-            guard let childParams = newChildParams[idx] else { continue }
+            guard let childParams = entry.params else { continue }
             let wasFoldParent = foldChildItems[ObjectIdentifier(directItems[idx])] != nil
-            let isFoldParent = childParams.fold && !newChild.children.isEmpty
+            let isFoldParent = childParams.fold && !entry.node.children.isEmpty
             if wasFoldParent != isFoldParent {
                 return true
             }
         }
 
-        for (idx, newChild) in newDirectChildren.enumerated() {
+        for (idx, entry) in newRendered.enumerated() {
             let existingChild = directItems[idx]
 
-            guard let childParams = newChildParams[idx] else {
+            guard let childParams = entry.params else {
                 // Separators don't need patching
                 continue
             }
 
+            let newChild = entry.node
             let isFoldParent = childParams.fold && !newChild.children.isEmpty
 
             if let foldView = existingChild.view as? FoldableMenuItemView, childParams.fold {
@@ -1019,8 +1006,8 @@ extension MenubarItem {
                 patchMenuItem(existingChild, with: childParams)
             }
 
-            let oldChild: MenuItemNode? = if let oldNode, oldNode.children.indices.contains(idx) {
-                oldNode.children[idx]
+            let oldChild: MenuItemNode? = if let oldRendered, oldRendered.indices.contains(idx) {
+                oldRendered[idx].node
             } else {
                 nil
             }
@@ -1048,10 +1035,28 @@ extension MenubarItem {
     /// `representedObject` is replaced — the old title is read from it.
     private func moveFoldExpansionKey(for item: NSMenuItem, to newParams: MenuLineParameters) {
         guard let oldParams = item.representedObject as? MenuLineParameters,
-              oldParams.title != newParams.title else { return }
+              oldParams.title != newParams.title,
+              // A collapsed fold owns no key; removing its old title could
+              // strip the key from an unrelated expanded fold sharing it.
+              expandedFoldItems.contains(ObjectIdentifier(item))
+        else { return }
         expandedFoldLines.remove(oldParams.title)
-        if expandedFoldItems.contains(ObjectIdentifier(item)) {
-            expandedFoldLines.insert(newParams.title)
+        expandedFoldLines.insert(newParams.title)
+    }
+
+    /// Fold-child nodes that render as NSMenuItems, paired with their parsed
+    /// parameters (nil for separators). buildMenuTree already excludes
+    /// dropdown=false lines from the node tree, but the predicate lives in
+    /// one place so every fold update path counts children exactly as
+    /// buildFoldChildren renders them and the paths cannot drift.
+    private static func renderableFoldChildren(of node: MenuItemNode) -> [(node: MenuItemNode, params: MenuLineParameters?)] {
+        node.children.compactMap { child in
+            if child.isSeparator {
+                return (child, nil)
+            }
+            let params = MenuLineParameters(line: child.workingLine)
+            guard params.dropdown else { return nil }
+            return (child, params)
         }
     }
 
@@ -1089,21 +1094,13 @@ extension MenubarItem {
     private func transferFoldExpansionState(of item: NSMenuItem, from oldNode: MenuItemNode?, to newNode: MenuItemNode) {
         guard let oldNode, let directItems = directFoldChildItems(of: item) else { return }
 
-        // dropdown=false nodes render no menu items; drop them before zipping
-        // so node/item pairs stay aligned, and exclude them from matching.
-        let oldRenderedChildren = oldNode.children.filter {
-            $0.isSeparator || MenuLineParameters(line: $0.workingLine).dropdown
-        }
         var oldEntries: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
-        for (node, childItem) in zip(oldRenderedChildren, directItems) where !node.isSeparator {
-            oldEntries.append((node, childItem, MenuLineParameters(line: node.workingLine).title))
+        for (entry, childItem) in zip(Self.renderableFoldChildren(of: oldNode), directItems) {
+            guard let params = entry.params else { continue }
+            oldEntries.append((entry.node, childItem, params.title))
         }
-        let newEntries: [(node: MenuItemNode, title: String)] = newNode.children
-            .filter { !$0.isSeparator }
-            .compactMap {
-                let params = MenuLineParameters(line: $0.workingLine)
-                return params.dropdown ? ($0, params.title) : nil
-            }
+        let newEntries: [(node: MenuItemNode, title: String)] = Self.renderableFoldChildren(of: newNode)
+            .compactMap { entry in entry.params.map { (entry.node, $0.title) } }
 
         var matchedNewIndices = Set<Int>()
         var unmatchedOld: [(node: MenuItemNode, item: NSMenuItem, title: String)] = []
