@@ -51,6 +51,11 @@ class MenubarItem: NSObject {
     var hotKeys: [HotKey] = []
     var hotkeyTrigger: Bool = false
     var showsAllStandardItemsWhileOpen = false
+    /// One-shot: the current showMenu() was initiated by an option-click,
+    /// so menuWillOpen must reveal the hidden standard items even if the
+    /// option key is released between the mouse-up and the menu opening.
+    /// Consumed in menuWillOpen, like hotkeyTrigger.
+    var pendingOptionClickReveal = false
     /// Reads the live hardware modifier state. `NSApp.currentEvent` is not
     /// reliable in `menuWillOpen`: during status-item menu tracking on
     /// macOS 27 it holds an unrelated event (e.g. mouse-moved) whose flags
@@ -229,7 +234,7 @@ class MenubarItem: NSObject {
 extension MenubarItem: NSMenuDelegate {
     func menuWillOpen(_: NSMenu) {
         isOpen = true
-        showsAllStandardItemsWhileOpen = !hotkeyTrigger && optionKeyIsPressed()
+        showsAllStandardItemsWhileOpen = pendingOptionClickReveal || (!hotkeyTrigger && optionKeyIsPressed())
 
         if #available(macOS 12, *) {
             // nothing todo here
@@ -241,6 +246,7 @@ extension MenubarItem: NSMenuDelegate {
         }
 
         hotkeyTrigger = false
+        pendingOptionClickReveal = false
         reapplyOpenMenuStateIfNeeded()
     }
 
@@ -1841,22 +1847,34 @@ extension MenubarItem {
         // there is nothing to intercept.
         guard barItem.menu == nil else { return }
         guard let event = NSApp.currentEvent else { return }
+        handleBarItemClick(eventType: event.type, eventFlagsContainOption: event.modifierFlags.contains(.option))
+    }
 
-        // Unlike menuWillOpen (#564), the dispatching click is current here —
-        // the type check above relies on it already — so its flags are the
-        // primary option source. The live hardware state is OR-ed in for
-        // dispatch paths whose current event carries no flags.
-        let optionHeld = event.modifierFlags.contains(.option) || optionKeyIsPressed()
-        if Self.clickOpensMenuInsteadOfTitleAction(eventType: event.type, optionKeyIsPressed: optionHeld) {
+    /// The detached-path click handler, split from barItemClicked so tests
+    /// can drive it without an NSApp event. Unlike menuWillOpen (#564), the
+    /// dispatching event is current in barItemClicked, so its flags are the
+    /// primary option source; the live hardware state is OR-ed in for
+    /// dispatch paths whose current event carries no flags.
+    func handleBarItemClick(eventType: NSEvent.EventType, eventFlagsContainOption: Bool) {
+        switch Self.routeForBarItemClick(
+            eventType: eventType,
+            eventFlagsContainOption: eventFlagsContainOption,
+            hotkeyTriggered: hotkeyTrigger,
+            optionKeyIsPressed: optionKeyIsPressed()
+        ) {
+        case let .openMenu(revealStandardItems):
+            pendingOptionClickReveal = revealStandardItems
             showMenu()
-            return
+        case .runTitleAction:
+            if performItemAction(params: MenuLineParameters(line: currentTitleLine)) {
+                // menuWillOpen never runs on this path, so consume the
+                // one-shot hotkey flag here — otherwise the next real
+                // option-click would still read as hotkey-driven.
+                hotkeyTrigger = false
+                return
+            }
+            showMenu()
         }
-
-        if performItemAction(params: MenuLineParameters(line: currentTitleLine)) {
-            return
-        }
-
-        showMenu()
     }
 
     /// A right click always opens the menu, never the title line's action.
@@ -1871,11 +1889,32 @@ extension MenubarItem {
     /// leaves no left-button route to the menu at all. Option-click must open
     /// the menu instead of running the action: it is the documented gesture
     /// for reaching the standard items (#560), and under StealthMode there is
-    /// no fallback SwiftBar item to reach them through (#576). The subsequent
-    /// `menuWillOpen` re-checks the option key and reveals the hidden
-    /// standard items.
+    /// no fallback SwiftBar item to reach them through (#576).
     static func clickOpensMenuInsteadOfTitleAction(eventType: NSEvent.EventType, optionKeyIsPressed: Bool) -> Bool {
         eventOpensMenuWithoutTitleAction(eventType) || optionKeyIsPressed
+    }
+
+    enum BarItemClickRoute: Equatable {
+        case openMenu(revealStandardItems: Bool)
+        case runTitleAction
+    }
+
+    /// Resolves a detached-path click. An option-click opens the menu and
+    /// carries the standard-items reveal with it (#576). A hotkey-driven
+    /// performClick dispatches with the hotkey's own key event current, so
+    /// an option key held as part of the combo must not read as an
+    /// option-click — the same suppression menuWillOpen applies through
+    /// hotkeyTrigger.
+    static func routeForBarItemClick(
+        eventType: NSEvent.EventType,
+        eventFlagsContainOption: Bool,
+        hotkeyTriggered: Bool,
+        optionKeyIsPressed: Bool
+    ) -> BarItemClickRoute {
+        let optionClick = !hotkeyTriggered && (eventFlagsContainOption || optionKeyIsPressed)
+        return clickOpensMenuInsteadOfTitleAction(eventType: eventType, optionKeyIsPressed: optionClick)
+            ? .openMenu(revealStandardItems: optionClick)
+            : .runTitleAction
     }
 
     /// Opens the menu for items on the detached path (title line with its
