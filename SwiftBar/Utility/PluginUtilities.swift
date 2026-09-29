@@ -55,6 +55,7 @@ final class RunPluginOperation<T: Plugin>: Operation {
     init(plugin: T,
          queue: OperationQueue?,
          reason: PluginRefreshReason? = nil,
+         timerGeneration: UInt? = nil,
          failedAttempts: Int = 0,
          retryDelay: @escaping (PluginRefreshReason, Int) -> TimeInterval? = wakeRefreshRetryDelay(reason:failedAttempts:))
     {
@@ -63,7 +64,10 @@ final class RunPluginOperation<T: Plugin>: Operation {
         refreshReason = reason ?? plugin.lastRefreshReason
         self.failedAttempts = failedAttempts
         self.retryDelay = retryDelay
-        scheduledTimerGeneration = (plugin as? TimerArmingPlugin)?.timerGeneration
+        // A retry inherits the generation captured at chain start; reading
+        // the current value here could adopt a newer refresh cycle's
+        // generation and let a stale retry pass the currency check.
+        scheduledTimerGeneration = timerGeneration ?? (plugin as? TimerArmingPlugin)?.timerGeneration
         super.init()
     }
 
@@ -93,6 +97,12 @@ final class RunPluginOperation<T: Plugin>: Operation {
            let delay = retryDelay(refreshReason, failedAttempts + 1),
            let queue
         {
+            // The chain owns the timer until it ends: rearming here would
+            // let a short-interval schedule fire into the still-broken
+            // window the backoff is waiting out and publish the very error
+            // the retry budget is meant to suppress. The successor rearms
+            // when it finishes or is cancelled.
+            handOffTimerRearm()
             scheduleRetry(after: delay, for: plugin, on: queue)
             return
         }
@@ -108,20 +118,43 @@ final class RunPluginOperation<T: Plugin>: Operation {
     }
 
     /// Runs the retry chain without occupying an invoke-queue slot during
-    /// the wait: the successor operation is created immediately, so a newer
-    /// refresh can cancel it through `plugin.operation`, but it is enqueued
-    /// only once the backoff delay elapses.
+    /// the wait: the successor operation is installed into
+    /// `plugin.operation`, so a newer refresh can cancel it, but it is
+    /// enqueued only once the backoff delay elapses.
     private func scheduleRetry(after delay: TimeInterval, for plugin: T, on queue: OperationQueue) {
         let successor = RunPluginOperation(plugin: plugin,
                                            queue: queue,
                                            reason: refreshReason,
+                                           timerGeneration: scheduledTimerGeneration,
                                            failedAttempts: failedAttempts + 1,
                                            retryDelay: retryDelay)
-        plugin.operation = successor
-        DispatchQueue.global().asyncAfter(deadline: .now() + delay) { [weak queue] in
-            guard !successor.isCancelled else { return }
-            queue?.addOperation(successor)
+        // Installation is serialized on the main queue with the refresh
+        // paths that assign plugin.operation: install only while this chain
+        // still owns the slot, so a stale wake retry can never replace the
+        // operation of a newer refresh that took over in the meantime.
+        DispatchQueue.main.async { [weak plugin] in
+            guard let plugin, !self.isCancelled, plugin.operation === self else {
+                // Ownership was lost during scheduling. Cancelling the
+                // never-installed successor returns timer control to this
+                // chain's generation — a no-op when a newer refresh cycle
+                // owns the timer already.
+                successor.cancel()
+                return
+            }
+            plugin.operation = successor
+            DispatchQueue.global().asyncAfter(deadline: .now() + delay) { [weak queue] in
+                guard !successor.isCancelled else { return }
+                queue?.addOperation(successor)
+            }
         }
+    }
+
+    /// Marks timer rearming as handled without rearming, transferring the
+    /// responsibility to the retry successor.
+    private func handOffTimerRearm() {
+        timerRearmLock.lock()
+        timerRearmHandled = true
+        timerRearmLock.unlock()
     }
 
     private var isCurrentTimerGeneration: Bool {

@@ -5888,13 +5888,14 @@ private final class WakeRetryTestPlugin: TimerArmingPlugin {
     var failuresBeforeSuccess = 0
     var successOutput = "success"
     private(set) var invokeCount = 0
+    private(set) var enableTimerCallCount = 0
 
     func refresh(reason _: PluginRefreshReason) {}
     func enable() {}
     func disable() {}
     func start() {}
     func terminate() {}
-    func enableTimer() {}
+    func enableTimer() { enableTimerCallCount += 1 }
     func makeScriptExecutable(file _: String) {}
     func refreshPluginMetadata() {}
 
@@ -6043,6 +6044,50 @@ struct WakeRefreshRetryTests {
 
         #expect(plugin.invokeCount == 1)
         #expect(plugin.content == "initial")
+        // Cancelling the pending retry ends the chain, which resumes the
+        // regular timer exactly once.
+        #expect(plugin.enableTimerCallCount == 1)
+    }
+
+    @Test func timerStaysPausedUntilRetryChainEnds() async {
+        // A short-interval plugin must not get its regular timer rearmed
+        // between wake attempts — a schedule tick would run into the same
+        // dead-network window and publish the error the backoff is meant
+        // to suppress. The timer resumes once, when the chain ends.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: testRetryDelay)
+
+        #expect(await waitUntil { plugin.invokeCount == 3 && plugin.content == nil })
+        #expect(await waitUntil { plugin.enableTimerCallCount == 1 })
+        #expect(plugin.enableTimerCallCount == 1)
+    }
+
+    @Test func staleRetryDoesNotStealOwnershipFromNewerRefresh() async {
+        // If a newer refresh installs its own operation while a failed wake
+        // attempt is scheduling its retry, the retry must not be installed
+        // over it; the successor is dropped and timer control returns to
+        // the chain's generation.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        let newerOwner = BlockOperation {}
+        plugin.operation = newerOwner
+
+        // This wake attempt runs without owning plugin.operation, exactly
+        // as if ownership had been taken between its invoke and the
+        // successor installation.
+        let staleAttempt = RunPluginOperation(plugin: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        queue.addOperation(staleAttempt)
+
+        #expect(await waitUntil { plugin.enableTimerCallCount == 1 })
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.operation === newerOwner)
+        #expect(plugin.invokeCount == 1)
     }
 
     @Test func menuOpenRecoveryDuringBackoffIsPreserved() async {
