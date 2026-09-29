@@ -78,6 +78,9 @@ protocol Plugin: AnyObject {
     var lastUpdated: Date? { get set }
     var lastState: PluginState { get set }
     var lastRefreshReason: PluginRefreshReason { get set }
+    /// Most recent refresh-initiated run, kept so a newer refresh (or a
+    /// menu-open refresh) can cancel it before starting its own run.
+    var operation: Operation? { get set }
     var content: String? { get set }
     var error: Error? { get set }
     var debugInfo: PluginDebugInfo { get set }

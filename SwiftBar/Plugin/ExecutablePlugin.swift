@@ -28,7 +28,7 @@ class ExecutablePlugin: TimerArmingPlugin {
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
-    var operation: RunPluginOperation<ExecutablePlugin>?
+    var operation: Operation?
 
     var content: String? = "..." {
         didSet {
@@ -93,7 +93,7 @@ class ExecutablePlugin: TimerArmingPlugin {
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
                 self?.lastRefreshReason = .Schedule
-                self?.invokeQueue.addOperation(RunPluginOperation<ExecutablePlugin>(plugin: self!))
+                self?.invokeQueue.addOperation(RunPluginOperation<ExecutablePlugin>(plugin: self!, queue: self!.invokeQueue))
             }).store(in: &cancellable)
     }
 
@@ -163,7 +163,7 @@ class ExecutablePlugin: TimerArmingPlugin {
 
         refreshPluginMetadata()
         lastRefreshReason = reason
-        operation = RunPluginOperation<ExecutablePlugin>(plugin: self)
+        operation = RunPluginOperation<ExecutablePlugin>(plugin: self, queue: invokeQueue)
         invokeQueue.addOperation(operation!)
     }
 

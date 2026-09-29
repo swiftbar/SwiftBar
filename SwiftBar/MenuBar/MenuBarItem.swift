@@ -1949,6 +1949,9 @@ extension MenubarItem {
 
     func refreshAndShowMenu() {
         os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
+        // Cancel any in-flight or pending run (e.g. a scheduled wake-refresh
+        // retry) so a stale result cannot overwrite the content produced here.
+        plugin?.operation?.cancel()
         plugin?.lastRefreshReason = .MenuOpen
         let content = plugin?.invoke()
         // Keep plugin.content in sync with the displayed content so that subsequent

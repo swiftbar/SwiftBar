@@ -45,7 +45,7 @@ class EphemeralPlugin: Plugin {
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
-    var operation: RunPluginOperation<ExecutablePlugin>?
+    var operation: Operation?
 
     var content: String? = "..." {
         didSet {

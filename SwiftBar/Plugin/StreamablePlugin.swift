@@ -28,6 +28,7 @@ class StreamablePlugin: Plugin {
     var lastUpdated: Date?
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
+    var operation: Operation?
     var updateInterval = 0.0
 
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
