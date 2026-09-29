@@ -9,9 +9,13 @@ public class ReloadPluginIntentHandler: NSObject, ReloadPluginIntentHandling {
             completion(ReloadPluginIntentResponse(code: .failure, userActivity: nil))
             return
         }
-        delegate.pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
-        plugin.refresh(reason: .Shortcut)
-        completion(ReloadPluginIntentResponse(code: .success, userActivity: nil))
+        // SiriKit calls handlers on a background thread; refresh (and the
+        // plugin.operation ownership it manages) is serialized on main.
+        DispatchQueue.main.async {
+            delegate.pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
+            plugin.refresh(reason: .Shortcut)
+            completion(ReloadPluginIntentResponse(code: .success, userActivity: nil))
+        }
     }
 
     @available(macOS 11.0, *)

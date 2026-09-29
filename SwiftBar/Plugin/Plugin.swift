@@ -160,6 +160,20 @@ extension Plugin {
         return timeSinceLastUpdate > (updateInterval * 2)
     }
 
+    /// Whether a wake-from-sleep start must run the plugin immediately
+    /// instead of only rearming its timer.
+    ///
+    /// A plugin whose last run failed always refreshes on wake: a failed
+    /// wake attempt records `lastUpdated`, and when the machine sleeps
+    /// again mid-retry the pending retry is invalidated — judging by
+    /// recency alone would leave the failure unresolved until the next
+    /// regular interval.
+    func needsWakeRefresh(at date: Date) -> Bool {
+        if lastState == .Failed { return true }
+        guard let lastUpdated else { return true }
+        return date > lastUpdated.addingTimeInterval(updateInterval)
+    }
+
     var prefs: PreferencesStore {
         PreferencesStore.shared
     }

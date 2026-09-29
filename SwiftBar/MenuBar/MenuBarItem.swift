@@ -1948,6 +1948,7 @@ extension MenubarItem {
     }
 
     func refreshAndShowMenu() {
+        dispatchPrecondition(condition: .onQueue(.main))
         os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
         // Cancel any in-flight or pending run (e.g. a scheduled wake-refresh
         // retry) so a stale result cannot overwrite the content produced here.
@@ -2026,7 +2027,11 @@ extension MenubarItem {
             defer { refreshLock.unlock() }
             guard !didRequestRefresh else { return }
             didRequestRefresh = true
-            self?.plugin?.refresh(reason: .MenuAction)
+            // The runInTerminal completion arrives on a background queue;
+            // refresh is serialized on main.
+            DispatchQueue.main.async {
+                self?.plugin?.refresh(reason: .MenuAction)
+            }
         }
 
         defer {

@@ -215,13 +215,10 @@ class PackagedPlugin: TimerArmingPlugin {
                 refreshPluginMetadata()
                 enableTimer()
             } else if updateInterval > 0, updateInterval < pluginNeverUpdateInterval {
-                if let lastUpdated {
-                    let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)
-                    if Date() > nextUpdateTime {
-                        refresh(reason: .WakeFromSleep)
-                    } else {
-                        enableTimer()
-                    }
+                if needsWakeRefresh(at: Date()) {
+                    refresh(reason: .WakeFromSleep)
+                } else {
+                    enableTimer()
                 }
             } else {
                 refresh(reason: .WakeFromSleep)
@@ -232,6 +229,9 @@ class PackagedPlugin: TimerArmingPlugin {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        // plugin.operation ownership is serialized on the main queue
+        // (see RunPluginOperation.scheduleRetry).
+        dispatchPrecondition(condition: .onQueue(.main))
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return

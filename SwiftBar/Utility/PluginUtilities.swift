@@ -110,9 +110,10 @@ final class RunPluginOperation<T: Plugin>: Operation {
         guard plugin.enabled else { return }
         plugin.content = result
         if failedAttempts > 0, result != nil, result == previousContent {
-            // The content didSet guard drops updates with unchanged output,
-            // which would leave the error icon up after a recovered retry —
-            // publish explicitly so the menu leaves the error state.
+            // The content didSet guard drops updates with unchanged output.
+            // That matters when the menu redrew during the backoff (e.g. it
+            // was opened) and rendered the error state — publish explicitly
+            // so recovery clears it.
             plugin.contentUpdatePublisher.send(result)
         }
     }

@@ -104,6 +104,9 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        // plugin.operation ownership is serialized on the main queue
+        // (see RunPluginOperation.scheduleRetry).
+        dispatchPrecondition(condition: .onQueue(.main))
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return

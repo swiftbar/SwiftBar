@@ -218,7 +218,7 @@ struct SwiftBarTests {
         })
     }
 
-    @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() throws {
+    @MainActor @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -239,7 +239,7 @@ struct SwiftBarTests {
         #expect(plugin.supportDirectoryName == aliasURL.lastPathComponent)
     }
 
-    @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
+    @MainActor @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let firstDirectory = tempDirectory.appendingPathComponent("first", isDirectory: true)
         let secondDirectory = tempDirectory.appendingPathComponent("second", isDirectory: true)
@@ -272,7 +272,7 @@ struct SwiftBarTests {
         #expect(secondPlugin.supportDirectoryName == "duplicate.1m.sh")
     }
 
-    @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() throws {
+    @MainActor @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let packageTargetURL = tempDirectory.appendingPathComponent("package-target", isDirectory: true)
         try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
@@ -1279,7 +1279,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() throws {
+    @MainActor @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1323,7 +1323,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() throws {
+    @MainActor @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1470,7 +1470,7 @@ struct SwiftBarIntegrationTests {
         #expect(merged[1] === last)
     }
 
-    @Test func testMergePluginsPreservingOrder_appendsNewFilePluginAndShortcuts() async throws {
+    @MainActor @Test func testMergePluginsPreservingOrder_appendsNewFilePluginAndShortcuts() async throws {
         let existing = TestPlugin(id: "existing", file: "/tmp/existing.5s.sh")
         let brandNew = TestPlugin(id: "brand-new", file: "/tmp/brand-new.5s.sh")
         let shortcut = ShortcutPlugin(PersistentShortcutPlugin(id: "shortcut", name: "shortcut", shortcut: "test", repeatString: "", cronString: ""))
@@ -1536,7 +1536,7 @@ struct SwiftBarIntegrationTests {
         #expect(manager.loadPlugin(fileURL: packageURL) == nil)
     }
 
-    @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() throws {
+    @MainActor @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -6004,14 +6004,18 @@ struct WakeRefreshRetryTests {
         let queue = OperationQueue()
         queue.maxConcurrentOperationCount = 1
 
-        startOperation(on: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        let longBackoff: (PluginRefreshReason, Int) -> TimeInterval? = { reason, failedAttempts in
+            guard reason == .WakeFromSleep, failedAttempts == 1 else { return nil }
+            return 1.0
+        }
+        startOperation(on: plugin, queue: queue, retryDelay: longBackoff)
         #expect(await waitUntil { plugin.invokeCount == 1 })
 
-        // A second plugin's run must complete during the 0.25s backoff wait.
+        // A second plugin's run must complete well within the 1s backoff wait.
         let other = WakeRetryTestPlugin()
         other.lastRefreshReason = .Schedule
         startOperation(on: other, queue: queue, retryDelay: wakeRefreshRetryDelay(reason:failedAttempts:))
-        #expect(await waitUntil(timeout: 0.2) { other.content == "success" })
+        #expect(await waitUntil(timeout: 0.5) { other.content == "success" })
     }
 
     @Test func scheduledRunDoesNotRetry() async {
@@ -6195,5 +6199,33 @@ struct WakeRefreshRetryTests {
         #expect(await waitUntil { plugin.invokeCount == 2 && !publishedValues.isEmpty })
         #expect(plugin.lastState == .Success)
         #expect(publishedValues.contains { $0 == plugin.successOutput })
+    }
+
+    @Test func failedPluginNeedsWakeRefreshDespiteRecentAttempt() {
+        // A failed wake attempt records lastUpdated. If the machine sleeps
+        // again mid-backoff, the pending retry is invalidated; the next
+        // wake must not judge by recency alone and leave the failure
+        // unresolved until the regular interval.
+        let plugin = TestPlugin(id: "wake.5m.sh", file: "wake.5m.sh", lastState: .Failed)
+        plugin.updateInterval = 300
+        plugin.lastUpdated = Date().addingTimeInterval(-5)
+
+        #expect(plugin.needsWakeRefresh(at: Date()))
+    }
+
+    @Test func healthyRecentPluginDoesNotNeedWakeRefresh() {
+        let plugin = TestPlugin(id: "wake.5m.sh", file: "wake.5m.sh", lastState: .Success)
+        plugin.updateInterval = 300
+        plugin.lastUpdated = Date().addingTimeInterval(-5)
+
+        #expect(!plugin.needsWakeRefresh(at: Date()))
+    }
+
+    @Test func overduePluginNeedsWakeRefresh() {
+        let plugin = TestPlugin(id: "wake.5m.sh", file: "wake.5m.sh", lastState: .Success)
+        plugin.updateInterval = 300
+        plugin.lastUpdated = Date().addingTimeInterval(-3600)
+
+        #expect(plugin.needsWakeRefresh(at: Date()))
     }
 }

@@ -129,16 +129,13 @@ class ExecutablePlugin: TimerArmingPlugin {
                 refreshPluginMetadata()
                 enableTimer()
             } else if updateInterval > 0, updateInterval < pluginNeverUpdateInterval {
-                // For interval-based plugins (excluding "never" plugins), check if the scheduled time has passed
-                if let lastUpdated {
-                    let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)
-                    if Date() > nextUpdateTime {
-                        // It's time to update
-                        refresh(reason: .WakeFromSleep)
-                    } else {
-                        // Not yet time to update, just re-enable the timer
-                        enableTimer()
-                    }
+                // For interval-based plugins (excluding "never" plugins), check if the
+                // scheduled time has passed or the last run needs a redo
+                if needsWakeRefresh(at: Date()) {
+                    refresh(reason: .WakeFromSleep)
+                } else {
+                    // Not yet time to update, just re-enable the timer
+                    enableTimer()
                 }
             } else {
                 // For plugins without a specific interval ("never" plugins), always refresh on wake
@@ -151,6 +148,9 @@ class ExecutablePlugin: TimerArmingPlugin {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        // plugin.operation ownership is serialized on the main queue
+        // (see RunPluginOperation.scheduleRetry).
+        dispatchPrecondition(condition: .onQueue(.main))
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return
