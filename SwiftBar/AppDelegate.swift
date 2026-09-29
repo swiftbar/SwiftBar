@@ -173,6 +173,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         // This fixes issues where menubar items disappear after initial setup
         cleanupStatusItemVisibility()
 
+        // Replace a launch-at-login registration left behind by SwiftBar 2.0.x
+        // and earlier with a main app registration the toggle can manage (#571)
+        ModernLaunchAtLogin.migrateLegacyLoginItem()
+
         let hostBundle = Bundle.main
         #if !MAC_APP_STORE
             let updateDriver = SPUStandardUserDriver(hostBundle: hostBundle, delegate: self)

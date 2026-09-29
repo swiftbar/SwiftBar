@@ -17,6 +17,14 @@ public enum ModernLaunchAtLogin {
     public static let observable = Observable()
 
     /**
+    Bundle identifier of the login item helper that SwiftBar 2.0.x and earlier
+    registered through `SMLoginItemSetEnabled` (via the LaunchAtLogin package).
+    The helper is still embedded at `Contents/Library/LoginItems` so this
+    identifier keeps resolving for status checks and unregistration.
+    */
+    static let legacyHelperIdentifier = "com.ameba.SwiftBar-LaunchAtLoginHelper"
+
+    /**
     Toggle "launch at login" for your app or check whether it's enabled.
     */
     public static var isEnabled: Bool {
@@ -41,6 +49,12 @@ public enum ModernLaunchAtLogin {
                         try SMAppService.mainApp.register()
                     } else {
                         try SMAppService.mainApp.unregister()
+
+                        // Disabling only the main app leaves any helper
+                        // registration made by SwiftBar 2.0.x and earlier
+                        // active in the background task management database,
+                        // so SwiftBar would keep launching at login (#571).
+                        try? SMAppService.loginItem(identifier: legacyHelperIdentifier).unregister()
                     }
                 } catch {
                     logger.error("Failed to \(newValue ? "enable" : "disable") launch at login: \(error.localizedDescription)")
@@ -60,6 +74,56 @@ public enum ModernLaunchAtLogin {
         let event = NSAppleEventManager.shared().currentAppleEvent
         return event?.eventID == kAEOpenApplication
             && event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
+    }
+}
+
+extension ModernLaunchAtLogin {
+    /**
+    Migrates a launch-at-login registration made by SwiftBar 2.0.x and earlier.
+
+    Old versions enabled launch at login by registering the embedded
+    `LaunchAtLoginHelper.app` through `SMLoginItemSetEnabled`. That registration
+    lives in the background task management database independently of
+    `SMAppService.mainApp`: it keeps launching SwiftBar at login even after the
+    toggle (which only manages the main app registration) is turned off, and it
+    appears in System Settings under "Allow in the Background" as
+    "Ameba Labs, LLC" instead of "SwiftBar". Replacing it with a main app
+    registration preserves the user's intent, makes the toggle authoritative,
+    and lists the item as "SwiftBar" in "Open at Login".
+    */
+    public static func migrateLegacyLoginItem() {
+        guard #available(macOS 13.0, *) else { return }
+
+        let legacyHelper = SMAppService.loginItem(identifier: legacyHelperIdentifier)
+        migrateLegacyLoginItem(
+            isLegacyEnabled: legacyHelper.status == .enabled,
+            unregisterLegacy: legacyHelper.unregister,
+            registerMain: SMAppService.mainApp.register
+        )
+    }
+
+    /// Migration logic separated from the `SMAppService` calls so it can be unit tested.
+    static func migrateLegacyLoginItem(
+        isLegacyEnabled: Bool,
+        unregisterLegacy: () throws -> Void,
+        registerMain: () throws -> Void
+    ) {
+        guard isLegacyEnabled else { return }
+
+        do {
+            try unregisterLegacy()
+        } catch {
+            logger.error("Failed to unregister legacy login item helper: \(error.localizedDescription)")
+        }
+
+        // Register the main app even if unregistering the helper failed:
+        // launch at login stays enabled either way, and the main app
+        // registration is the one the toggle can actually manage.
+        do {
+            try registerMain()
+        } catch {
+            logger.error("Failed to register main app while migrating legacy login item: \(error.localizedDescription)")
+        }
     }
 }
 
