@@ -40,24 +40,28 @@ public enum ModernLaunchAtLogin {
             observable.objectWillChange.send()
 
             if #available(macOS 13.0, *) {
-                do {
-                    if newValue {
+                if newValue {
+                    do {
                         if SMAppService.mainApp.status == .enabled {
                             try? SMAppService.mainApp.unregister()
                         }
 
                         try SMAppService.mainApp.register()
-                    } else {
-                        try SMAppService.mainApp.unregister()
-
-                        // Disabling only the main app leaves any helper
-                        // registration made by SwiftBar 2.0.x and earlier
-                        // active in the background task management database,
-                        // so SwiftBar would keep launching at login (#571).
-                        try? SMAppService.loginItem(identifier: legacyHelperIdentifier).unregister()
+                    } catch {
+                        logger.error("Failed to enable launch at login: \(error.localizedDescription)")
                     }
-                } catch {
-                    logger.error("Failed to \(newValue ? "enable" : "disable") launch at login: \(error.localizedDescription)")
+                } else {
+                    do {
+                        try SMAppService.mainApp.unregister()
+                    } catch {
+                        logger.error("Failed to disable launch at login: \(error.localizedDescription)")
+                    }
+
+                    // Runs even when the main app call fails or the main app
+                    // was never registered: for users upgraded from SwiftBar
+                    // 2.0.x the launch-at-login state may live only in the
+                    // legacy helper registration (#571).
+                    unregisterLegacyHelperIfEnabled()
                 }
             } else {
                 logger.warning("Launch at login requires macOS 13.0 or later")
@@ -97,32 +101,64 @@ extension ModernLaunchAtLogin {
         let legacyHelper = SMAppService.loginItem(identifier: legacyHelperIdentifier)
         migrateLegacyLoginItem(
             isLegacyEnabled: legacyHelper.status == .enabled,
-            unregisterLegacy: legacyHelper.unregister,
-            registerMain: SMAppService.mainApp.register
+            isMainAppEnabled: SMAppService.mainApp.status == .enabled,
+            registerMain: SMAppService.mainApp.register,
+            unregisterLegacy: legacyHelper.unregister
         )
     }
 
+    /// What `migrateLegacyLoginItem` did, so tests can assert the failure paths.
+    enum LegacyMigrationOutcome: Equatable {
+        case notNeeded
+        case migrated
+        case registrationFailed
+        case unregistrationFailed
+    }
+
     /// Migration logic separated from the `SMAppService` calls so it can be unit tested.
+    @discardableResult
     static func migrateLegacyLoginItem(
         isLegacyEnabled: Bool,
-        unregisterLegacy: () throws -> Void,
-        registerMain: () throws -> Void
-    ) {
-        guard isLegacyEnabled else { return }
+        isMainAppEnabled: Bool,
+        registerMain: () throws -> Void,
+        unregisterLegacy: () throws -> Void
+    ) -> LegacyMigrationOutcome {
+        guard isLegacyEnabled else { return .notNeeded }
+
+        // Register the replacement before dropping the legacy registration so
+        // a failure can never silently lose launch at login: on error the
+        // legacy helper stays registered (still enabled, still launching the
+        // app) and the migration retries on the next launch.
+        if !isMainAppEnabled {
+            do {
+                try registerMain()
+            } catch {
+                logger.error("Failed to register main app while migrating legacy login item: \(error.localizedDescription)")
+                return .registrationFailed
+            }
+        }
 
         do {
             try unregisterLegacy()
         } catch {
             logger.error("Failed to unregister legacy login item helper: \(error.localizedDescription)")
+            return .unregistrationFailed
         }
 
-        // Register the main app even if unregistering the helper failed:
-        // launch at login stays enabled either way, and the main app
-        // registration is the one the toggle can actually manage.
+        return .migrated
+    }
+
+    /// Drops the launch-at-login registration made by SwiftBar 2.0.x and
+    /// earlier, if one is still active. See `migrateLegacyLoginItem()`.
+    @available(macOS 13.0, *)
+    private static func unregisterLegacyHelperIfEnabled() {
+        let legacyHelper = SMAppService.loginItem(identifier: legacyHelperIdentifier)
+        guard legacyHelper.status == .enabled else { return }
+
         do {
-            try registerMain()
+            try legacyHelper.unregister()
         } catch {
-            logger.error("Failed to register main app while migrating legacy login item: \(error.localizedDescription)")
+            logger.error("Failed to unregister legacy login item helper: \(error.localizedDescription)")
         }
     }
 }

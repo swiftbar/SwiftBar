@@ -174,8 +174,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         cleanupStatusItemVisibility()
 
         // Replace a launch-at-login registration left behind by SwiftBar 2.0.x
-        // and earlier with a main app registration the toggle can manage (#571)
-        ModernLaunchAtLogin.migrateLegacyLoginItem()
+        // and earlier with a main app registration the toggle can manage (#571).
+        // Off the main thread: the SMAppService status checks are XPC calls.
+        DispatchQueue.global(qos: .utility).async {
+            ModernLaunchAtLogin.migrateLegacyLoginItem()
+        }
 
         let hostBundle = Bundle.main
         #if !MAC_APP_STORE
