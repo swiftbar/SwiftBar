@@ -70,7 +70,13 @@ public enum ModernLaunchAtLogin {
                         }
                     } else {
                         do {
-                            try SMAppService.mainApp.unregister()
+                            // unregister() throws when the main app was never
+                            // registered — the normal state for a legacy-only
+                            // 2.0.x upgrade — so skip it rather than log a
+                            // false failure.
+                            if SMAppService.mainApp.status != .notRegistered {
+                                try SMAppService.mainApp.unregister()
+                            }
                         } catch {
                             logger.error("Failed to disable launch at login: \(error.localizedDescription)")
                         }
@@ -97,6 +103,22 @@ public enum ModernLaunchAtLogin {
         let event = NSAppleEventManager.shared().currentAppleEvent
         return event?.eventID == kAEOpenApplication
             && event?.paramDescriptor(forKeyword: keyAEPropData)?.enumCodeValue == keyAELaunchedAsLogInItem
+    }
+}
+
+private protocol LegacyLoginItemDisabling {
+    static func disable(_ identifier: CFString)
+}
+
+/// `SMLoginItemSetEnabled` is deprecated since macOS 13, but it is the API
+/// that created pre-2.1.0 registrations and the reliable way to clear them on
+/// systems where `SMAppService` does not bridge to them. The deprecated call
+/// lives in a deprecated witness and is reached through the protocol, which
+/// contains the deprecation warning to this shim.
+private enum LegacyLoginItemShim: LegacyLoginItemDisabling {
+    @available(macOS, deprecated: 13.0)
+    static func disable(_ identifier: CFString) {
+        _ = SMLoginItemSetEnabled(identifier, false)
     }
 }
 
@@ -132,12 +154,21 @@ extension ModernLaunchAtLogin {
                     }
                 },
                 registerMain: SMAppService.mainApp.register,
-                unregisterLegacy: legacyHelper.unregister
+                unregisterLegacy: {
+                    // Defense in depth: also clear the legacy registration
+                    // through the API that created it, even when the
+                    // SMAppService unregistration throws (see
+                    // disableLegacyLoginItem()).
+                    defer { disableLegacyLoginItem() }
+                    try legacyHelper.unregister()
+                }
             )
 
             if outcome == .migrated {
-                // Refresh an already-open Preferences toggle, which reads
-                // SMAppService.mainApp.status through `observable`.
+                // The displayed state does not change (the getter already
+                // counted the legacy helper), but nudge an open Preferences
+                // toggle to re-read it now that the backing registration is
+                // the main app.
                 DispatchQueue.main.async {
                     observable.objectWillChange.send()
                 }
@@ -223,6 +254,21 @@ extension ModernLaunchAtLogin {
             isLegacyEnabled: legacyHelper.status == .enabled,
             unregisterLegacy: legacyHelper.unregister
         )
+
+        // Defense in depth, unconditionally: also clear the registration
+        // through the API that created it. SMAppService reads and removes
+        // SMLoginItemSetEnabled registrations on current systems (verified
+        // live against the BTM database), but this keeps the removal robust
+        // on systems where that bridge may not hold.
+        disableLegacyLoginItem()
+    }
+
+    /// Clears the pre-2.1.0 registration through `SMLoginItemSetEnabled`,
+    /// the API that created it. The result is intentionally ignored: this
+    /// backs up the `SMAppService` unregistration, it does not replace it.
+    static func disableLegacyLoginItem() {
+        (LegacyLoginItemShim.self as LegacyLoginItemDisabling.Type)
+            .disable(legacyHelperIdentifier as CFString)
     }
 
     /// Disable-path logic separated from the `SMAppService` calls so it can be
