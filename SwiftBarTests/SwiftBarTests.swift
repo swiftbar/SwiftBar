@@ -18,6 +18,7 @@ final class TestPlugin: Plugin {
     var lastUpdated: Date?
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
+    var operation: Operation?
     var content: String?
     var error: Error?
     var debugInfo = PluginDebugInfo()
@@ -73,6 +74,7 @@ final class TimedTestPlugin: TimerArmingPlugin {
     var lastUpdated: Date?
     var lastState: PluginState = .Loading
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
+    var operation: Operation?
     var content: String?
     var error: Error?
     var debugInfo = PluginDebugInfo()
@@ -216,7 +218,7 @@ struct SwiftBarTests {
         })
     }
 
-    @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() throws {
+    @MainActor @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -237,7 +239,7 @@ struct SwiftBarTests {
         #expect(plugin.supportDirectoryName == aliasURL.lastPathComponent)
     }
 
-    @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
+    @MainActor @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let firstDirectory = tempDirectory.appendingPathComponent("first", isDirectory: true)
         let secondDirectory = tempDirectory.appendingPathComponent("second", isDirectory: true)
@@ -270,7 +272,7 @@ struct SwiftBarTests {
         #expect(secondPlugin.supportDirectoryName == "duplicate.1m.sh")
     }
 
-    @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() throws {
+    @MainActor @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let packageTargetURL = tempDirectory.appendingPathComponent("package-target", isDirectory: true)
         try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
@@ -357,7 +359,7 @@ struct SwiftBarTests {
 
     @Test func testRunPluginOperation_rearmsTimersForTimerArmingPlugins() {
         let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
-        let operation = RunPluginOperation(plugin: plugin)
+        let operation = RunPluginOperation(plugin: plugin, queue: nil)
         let queue = OperationQueue()
 
         #expect(plugin.enableTimerCallCount == 0)
@@ -374,7 +376,7 @@ struct SwiftBarTests {
         // plugin would be left without a scheduled refresh and stay dormant
         // until the SwiftBar process is restarted.
         let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
-        let op = RunPluginOperation(plugin: plugin)
+        let op = RunPluginOperation(plugin: plugin, queue: nil)
         let queue = OperationQueue()
         queue.isSuspended = true
         queue.addOperation(op)
@@ -388,7 +390,7 @@ struct SwiftBarTests {
 
     @Test func testRunPluginOperation_doesNotRearmAfterTimerCycleStops() {
         let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
-        let operation = RunPluginOperation(plugin: plugin)
+        let operation = RunPluginOperation(plugin: plugin, queue: nil)
         let queue = OperationQueue()
         queue.isSuspended = true
         queue.addOperation(operation)
@@ -404,7 +406,7 @@ struct SwiftBarTests {
 
     @Test func testRunPluginOperation_doesNotRearmStaleTimerGeneration() {
         let plugin = TimedTestPlugin(id: "timed-plugin", file: "/tmp/timed.5s.sh", invokeResult: "updated")
-        let operation = RunPluginOperation(plugin: plugin)
+        let operation = RunPluginOperation(plugin: plugin, queue: nil)
         let queue = OperationQueue()
 
         plugin.beginTimerArmingCycle()
@@ -1277,7 +1279,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() throws {
+    @MainActor @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1321,7 +1323,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() throws {
+    @MainActor @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1468,7 +1470,7 @@ struct SwiftBarIntegrationTests {
         #expect(merged[1] === last)
     }
 
-    @Test func testMergePluginsPreservingOrder_appendsNewFilePluginAndShortcuts() async throws {
+    @MainActor @Test func testMergePluginsPreservingOrder_appendsNewFilePluginAndShortcuts() async throws {
         let existing = TestPlugin(id: "existing", file: "/tmp/existing.5s.sh")
         let brandNew = TestPlugin(id: "brand-new", file: "/tmp/brand-new.5s.sh")
         let shortcut = ShortcutPlugin(PersistentShortcutPlugin(id: "shortcut", name: "shortcut", shortcut: "test", repeatString: "", cronString: ""))
@@ -1534,7 +1536,7 @@ struct SwiftBarIntegrationTests {
         #expect(manager.loadPlugin(fileURL: packageURL) == nil)
     }
 
-    @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() throws {
+    @MainActor @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -5853,5 +5855,377 @@ struct MenuBarRecoveryGatingTests {
         let macOS15 = OperatingSystemVersion(majorVersion: 15, minorVersion: 6, patchVersion: 0)
 
         #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: Date(), operatingSystemVersion: macOS15))
+    }
+}
+
+// MARK: - Wake Refresh Retry Tests (issue #540)
+
+/// Plugin double whose invocation fails a configurable number of times
+/// before succeeding, mimicking a network-dependent script that runs
+/// while the connection is still resuming after wake.
+private final class WakeRetryTestPlugin: TimerArmingPlugin {
+    let id: PluginID = "wake-retry-test"
+    let type: PluginType = .Executable
+    let name = "wake-retry-test"
+    let file = "wake-retry-test.sh"
+    var metadata: PluginMetadata?
+    var contentUpdatePublisher = PassthroughSubject<String?, Never>()
+    var updateInterval: Double = 60
+    var lastUpdated: Date?
+    var lastState: PluginState = .Loading
+    var lastRefreshReason: PluginRefreshReason = .WakeFromSleep
+    var operation: Operation?
+    var content: String? = "initial"
+    var error: Error?
+    var debugInfo = PluginDebugInfo()
+    var refreshEnv: [String: String] = [:]
+    var timerGeneration: UInt = 0
+    var timerArmingEnabled = true
+
+    var enabledOverride = true
+    var enabled: Bool { enabledOverride }
+
+    var failuresBeforeSuccess = 0
+    var successOutput = "success"
+    private(set) var invokeCount = 0
+    private(set) var enableTimerCallCount = 0
+
+    func refresh(reason _: PluginRefreshReason) {}
+    func enable() {}
+    func disable() {}
+    func start() {}
+    func terminate() {}
+    func enableTimer() { enableTimerCallCount += 1 }
+    func makeScriptExecutable(file _: String) {}
+    func refreshPluginMetadata() {}
+
+    func invoke() -> String? {
+        invokeCount += 1
+        lastUpdated = Date()
+        if invokeCount <= failuresBeforeSuccess {
+            error = NSError(domain: "WakeRetryTest", code: 1)
+            lastState = .Failed
+            return nil
+        }
+        error = nil
+        lastState = .Success
+        return successOutput
+    }
+}
+
+struct WakeRefreshRetryTests {
+    private let testRetryDelay: (PluginRefreshReason, Int) -> TimeInterval? = { reason, failedAttempts in
+        guard reason == .WakeFromSleep, failedAttempts <= 2 else { return nil }
+        return 0.02
+    }
+
+    /// Delay long enough for the test to interleave work before the retry fires.
+    private let interleavingRetryDelay: (PluginRefreshReason, Int) -> TimeInterval? = { reason, failedAttempts in
+        guard reason == .WakeFromSleep, failedAttempts == 1 else { return nil }
+        return 0.25
+    }
+
+    private func startOperation(
+        on plugin: WakeRetryTestPlugin,
+        queue: OperationQueue,
+        retryDelay: @escaping (PluginRefreshReason, Int) -> TimeInterval?
+    ) {
+        let operation = RunPluginOperation(plugin: plugin, queue: queue, retryDelay: retryDelay)
+        plugin.operation = operation
+        queue.addOperation(operation)
+    }
+
+    /// Polls with a yielding sleep — a blocking wait here would starve the
+    /// cooperative pool that runs the parallel test tasks.
+    private func waitUntil(timeout: TimeInterval = 3, _ condition: () -> Bool) async -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition(), Date() < deadline {
+            try? await Task.sleep(nanoseconds: 5_000_000)
+        }
+        return condition()
+    }
+
+    private func letPendingRetryWindowPass() async {
+        try? await Task.sleep(nanoseconds: 400_000_000)
+    }
+
+    @Test func wakeRefreshGetsBoundedBackoffDelays() {
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 1) == 2)
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 2) == 4)
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 3) == 8)
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 4) == nil)
+    }
+
+    @Test func otherRefreshReasonsKeepFailFastBehavior() {
+        let reasons: [PluginRefreshReason] = [
+            .FirstLaunch, .Schedule, .MenuAction, .RefreshAllMenu,
+            .RefreshAllURLScheme, .URLScheme, .Shortcut, .DebugView,
+            .NotificationAction, .PluginSettings, .MenuOpen,
+        ]
+        for reason in reasons {
+            #expect(wakeRefreshRetryDelay(reason: reason, failedAttempts: 1) == nil)
+        }
+    }
+
+    @Test func wakeRunRetriesUntilSuccessWithoutSurfacingError() async {
+        // Two failures while the network resumes, then success — the menu
+        // must end up with the successful output and a clean error state.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = 2
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: testRetryDelay)
+
+        #expect(await waitUntil { plugin.content == "success" })
+        #expect(plugin.invokeCount == 3)
+        #expect(plugin.lastState == .Success)
+        #expect(plugin.error == nil)
+    }
+
+    @Test func wakeRunSurfacesErrorAfterRetriesExhausted() async {
+        // A genuinely broken plugin must still reach the error state after
+        // the retry budget is spent.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: testRetryDelay)
+
+        #expect(await waitUntil { plugin.invokeCount == 3 && plugin.content == nil })
+        #expect(plugin.lastState == .Failed)
+        #expect(plugin.error != nil)
+    }
+
+    @Test func retryWaitDoesNotHoldAnInvokeQueueSlot() async {
+        // While a retry waits for its backoff delay, the queue must be free
+        // to run other plugins — the retry is rescheduled, not slept out.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+
+        let longBackoff: (PluginRefreshReason, Int) -> TimeInterval? = { reason, failedAttempts in
+            guard reason == .WakeFromSleep, failedAttempts == 1 else { return nil }
+            return 1.0
+        }
+        startOperation(on: plugin, queue: queue, retryDelay: longBackoff)
+        #expect(await waitUntil { plugin.invokeCount == 1 })
+
+        // A second plugin's run must complete well within the 1s backoff wait.
+        let other = WakeRetryTestPlugin()
+        other.lastRefreshReason = .Schedule
+        startOperation(on: other, queue: queue, retryDelay: wakeRefreshRetryDelay(reason:failedAttempts:))
+        #expect(await waitUntil(timeout: 0.5) { other.content == "success" })
+    }
+
+    @Test func scheduledRunDoesNotRetry() async {
+        // Normal error handling is unchanged: a scheduled run fails fast.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        plugin.lastRefreshReason = .Schedule
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: wakeRefreshRetryDelay(reason:failedAttempts:))
+
+        #expect(await waitUntil { plugin.content == nil })
+        #expect(plugin.invokeCount == 1)
+        #expect(plugin.lastState == .Failed)
+    }
+
+    @Test func cancelledPendingRetryDoesNotRun() async {
+        // refresh() cancels plugin.operation; a pending retry stored there
+        // must be cancelled with it and never run.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        let firstOperation = plugin.operation
+        #expect(await waitUntil { plugin.operation !== firstOperation })
+
+        plugin.operation?.cancel()
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.invokeCount == 1)
+        #expect(plugin.content == "initial")
+        // Cancelling the pending retry ends the chain, which resumes the
+        // regular timer exactly once.
+        #expect(plugin.enableTimerCallCount == 1)
+    }
+
+    @Test func timerStaysPausedUntilRetryChainEnds() async {
+        // A short-interval plugin must not get its regular timer rearmed
+        // between wake attempts — a schedule tick would run into the same
+        // dead-network window and publish the error the backoff is meant
+        // to suppress. The timer resumes once, when the chain ends.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: testRetryDelay)
+
+        #expect(await waitUntil { plugin.invokeCount == 3 && plugin.content == nil })
+        #expect(await waitUntil { plugin.enableTimerCallCount == 1 })
+        #expect(plugin.enableTimerCallCount == 1)
+    }
+
+    @Test func staleRetryDoesNotStealOwnershipFromNewerRefresh() async {
+        // If a newer refresh installs its own operation while a failed wake
+        // attempt is scheduling its retry, the retry must not be installed
+        // over it; the successor is dropped and timer control returns to
+        // the chain's generation.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        let newerOwner = BlockOperation {}
+        plugin.operation = newerOwner
+
+        // This wake attempt runs without owning plugin.operation, exactly
+        // as if ownership had been taken between its invoke and the
+        // successor installation.
+        let staleAttempt = RunPluginOperation(plugin: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        queue.addOperation(staleAttempt)
+
+        #expect(await waitUntil { plugin.enableTimerCallCount == 1 })
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.operation === newerOwner)
+        #expect(plugin.invokeCount == 1)
+    }
+
+    @Test func menuOpenRecoveryDuringBackoffIsPreserved() async {
+        // The interleaving from review: the wake attempt failed, the user
+        // opens the menu during the backoff, and that run succeeds. The
+        // fresh content must survive; the retry must not run afterwards
+        // and overwrite it with a stale result.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = 1
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        let firstOperation = plugin.operation
+        #expect(await waitUntil { plugin.operation !== firstOperation })
+
+        // What refreshAndShowMenu does: cancel the pending run, invoke on
+        // the spot, and assign the fresh content.
+        plugin.operation?.cancel()
+        plugin.lastRefreshReason = .MenuOpen
+        let fresh = plugin.invoke()
+        plugin.content = fresh
+
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.invokeCount == 2)
+        #expect(plugin.content == "success")
+        #expect(plugin.lastState == .Success)
+    }
+
+    @Test func retrySkipsWhenPluginAlreadyRecovered() async {
+        // A run outside plugin.operation (e.g. a timer-scheduled one) can
+        // recover the plugin during the backoff without cancelling the
+        // pending retry. The retry must notice and do nothing.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = 1
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        let firstOperation = plugin.operation
+        #expect(await waitUntil { plugin.operation !== firstOperation })
+
+        let fresh = plugin.invoke()
+        plugin.content = fresh
+
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.invokeCount == 2)
+        #expect(plugin.content == "success")
+        #expect(plugin.lastState == .Success)
+    }
+
+    @Test func disabledDuringBackoffDoesNotRun() async {
+        // Disabling the plugin while a retry waits must silently drop the
+        // retry; .Disabled must not be overwritten with .Failed or .Success.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        let firstOperation = plugin.operation
+        #expect(await waitUntil { plugin.operation !== firstOperation })
+
+        plugin.enabledOverride = false
+        plugin.lastState = .Disabled
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.invokeCount == 1)
+        #expect(plugin.lastState == .Disabled)
+        #expect(plugin.content == "initial")
+    }
+
+    @Test func terminatedDuringBackoffDoesNotRun() async {
+        // terminate() bumps the timer generation; a retry from the previous
+        // cycle must not run afterwards.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        let queue = OperationQueue()
+
+        startOperation(on: plugin, queue: queue, retryDelay: interleavingRetryDelay)
+        let firstOperation = plugin.operation
+        #expect(await waitUntil { plugin.operation !== firstOperation })
+
+        plugin.stopTimerArming()
+        await letPendingRetryWindowPass()
+
+        #expect(plugin.invokeCount == 1)
+        #expect(plugin.content == "initial")
+    }
+
+    @Test func recoveredRetryWithUnchangedOutputStillPublishes() async {
+        // The content didSet guard suppresses updates with unchanged output.
+        // A retry that recovers with the same output as before the failure
+        // must still publish, otherwise the error icon stays up.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = 1
+        plugin.content = plugin.successOutput
+        let queue = OperationQueue()
+
+        var publishedValues: [String?] = []
+        let cancellable = plugin.contentUpdatePublisher.sink { publishedValues.append($0) }
+        defer { cancellable.cancel() }
+
+        startOperation(on: plugin, queue: queue, retryDelay: testRetryDelay)
+
+        #expect(await waitUntil { plugin.invokeCount == 2 && !publishedValues.isEmpty })
+        #expect(plugin.lastState == .Success)
+        #expect(publishedValues.contains { $0 == plugin.successOutput })
+    }
+
+    @Test func failedPluginNeedsWakeRefreshDespiteRecentAttempt() {
+        // A failed wake attempt records lastUpdated. If the machine sleeps
+        // again mid-backoff, the pending retry is invalidated; the next
+        // wake must not judge by recency alone and leave the failure
+        // unresolved until the regular interval.
+        let plugin = TestPlugin(id: "wake.5m.sh", file: "wake.5m.sh", lastState: .Failed)
+        plugin.updateInterval = 300
+        plugin.lastUpdated = Date().addingTimeInterval(-5)
+
+        #expect(plugin.needsWakeRefresh(at: Date()))
+    }
+
+    @Test func healthyRecentPluginDoesNotNeedWakeRefresh() {
+        let plugin = TestPlugin(id: "wake.5m.sh", file: "wake.5m.sh", lastState: .Success)
+        plugin.updateInterval = 300
+        plugin.lastUpdated = Date().addingTimeInterval(-5)
+
+        #expect(!plugin.needsWakeRefresh(at: Date()))
+    }
+
+    @Test func overduePluginNeedsWakeRefresh() {
+        let plugin = TestPlugin(id: "wake.5m.sh", file: "wake.5m.sh", lastState: .Success)
+        plugin.updateInterval = 300
+        plugin.lastUpdated = Date().addingTimeInterval(-3600)
+
+        #expect(plugin.needsWakeRefresh(at: Date()))
     }
 }

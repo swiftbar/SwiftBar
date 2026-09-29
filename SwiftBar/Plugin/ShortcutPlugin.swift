@@ -47,7 +47,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     var cronString: String
     var refreshEnv: [String: String] = [:]
     @Published var enabled: Bool = true
-    var operation: RunPluginOperation<ShortcutPlugin>?
+    var operation: Operation?
 
     var content: String? = "..." {
         didSet {
@@ -94,7 +94,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
             .receive(on: invokeQueue)
             .sink(receiveValue: { [weak self] _ in
                 self?.lastRefreshReason = .Schedule
-                self?.invokeQueue.addOperation(RunPluginOperation<ShortcutPlugin>(plugin: self!))
+                self?.invokeQueue.addOperation(RunPluginOperation<ShortcutPlugin>(plugin: self!, queue: self!.invokeQueue))
             }).store(in: &cancellable)
     }
 
@@ -104,6 +104,9 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        // plugin.operation ownership is serialized on the main queue
+        // (see RunPluginOperation.scheduleRetry).
+        dispatchPrecondition(condition: .onQueue(.main))
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return
@@ -115,7 +118,7 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
         operation?.cancel()
 
         lastRefreshReason = reason
-        operation = RunPluginOperation<ShortcutPlugin>(plugin: self)
+        operation = RunPluginOperation<ShortcutPlugin>(plugin: self, queue: invokeQueue)
         invokeQueue.addOperation(operation!)
     }
 

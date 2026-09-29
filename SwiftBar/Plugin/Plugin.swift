@@ -78,6 +78,9 @@ protocol Plugin: AnyObject {
     var lastUpdated: Date? { get set }
     var lastState: PluginState { get set }
     var lastRefreshReason: PluginRefreshReason { get set }
+    /// Most recent refresh-initiated run, kept so a newer refresh (or a
+    /// menu-open refresh) can cancel it before starting its own run.
+    var operation: Operation? { get set }
     var content: String? { get set }
     var error: Error? { get set }
     var debugInfo: PluginDebugInfo { get set }
@@ -155,6 +158,20 @@ extension Plugin {
 
         let timeSinceLastUpdate = date.timeIntervalSince(referenceDate)
         return timeSinceLastUpdate > (updateInterval * 2)
+    }
+
+    /// Whether a wake-from-sleep start must run the plugin immediately
+    /// instead of only rearming its timer.
+    ///
+    /// A plugin whose last run failed always refreshes on wake: a failed
+    /// wake attempt records `lastUpdated`, and when the machine sleeps
+    /// again mid-retry the pending retry is invalidated — judging by
+    /// recency alone would leave the failure unresolved until the next
+    /// regular interval.
+    func needsWakeRefresh(at date: Date) -> Bool {
+        if lastState == .Failed { return true }
+        guard let lastUpdated else { return true }
+        return date > lastUpdated.addingTimeInterval(updateInterval)
     }
 
     var prefs: PreferencesStore {

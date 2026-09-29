@@ -37,7 +37,7 @@ class PackagedPlugin: TimerArmingPlugin {
     var lastState: PluginState
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
-    var operation: RunPluginOperation<PackagedPlugin>?
+    var operation: Operation?
 
     var content: String? = "..." {
         didSet {
@@ -180,7 +180,7 @@ class PackagedPlugin: TimerArmingPlugin {
             .sink(receiveValue: { [weak self] _ in
                 guard let self else { return }
                 self.lastRefreshReason = .Schedule
-                self.invokeQueue.addOperation(RunPluginOperation<PackagedPlugin>(plugin: self))
+                self.invokeQueue.addOperation(RunPluginOperation<PackagedPlugin>(plugin: self, queue: invokeQueue))
             }).store(in: &cancellable)
     }
 
@@ -215,13 +215,10 @@ class PackagedPlugin: TimerArmingPlugin {
                 refreshPluginMetadata()
                 enableTimer()
             } else if updateInterval > 0, updateInterval < pluginNeverUpdateInterval {
-                if let lastUpdated {
-                    let nextUpdateTime = lastUpdated.addingTimeInterval(updateInterval)
-                    if Date() > nextUpdateTime {
-                        refresh(reason: .WakeFromSleep)
-                    } else {
-                        enableTimer()
-                    }
+                if needsWakeRefresh(at: Date()) {
+                    refresh(reason: .WakeFromSleep)
+                } else {
+                    enableTimer()
                 }
             } else {
                 refresh(reason: .WakeFromSleep)
@@ -232,6 +229,9 @@ class PackagedPlugin: TimerArmingPlugin {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        // plugin.operation ownership is serialized on the main queue
+        // (see RunPluginOperation.scheduleRetry).
+        dispatchPrecondition(condition: .onQueue(.main))
         guard enabled else {
             os_log("Skipping refresh for disabled plugin\n%{public}@", log: Log.plugin, description)
             return
@@ -244,7 +244,7 @@ class PackagedPlugin: TimerArmingPlugin {
 
         refreshPluginMetadata()
         lastRefreshReason = reason
-        operation = RunPluginOperation<PackagedPlugin>(plugin: self)
+        operation = RunPluginOperation<PackagedPlugin>(plugin: self, queue: invokeQueue)
         invokeQueue.addOperation(operation!)
     }
 

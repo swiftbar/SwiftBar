@@ -434,7 +434,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                                     env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true)
             {
                 if params.refresh {
-                    plugin.refresh(reason: .NotificationAction)
+                    // The runInTerminal completion arrives on a background
+                    // queue; refresh is serialized on main.
+                    DispatchQueue.main.async {
+                        plugin.refresh(reason: .NotificationAction)
+                    }
                 }
             }
         }
