@@ -51,6 +51,11 @@ class MenubarItem: NSObject {
     var hotKeys: [HotKey] = []
     var hotkeyTrigger: Bool = false
     var showsAllStandardItemsWhileOpen = false
+    /// One-shot: the current showMenu() was initiated by an option-click,
+    /// so menuWillOpen must reveal the hidden standard items even if the
+    /// option key is released between the mouse-up and the menu opening.
+    /// Consumed in menuWillOpen, like hotkeyTrigger.
+    var pendingOptionClickReveal = false
     /// Reads the live hardware modifier state. `NSApp.currentEvent` is not
     /// reliable in `menuWillOpen`: during status-item menu tracking on
     /// macOS 27 it holds an unrelated event (e.g. mouse-moved) whose flags
@@ -229,7 +234,7 @@ class MenubarItem: NSObject {
 extension MenubarItem: NSMenuDelegate {
     func menuWillOpen(_: NSMenu) {
         isOpen = true
-        showsAllStandardItemsWhileOpen = !hotkeyTrigger && optionKeyIsPressed()
+        showsAllStandardItemsWhileOpen = pendingOptionClickReveal || (!hotkeyTrigger && optionKeyIsPressed())
 
         if #available(macOS 12, *) {
             // nothing todo here
@@ -241,6 +246,7 @@ extension MenubarItem: NSMenuDelegate {
         }
 
         hotkeyTrigger = false
+        pendingOptionClickReveal = false
         reapplyOpenMenuStateIfNeeded()
     }
 
@@ -1838,20 +1844,50 @@ extension MenubarItem {
         // Defensive: with the menu attached to the status item AppKit owns
         // the whole click (including press-drag-release) and does not send
         // the button action, so this should never fire; if it ever does,
-        // there is nothing to intercept.
-        guard barItem.menu == nil else { return }
-        guard let eventType = NSApp.currentEvent?.type else { return }
+        // there is nothing to intercept. Either way an aborted dispatch
+        // must consume the one-shot hotkey flag: left stale, it would make
+        // the next real option-click read as hotkey-driven and run the
+        // title action — the very bug #576 fixes.
+        guard barItem.menu == nil, let event = NSApp.currentEvent else {
+            hotkeyTrigger = false
+            return
+        }
+        handleBarItemClick(eventType: event.type, eventFlagsContainOption: event.modifierFlags.contains(.option))
+    }
 
-        if Self.eventOpensMenuWithoutTitleAction(eventType) {
+    /// The detached-path click handler, split from barItemClicked so tests
+    /// can drive it without an NSApp event. Unlike menuWillOpen (#564), the
+    /// dispatching event is current in barItemClicked, so its flags are the
+    /// primary option source; the live hardware state is OR-ed in for
+    /// dispatch paths whose current event carries no flags.
+    func handleBarItemClick(eventType: NSEvent.EventType, eventFlagsContainOption: Bool) {
+        switch Self.routeForBarItemClick(
+            eventType: eventType,
+            eventFlagsContainOption: eventFlagsContainOption,
+            hotkeyTriggered: hotkeyTrigger,
+            optionKeyIsPressed: optionKeyIsPressed()
+        ) {
+        case let .openMenu(revealStandardItems):
+            // performClick runs menu tracking synchronously, so menuWillOpen
+            // sees the flag before the defer clears it; it is an instance
+            // flag rather than an argument because it must also survive
+            // refreshAndShowMenu's synchronous plugin invocation. The defer
+            // keeps it from leaking into a later open — one that must
+            // suppress the reveal, like a hotkey open — when no menu
+            // tracking starts to consume it.
+            pendingOptionClickReveal = revealStandardItems
+            defer { pendingOptionClickReveal = false }
             showMenu()
-            return
+        case .runTitleAction:
+            if performItemAction(params: MenuLineParameters(line: currentTitleLine)) {
+                // menuWillOpen never runs on this path, so consume the
+                // one-shot hotkey flag here — otherwise the next real
+                // option-click would still read as hotkey-driven.
+                hotkeyTrigger = false
+                return
+            }
+            showMenu()
         }
-
-        if performItemAction(params: MenuLineParameters(line: currentTitleLine)) {
-            return
-        }
-
-        showMenu()
     }
 
     /// A right click always opens the menu, never the title line's action.
@@ -1860,6 +1896,33 @@ extension MenubarItem {
     /// current — a stale right mouse down must still route to the menu.
     static func eventOpensMenuWithoutTitleAction(_ eventType: NSEvent.EventType) -> Bool {
         eventType == .rightMouseUp || eventType == .rightMouseDown
+    }
+
+    enum BarItemClickRoute: Equatable {
+        case openMenu(revealStandardItems: Bool)
+        case runTitleAction
+    }
+
+    /// Resolves a detached-path click. A left click runs the title line's
+    /// action, which leaves no left-button route to the menu at all, so an
+    /// option-click opens the menu instead and carries the standard-items
+    /// reveal with it: option-click is the documented gesture for reaching
+    /// the standard items (#560), and under StealthMode there is no fallback
+    /// SwiftBar item to reach them through (#576). A hotkey-driven
+    /// performClick dispatches with the hotkey's own key event current, so
+    /// an option key held as part of the combo must not read as an
+    /// option-click — the same suppression menuWillOpen applies through
+    /// hotkeyTrigger.
+    static func routeForBarItemClick(
+        eventType: NSEvent.EventType,
+        eventFlagsContainOption: Bool,
+        hotkeyTriggered: Bool,
+        optionKeyIsPressed: Bool
+    ) -> BarItemClickRoute {
+        let optionClick = !hotkeyTriggered && (eventFlagsContainOption || optionKeyIsPressed)
+        return eventOpensMenuWithoutTitleAction(eventType) || optionClick
+            ? .openMenu(revealStandardItems: optionClick)
+            : .runTitleAction
     }
 
     /// Opens the menu for items on the detached path (title line with its
@@ -1872,7 +1935,10 @@ extension MenubarItem {
     /// swallowing every subsequent click. Only a menu attached to the
     /// status item before the press supports the full native gesture; see
     /// syncMenuAttachment().
-    func showMenu() {
+    /// @objc so tests can override it: extension members are otherwise not
+    /// overridable, and a stub is the only way to drive the click handler
+    /// without starting real menu tracking.
+    @objc func showMenu() {
         if refreshOnOpen, plugin?.type == .Executable {
             refreshAndShowMenu()
             return

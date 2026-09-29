@@ -478,6 +478,29 @@ struct SwiftBarTests {
         #expect(!MenubarItem.eventOpensMenuWithoutTitleAction(.mouseMoved))
     }
 
+    @Test func testRouteForBarItemClick_optionLeftClickOpensMenuWithReveal() async throws {
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: true, hotkeyTriggered: false, optionKeyIsPressed: false) == .openMenu(revealStandardItems: true))
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: false, hotkeyTriggered: false, optionKeyIsPressed: true) == .openMenu(revealStandardItems: true))
+    }
+
+    @Test func testRouteForBarItemClick_hotkeyDispatchIgnoresHeldOption() async throws {
+        // A hotkey combo containing ⌥ dispatches performClick with the key
+        // event current: the held option key is part of the shortcut, not an
+        // option-click, so the title action must still run.
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: true, hotkeyTriggered: true, optionKeyIsPressed: true) == .runTitleAction)
+    }
+
+    @Test func testRouteForBarItemClick_rightClickOpensMenuWithAndWithoutOption() async throws {
+        #expect(MenubarItem.routeForBarItemClick(eventType: .rightMouseUp, eventFlagsContainOption: false, hotkeyTriggered: false, optionKeyIsPressed: false) == .openMenu(revealStandardItems: false))
+        #expect(MenubarItem.routeForBarItemClick(eventType: .rightMouseUp, eventFlagsContainOption: true, hotkeyTriggered: false, optionKeyIsPressed: true) == .openMenu(revealStandardItems: true))
+        #expect(MenubarItem.routeForBarItemClick(eventType: .rightMouseDown, eventFlagsContainOption: false, hotkeyTriggered: false, optionKeyIsPressed: false) == .openMenu(revealStandardItems: false))
+    }
+
+    @Test func testRouteForBarItemClick_plainLeftClickRunsTitleAction() async throws {
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: false, hotkeyTriggered: false, optionKeyIsPressed: false) == .runTitleAction)
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseDown, eventFlagsContainOption: false, hotkeyTriggered: false, optionKeyIsPressed: false) == .runTitleAction)
+    }
+
     @Test func testHasAction_falseWithNoActionParams() async throws {
         let params = MenuLineParameters(line: "Status | color=red")
         #expect(!params.hasAction)
@@ -2296,6 +2319,19 @@ struct MenubarItemMenuAttachmentTests {
     }
 }
 
+/// Records showMenu() calls instead of starting real menu tracking, so
+/// detached-path click handling can be driven in tests without opening a
+/// menu on screen.
+private final class ShowMenuRecordingMenubarItem: MenubarItem {
+    var showMenuCalls = 0
+    var pendingRevealDuringShowMenu: Bool?
+
+    override func showMenu() {
+        showMenuCalls += 1
+        pendingRevealDuringShowMenu = pendingOptionClickReveal
+    }
+}
+
 struct MenubarItemIncrementalUpdateTests {
     @MainActor
     private func makeMenuBarItem(statusBarMenu: NSMenu = NSMenu(title: "")) -> MenubarItem {
@@ -2533,6 +2569,91 @@ struct MenubarItemIncrementalUpdateTests {
         item.menuWillOpen(item.statusBarMenu)
 
         #expect(!item.showsAllStandardItemsWhileOpen)
+    }
+
+    @MainActor @Test func testMenuOpen_revealsStandardItemsForCarriedOptionClick() throws {
+        let item = makeMenuBarItem()
+        item.plugin?.metadata = PluginMetadata(
+            hideRunInTerminal: true,
+            hideLastUpdated: true,
+            hideDisablePlugin: true,
+            hideSwiftBar: true
+        )
+        item.plugin?.lastUpdated = Date()
+
+        item._updateMenu(content: """
+        Title
+        ---
+        Visible A
+        """)
+
+        // The click decision saw the option key, but it was released between
+        // the mouse-up and the menu opening — the carried reveal must win.
+        item.pendingOptionClickReveal = true
+        item.optionKeyIsPressed = { false }
+        item.menuWillOpen(item.statusBarMenu)
+
+        #expect(item.showsAllStandardItemsWhileOpen)
+        #expect(!item.pendingOptionClickReveal)
+        #expect(!item.lastUpdatedItem.isHidden)
+        #expect(!item.swiftBarItem.isHidden)
+
+        item.menuDidClose(item.statusBarMenu)
+        #expect(!item.showsAllStandardItemsWhileOpen)
+    }
+
+    @MainActor @Test func testHotkeyDispatchedTitleAction_clearsHotkeyTriggerForNextOptionClick() throws {
+        let item = MenubarItem(title: "Test")
+        // performItemAction treats a bare refresh=true as handled even with
+        // no plugin attached (the refresh request is a no-op), so the title
+        // action path runs without side effects.
+        item.titleLines = ["Test | refresh=true"]
+        item.hotkeyTrigger = true
+        item.optionKeyIsPressed = { true } // held as part of the hotkey combo
+
+        item.handleBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: true)
+
+        // The combo's option key must not read as an option-click: the title
+        // action ran and consumed the one-shot hotkey flag.
+        #expect(!item.hotkeyTrigger)
+
+        // The next option-click's routing sees the cleared flag and opens
+        // the menu — routing is checked directly because showMenu() would
+        // start real menu tracking.
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: true, hotkeyTriggered: item.hotkeyTrigger, optionKeyIsPressed: true) == .openMenu(revealStandardItems: true))
+
+        item.menuWillOpen(item.statusBarMenu)
+        #expect(item.showsAllStandardItemsWhileOpen)
+    }
+
+    @MainActor @Test func testAbortedClickDispatch_consumesHotkeyTrigger() throws {
+        let item = MenubarItem(title: "Test")
+        // An action-less title keeps the menu attached, so barItemClicked
+        // takes its defensive early return.
+        #expect(item.barItem.menu != nil)
+        item.hotkeyTrigger = true
+
+        item.barItemClicked()
+
+        // The aborted dispatch consumed the one-shot flag; the next real
+        // option-click routes to the menu instead of the title action.
+        #expect(!item.hotkeyTrigger)
+        #expect(MenubarItem.routeForBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: true, hotkeyTriggered: item.hotkeyTrigger, optionKeyIsPressed: true) == .openMenu(revealStandardItems: true))
+    }
+
+    @MainActor @Test func testOptionClickOpen_revealDoesNotLeakWhenMenuTrackingNeverStarts() throws {
+        let item = ShowMenuRecordingMenubarItem(title: "Test")
+        item.optionKeyIsPressed = { true }
+
+        item.handleBarItemClick(eventType: .leftMouseUp, eventFlagsContainOption: true)
+
+        #expect(item.showMenuCalls == 1)
+        // The reveal is visible while showMenu() runs — menu tracking is
+        // synchronous, so menuWillOpen would see it…
+        #expect(item.pendingRevealDuringShowMenu == true)
+        // …but it must not leak into a later open (like a hotkey open,
+        // which suppresses the reveal) when no menu tracking consumed it.
+        #expect(!item.pendingOptionClickReveal)
     }
 
     @MainActor @Test func testIncrementalUpdate_keepsRegeneratedHotKeysPausedWhileMenuIsOpen() throws {
