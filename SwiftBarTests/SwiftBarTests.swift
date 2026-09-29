@@ -5855,3 +5855,136 @@ struct MenuBarRecoveryGatingTests {
         #expect(!shouldShowMenuBarRecovery(hasVisibleAppWindows: false, at: Date(), operatingSystemVersion: macOS15))
     }
 }
+
+// MARK: - Wake Refresh Retry Tests (issue #540)
+
+/// Plugin double whose invocation fails a configurable number of times
+/// before succeeding, mimicking a network-dependent script that runs
+/// while the connection is still resuming after wake.
+private final class WakeRetryTestPlugin: Plugin {
+    let id: PluginID = "wake-retry-test"
+    let type: PluginType = .Executable
+    let name = "wake-retry-test"
+    let file = "wake-retry-test.sh"
+    var metadata: PluginMetadata?
+    var contentUpdatePublisher = PassthroughSubject<String?, Never>()
+    var updateInterval: Double = 60
+    var lastUpdated: Date?
+    var lastState: PluginState = .Loading
+    var lastRefreshReason: PluginRefreshReason = .WakeFromSleep
+    var content: String? = "initial"
+    var error: Error?
+    var debugInfo = PluginDebugInfo()
+    var refreshEnv: [String: String] = [:]
+
+    var failuresBeforeSuccess = 0
+    var successOutput = "success"
+    private(set) var invokeCount = 0
+
+    func refresh(reason _: PluginRefreshReason) {}
+    func enable() {}
+    func disable() {}
+    func start() {}
+    func terminate() {}
+    func makeScriptExecutable(file _: String) {}
+    func refreshPluginMetadata() {}
+
+    func invoke() -> String? {
+        invokeCount += 1
+        if invokeCount <= failuresBeforeSuccess {
+            error = NSError(domain: "WakeRetryTest", code: 1)
+            lastState = .Failed
+            return nil
+        }
+        error = nil
+        lastState = .Success
+        return successOutput
+    }
+}
+
+struct WakeRefreshRetryTests {
+    private let testRetryDelay: (PluginRefreshReason, Int) -> TimeInterval? = { reason, failedAttempts in
+        guard reason == .WakeFromSleep, failedAttempts <= 2 else { return nil }
+        return 0.01
+    }
+
+    @Test func wakeRefreshGetsBoundedBackoffDelays() {
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 1) == 2)
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 2) == 4)
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 3) == 8)
+        #expect(wakeRefreshRetryDelay(reason: .WakeFromSleep, failedAttempts: 4) == nil)
+    }
+
+    @Test func otherRefreshReasonsKeepFailFastBehavior() {
+        let reasons: [PluginRefreshReason] = [
+            .FirstLaunch, .Schedule, .MenuAction, .RefreshAllMenu,
+            .RefreshAllURLScheme, .URLScheme, .Shortcut, .DebugView,
+            .NotificationAction, .PluginSettings, .MenuOpen,
+        ]
+        for reason in reasons {
+            #expect(wakeRefreshRetryDelay(reason: reason, failedAttempts: 1) == nil)
+        }
+    }
+
+    @Test func wakeRunRetriesUntilSuccessWithoutSurfacingError() {
+        // Two failures while the network resumes, then success — the menu
+        // must end up with the successful output and a clean error state.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = 2
+
+        let operation = RunPluginOperation(plugin: plugin, retryDelay: testRetryDelay)
+        operation.start()
+
+        #expect(plugin.invokeCount == 3)
+        #expect(plugin.content == "success")
+        #expect(plugin.lastState == .Success)
+        #expect(plugin.error == nil)
+    }
+
+    @Test func wakeRunSurfacesErrorAfterRetriesExhausted() {
+        // A genuinely broken plugin must still reach the error state after
+        // the retry budget is spent.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+
+        let operation = RunPluginOperation(plugin: plugin, retryDelay: testRetryDelay)
+        operation.start()
+
+        #expect(plugin.invokeCount == 3)
+        #expect(plugin.content == nil)
+        #expect(plugin.lastState == .Failed)
+        #expect(plugin.error != nil)
+    }
+
+    @Test func scheduledRunDoesNotRetry() {
+        // Normal error handling is unchanged: a scheduled run fails fast.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+        plugin.lastRefreshReason = .Schedule
+
+        let operation = RunPluginOperation(plugin: plugin)
+        operation.start()
+
+        #expect(plugin.invokeCount == 1)
+        #expect(plugin.content == nil)
+        #expect(plugin.lastState == .Failed)
+    }
+
+    @Test func cancellationDuringRetryWaitStopsRetrying() {
+        // A manual refresh cancels the in-flight operation; the retry wait
+        // must notice and leave the previous content untouched.
+        let plugin = WakeRetryTestPlugin()
+        plugin.failuresBeforeSuccess = .max
+
+        var operationBox: RunPluginOperation<WakeRetryTestPlugin>?
+        let operation = RunPluginOperation(plugin: plugin, retryDelay: { _, _ in
+            operationBox?.cancel()
+            return 10
+        })
+        operationBox = operation
+        operation.start()
+
+        #expect(plugin.invokeCount == 1)
+        #expect(plugin.content == "initial")
+    }
+}
