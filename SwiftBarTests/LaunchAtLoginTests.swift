@@ -12,7 +12,7 @@ struct LaunchAtLoginMigrationTests {
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: false,
-            isMainAppEnabled: { false },
+            mainAppRegistration: { .notRegistered },
             registerMain: { registerCalls += 1 },
             unregisterLegacy: { unregisterCalls += 1 }
         )
@@ -24,14 +24,14 @@ struct LaunchAtLoginMigrationTests {
 
     @Test func migration_registersMainAppBeforeUnregisteringLegacyHelper() {
         var calls: [String] = []
-        var mainAppEnabled = false
+        var mainApp = ModernLaunchAtLogin.MainAppRegistration.notRegistered
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: { mainAppEnabled },
+            mainAppRegistration: { mainApp },
             registerMain: {
                 calls.append("registerMain")
-                mainAppEnabled = true
+                mainApp = .enabled
             },
             unregisterLegacy: { calls.append("unregisterLegacy") }
         )
@@ -46,7 +46,7 @@ struct LaunchAtLoginMigrationTests {
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: { true },
+            mainAppRegistration: { .enabled },
             registerMain: { registerCalls += 1 },
             unregisterLegacy: { unregisterCalls += 1 }
         )
@@ -64,7 +64,7 @@ struct LaunchAtLoginMigrationTests {
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: { false },
+            mainAppRegistration: { .notRegistered },
             registerMain: { throw TestError() },
             unregisterLegacy: { unregisterCalls += 1 }
         )
@@ -80,11 +80,15 @@ struct LaunchAtLoginMigrationTests {
     @Test func migration_keepsLegacyHelperWhileRegistrationIsPendingApproval() {
         var registerCalls = 0
         var unregisterCalls = 0
+        var mainApp = ModernLaunchAtLogin.MainAppRegistration.notRegistered
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: { false },
-            registerMain: { registerCalls += 1 },
+            mainAppRegistration: { mainApp },
+            registerMain: {
+                registerCalls += 1
+                mainApp = .requiresApproval
+            },
             unregisterLegacy: { unregisterCalls += 1 }
         )
 
@@ -93,16 +97,35 @@ struct LaunchAtLoginMigrationTests {
         #expect(unregisterCalls == 0)
     }
 
-    @Test func migration_reportsFailedLegacyHelperUnregistration() {
+    /// Once the main app already sits in `.requiresApproval`, registering
+    /// again cannot help and would repost the "Background Items Added"
+    /// notification on every launch.
+    @Test func migration_doesNotReregisterWhileApprovalIsPending() {
         var registerCalls = 0
-        var mainAppEnabled = false
+        var unregisterCalls = 0
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: { mainAppEnabled },
+            mainAppRegistration: { .requiresApproval },
+            registerMain: { registerCalls += 1 },
+            unregisterLegacy: { unregisterCalls += 1 }
+        )
+
+        #expect(outcome == .pendingApproval)
+        #expect(registerCalls == 0)
+        #expect(unregisterCalls == 0)
+    }
+
+    @Test func migration_reportsFailedLegacyHelperUnregistration() {
+        var registerCalls = 0
+        var mainApp = ModernLaunchAtLogin.MainAppRegistration.notRegistered
+
+        let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
+            isLegacyEnabled: true,
+            mainAppRegistration: { mainApp },
             registerMain: {
                 registerCalls += 1
-                mainAppEnabled = true
+                mainApp = .enabled
             },
             unregisterLegacy: { throw TestError() }
         )
@@ -146,6 +169,24 @@ struct LaunchAtLoginDisableTests {
         )
 
         #expect(!unregistered)
+    }
+}
+
+struct LaunchAtLoginStateTests {
+    /// The toggle must report launch at login as ON while only the legacy
+    /// helper registration is enabled — e.g. when the startup migration
+    /// failed or is pending approval — otherwise Preferences shows OFF while
+    /// the helper still launches SwiftBar at login (#571).
+    @Test func state_reportsEnabledWhenOnlyLegacyHelperIsEnabled() {
+        #expect(ModernLaunchAtLogin.launchAtLoginState(isMainAppEnabled: false, isLegacyEnabled: true))
+    }
+
+    @Test func state_reportsEnabledWhenMainAppIsEnabled() {
+        #expect(ModernLaunchAtLogin.launchAtLoginState(isMainAppEnabled: true, isLegacyEnabled: false))
+    }
+
+    @Test func state_reportsDisabledWhenNeitherRegistrationIsEnabled() {
+        #expect(!ModernLaunchAtLogin.launchAtLoginState(isMainAppEnabled: false, isLegacyEnabled: false))
     }
 }
 

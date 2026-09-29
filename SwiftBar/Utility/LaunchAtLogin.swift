@@ -24,13 +24,30 @@ public enum ModernLaunchAtLogin {
     */
     static let legacyHelperIdentifier = "com.ameba.SwiftBar-LaunchAtLoginHelper"
 
+    /// Serializes the `SMAppService` mutations made by the launch-time
+    /// migration and the Preferences toggle, so a toggle flipped while the
+    /// migration is in flight cannot be overwritten by a stale registration.
+    private static let serviceQueue = DispatchQueue(label: "com.ameba.SwiftBar.LaunchAtLogin")
+
+    /// Getter logic separated from the `SMAppService` calls so it can be unit
+    /// tested: launch at login is on while either registration is enabled.
+    static func launchAtLoginState(isMainAppEnabled: Bool, isLegacyEnabled: Bool) -> Bool {
+        isMainAppEnabled || isLegacyEnabled
+    }
+
     /**
     Toggle "launch at login" for your app or check whether it's enabled.
     */
     public static var isEnabled: Bool {
         get { 
             if #available(macOS 13.0, *) {
-                return SMAppService.mainApp.status == .enabled
+                // The legacy helper also launches SwiftBar at login, so the
+                // toggle must report it while a failed or pending migration
+                // leaves it registered (#571).
+                return launchAtLoginState(
+                    isMainAppEnabled: SMAppService.mainApp.status == .enabled,
+                    isLegacyEnabled: SMAppService.loginItem(identifier: legacyHelperIdentifier).status == .enabled
+                )
             } else {
                 // Fallback for older macOS versions
                 return false
@@ -40,28 +57,30 @@ public enum ModernLaunchAtLogin {
             observable.objectWillChange.send()
 
             if #available(macOS 13.0, *) {
-                if newValue {
-                    do {
-                        if SMAppService.mainApp.status == .enabled {
-                            try? SMAppService.mainApp.unregister()
+                serviceQueue.sync {
+                    if newValue {
+                        do {
+                            if SMAppService.mainApp.status == .enabled {
+                                try? SMAppService.mainApp.unregister()
+                            }
+
+                            try SMAppService.mainApp.register()
+                        } catch {
+                            logger.error("Failed to enable launch at login: \(error.localizedDescription)")
+                        }
+                    } else {
+                        do {
+                            try SMAppService.mainApp.unregister()
+                        } catch {
+                            logger.error("Failed to disable launch at login: \(error.localizedDescription)")
                         }
 
-                        try SMAppService.mainApp.register()
-                    } catch {
-                        logger.error("Failed to enable launch at login: \(error.localizedDescription)")
+                        // Runs even when the main app call fails or the main
+                        // app was never registered: for users upgraded from
+                        // SwiftBar 2.0.x the launch-at-login state may live
+                        // only in the legacy helper registration (#571).
+                        unregisterLegacyHelperIfEnabled()
                     }
-                } else {
-                    do {
-                        try SMAppService.mainApp.unregister()
-                    } catch {
-                        logger.error("Failed to disable launch at login: \(error.localizedDescription)")
-                    }
-
-                    // Runs even when the main app call fails or the main app
-                    // was never registered: for users upgraded from SwiftBar
-                    // 2.0.x the launch-at-login state may live only in the
-                    // legacy helper registration (#571).
-                    unregisterLegacyHelperIfEnabled()
                 }
             } else {
                 logger.warning("Launch at login requires macOS 13.0 or later")
@@ -98,19 +117,30 @@ extension ModernLaunchAtLogin {
     public static func migrateLegacyLoginItem() {
         guard #available(macOS 13.0, *) else { return }
 
-        let legacyHelper = SMAppService.loginItem(identifier: legacyHelperIdentifier)
-        let outcome = migrateLegacyLoginItem(
-            isLegacyEnabled: legacyHelper.status == .enabled,
-            isMainAppEnabled: { SMAppService.mainApp.status == .enabled },
-            registerMain: SMAppService.mainApp.register,
-            unregisterLegacy: legacyHelper.unregister
-        )
+        // On the serial queue: keeps the XPC calls off the calling thread and
+        // serializes the migration with the Preferences toggle, so a toggle
+        // flipped while the migration is in flight cannot be overwritten.
+        serviceQueue.async {
+            let legacyHelper = SMAppService.loginItem(identifier: legacyHelperIdentifier)
+            let outcome = migrateLegacyLoginItem(
+                isLegacyEnabled: legacyHelper.status == .enabled,
+                mainAppRegistration: {
+                    switch SMAppService.mainApp.status {
+                    case .enabled: .enabled
+                    case .requiresApproval: .requiresApproval
+                    default: .notRegistered
+                    }
+                },
+                registerMain: SMAppService.mainApp.register,
+                unregisterLegacy: legacyHelper.unregister
+            )
 
-        if outcome == .migrated {
-            // Refresh an already-open Preferences toggle, which reads
-            // SMAppService.mainApp.status through `observable`.
-            DispatchQueue.main.async {
-                observable.objectWillChange.send()
+            if outcome == .migrated {
+                // Refresh an already-open Preferences toggle, which reads
+                // SMAppService.mainApp.status through `observable`.
+                DispatchQueue.main.async {
+                    observable.objectWillChange.send()
+                }
             }
         }
     }
@@ -124,11 +154,19 @@ extension ModernLaunchAtLogin {
         case unregistrationFailed
     }
 
+    /// `SMAppService.Status` reduced to the cases the migration distinguishes,
+    /// keeping the logic testable without ServiceManagement types.
+    enum MainAppRegistration: Equatable {
+        case enabled
+        case requiresApproval
+        case notRegistered
+    }
+
     /// Migration logic separated from the `SMAppService` calls so it can be unit tested.
     @discardableResult
     static func migrateLegacyLoginItem(
         isLegacyEnabled: Bool,
-        isMainAppEnabled: () -> Bool,
+        mainAppRegistration: () -> MainAppRegistration,
         registerMain: () throws -> Void,
         unregisterLegacy: () throws -> Void
     ) -> LegacyMigrationOutcome {
@@ -138,7 +176,16 @@ extension ModernLaunchAtLogin {
         // a failure can never silently lose launch at login: on error the
         // legacy helper stays registered (still enabled, still launching the
         // app) and the migration retries on the next launch.
-        if !isMainAppEnabled() {
+        switch mainAppRegistration() {
+        case .enabled:
+            break
+        case .requiresApproval:
+            // Registering again would repost the "Background Items Added"
+            // notification on every launch without changing anything; the
+            // user has to approve SwiftBar in System Settings first.
+            logger.notice("Launch at login migration pending: main app registration requires approval in System Settings")
+            return .pendingApproval
+        case .notRegistered:
             do {
                 try registerMain()
             } catch {
@@ -151,7 +198,8 @@ extension ModernLaunchAtLogin {
             // main app lands in .requiresApproval. Keep the legacy helper
             // until the replacement is actually enabled; the migration
             // retries on the next launch.
-            guard isMainAppEnabled() else {
+            guard mainAppRegistration() == .enabled else {
+                logger.notice("Launch at login migration pending: main app registration requires approval in System Settings")
                 return .pendingApproval
             }
         }
