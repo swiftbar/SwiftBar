@@ -12,7 +12,7 @@ struct LaunchAtLoginMigrationTests {
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: false,
-            isMainAppEnabled: false,
+            isMainAppEnabled: { false },
             registerMain: { registerCalls += 1 },
             unregisterLegacy: { unregisterCalls += 1 }
         )
@@ -24,11 +24,15 @@ struct LaunchAtLoginMigrationTests {
 
     @Test func migration_registersMainAppBeforeUnregisteringLegacyHelper() {
         var calls: [String] = []
+        var mainAppEnabled = false
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: false,
-            registerMain: { calls.append("registerMain") },
+            isMainAppEnabled: { mainAppEnabled },
+            registerMain: {
+                calls.append("registerMain")
+                mainAppEnabled = true
+            },
             unregisterLegacy: { calls.append("unregisterLegacy") }
         )
 
@@ -42,7 +46,7 @@ struct LaunchAtLoginMigrationTests {
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: true,
+            isMainAppEnabled: { true },
             registerMain: { registerCalls += 1 },
             unregisterLegacy: { unregisterCalls += 1 }
         )
@@ -60,7 +64,7 @@ struct LaunchAtLoginMigrationTests {
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: false,
+            isMainAppEnabled: { false },
             registerMain: { throw TestError() },
             unregisterLegacy: { unregisterCalls += 1 }
         )
@@ -69,20 +73,86 @@ struct LaunchAtLoginMigrationTests {
         #expect(unregisterCalls == 0)
     }
 
-    @Test func migration_reportsFailedLegacyHelperUnregistration() {
+    /// `register()` returning without throwing does not guarantee an enabled
+    /// registration — the main app can land in `.requiresApproval` for a user
+    /// who once disabled SwiftBar in System Settings. The legacy helper must
+    /// stay registered until the replacement actually takes effect.
+    @Test func migration_keepsLegacyHelperWhileRegistrationIsPendingApproval() {
         var registerCalls = 0
+        var unregisterCalls = 0
 
         let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
             isLegacyEnabled: true,
-            isMainAppEnabled: false,
+            isMainAppEnabled: { false },
             registerMain: { registerCalls += 1 },
+            unregisterLegacy: { unregisterCalls += 1 }
+        )
+
+        #expect(outcome == .pendingApproval)
+        #expect(registerCalls == 1)
+        #expect(unregisterCalls == 0)
+    }
+
+    @Test func migration_reportsFailedLegacyHelperUnregistration() {
+        var registerCalls = 0
+        var mainAppEnabled = false
+
+        let outcome = ModernLaunchAtLogin.migrateLegacyLoginItem(
+            isLegacyEnabled: true,
+            isMainAppEnabled: { mainAppEnabled },
+            registerMain: {
+                registerCalls += 1
+                mainAppEnabled = true
+            },
             unregisterLegacy: { throw TestError() }
         )
 
         #expect(outcome == .unregistrationFailed)
         #expect(registerCalls == 1)
     }
+}
 
+struct LaunchAtLoginDisableTests {
+    struct TestError: Error {}
+
+    @Test func disable_skipsLegacyHelperWhenNotEnabled() {
+        var unregisterCalls = 0
+
+        let unregistered = ModernLaunchAtLogin.unregisterLegacyHelper(
+            isLegacyEnabled: false,
+            unregisterLegacy: { unregisterCalls += 1 }
+        )
+
+        #expect(!unregistered)
+        #expect(unregisterCalls == 0)
+    }
+
+    @Test func disable_unregistersEnabledLegacyHelper() {
+        var unregisterCalls = 0
+
+        let unregistered = ModernLaunchAtLogin.unregisterLegacyHelper(
+            isLegacyEnabled: true,
+            unregisterLegacy: { unregisterCalls += 1 }
+        )
+
+        #expect(unregistered)
+        #expect(unregisterCalls == 1)
+    }
+
+    @Test func disable_reportsFailedLegacyHelperUnregistration() {
+        let unregistered = ModernLaunchAtLogin.unregisterLegacyHelper(
+            isLegacyEnabled: true,
+            unregisterLegacy: { throw TestError() }
+        )
+
+        #expect(!unregistered)
+    }
+}
+
+struct LaunchAtLoginBundleTests {
+    /// Requires the hosted test bundle: `Bundle.main` is the SwiftBar app, so
+    /// the helper embedded by the "Launch At Login" build phase is present.
+    ///
     /// The identifier must match the helper embedded in the app bundle,
     /// otherwise `SMAppService.loginItem(identifier:)` cannot resolve it and
     /// stale registrations from SwiftBar 2.0.x would survive unregistration.

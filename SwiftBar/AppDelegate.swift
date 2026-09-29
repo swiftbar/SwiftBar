@@ -176,6 +176,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         // Replace a launch-at-login registration left behind by SwiftBar 2.0.x
         // and earlier with a main app registration the toggle can manage (#571).
         // Off the main thread: the SMAppService status checks are XPC calls.
+        // Not serialized with the Preferences toggle, but the migration runs
+        // once at launch, before the Preferences window can be opened.
         DispatchQueue.global(qos: .utility).async {
             ModernLaunchAtLogin.migrateLegacyLoginItem()
         }
