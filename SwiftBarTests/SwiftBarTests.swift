@@ -478,6 +478,21 @@ struct SwiftBarTests {
         #expect(!MenubarItem.eventOpensMenuWithoutTitleAction(.mouseMoved))
     }
 
+    @Test func testClickOpensMenuInsteadOfTitleAction_forOptionLeftClick() async throws {
+        #expect(MenubarItem.clickOpensMenuInsteadOfTitleAction(eventType: .leftMouseUp, optionKeyIsPressed: true))
+        #expect(MenubarItem.clickOpensMenuInsteadOfTitleAction(eventType: .leftMouseDown, optionKeyIsPressed: true))
+    }
+
+    @Test func testClickOpensMenuInsteadOfTitleAction_forRightClickWithoutOption() async throws {
+        #expect(MenubarItem.clickOpensMenuInsteadOfTitleAction(eventType: .rightMouseUp, optionKeyIsPressed: false))
+        #expect(MenubarItem.clickOpensMenuInsteadOfTitleAction(eventType: .rightMouseDown, optionKeyIsPressed: false))
+    }
+
+    @Test func testClickOpensMenuInsteadOfTitleAction_notForPlainLeftClick() async throws {
+        #expect(!MenubarItem.clickOpensMenuInsteadOfTitleAction(eventType: .leftMouseUp, optionKeyIsPressed: false))
+        #expect(!MenubarItem.clickOpensMenuInsteadOfTitleAction(eventType: .leftMouseDown, optionKeyIsPressed: false))
+    }
+
     @Test func testHasAction_falseWithNoActionParams() async throws {
         let params = MenuLineParameters(line: "Status | color=red")
         #expect(!params.hasAction)

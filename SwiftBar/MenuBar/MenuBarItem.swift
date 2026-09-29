@@ -1840,9 +1840,14 @@ extension MenubarItem {
         // the button action, so this should never fire; if it ever does,
         // there is nothing to intercept.
         guard barItem.menu == nil else { return }
-        guard let eventType = NSApp.currentEvent?.type else { return }
+        guard let event = NSApp.currentEvent else { return }
 
-        if Self.eventOpensMenuWithoutTitleAction(eventType) {
+        // Unlike menuWillOpen (#564), the dispatching click is current here —
+        // the type check above relies on it already — so its flags are the
+        // primary option source. The live hardware state is OR-ed in for
+        // dispatch paths whose current event carries no flags.
+        let optionHeld = event.modifierFlags.contains(.option) || optionKeyIsPressed()
+        if Self.clickOpensMenuInsteadOfTitleAction(eventType: event.type, optionKeyIsPressed: optionHeld) {
             showMenu()
             return
         }
@@ -1860,6 +1865,17 @@ extension MenubarItem {
     /// current — a stale right mouse down must still route to the menu.
     static func eventOpensMenuWithoutTitleAction(_ eventType: NSEvent.EventType) -> Bool {
         eventType == .rightMouseUp || eventType == .rightMouseDown
+    }
+
+    /// On the detached path a left click runs the title line's action, which
+    /// leaves no left-button route to the menu at all. Option-click must open
+    /// the menu instead of running the action: it is the documented gesture
+    /// for reaching the standard items (#560), and under StealthMode there is
+    /// no fallback SwiftBar item to reach them through (#576). The subsequent
+    /// `menuWillOpen` re-checks the option key and reveals the hidden
+    /// standard items.
+    static func clickOpensMenuInsteadOfTitleAction(eventType: NSEvent.EventType, optionKeyIsPressed: Bool) -> Bool {
+        eventOpensMenuWithoutTitleAction(eventType) || optionKeyIsPressed
     }
 
     /// Opens the menu for items on the detached path (title line with its
