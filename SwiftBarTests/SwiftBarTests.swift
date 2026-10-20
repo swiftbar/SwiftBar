@@ -239,6 +239,39 @@ struct SwiftBarTests {
         #expect(plugin.supportDirectoryName == aliasURL.lastPathComponent)
     }
 
+    // RunPluginOperation writes plugin.content on the invoke queue while the
+    // menu reads it on the main and menu update queues. Unsynchronized, the
+    // overlapping String release crashes in _swift_release_dealloc.
+    @MainActor @Test func executablePlugin_contentSurvivesConcurrentReadsAndWrites() throws {
+        let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let pluginURL = tempDirectory.appendingPathComponent("race.1m.sh")
+        try Data("#!/bin/zsh\necho race\n".utf8).write(to: pluginURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: pluginURL.path)
+
+        let plugin = ExecutablePlugin(fileURL: pluginURL, createSupportDirectories: false)
+        plugin.operation?.cancel()
+        plugin.operation?.waitUntilFinished()
+        defer { plugin.terminate() }
+
+        let lastWrite = String(repeating: "x", count: 64) + "-last"
+        DispatchQueue.concurrentPerform(iterations: 8) { worker in
+            for i in 0 ..< 20000 {
+                if worker.isMultiple(of: 2) {
+                    // Heap-allocated (non-small) strings so each write releases a buffer.
+                    plugin.content = String(repeating: "x", count: 64) + "-\(worker)-\(i)"
+                } else {
+                    _ = plugin.content?.count
+                }
+            }
+        }
+        plugin.content = lastWrite
+
+        #expect(plugin.content == lastWrite)
+    }
+
     @MainActor @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let firstDirectory = tempDirectory.appendingPathComponent("first", isDirectory: true)

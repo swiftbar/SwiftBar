@@ -49,9 +49,12 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     @Published var enabled: Bool = true
     var operation: Operation?
 
-    var content: String? = "..." {
-        didSet {
-            contentUpdatePublisher.send(content)
+    private let contentStorage = LockedValue<String?>("...")
+    var content: String? {
+        get { contentStorage.current }
+        set {
+            _ = contentStorage.exchange(newValue)
+            contentUpdatePublisher.send(newValue)
         }
     }
 

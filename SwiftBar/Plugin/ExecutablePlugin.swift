@@ -30,11 +30,14 @@ class ExecutablePlugin: TimerArmingPlugin {
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
     var operation: Operation?
 
-    var content: String? = "..." {
-        didSet {
+    private let contentStorage = LockedValue<String?>("...")
+    var content: String? {
+        get { contentStorage.current }
+        set {
+            let oldValue = contentStorage.exchange(newValue)
             // force update menu if refresh triggered manually, even if the output of the plugin didn't changed
-            guard content != oldValue || PluginRefreshReason.manualReasons().contains(lastRefreshReason) else { return }
-            contentUpdatePublisher.send(content)
+            guard newValue != oldValue || PluginRefreshReason.manualReasons().contains(lastRefreshReason) else { return }
+            contentUpdatePublisher.send(newValue)
         }
     }
 

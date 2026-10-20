@@ -23,6 +23,34 @@ func parseRefreshInterval(intervalStr: String, baseUpdateinterval: Double) -> Do
     return updateInterval
 }
 
+/// Lock-protected storage for plugin state that is written on the invoke
+/// queue (or a stream output queue) while the menu reads it on the main and
+/// menu update queues. Plain stored properties race there: two threads
+/// releasing the same String buffer crash in _swift_release_dealloc.
+final class LockedValue<Value> {
+    private var value: Value
+    private let lock = NSLock()
+
+    init(_ value: Value) {
+        self.value = value
+    }
+
+    var current: Value {
+        lock.lock()
+        defer { lock.unlock() }
+        return value
+    }
+
+    /// Stores `newValue` and returns the value it replaced.
+    func exchange(_ newValue: Value) -> Value {
+        lock.lock()
+        defer { lock.unlock() }
+        let oldValue = value
+        value = newValue
+        return oldValue
+    }
+}
+
 /// Delay before re-running a plugin invocation that just failed, or nil when
 /// the failure should surface immediately.
 ///

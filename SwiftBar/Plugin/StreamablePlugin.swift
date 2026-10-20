@@ -34,11 +34,14 @@ class StreamablePlugin: Plugin {
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
 
     var streamInProgressContent: String = ""
-    var content: String? = "" {
-        didSet {
-            guard content != oldValue else { return }
+    private let contentStorage = LockedValue<String?>("")
+    var content: String? {
+        get { contentStorage.current }
+        set {
+            let oldValue = contentStorage.exchange(newValue)
+            guard newValue != oldValue else { return }
             lastUpdated = Date()
-            contentUpdatePublisher.send(content)
+            contentUpdatePublisher.send(newValue)
         }
     }
 

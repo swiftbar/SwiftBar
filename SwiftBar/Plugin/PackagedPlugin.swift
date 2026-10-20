@@ -39,10 +39,13 @@ class PackagedPlugin: TimerArmingPlugin {
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
     var operation: Operation?
 
-    var content: String? = "..." {
-        didSet {
-            guard content != oldValue || PluginRefreshReason.manualReasons().contains(lastRefreshReason) else { return }
-            contentUpdatePublisher.send(content)
+    private let contentStorage = LockedValue<String?>("...")
+    var content: String? {
+        get { contentStorage.current }
+        set {
+            let oldValue = contentStorage.exchange(newValue)
+            guard newValue != oldValue || PluginRefreshReason.manualReasons().contains(lastRefreshReason) else { return }
+            contentUpdatePublisher.send(newValue)
         }
     }
 
