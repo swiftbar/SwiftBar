@@ -93,7 +93,13 @@ func kittyExecutableURL(workspace: NSWorkspace = .shared) -> URL? {
 
 class AppShared: NSObject {
     public static func openPluginFolder(path: String? = nil) {
-        NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: PreferencesStore.shared.pluginDirectoryResolvedPath ?? "")
+        let pluginDirectoryPath = PreferencesStore.shared.pluginDirectoryResolvedPath
+        // A custom file viewer (NSFileViewer) gets no folder path when nothing is selected, only a reopen event.
+        if path == nil, let pluginDirectoryPath, UserDefaults.standard.string(forKey: "NSFileViewer")?.isEmpty == false {
+            NSWorkspace.shared.selectFile(pluginDirectoryPath, inFileViewerRootedAtPath: "")
+        } else {
+            NSWorkspace.shared.selectFile(path, inFileViewerRootedAtPath: pluginDirectoryPath ?? "")
+        }
     }
 
     public static func changePluginFolder() {
