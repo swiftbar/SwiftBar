@@ -4367,6 +4367,19 @@ struct MenuBarImageAppearanceTests {
     }
 }
 
+// MARK: - ANSI True Color Tests
+
+struct ANSITrueColorTests {
+    @Test func testANSITrueColorSetsExactColor() throws {
+        let title = "\u{1B}[38;2;188;135;0mwarning\u{1B}[39m".colorizedWithANSIColor()
+        let color = try #require((title.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor)?.usingColorSpace(.sRGB))
+
+        #expect(Int((color.redComponent * 255).rounded()) == 188)
+        #expect(Int((color.greenComponent * 255).rounded()) == 135)
+        #expect(Int((color.blueComponent * 255).rounded()) == 0)
+    }
+}
+
 // MARK: - Fold Parameter Tests
 
 struct FoldParameterTests {

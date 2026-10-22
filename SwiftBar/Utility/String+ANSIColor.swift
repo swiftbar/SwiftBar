@@ -75,10 +75,33 @@ extension [NSAttributedString.Key: Any] {
     mutating func attributesForANSICodes(codes: String) {
         var color256 = false
         var foreground = false
+        // After 38 or 48 the next code selects the color format; 2 starts an `r;g;b` triplet.
+        var expectsColorFormat = false
+        var rgb: [Int]?
         let font = self[.font]
 
         for codeString in codes.components(separatedBy: ";") {
             guard var code = Int(codeString) else { continue }
+            if var components = rgb {
+                components.append(code)
+                if components.count < 3 {
+                    rgb = components
+                    continue
+                }
+                rgb = nil
+                self[foreground ? .foregroundColor : .backgroundColor] = NSColor(
+                    srgbRed: CGFloat(components[0]) / 255, green: CGFloat(components[1]) / 255, blue: CGFloat(components[2]) / 255, alpha: 1
+                )
+                foreground = false
+                continue
+            }
+            if expectsColorFormat {
+                expectsColorFormat = false
+                if code == 2 {
+                    rgb = []
+                    continue
+                }
+            }
             if color256 {
                 color256 = false
                 if let color = NSColor.colorForAnsi256ColorIndex(index: code) {
@@ -109,6 +132,7 @@ extension [NSAttributedString.Key: Any] {
 
             if code == 38 {
                 foreground = true
+                expectsColorFormat = true
                 continue
             }
             if code == 39 {
@@ -117,6 +141,7 @@ extension [NSAttributedString.Key: Any] {
             }
             if code == 48 {
                 foreground = false
+                expectsColorFormat = true
                 continue
             }
             if code == 49 {
