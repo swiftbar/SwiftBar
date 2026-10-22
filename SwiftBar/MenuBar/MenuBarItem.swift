@@ -1754,11 +1754,6 @@ extension MenubarItem {
         if params.emojize, !params.symbolize {
             title = title.emojify()
         }
-        let fullTitle = title
-        if let length = params.length, length < title.count {
-            title = String(title.prefix(length)).appending("...")
-        }
-
         title = unescape(title)
 
         let fontSize = params.size ?? 0
@@ -1786,12 +1781,25 @@ extension MenubarItem {
         if #available(macOS 12, *), params.md, let parsedMD = try? NSAttributedString(markdown: title) {
             attributedTitle = NSMutableAttributedString(attributedString: parsedMD)
         }
+        // The tooltip of a truncated row: the text as the user reads it, with `:symbol:` names kept since a tooltip can't show images.
+        var fullTitle = attributedTitle.string
 
         if params.symbolize, !params.ansi {
             attributedTitle.symbolize(font: font, colors: params.sfcolors, sfsize: params.sfsize)
         }
         if params.ansi {
             attributedTitle = title.colorizedWithANSIColor()
+            fullTitle = attributedTitle.string
+        }
+
+        // `length` counts the characters the user sees, so escapes, Markdown markup and `:symbol:` names are already resolved here.
+        let visibleTitle = attributedTitle.string
+        if let length = params.length, length < visibleTitle.count {
+            let end = visibleTitle.index(visibleTitle.startIndex, offsetBy: length)
+            let kept = NSRange(visibleTitle.startIndex ..< end, in: visibleTitle)
+            let ellipsisAttributes = kept.length > 0 ? attributedTitle.attributes(at: kept.length - 1, effectiveRange: nil) : [:]
+            attributedTitle = NSMutableAttributedString(attributedString: attributedTitle.attributedSubstring(from: kept))
+            attributedTitle.append(NSAttributedString(string: "...", attributes: ellipsisAttributes))
         }
 
         if !params.ansi {

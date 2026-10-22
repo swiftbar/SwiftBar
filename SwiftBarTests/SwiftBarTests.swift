@@ -4012,6 +4012,34 @@ struct StreamableSubmenuParentTests {
     }
 }
 
+// MARK: - Menu Item Title Length Tests
+
+struct MenuItemTitleLengthTests {
+    @MainActor @Test func testLengthCountsTheCharactersTheUserSees() throws {
+        let item = MenubarItem(title: "Test")
+        let menuItem = try #require(item.buildMenuItem(params: MenuLineParameters(
+            line: "\u{1B}[31mmeeting notes\u{1B}[39m | ansi=true length=7"
+        )))
+        let title = try #require(menuItem.attributedTitle)
+
+        #expect(title.string == "meeting...")
+        #expect(title.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor == NSColor.systemRed)
+    }
+
+    @MainActor @Test func testTruncatedRowTooltipShowsTheTitleAsReadWithSymbolNames() throws {
+        let item = MenubarItem(title: "Test")
+        let ansiRow = try #require(item.buildMenuItem(params: MenuLineParameters(
+            line: "meeting notes \u{1B}[31mred\u{1B}[39m | ansi=true length=7"
+        )))
+        let symbolRow = try #require(item.buildMenuItem(params: MenuLineParameters(
+            line: ":sun.max: meeting notes | length=7"
+        )))
+
+        #expect(ansiRow.toolTip == "meeting notes red")
+        #expect(symbolRow.toolTip == ":sun.max: meeting notes")
+    }
+}
+
 // MARK: - MenuItemNode Tree Building Tests
 
 struct MenuItemNodeParsingTests {
