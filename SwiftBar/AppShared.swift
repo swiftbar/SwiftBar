@@ -279,7 +279,7 @@ class AppShared: NSObject {
     }
 
     public static func isDarkStatusBar(appearance: NSAppearance?) -> Bool {
-        appearance?.bestMatch(from: [.aqua, .darkAqua]) == .aqua
+        appearance?.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
     }
 
     public static var isReduceTransparencyEnabled: Bool {

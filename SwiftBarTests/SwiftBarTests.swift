@@ -4363,7 +4363,22 @@ struct MenuBarImageAppearanceTests {
         item.setMenuTitle(title: title)
         let darkAquaRepresentation = try #require(item.barItem.button?.image?.tiffRepresentation)
 
-        #expect(aquaRepresentation != darkAquaRepresentation)
+        #expect(aquaRepresentation == NSImage.createImage(from: aquaImage, isTemplate: false)?.tiffRepresentation)
+        #expect(darkAquaRepresentation == NSImage.createImage(from: darkAquaImage, isTemplate: false)?.tiffRepresentation)
+    }
+
+    @MainActor @Test func testMenuBarPairedSFSymbolFollowsStatusButtonAppearance() throws {
+        let params = MenuLineParameters(line: "Test | sfimage=sun.max,moon")
+        func symbol(_ name: String) -> Data? {
+            NSImage(systemSymbolName: name, accessibilityDescription: nil)?
+                .withSymbolConfiguration(NSImage.SymbolConfiguration(scale: .large))?.tiffRepresentation
+        }
+
+        let onAqua = params.getImage(isMenuBarItem: true, menuBarAppearance: NSAppearance(named: .aqua))
+        let onDarkAqua = params.getImage(isMenuBarItem: true, menuBarAppearance: NSAppearance(named: .darkAqua))
+
+        #expect(onAqua?.tiffRepresentation == symbol("sun.max"))
+        #expect(onDarkAqua?.tiffRepresentation == symbol("moon"))
     }
 }
 

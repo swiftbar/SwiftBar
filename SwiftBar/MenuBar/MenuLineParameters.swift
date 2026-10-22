@@ -368,7 +368,7 @@ struct MenuLineParameters: Codable, Equatable {
 
             // Use isDarkStatusBar for menu bar items, isDarkTheme for dropdown items
             let shouldUseDarkImage = isMenuBarItem ? AppShared.isDarkStatusBar(appearance: menuBarAppearance) : AppShared.isDarkTheme
-            return resizedImageIfRequested(NSImage.createImage(from: shouldUseDarkImage || darkImage == nil ? lightImage : darkImage, isTemplate: false))
+            return resizedImageIfRequested(NSImage.createImage(from: shouldUseDarkImage && darkImage != nil ? darkImage : lightImage, isTemplate: false))
         }
 
         if params["templateimage"] != nil {
