@@ -175,6 +175,9 @@ class MenubarItem: NSObject {
         // doesn't erase the saved menu bar position.
         if let plugin {
             barItem.autosaveName = plugin.id
+            // A stable accessibility identifier lets menu bar managers (Ice, Thaw,
+            // Bartender) tell plugins apart; the title changes on every refresh.
+            barItem.button?.setAccessibilityIdentifier(plugin.id)
         }
 
         if let dropTypes = plugin?.metadata?.dropTypes, !dropTypes.isEmpty {
