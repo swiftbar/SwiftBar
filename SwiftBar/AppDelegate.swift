@@ -134,6 +134,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     var repositoryToolbarSearchItem: NSToolbarItem?
 
     var pluginManager: PluginManager!
+    private var pendingOpenURLs: [URL] = []
+    private var isReadyForOpenEvents = false
     let prefs = PreferencesStore.shared
     let sharedEnv = Environment.shared
 
@@ -164,7 +166,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         // host never reaches application termination and the test process hangs
         // indefinitely after the last @Test finishes.
         pluginManager = PluginManager.shared
-        if Self.isRunningTests { return }
+        if Self.isRunningTests {
+            finishLaunchingOpenEvents()
+            return
+        }
 
         preferencesWindowController.window?.delegate = self
         setupToolbar()
@@ -234,9 +239,23 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
         { [weak self] _ in
             os_log("Mac waked up", log: Log.plugin, type: .info)
             self?.sharedEnv.updateWakeTime(date: NSDate.now)
+            // A staleness timer may already have drawn a warning before the
+            // wake notification was delivered. Clear it even if output is unchanged.
+            self?.pluginManager.menuBarItems.values.forEach { $0.refreshStalenessIndicator() }
             // Start plugins with respect to their schedules
             self?.pluginManager.startAllPlugins()
         }
+        finishLaunchingOpenEvents()
+    }
+
+    /// AppKit can deliver file and URL events before didFinishLaunching.
+    /// Drain only after plugins (and the first-run folder selection) are ready.
+    func finishLaunchingOpenEvents() {
+        guard !isReadyForOpenEvents, pluginManager != nil else { return }
+        isReadyForOpenEvents = true
+        let urls = pendingOpenURLs
+        pendingOpenURLs.removeAll()
+        application(NSApplication.shared, open: urls)
     }
 
     func setDefaultShelf() {
@@ -335,7 +354,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     func getPluginFromURL(url: URL) -> Plugin? {
         guard let identifier = url.queryParameters?["plugin"] ?? url.queryParameters?["name"] else { return nil }
-        return pluginManager.getPluginByNameOrID(identifier: identifier)
+        return pluginManager?.getPluginByNameOrID(identifier: identifier)
     }
 
     func feedURLString(for _: SPUUpdater) -> String? {
@@ -347,6 +366,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
 
     func application(_: NSApplication, open urls: [URL]) {
         lastHandledEventDate = Date()
+        guard isReadyForOpenEvents else {
+            pendingOpenURLs.append(contentsOf: urls)
+            return
+        }
         for url in urls {
             if shouldImportOpenedPluginFile(at: url, makePluginExecutable: prefs.makePluginExecutable) {
                 pluginManager.importPlugin(from: url)
@@ -363,11 +386,11 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                         plugin.refreshEnv = params.filter { $0.key != "name" }
                     }
                     plugin.refresh(reason: .URLScheme)
-                    return
+                    continue
                 }
                 if let indexStr = url.queryParameters?["index"], let index = Int(indexStr) {
                     pluginManager.refreshPlugin(with: index, reason: .URLScheme)
-                    return
+                    continue
                 }
             case "disableplugin":
                 if let plugin = getPluginFromURL(url: url) {
@@ -393,7 +416,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
                     pluginManager.setEphemeralPlugin(pluginId: name, content: pluginContent, exitAfter: exitAfter)
                 }
             case "notify":
-                guard let plugin = getPluginFromURL(url: url) else { return }
+                guard let plugin = getPluginFromURL(url: url) else { continue }
                 let paramsString = url.queryParameters?.map { "\($0.key)=\($0.value.escaped())" }.joined(separator: " ") ?? ""
                 pluginManager.showNotification(plugin: plugin,
                                                title: url.queryParameters?["title"]?.replacingOccurrences(of: "+", with: " "),

@@ -152,14 +152,14 @@ struct MenuLineParameters: Codable, Equatable {
             case black
         }
 
-        var renderingMode: RenderingMode
-        var colors: [String]
+        var renderingMode: RenderingMode?
+        var colors: [String]?
         var scale: Scale?
         var weight: Weight?
         var variableValue: Double?
 
         func getColors() -> [NSColor] {
-            colors.compactMap { NSColor.webColor(from: $0) }
+            (colors ?? []).compactMap { NSColor.webColor(from: $0) }
         }
 
         @available(macOS 11.0, *)
@@ -339,7 +339,11 @@ struct MenuLineParameters: Codable, Equatable {
                     case .Hierarchical:
                         config = config.applying(NSImage.SymbolConfiguration(hierarchicalColor: configuredColors.first ?? NSColor(Color.primary)))
                     case .Palette:
-                        config = config.applying(NSImage.SymbolConfiguration(paletteColors: configuredColors))
+                        if !configuredColors.isEmpty {
+                            config = config.applying(NSImage.SymbolConfiguration(paletteColors: configuredColors))
+                        }
+                    case .none:
+                        break
                     }
                     config = config.applying(NSImage.SymbolConfiguration(pointSize: 0, weight: sfmc.getWeight(), scale: sfmc.getScale()))
                 }

@@ -2,7 +2,50 @@ import Combine
 import Foundation
 import os
 
-private let streamSeparator = "~~~"
+/// Each invocation owns its parser. Pipe reads may split a separator anywhere,
+/// and an old process must never share this buffer with its replacement.
+struct StreamContentParser {
+    let useTrailingSeparator: Bool
+    private var pendingLine = ""
+    private var block = ""
+
+    mutating func consume(_ chunk: String) -> [String] {
+        pendingLine += chunk
+        var completedBlocks: [String] = []
+        var changedLeadingBlock = false
+        while let newline = pendingLine.firstIndex(where: { $0 == "\n" || $0 == "\r\n" }) {
+            var line = String(pendingLine[..<newline])
+            pendingLine.removeSubrange(...newline)
+            if line.last == "\r" { line.removeLast() }
+            if line == "~~~" {
+                if useTrailingSeparator { completedBlocks.append(block) }
+                block = ""
+                changedLeadingBlock = false
+            } else {
+                block += line + "\n"
+                changedLeadingBlock = true
+            }
+        }
+        if !useTrailingSeparator {
+            // Hold possible separator fragments until their line is complete.
+            let hasPartialText = !pendingLine.isEmpty && !"~~~".hasPrefix(pendingLine)
+            if changedLeadingBlock || hasPartialText {
+                completedBlocks.append(block + (hasPartialText ? pendingLine : ""))
+            }
+        }
+        return completedBlocks
+    }
+}
+
+private final class StreamInvocation {
+    let process = Process()
+    let stdin = Pipe()
+    var parser: StreamContentParser
+
+    init(useTrailingSeparator: Bool) {
+        parser = StreamContentParser(useTrailingSeparator: useTrailingSeparator)
+    }
+}
 
 class StreamablePlugin: Plugin {
     var id: PluginID
@@ -13,15 +56,10 @@ class StreamablePlugin: Plugin {
 
     private var _metadata: PluginMetadata?
     private let metadataQueue = DispatchQueue(label: "com.ameba.SwiftBar.StreamablePlugin.metadata", attributes: .concurrent)
-
     var metadata: PluginMetadata? {
-        get {
-            metadataQueue.sync { _metadata }
-        }
+        get { metadataQueue.sync { _metadata } }
         set {
-            metadataQueue.async(flags: .barrier) { [weak self] in
-                self?._metadata = newValue
-            }
+            metadataQueue.async(flags: .barrier) { [weak self] in self?._metadata = newValue }
         }
     }
 
@@ -30,10 +68,8 @@ class StreamablePlugin: Plugin {
     var lastRefreshReason: PluginRefreshReason = .FirstLaunch
     var operation: Operation?
     var updateInterval = 0.0
-
     var contentUpdatePublisher = PassthroughSubject<String?, Never>()
 
-    var streamInProgressContent: String = ""
     private let contentStorage = LockedValue<String?>("")
     var content: String? {
         get { contentStorage.current }
@@ -47,143 +83,130 @@ class StreamablePlugin: Plugin {
 
     var error: Error?
     var debugInfo = PluginDebugInfo()
-
-    lazy var invokeQueue: OperationQueue = delegate.pluginManager.pluginInvokeQueue
-
-    var procces: Process?
-    var stdinPipe: Pipe = Pipe()
+    let invokeQueue: OperationQueue
     let prefs = PreferencesStore.shared
 
-    init?(fileURL: URL) {
+    // Main owns lifecycle, parser mutations, and output application. Blocking
+    // pipe reads and waitUntilExit remain on the invoke queue.
+    private var currentInvocation: StreamInvocation?
+
+    init?(fileURL: URL, invokeQueue: OperationQueue? = nil, createSupportDirectories: Bool = true) {
         let nameComponents = fileURL.lastPathComponent.components(separatedBy: ".")
         id = fileURL.lastPathComponent
         name = nameComponents.first ?? ""
         file = fileURL.path
+        self.invokeQueue = invokeQueue ?? delegate.pluginManager.pluginInvokeQueue
         lastState = .Streaming
         makeScriptExecutable(file: file)
         refreshPluginMetadata()
         guard metadata?.type == .Streamable else { return nil }
         guard enabled else { return }
-        createSupportDirs()
-        os_log("Initialized streamable plugin\n%{public}@", log: Log.plugin, description)
-        invokeQueue.addOperation { [weak self] in self?.invoke() }
+        if createSupportDirectories { createSupportDirs() }
+        start()
     }
 
-    func refresh(reason _: PluginRefreshReason = .FirstLaunch) {
-        os_log("Refreshing Streamable plugin\n%{public}@", log: Log.plugin, description)
-        terminate()
-        invokeQueue.addOperation { [weak self] in self?.invoke() }
+    func refresh(reason: PluginRefreshReason = .FirstLaunch) {
+        lastRefreshReason = reason
+        start()
     }
 
     func start() {
-        invokeQueue.addOperation { [weak self] in self?.invoke() }
+        dispatchPrecondition(condition: .onQueue(.main))
+        stopCurrentInvocation()
+        guard enabled else { return }
+
+        let invocation = StreamInvocation(useTrailingSeparator: metadata?.useTrailingStreamSeparator == true)
+        currentInvocation = invocation
+        lastUpdated = Date()
+        lastState = .Streaming
+        error = nil
+        let environment = env
+        let runInBash = metadata?.shouldRunInBash ?? true
+        let debugOutput = prefs.streamablePluginDebugOutput
+        let file = file
+        let name = name
+
+        let operation = BlockOperation { [weak self] in
+            do {
+                let output = try runScript(to: file, process: invocation.process,
+                                           env: environment, runInBash: runInBash,
+                                           streamOutput: true, stdinPipe: invocation.stdin,
+                                           launchProcess: { process in
+                                               // Serialize the actual launch with cancellation:
+                                               // a cancelled queued run must never launch later.
+                                               try DispatchQueue.main.sync {
+                                                   guard self?.currentInvocation === invocation else {
+                                                       throw CocoaError(.userCancelled)
+                                                   }
+                                                   try process.run()
+                                               }
+                                           }, onOutputUpdate: { chunk in
+                                               DispatchQueue.main.async { [weak self] in
+                                                   guard let self, self.currentInvocation === invocation,
+                                                         let chunk else { return }
+                                                   if debugOutput {
+                                                       os_log("Streaming %{public}@: %{public}@", log: Log.plugin, name, chunk)
+                                                   }
+                                                   for block in invocation.parser.consume(chunk) {
+                                                       self.content = block
+                                                   }
+                                               }
+                                           })
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.currentInvocation === invocation else { return }
+                    if let errorOutput = output.err, !errorOutput.isEmpty {
+                        self.debugInfo.addEvent(type: .ContentUpdateError, value: errorOutput)
+                    }
+                }
+            } catch {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.currentInvocation === invocation else { return }
+                    self.error = error
+                    self.lastState = .Failed
+                    self.content = nil
+                }
+            }
+        }
+        self.operation = operation
+        invokeQueue.addOperation(operation)
+    }
+
+    private func stopCurrentInvocation() {
+        let previous = currentInvocation
+        currentInvocation = nil
+        operation?.cancel()
+        if previous?.process.isRunning == true { previous?.process.terminate() }
     }
 
     func disable() {
-        lastState = .Disabled
+        terminate()
         content = ""
-        procces?.terminate()
         prefs.disabledPlugins.append(id)
     }
 
     func terminate() {
+        dispatchPrecondition(condition: .onQueue(.main))
+        stopCurrentInvocation()
         lastState = .Disabled
-        procces?.terminate()
     }
 
     func enable() {
         prefs.disabledPlugins.removeAll(where: { $0 == id })
-        invokeQueue.addOperation { [weak self] in self?.invoke() }
+        start()
     }
 
     @discardableResult func invoke() -> String? {
-        lastUpdated = Date()
-        do {
-            stdinPipe = Pipe()
-            procces = Process()
-            guard let procces else { return nil }
-
-            let out = try runScript(to: file, process: procces,
-                                    env: env,
-                                    runInBash: metadata?.shouldRunInBash ?? true,
-                                    streamOutput: true,
-                                    stdinPipe: stdinPipe,
-                                    onOutputUpdate: { [weak self] str in
-                                        if self?.prefs.streamablePluginDebugOutput == true,
-                                           let str,
-                                           let name = self?.name
-                                        {
-                                            os_log("Streaming %{public}@: %{public}@", log: Log.plugin, name, str)
-                                        }
-                                        guard let str else {
-                                            self?.streamInProgressContent.removeAll()
-                                            self?.content = nil
-                                            return
-                                        }
-                                        guard str.contains("\n") || !str.contains(streamSeparator) else {
-                                            self?.streamInProgressContent.append(contentsOf: str)
-                                            return
-                                        }
-
-                                        guard self?.metadata?.useTrailingStreamSeparator == true else {
-                                            // Process leading separator
-                                            if str.contains(streamSeparator) {
-                                                self?.content = str.components(separatedBy: streamSeparator).last
-                                                return
-                                            }
-                                            self?.content?.append(str)
-                                            return
-                                        }
-                                        // Process trailing separator
-                                        if str.contains(streamSeparator) {
-                                            // we expect streamSeparator on a separate line
-                                            let lines = str.components(separatedBy: .newlines)
-                                            let linesCount = lines.count
-                                            let endsOnNewLine = str.last == "\n"
-                                            for (i, s) in lines.enumerated() {
-                                                if s == streamSeparator {
-                                                    self?.content = self?.streamInProgressContent
-                                                    self?.streamInProgressContent.removeAll()
-                                                    continue
-                                                }
-                                                self?.streamInProgressContent.append(s)
-                                                if !endsOnNewLine, i == linesCount - 1 {
-                                                    continue
-                                                }
-                                                self?.streamInProgressContent.append("\n")
-                                            }
-                                            return
-                                        }
-                                        self?.streamInProgressContent.append(str)
-                                    })
-            error = nil
-            lastState = .Streaming
-            os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
-            if let err = out.err, err != "" {
-                debugInfo.addEvent(type: .ContentUpdateError, value: err)
-                os_log("Error output from the script: \n%{public}@", log: Log.plugin, err)
-            }
-            return out.out
-        } catch {
-            guard lastState != .Disabled,
-                  let error = error as? ShellOutError else { return nil }
-            os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type: .error, file, error.message)
-            self.error = error
-            lastState = .Failed
-            content = nil
-        }
-        return nil
+        // A streaming invocation delivers asynchronously; never block main
+        // waiting for a long-lived process to exit.
+        start()
+        return content
     }
 
     func writeStdin(_ input: String) throws {
-        guard let data = (input + "\n").data(using: .utf8) else {
-            throw NSError(domain: "SwiftBar.StreamablePlugin", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to encode input as UTF8"])
+        dispatchPrecondition(condition: .onQueue(.main))
+        guard let invocation = currentInvocation, invocation.process.isRunning else {
+            throw CocoaError(.fileWriteUnknown)
         }
-
-        do {
-            try stdinPipe.fileHandleForWriting.write(contentsOf: data)
-        } catch {
-            throw NSError(domain: "SwiftBar.StreamablePlugin", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to write to stdin: \(error.localizedDescription)"])
-        }
+        try invocation.stdin.fileHandleForWriting.write(contentsOf: Data((input + "\n").utf8))
     }
 }

@@ -4,6 +4,36 @@ import SwiftUI
 
 private let kittyBundleIdentifier = "net.kovidgoyal.kitty"
 
+struct PreparedTerminalCommand {
+    let command: String
+    let temporaryDirectory: URL?
+}
+
+/// Terminal may accept a command before its login shell leaves canonical input
+/// mode, where a line is limited to 1024 bytes. Source a private file for long
+/// commands so neither environment exports nor arguments are truncated.
+func prepareTerminalCommand(_ command: String, in temporaryDirectory: URL = FileManager.default.temporaryDirectory) throws -> PreparedTerminalCommand {
+    guard command.utf8.count >= 900 else {
+        return PreparedTerminalCommand(command: command, temporaryDirectory: nil)
+    }
+    let directory = temporaryDirectory.appendingPathComponent("swiftbar-terminal-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false,
+                                          attributes: [.posixPermissions: 0o700])
+    do {
+        let file = directory.appendingPathComponent("command")
+        // Source keeps the user's current shell and environment semantics. The
+        // open file remains readable after unlinking; cleanup precedes the user
+        // command so even exec/exit and a failed command leave no private data.
+        let source = "/bin/rm -- \(file.path.quoteIfNeeded())\n/bin/rmdir -- \(directory.path.quoteIfNeeded())\n\(command)\n"
+        try source.write(to: file, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
+        return PreparedTerminalCommand(command: "source \(file.path.quoteIfNeeded())", temporaryDirectory: directory)
+    } catch {
+        try? FileManager.default.removeItem(at: directory)
+        throw error
+    }
+}
+
 func buildTerminalAppleScript(command: String, terminal: TerminalOptions) -> String {
     let escapedCommand = command.appleScriptEscaped()
 
@@ -242,16 +272,28 @@ class AppShared: NSObject {
             return
         }
 
-        let appleScript = buildTerminalAppleScript(command: runInTerminalScript, terminal: PreferencesStore.shared.terminal)
+        let terminal = PreferencesStore.shared.terminal
+        let prepared: PreparedTerminalCommand
+        do {
+            prepared = terminal == .Terminal ? try prepareTerminalCommand(runInTerminalScript) :
+                PreparedTerminalCommand(command: runInTerminalScript, temporaryDirectory: nil)
+        } catch {
+            os_log("Failed to prepare Terminal command: %{public}@", log: Log.plugin, type: .error, error.localizedDescription)
+            return
+        }
+        let appleScript = buildTerminalAppleScript(command: prepared.command, terminal: terminal)
 
         var error: NSDictionary?
         if let scriptObject = NSAppleScript(source: appleScript) {
             if let outputString = scriptObject.executeAndReturnError(&error).stringValue {
                 print(outputString)
             } else if let error {
+                if let directory = prepared.temporaryDirectory { try? FileManager.default.removeItem(at: directory) }
                 os_log("Failed to execute script in Terminal \n%{public}@", log: Log.plugin, type: .error, error.description)
             }
             completionHandler?()
+        } else if let directory = prepared.temporaryDirectory {
+            try? FileManager.default.removeItem(at: directory)
         }
     }
 

@@ -190,30 +190,33 @@ class MenubarItem: NSObject {
 
         updateMenu(content: plugin?.content)
         contentUpdateCancellable = plugin?.contentUpdatePublisher
-            .receive(on: menuUpdateQueue)
-            .sink { [weak self] content in
-                self?.disableTitleCycle()
-                self?.updateMenu(content: content)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self, weak plugin] _ in
+                guard let self, let plugin, self.plugin === plugin else { return }
+                // Concurrent setters can publish an older value after a newer
+                // one. Notifications invalidate the menu; storage owns its value.
+                self.disableTitleCycle()
+                self._updateMenu(content: plugin.content)
             }
 
         // Keep the existing status item and swap only the plugin bindings so menu bar position stays stable.
         stalenessCheckCancellable = Timer.publish(every: 30, on: .main, in: .common)
             .autoconnect()
             .sink { [weak self] _ in
-                guard let self,
-                      let plugin = self.plugin else { return }
-
-                let wasStale = barItem.button?.attributedTitle.string.hasPrefix("⚠️") ?? false
-                let isNowStale = plugin.isStale
-
-                if wasStale != isNowStale {
-                    setMenuTitle(title: currentTitleLine)
-                }
+                self?.refreshStalenessIndicator()
             }
 
         // Restore title cycling if it was active before the replacement.
         if wasCyclingTitles, titleLines.count > 1 {
             enableTitleCycle()
+        }
+    }
+
+    func refreshStalenessIndicator() {
+        guard let plugin else { return }
+        let wasStale = barItem.button?.attributedTitle.string.hasPrefix("⚠️") ?? false
+        if wasStale != plugin.isStale {
+            setMenuTitle(title: currentTitleLine)
         }
     }
 
@@ -276,11 +279,9 @@ extension MenubarItem: NSMenuDelegate {
 
         // if plugin was refreshed when menu was opened refresh on menu close
         if refreshOnClose {
-            menuUpdateQueue.addOperation { [weak self] in
-                self?.refreshOnClose = false
-                self?.disableTitleCycle()
-                self?.updateMenu(content: self?.plugin?.content)
-            }
+            refreshOnClose = false
+            disableTitleCycle()
+            _updateMenu(content: plugin?.content)
         }
     }
 
@@ -1293,6 +1294,14 @@ extension MenubarItem {
     ) {
         let resolvedPresentation: MenuImagePresentation = if let presentation {
             presentation
+        } else if title.string.contains("\n") || (
+            params.params["sfimage"] != nil && params.getSFConfig() == nil &&
+                params.params["width"] == nil && params.params["height"] == nil
+        ) {
+            // Native images span a multiline title rather than making its
+            // first text line image-height. AppKit also supplies the customary
+            // menu size for unconfigured SF Symbols, as in SwiftBar 2.0.x.
+            .native
         } else if #available(macOS 26.0, *) {
             .attributed
         } else {

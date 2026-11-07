@@ -36,6 +36,52 @@ private final class OutputRecorder {
 }
 
 struct RunScriptTests {
+    @Test func longTerminalCommandsKeepAllBytesAndCleanUpTheirPrivateFile() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("terminal space ' quote \(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let text = String(repeating: "🌍 quotes ' and $ literal ", count: 150)
+        let command = "printf '%s\\n' \(text.quoteIfNeeded()); printf END; false"
+        let prepared = try prepareTerminalCommand(command, in: root)
+        let directory = try #require(prepared.temporaryDirectory)
+        #expect(prepared.command.utf8.count < 900)
+        #expect(try FileManager.default.attributesOfItem(atPath: directory.path)[.posixPermissions] as? Int == 0o700)
+        #expect(try FileManager.default.attributesOfItem(atPath: directory.appendingPathComponent("command").path)[.posixPermissions] as? Int == 0o600)
+
+        for shell in ["/bin/bash", "/bin/zsh"] {
+            let invocation = shell == "/bin/bash" ? prepared : try prepareTerminalCommand(command, in: root)
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: shell)
+            process.arguments = ["-c", invocation.command]
+            let pipe = Pipe()
+            process.standardOutput = pipe
+            try process.run()
+            let output = pipe.fileHandleForReading.readDataToEndOfFile()
+            process.waitUntilExit()
+            #expect(String(decoding: output, as: UTF8.self) == text + "\nEND")
+            #expect(process.terminationStatus == 1)
+            #expect(!FileManager.default.fileExists(atPath: try #require(invocation.temporaryDirectory).path))
+        }
+    }
+
+    @Test func shortTerminalCommandsNeedNoTemporaryFile() throws {
+        let prepared = try prepareTerminalCommand("echo short")
+        #expect(prepared.command == "echo short")
+        #expect(prepared.temporaryDirectory == nil)
+    }
+
+    @Test func rejectedLaunchDoesNotReadAnUnlaunchedProcessStatus() throws {
+        for streaming in [false, true] {
+            do {
+                _ = try runScript(to: "/usr/bin/true", runInBash: false, streamOutput: streaming,
+                                  launchProcess: { _ in throw CocoaError(.userCancelled) })
+                Issue.record("Rejected launch unexpectedly succeeded")
+            } catch let error as ShellOutError {
+                #expect(error.terminationStatus == -1)
+                #expect(!error.message.isEmpty)
+            }
+        }
+    }
     @Test func utf8ChunkDecoder_reassemblesScalarsSplitAtEveryByte() {
         let expected = "A¢●🌍Z"
         let bytes = Array(expected.utf8)
@@ -102,5 +148,128 @@ struct RunScriptTests {
         #expect(updates.allSatisfy { $0 != nil })
         #expect(updates.compactMap { $0 }.joined() == "prefix ● suffix\n")
         #expect(result.out == "prefix ● suffix\n")
+    }
+}
+
+struct StreamContentParserTests {
+    @Test func trailingFramesSurviveEveryChunkBoundary() {
+        let text = "First 🌍\n---\nBody\n~~~\nSecond\n~~~\n"
+        let expected = ["First 🌍\n---\nBody\n", "Second\n"]
+        for split in 0...text.count {
+            let boundary = text.index(text.startIndex, offsetBy: split)
+            var parser = StreamContentParser(useTrailingSeparator: true)
+            let frames = parser.consume(String(text[..<boundary])) + parser.consume(String(text[boundary...]))
+            #expect(frames == expected, "Split at character \(split)")
+        }
+        var parser = StreamContentParser(useTrailingSeparator: true)
+        #expect(text.flatMap { parser.consume(String($0)) } == expected)
+    }
+
+    @Test func leadingFramesPreservePartialLinesAndSplitSeparators() {
+        var parser = StreamContentParser(useTrailingSeparator: false)
+        #expect(parser.consume("first") == ["first"])
+        #expect(parser.consume(" line\n~") == ["first line\n"])
+        #expect(parser.consume("~").isEmpty)
+        #expect(parser.consume("~\nsec") == ["sec"])
+        #expect(parser.consume("ond\n") == ["second\n"])
+        #expect(parser.consume("text ~~~ inside a row\n") == ["second\ntext ~~~ inside a row\n"])
+    }
+
+    @Test func trailingModeDoesNotPublishAnIncompleteFrame() {
+        var parser = StreamContentParser(useTrailingSeparator: true)
+        #expect(parser.consume("partial\n~~").isEmpty)
+        #expect(parser.consume("~").isEmpty)
+        #expect(parser.consume("\r\n") == ["partial\n"])
+        #expect(parser.consume("next\n~~~\n") == ["next\n"])
+    }
+}
+
+@MainActor
+struct StreamableLifecycleTests {
+    private func makeScript(_ body: String) throws -> URL {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("lifecycle.sh")
+        let script = """
+        #!/bin/sh
+        # <swiftbar.type>Streamable</swiftbar.type>
+        # <swiftbar.runInBash>false</swiftbar.runInBash>
+        # <swiftbar.useTrailingStreamSeparator>true</swiftbar.useTrailingStreamSeparator>
+        \(body)
+        """
+        try script.write(to: url, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+        return url
+    }
+
+    private func waitUntil(_ condition: () -> Bool) async throws -> Bool {
+        let deadline = Date().addingTimeInterval(5)
+        while Date() < deadline {
+            if condition() { return true }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        return condition()
+    }
+
+    @Test func cancelledQueuedInvocationsNeverStart() async throws {
+        let url = try makeScript("touch \"$0.started\"")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let queue = OperationQueue()
+        queue.isSuspended = true
+        let plugin = try #require(StreamablePlugin(fileURL: url, invokeQueue: queue, createSupportDirectories: false))
+        for _ in 0..<20 { plugin.refresh(reason: .URLScheme) }
+        plugin.terminate()
+        queue.isSuspended = false
+        #expect(try await waitUntil { queue.operationCount == 0 })
+        #expect(!FileManager.default.fileExists(atPath: url.path + ".started"))
+        #expect(plugin.lastState == .Disabled)
+    }
+
+    @Test func restartedStreamsIgnoreLateOutputAndStoppedStreamsStayStopped() async throws {
+        let url = try makeScript("""
+        trap '' TERM
+        i=0
+        while [ "$i" -lt 30 ]; do
+          printf '%s:%s\\n~~~\\n' "$$" "$i"
+          i=$((i + 1))
+          sleep 0.025
+        done
+        """)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let queue = OperationQueue()
+        let plugin = try #require(StreamablePlugin(fileURL: url, invokeQueue: queue, createSupportDirectories: false))
+        defer { plugin.terminate() }
+        #expect(try await waitUntil { plugin.content?.contains(":") == true })
+        let originalPID = try #require(plugin.content?.split(separator: ":").first.map(String.init))
+        plugin.refresh(reason: .URLScheme)
+        #expect(try await waitUntil {
+            plugin.content?.split(separator: ":").first.map(String.init) != originalPID
+        })
+        let replacementPID = try #require(plugin.content?.split(separator: ":").first.map(String.init))
+        for _ in 0..<15 {
+            try await Task.sleep(for: .milliseconds(20))
+            #expect(plugin.content?.hasPrefix(replacementPID + ":") == true)
+        }
+        plugin.terminate()
+        let stoppedContent = plugin.content
+        #expect(try await waitUntil { queue.operationCount == 0 })
+        #expect(plugin.content == stoppedContent)
+        #expect(plugin.lastState == .Disabled)
+        #expect(throws: CocoaError.self) { try plugin.writeStdin("after stop") }
+    }
+
+    @Test func stdinTargetsTheActiveProcess() async throws {
+        let url = try makeScript("""
+        printf 'ready\\n~~~\\n'
+        while IFS= read -r line; do
+          printf '%s\\n~~~\\n' "$line"
+        done
+        """)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let plugin = try #require(StreamablePlugin(fileURL: url, createSupportDirectories: false))
+        defer { plugin.terminate() }
+        #expect(try await waitUntil { plugin.content == "ready\n" })
+        try plugin.writeStdin("updated 🌍")
+        #expect(try await waitUntil { plugin.content == "updated 🌍\n" })
     }
 }

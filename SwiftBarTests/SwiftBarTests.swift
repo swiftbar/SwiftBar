@@ -5,6 +5,87 @@ import Testing
 
 @testable import SwiftBar
 
+struct ColdStartURLTests {
+    @MainActor @Test func refreshURLBeforeLaunchDoesNotRequirePluginManager() throws {
+        let app = AppDelegate()
+        let url = try #require(URL(string: "swiftbar://refreshplugin?name=not-loaded-yet.sh"))
+        app.application(NSApplication.shared, open: [url])
+        #expect(app.pluginManager == nil)
+    }
+
+    @MainActor @Test func queuedURLsAreDeliveredInOrderOncePluginsAreReady() throws {
+        let app = AppDelegate()
+        let plugin = TestPlugin(id: "queued", file: "/tmp/queued.sh")
+        let url = try #require(URL(string: "swiftbar://refreshplugin?name=queued"))
+        app.application(NSApplication.shared, open: [url, url])
+        #expect(plugin.refreshReasons.isEmpty)
+
+        let manager = PluginManager()
+        manager.plugins = [plugin]
+        app.pluginManager = manager
+        app.finishLaunchingOpenEvents()
+        #expect(plugin.refreshReasons == [.URLScheme, .URLScheme])
+        app.finishLaunchingOpenEvents()
+        #expect(plugin.refreshReasons.count == 2)
+        app.application(NSApplication.shared, open: [url])
+        #expect(plugin.refreshReasons.count == 3)
+    }
+}
+
+struct EmptySymbolPaletteTests {
+    @MainActor @Test func scaleOnlyConfigurationKeepsMonochromeRendering() throws {
+        let config = Data("{\"scale\":\"small\"}".utf8).base64EncodedString()
+        let params = MenuLineParameters(line: "Item | sfimage=timer sfconfig=\(config)")
+        let decoded = try #require(params.getSFConfig())
+        #expect(decoded.renderingMode == nil)
+        #expect(decoded.getScale() == .small)
+        #expect(try #require(params.image).isTemplate)
+    }
+    @MainActor @Test(arguments: ["[]", "[\"not-a-color\"]"])
+    func emptyOrInvalidPaletteFallsBackToTemplate(colors: String) throws {
+        let config = Data("{\"renderingMode\":\"Palette\",\"colors\":\(colors),\"scale\":\"small\"}".utf8).base64EncodedString()
+        let params = MenuLineParameters(line: "Item | sfimage=timer sfconfig=\(config)")
+        let image = try #require(params.image)
+        #expect(image.isTemplate)
+    }
+}
+
+struct MenuContentInvalidationTests {
+    @MainActor @Test func stalePublicationsRenderCurrentStoredContent() async throws {
+        let plugin = TestPlugin(id: "current", file: "/tmp/current.sh", content: "newest", lastState: .Success)
+        let item = MenubarItem(title: "Test", plugin: plugin)
+        plugin.contentUpdatePublisher.send("older")
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(item.titleLines == ["newest"])
+    }
+
+    @MainActor @Test func replacingPluginKeepsAccessibilityIdentityInSync() throws {
+        let old = TestPlugin(id: "old", file: "/tmp/old.sh", content: "old")
+        let item = MenubarItem(title: "Test", plugin: old)
+        #expect(item.barItem.button?.accessibilityIdentifier() == old.id)
+        let new = TestPlugin(id: "new", file: "/tmp/new.sh", content: "new")
+        item.replacePlugin(new)
+        #expect(item.barItem.button?.accessibilityIdentifier() == new.id)
+    }
+
+    @MainActor @Test func wakeImmediatelyClearsWarningEvenWhenOutputIsUnchanged() throws {
+        let environment = Environment.shared
+        let oldWake = environment.lastWakeDate
+        defer { environment.updateWakeTime(date: oldWake ?? .distantPast) }
+        environment.updateWakeTime(date: .distantPast)
+        let plugin = TestPlugin(id: "wake", file: "/tmp/wake.sh", content: "unchanged", lastState: .Success)
+        plugin.updateInterval = 60
+        plugin.lastUpdated = Date().addingTimeInterval(-1000)
+        let item = MenubarItem(title: "Test", plugin: plugin)
+        item._updateMenu(content: plugin.content)
+        #expect(item.barItem.button?.attributedTitle.string.hasPrefix("⚠️") == true)
+        environment.updateWakeTime(date: Date())
+        item.refreshStalenessIndicator()
+        #expect(item.barItem.button?.attributedTitle.string == "unchanged")
+        #expect(plugin.content == "unchanged")
+    }
+}
+
 final class TestPlugin: Plugin {
     let id: PluginID
     let type: PluginType
@@ -24,6 +105,7 @@ final class TestPlugin: Plugin {
     var debugInfo = PluginDebugInfo()
     var refreshEnv: [String: String] = [:]
     var terminateCallCount = 0
+    var refreshReasons: [PluginRefreshReason] = []
 
     var supportDirectoryName: String {
         supportDirectoryNameOverride ?? (file as NSString).lastPathComponent
@@ -49,7 +131,7 @@ final class TestPlugin: Plugin {
         self.lastState = lastState
     }
 
-    func refresh(reason: PluginRefreshReason) {}
+    func refresh(reason: PluginRefreshReason) { refreshReasons.append(reason) }
     func enable() {}
     func disable() {}
     func start() {}
@@ -4718,6 +4800,33 @@ struct FoldMenuItemBuildTests {
         #expect(try attachedImage(from: menuItem).size == NSSize(width: 30, height: 30))
     }
 
+    @MainActor @Test func testDefaultMultilineImageLeavesBothTextLinesBesideNativeImage() throws {
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 37, height: 37))
+        let params = MenuLineParameters(line: "First line\\nSecond line | image=\(image)")
+        let menuItem = try #require(item.buildMenuItem(params: params))
+        let title = try #require(menuItem.attributedTitle)
+        #expect(menuItem.image?.size == NSSize(width: 37, height: 37))
+        #expect(title.string == "First line\nSecond line")
+        #expect(title.attribute(.attachment, at: 0, effectiveRange: nil) == nil)
+        let first = textBounds("First line", in: title)
+        let second = textBounds("Second line", in: title)
+        #expect(second.minY - first.minY < 30)
+        #expect(first.minX == second.minX)
+    }
+
+    @MainActor @Test func testDefaultSFSymbolUsesNativeMenuSizingButExplicitDimensionsArePreserved() throws {
+        let item = makeMenuBarItem()
+        let native = try #require(item.buildMenuItem(params: MenuLineParameters(line: "Symbol | sfimage=timer")))
+        #expect(native.image != nil)
+        #expect(native.attributedTitle?.string == "Symbol")
+        let explicit = try #require(item.buildMenuItem(params: MenuLineParameters(line: "Symbol | sfimage=timer width=30 height=30")))
+        if #available(macOS 26.0, *) {
+            #expect(explicit.image == nil)
+            #expect(try attachedImage(from: explicit).size == NSSize(width: 30, height: 30))
+        }
+    }
+
     @MainActor @Test func testAttributedPresentation_doesNotIndentMultilineTitleWithoutImage() throws {
         let item = makeMenuBarItem()
         let params = MenuLineParameters(line: "First line\\nSecond line")
@@ -5088,7 +5197,7 @@ struct FoldMenuItemBuildTests {
         ))
     }
 
-    @MainActor @Test func testPlainHighlightPreservesAttributedImageOnMacOS26AndLater() throws {
+    @MainActor @Test func testPlainHighlightPreservesNativeMultilineImageOnMacOS26AndLater() throws {
         guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
 
         let item = makeMenuBarItem()
@@ -5102,7 +5211,7 @@ struct FoldMenuItemBuildTests {
 
         let imageItem = try #require(menuItem(named: "Image\\nsubtitle", in: item.statusBarMenu))
         let originalTitle = try #require(imageItem.attributedTitle)
-        let originalImage = try attachedImage(from: imageItem)
+        let originalImage = try #require(imageItem.image)
         let textLocation = (originalTitle.string as NSString).range(of: "Image").location
 
         item.menu(item.statusBarMenu, willHighlight: imageItem)
@@ -5110,9 +5219,9 @@ struct FoldMenuItemBuildTests {
         item.menu(item.statusBarMenu, willHighlight: nil)
 
         #expect(imageItem.attributedTitle === originalTitle)
-        #expect(try attachedImage(from: imageItem) === originalImage)
+        #expect(imageItem.image === originalImage)
         #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
-        #expect(imageItem.image == nil)
+        #expect(imageItem.image?.size == NSSize(width: 30, height: 30))
     }
 
     @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
@@ -6002,6 +6111,7 @@ private final class WakeRetryTestPlugin: TimerArmingPlugin {
     }
 }
 
+@MainActor
 struct WakeRefreshRetryTests {
     private let testRetryDelay: (PluginRefreshReason, Int) -> TimeInterval? = { reason, failedAttempts in
         guard reason == .WakeFromSleep, failedAttempts <= 2 else { return nil }

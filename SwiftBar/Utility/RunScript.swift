@@ -91,6 +91,7 @@ func buildTerminalCommand(script: String, args: [String] = [], env: [String: Str
                                   runInBash: Bool = true,
                                   streamOutput: Bool = false,
                                   stdinPipe: Pipe? = nil,
+                                  launchProcess: ((Process) throws -> Void)? = nil,
                                   onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> (out: String, err: String?)
 {
     let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { _, new in new }
@@ -98,7 +99,7 @@ func buildTerminalCommand(script: String, args: [String] = [], env: [String: Str
     if let workingDirectory {
         process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
     }
-    return try process.launchScript(with: command, args: args, runInBash: runInBash, streamOutput: streamOutput, stdinPipe: stdinPipe, onOutputUpdate: onOutputUpdate)
+    return try process.launchScript(with: command, args: args, runInBash: runInBash, streamOutput: streamOutput, stdinPipe: stdinPipe, launchProcess: launchProcess, onOutputUpdate: onOutputUpdate)
 }
 
 // Code below is adopted from https://github.com/JohnSundell/ShellOut
@@ -120,7 +121,14 @@ public struct ShellOutError: Swift.Error {
 // MARK: - Private
 
 private extension Process {
-    @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, stdinPipe: Pipe? = nil, onOutputUpdate: @escaping (String?) -> Void) throws -> (out: String, err: String?) {
+    @discardableResult func launchScript(with script: String, args: [String], runInBash: Bool = true, streamOutput: Bool, stdinPipe: Pipe? = nil, launchProcess: ((Process) throws -> Void)?, onOutputUpdate: @escaping (String?) -> Void) throws -> (out: String, err: String?) {
+        let launch = {
+            if let launchProcess {
+                try launchProcess(self)
+            } else {
+                try self.run()
+            }
+        }
         if !runInBash {
             executableURL = URL(fileURLWithPath: script)
             arguments = args
@@ -155,12 +163,12 @@ private extension Process {
 
         guard streamOutput else { // horrible hack, code below this guard doesn't work reliably and I can't fugire out why.
             do {
-                try run()
+                try launch()
             } catch {
                 os_log("Failed to launch plugin", log: Log.plugin, type: .error)
-                let data = outputPipe.fileHandleForReading.readDataToEndOfFile()
-                let errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-                throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: data)
+                // An unlaunched Process has no terminationStatus, and its
+                // unwritten pipes cannot be drained to EOF while still open.
+                throw ShellOutError(terminationStatus: -1, errorData: Data(error.localizedDescription.utf8), outputData: Data())
             }
 
             outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
@@ -202,10 +210,12 @@ private extension Process {
         }
 
         do {
-            try run()
+            try launch()
         } catch {
             os_log("Failed to launch plugin", log: Log.plugin, type: .error)
-            throw ShellOutError(terminationStatus: terminationStatus, errorData: errorData, outputData: outputData)
+            outputPipe.fileHandleForReading.readabilityHandler = nil
+            errorPipe.fileHandleForReading.readabilityHandler = nil
+            throw ShellOutError(terminationStatus: -1, errorData: Data(error.localizedDescription.utf8), outputData: Data())
         }
 
         waitUntilExit()
