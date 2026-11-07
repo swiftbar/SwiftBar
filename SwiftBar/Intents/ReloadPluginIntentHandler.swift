@@ -3,15 +3,15 @@ import Intents
 public class ReloadPluginIntentHandler: NSObject, ReloadPluginIntentHandling {
     @available(macOS 11.0, *)
     public func handle(intent: ReloadPluginIntent, completion: @escaping (ReloadPluginIntentResponse) -> Void) {
-        guard let pluginID = intent.plugin?.identifier,
-              let plugin = delegate.pluginManager.plugins.first(where: { $0.id == pluginID })
-        else {
-            completion(ReloadPluginIntentResponse(code: .failure, userActivity: nil))
-            return
-        }
         // SiriKit calls handlers on a background thread; refresh (and the
         // plugin.operation ownership it manages) is serialized on main.
         DispatchQueue.main.async {
+            guard let pluginID = intent.plugin?.identifier,
+                  let plugin = delegate.pluginManager.plugins.first(where: { $0.id == pluginID })
+            else {
+                completion(ReloadPluginIntentResponse(code: .failure, userActivity: nil))
+                return
+            }
             delegate.pluginManager.menuBarItems[plugin.id]?.dimOnManualRefresh()
             plugin.refresh(reason: .Shortcut)
             completion(ReloadPluginIntentResponse(code: .success, userActivity: nil))
@@ -29,7 +29,9 @@ public class ReloadPluginIntentHandler: NSObject, ReloadPluginIntentHandling {
 
     @available(macOS 11.0, *)
     public func providePluginOptionsCollection(for _: ReloadPluginIntent, with completion: @escaping (INObjectCollection<SKPlugin>?, Error?) -> Void) {
-        let plugins = delegate.pluginManager.plugins.map { SKPlugin(identifier: $0.id, display: $0.name) }
-        completion(INObjectCollection(items: plugins), nil)
+        DispatchQueue.main.async {
+            let plugins = delegate.pluginManager.plugins.map { SKPlugin(identifier: $0.id, display: $0.name) }
+            completion(INObjectCollection(items: plugins), nil)
+        }
     }
 }

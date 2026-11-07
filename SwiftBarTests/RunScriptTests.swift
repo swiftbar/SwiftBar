@@ -1,4 +1,5 @@
 import Foundation
+import Intents
 import Testing
 
 @testable import SwiftBar
@@ -152,6 +153,17 @@ struct RunScriptTests {
 }
 
 struct StreamContentParserTests {
+    @Test func leadingSeparatorResetsTheMenuEvenWhenNextContentArrivesLater() {
+        let separator = "~~~\n"
+        for split in 0...separator.count {
+            var parser = StreamContentParser(useTrailingSeparator: false)
+            #expect(parser.consume("hello\n") == ["hello\n"])
+            let boundary = separator.index(separator.startIndex, offsetBy: split)
+            let resets = parser.consume(String(separator[..<boundary])) + parser.consume(String(separator[boundary...]))
+            #expect(resets.last == "", "Separator split at \(split) must clear prior content")
+        }
+    }
+
     @Test func trailingFramesSurviveEveryChunkBoundary() {
         let text = "First 🌍\n---\nBody\n~~~\nSecond\n~~~\n"
         let expected = ["First 🌍\n---\nBody\n", "Second\n"]
@@ -189,7 +201,7 @@ struct StreamableLifecycleTests {
     private func makeScript(_ body: String) throws -> URL {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let url = dir.appendingPathComponent("lifecycle.sh")
+        let url = dir.appendingPathComponent("lifecycle-\(UUID().uuidString).sh")
         let script = """
         #!/bin/sh
         # <swiftbar.type>Streamable</swiftbar.type>
@@ -209,6 +221,65 @@ struct StreamableLifecycleTests {
             try await Task.sleep(for: .milliseconds(20))
         }
         return condition()
+    }
+
+    @Test func shortcutHandlersAcceptBackgroundCallsForStreamingPlugins() async throws {
+        let url = try makeScript("printf 'ready\\n~~~\\n'; while IFS= read -r line; do :; done")
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        let plugin = try #require(StreamablePlugin(fileURL: url, createSupportDirectories: false))
+        // System reports inspect the manager's directory on plugin changes.
+        // Keep this test away from the user's configured (possibly remote) folder.
+        let previousManager = delegate.pluginManager
+        let manager = TestDirectoryPluginManager(pluginDirectoryURL: url.deletingLastPathComponent())
+        delegate.pluginManager = manager
+        manager.plugins.append(plugin)
+        defer {
+            plugin.terminate()
+            manager.plugins.removeAll { $0 === plugin }
+            PreferencesStore.shared.disabledPlugins.removeAll { $0 == plugin.id }
+            delegate.pluginManager = previousManager
+        }
+        let object = SKPlugin(identifier: plugin.id, display: plugin.name)
+        let disable = DisablePluginIntent()
+        disable.plugin = object
+        let disabled: Bool = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                DisablePluginIntentHandler().handle(intent: disable) { response in
+                    continuation.resume(returning: Thread.isMainThread && response.code == .success)
+                }
+            }
+        }
+        #expect(disabled)
+        #expect(plugin.lastState == .Disabled)
+        let enable = EnablePluginIntent()
+        enable.plugin = object
+        let enabled: Bool = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                EnablePluginIntentHandler().handle(intent: enable) { response in
+                    continuation.resume(returning: Thread.isMainThread && response.code == .success)
+                }
+            }
+        }
+        #expect(enabled)
+        #expect(plugin.lastState == .Streaming)
+        let reload = ReloadPluginIntent()
+        reload.plugin = object
+        let reloaded: Bool = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                ReloadPluginIntentHandler().handle(intent: reload) { response in
+                    continuation.resume(returning: Thread.isMainThread && response.code == .success)
+                }
+            }
+        }
+        #expect(reloaded)
+        let listed: Bool = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                GetPluginsIntentHandler().handle(intent: GetPluginsIntent()) { response in
+                    continuation.resume(returning: Thread.isMainThread && response.plugins?.contains { $0.identifier == plugin.id } == true)
+                }
+            }
+        }
+        #expect(listed)
     }
 
     @Test func cancelledQueuedInvocationsNeverStart() async throws {

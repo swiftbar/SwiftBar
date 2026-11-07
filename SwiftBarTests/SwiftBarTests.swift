@@ -2254,15 +2254,33 @@ struct PluginVariableIntegrationTests {
 // MARK: - Environment Variable Tests (Issues #473, #453)
 
 @Suite(.serialized)
+@MainActor
 struct EnvironmentVariableTests {
+    private func preservePluginDirectory() -> () -> Void {
+        let originalPath = PreferencesStore.shared.pluginDirectoryPath
+        let defaults = UserDefaults.standard
+        let domain = Bundle.main.bundleIdentifier!
+        // The test scheme's argument-domain override must not be persisted
+        // over the user's saved folder by PreferencesStore's setter.
+        let savedPath = defaults.persistentDomain(forName: domain)?["PluginDirectory"]
+        return {
+            PreferencesStore.shared.pluginDirectoryPath = originalPath
+            if let savedPath {
+                defaults.set(savedPath, forKey: "PluginDirectory")
+            } else {
+                defaults.removeObject(forKey: "PluginDirectory")
+            }
+            defaults.synchronize()
+        }
+    }
+
     // Issue #473: SWIFTBAR_PLUGINS_PATH should reflect the current plugin directory,
     // not a stale value captured at Environment init time.
     @Test func testPluginsPathReflectsCurrentPreference() throws {
         let env = Environment.shared
 
-        // Save original value to restore later
-        let originalPath = PreferencesStore.shared.pluginDirectoryPath
-        defer { PreferencesStore.shared.pluginDirectoryPath = originalPath }
+        let restoreDirectory = preservePluginDirectory()
+        defer { restoreDirectory() }
 
         // Set a known path
         PreferencesStore.shared.pluginDirectoryPath = "/tmp/test-plugins-path"
@@ -2281,8 +2299,8 @@ struct EnvironmentVariableTests {
     @Test func testPluginsPathHandlesNilDirectory() throws {
         let env = Environment.shared
 
-        let originalPath = PreferencesStore.shared.pluginDirectoryPath
-        defer { PreferencesStore.shared.pluginDirectoryPath = originalPath }
+        let restoreDirectory = preservePluginDirectory()
+        defer { restoreDirectory() }
 
         PreferencesStore.shared.pluginDirectoryPath = nil
         let envStr = env.systemEnvStr

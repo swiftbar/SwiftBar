@@ -20,7 +20,7 @@ struct StreamContentParser {
             if line == "~~~" {
                 if useTrailingSeparator { completedBlocks.append(block) }
                 block = ""
-                changedLeadingBlock = false
+                changedLeadingBlock = !useTrailingSeparator
             } else {
                 block += line + "\n"
                 changedLeadingBlock = true
