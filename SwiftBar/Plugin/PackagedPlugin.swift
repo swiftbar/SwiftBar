@@ -179,11 +179,9 @@ class PackagedPlugin: TimerArmingPlugin {
         guard cancellable.isEmpty else { return }
         updateTimerPublisher
             .autoconnect()
-            .receive(on: invokeQueue)
+            .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] _ in
-                guard let self else { return }
-                self.lastRefreshReason = .Schedule
-                self.invokeQueue.addOperation(RunPluginOperation<PackagedPlugin>(plugin: self, queue: invokeQueue))
+                self?.refresh(reason: .Schedule, reloadMetadata: false)
             }).store(in: &cancellable)
     }
 
@@ -232,6 +230,10 @@ class PackagedPlugin: TimerArmingPlugin {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        refresh(reason: reason, reloadMetadata: true)
+    }
+
+    private func refresh(reason: PluginRefreshReason, reloadMetadata: Bool) {
         // plugin.operation ownership is serialized on the main queue
         // (see RunPluginOperation.scheduleRetry).
         dispatchPrecondition(condition: .onQueue(.main))
@@ -245,41 +247,31 @@ class PackagedPlugin: TimerArmingPlugin {
         disableTimer()
         operation?.cancel()
 
-        refreshPluginMetadata()
+        if reloadMetadata { refreshPluginMetadata() }
         lastRefreshReason = reason
         operation = RunPluginOperation<PackagedPlugin>(plugin: self, queue: invokeQueue)
         invokeQueue.addOperation(operation!)
     }
 
     func invoke() -> String? {
-        lastUpdated = Date()
-        do {
-            let out = try runScript(to: mainExecutable.path,
-                                    env: env,
-                                    workingDirectory: packageDirectory.path,
-                                    runInBash: metadata?.shouldRunInBash ?? true)
-            error = nil
-            lastState = .Success
-            os_log("Successfully executed packaged plugin script \n%{public}@", log: Log.plugin, file)
-            debugInfo.addEvent(type: .ContentUpdate, value: out.out)
-            if let err = out.err, err != "" {
-                debugInfo.addEvent(type: .ContentUpdateError, value: err)
-                os_log("Error output from the script: \n%{public}@:", log: Log.plugin, err)
+        prepareInvocation(isCurrent: { true })()
+    }
+
+    func prepareInvocation(isCurrent: @escaping () -> Bool) -> () -> String? {
+        onPluginMain {
+            let environment = env
+            let runInBash = metadata?.shouldRunInBash ?? true
+            let command = mainExecutable.path
+            let directory = packageDirectory.path
+            return prepareInvocation(isCurrent: isCurrent) {
+                do {
+                    let output = try runScript(to: command, env: environment, workingDirectory: directory, runInBash: runInBash)
+                    return PluginInvocationResult(content: output.out, errorOutput: output.err)
+                } catch {
+                    return PluginInvocationResult(error: error, message: (error as? ShellOutError)?.message ?? error.localizedDescription)
+                }
             }
-            return out.out
-        } catch let shellError as ShellOutError {
-            os_log("Failed to execute packaged plugin script\n%{public}@\n%{public}@",
-                   log: Log.plugin, type: .error, file, shellError.message)
-            self.error = shellError
-            debugInfo.addEvent(type: .ContentUpdateError, value: shellError.message)
-            lastState = .Failed
-        } catch {
-            os_log("Failed to execute packaged plugin script\n%{public}@\n%{public}@",
-                   log: Log.plugin, type: .error, file, error.localizedDescription)
-            self.error = error
-            lastState = .Failed
         }
-        return nil
     }
 
     @objc func scheduledContentUpdate() {

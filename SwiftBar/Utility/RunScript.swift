@@ -94,7 +94,8 @@ func buildTerminalCommand(script: String, args: [String] = [], env: [String: Str
                                   launchProcess: ((Process) throws -> Void)? = nil,
                                   onOutputUpdate: @escaping (String?) -> Void = { _ in }) throws -> (out: String, err: String?)
 {
-    let swiftbarEnv = sharedEnv.systemEnvStr.merging(env) { _, new in new }
+    // Sleep/wake and preference changes update the system environment on main.
+    let swiftbarEnv = onPluginMain { sharedEnv.systemEnvStr.merging(env) { _, new in new } }
     process.environment = swiftbarEnv.merging(ProcessInfo.processInfo.environment) { current, _ in current }
     if let workingDirectory {
         process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory)
@@ -133,7 +134,7 @@ private extension Process {
             executableURL = URL(fileURLWithPath: script)
             arguments = args
         } else {
-            let shell = delegate.prefs.shell
+            let shell = onPluginMain { delegate.prefs.shell }
             executableURL = URL(fileURLWithPath: shell.path)
             // When executing in a shell, we need to properly escape arguments to handle special characters
             let escapedArgs = args.map { $0.quoteIfNeeded() }

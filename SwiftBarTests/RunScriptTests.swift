@@ -344,3 +344,95 @@ struct StreamableLifecycleTests {
         #expect(try await waitUntil { plugin.content == "updated 🌍\n" })
     }
 }
+
+@MainActor
+struct RegularPluginLifecycleTests {
+    private func makePlugin(root: URL, packaged: Bool, interval: String = "1h", body: String) throws -> (any TimerArmingPlugin, URL) {
+        let directory = packaged ? root.appendingPathComponent("lifecycle.swiftbar") : root
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let script = directory.appendingPathComponent(packaged ? "plugin.\(interval).sh" : "regular.\(interval).sh")
+        try ("#!/bin/sh\n# <swiftbar.runInBash>false</swiftbar.runInBash>\n" + body)
+            .write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        if packaged {
+            return (try #require(PackagedPlugin(packageDirectory: directory, createSupportDirectories: false)), script)
+        }
+        return (ExecutablePlugin(fileURL: script, createSupportDirectories: false), script)
+    }
+
+    @Test(arguments: [false, true]) func cancelledOldFailureCannotReplaceNewerSuccessState(packaged: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (plugin, script) = try makePlugin(root: root, packaged: packaged, body: """
+        if [ "$MARKER" = older ]; then
+          touch "$0.old-started"
+          sleep 0.4
+          printf 'older failed\\n' >&2
+          exit 1
+        fi
+        printf '%s\\n' "${MARKER:-initial}"
+        """)
+        defer { plugin.operation?.cancel(); plugin.terminate() }
+        try await waitForPluginOperation(plugin.operation)
+        plugin.refreshEnv = ["MARKER": "older"]
+        plugin.refresh(reason: .URLScheme)
+        let oldOperation = try #require(plugin.operation)
+        try await waitForPluginCondition { FileManager.default.fileExists(atPath: script.path + ".old-started") }
+        plugin.refreshEnv = ["MARKER": "newer"]
+        plugin.refresh(reason: .URLScheme)
+        try await waitForPluginOperation(plugin.operation)
+        #expect(plugin.content == "newer\n")
+        #expect(plugin.lastState == .Success)
+        let newestUpdate = plugin.lastUpdated
+        try await waitForPluginOperation(oldOperation)
+        #expect(plugin.content == "newer\n")
+        #expect(plugin.lastState == .Success)
+        #expect(plugin.error == nil)
+        #expect(plugin.lastUpdated == newestUpdate)
+    }
+
+    @Test(arguments: [false, true]) func repeatedURLRefreshDoesNotRaceInvocationEnvironment(packaged: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (plugin, _) = try makePlugin(root: root, packaged: packaged,
+                                        body: "sleep 0.005\nprintf '%s\\n' \"${MARKER:-blank}\"\n")
+        defer { plugin.operation?.cancel(); plugin.terminate() }
+        for attempt in 0..<50 {
+            var environment = Dictionary(uniqueKeysWithValues: (0..<500).map {
+                ("TEST_KEY_\($0)", String(repeating: "x", count: 80) + "-\(attempt)-\($0)")
+            })
+            environment["MARKER"] = "request-\(attempt)"
+            // Mirrors main-owned AppDelegate URL delivery immediately followed
+            // by ExecutablePlugin.refresh, while the previous invoke may run.
+            plugin.refreshEnv = environment
+            plugin.refresh(reason: .URLScheme)
+            try await Task.sleep(for: .milliseconds(1))
+        }
+        try await waitForPluginOperation(plugin.operation)
+        #expect(plugin.content == "request-49\n")
+    }
+
+    @Test(arguments: [false, true]) func scheduledRunsRearmAndStopAfterTermination(packaged: Bool) async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let (plugin, script) = try makePlugin(root: root, packaged: packaged, interval: "20ms", body: """
+        printf '%s\\n' "$SWIFTBAR_PLUGIN_REFRESH_REASON" >> "$0.runs"
+        printf 'ready\\n'
+        """)
+        defer { plugin.operation?.cancel(); plugin.terminate() }
+        let log = URL(fileURLWithPath: script.path + ".runs")
+        func runs() -> [Substring] {
+            (try? String(contentsOf: log))?.split(separator: "\n") ?? []
+        }
+        try await waitForPluginCondition { runs().filter { $0 == "Schedule" }.count >= 2 }
+        plugin.terminate()
+        try await waitForPluginOperation(plugin.operation)
+        let completedRuns = runs().count
+        try await Task.sleep(for: .milliseconds(80))
+        #expect(runs().count == completedRuns)
+        #expect(plugin.content == "ready\n")
+    }
+}

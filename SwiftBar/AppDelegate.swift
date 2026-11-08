@@ -436,37 +436,46 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
     }
 
     func userNotificationCenter(_: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        lastHandledEventDate = Date()
-        let payload = response.notification.request.content.userInfo
+        handleNotificationResponse(userInfo: response.notification.request.content.userInfo, completion: completionHandler)
+    }
 
-        guard let pluginID = payload[SystemNotificationName.pluginID] as? String,
-              let plugin = pluginManager.plugins.first(where: { $0.id == pluginID }),
-              plugin.enabled else { return }
+    func handleNotificationResponse(userInfo payload: [AnyHashable: Any], completion: @escaping () -> Void) {
+        // UserNotifications invokes its delegate off-main. Lookup and env
+        // consumption share ownership with URL refresh and invocation snapshots.
+        DispatchQueue.main.async { [self] in
+            defer { completion() }
+            lastHandledEventDate = Date()
 
-        if let urlString = payload[SystemNotificationName.url] as? String,
-           let url = URL(string: urlString)
-        {
-            NSWorkspace.shared.open(url)
-        }
+            guard let pluginID = payload[SystemNotificationName.pluginID] as? String,
+                  let plugin = pluginManager?.plugins.first(where: { $0.id == pluginID }),
+                  plugin.enabled else { return }
 
-        if let commandString = payload[SystemNotificationName.command] as? String,
-           let json = commandString.data(using: .utf8), let params = MenuLineParameters(json: json),
-           let bash = params.bash
-        {
-            AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
-                                    env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true)
+            if let urlString = payload[SystemNotificationName.url] as? String,
+               let url = URL(string: urlString)
             {
-                if params.refresh {
-                    // The runInTerminal completion arrives on a background
-                    // queue; refresh is serialized on main.
-                    DispatchQueue.main.async {
-                        plugin.refresh(reason: .NotificationAction)
+                NSWorkspace.shared.open(url)
+            }
+
+            if let commandString = payload[SystemNotificationName.command] as? String,
+               let json = commandString.data(using: .utf8), let params = MenuLineParameters(json: json),
+               let bash = params.bash
+            {
+                AppShared.runInTerminal(script: bash, args: params.bashParams, runInBackground: !params.terminal,
+                                        env: plugin.env, runInBash: plugin.metadata?.shouldRunInBash ?? true)
+                {
+                    if params.refresh {
+                        // The runInTerminal completion arrives on a background
+                        // queue; refresh is serialized on main.
+                        DispatchQueue.main.async { [weak self, weak plugin] in
+                            guard let self, let plugin, plugin.enabled,
+                                  self.pluginManager?.plugins.contains(where: { $0 === plugin }) == true else { return }
+                            plugin.refresh(reason: .NotificationAction)
+                        }
                     }
                 }
             }
-        }
 
-        completionHandler()
+        }
     }
 
     func windowWillClose(_: Notification) {

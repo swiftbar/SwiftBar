@@ -94,10 +94,9 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
         guard cancellable.isEmpty else { return }
         updateTimerPublisher
             .autoconnect()
-            .receive(on: invokeQueue)
+            .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] _ in
-                self?.lastRefreshReason = .Schedule
-                self?.invokeQueue.addOperation(RunPluginOperation<ShortcutPlugin>(plugin: self!, queue: self!.invokeQueue))
+                self?.refresh(reason: .Schedule)
             }).store(in: &cancellable)
     }
 
@@ -147,21 +146,20 @@ class ShortcutPlugin: TimerArmingPlugin, Identifiable, ObservableObject {
     }
 
     func invoke() -> String? {
-        lastUpdated = Date()
-        do {
-            let out = try shortcutsManager.runShortcut(shortcut: shortcut)
-            error = nil
-            lastState = .Success
-            os_log("Successfully executed Shortcut plugin: %{public}@", log: Log.plugin, "\(name)(\(shortcut))")
-            debugInfo.addEvent(type: .ContentUpdate, value: out)
-            return out
-        } catch {
-            guard let error = error as? RunShortcutError else { return nil }
-            os_log("Failed to execute Shortcut plugin: %{public}@\n%{public}@", log: Log.plugin, type: .error, "\(name)(\(shortcut))", error.message)
-            self.error = error
-            debugInfo.addEvent(type: .ContentUpdateError, value: error.message)
-            lastState = .Failed
+        prepareInvocation(isCurrent: { true })()
+    }
+
+    func prepareInvocation(isCurrent: @escaping () -> Bool) -> () -> String? {
+        onPluginMain {
+            let manager = shortcutsManager
+            let name = shortcut
+            return prepareInvocation(isCurrent: isCurrent) {
+                do {
+                    return PluginInvocationResult(content: try manager.runShortcut(shortcut: name))
+                } catch {
+                    return PluginInvocationResult(error: error, message: (error as? RunShortcutError)?.message ?? error.localizedDescription)
+                }
+            }
         }
-        return nil
     }
 }

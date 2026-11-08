@@ -93,10 +93,9 @@ class ExecutablePlugin: TimerArmingPlugin {
         guard cancellable.isEmpty else { return }
         updateTimerPublisher
             .autoconnect()
-            .receive(on: invokeQueue)
+            .receive(on: DispatchQueue.main)
             .sink(receiveValue: { [weak self] _ in
-                self?.lastRefreshReason = .Schedule
-                self?.invokeQueue.addOperation(RunPluginOperation<ExecutablePlugin>(plugin: self!, queue: self!.invokeQueue))
+                self?.refresh(reason: .Schedule, reloadMetadata: false)
             }).store(in: &cancellable)
     }
 
@@ -151,6 +150,10 @@ class ExecutablePlugin: TimerArmingPlugin {
     }
 
     func refresh(reason: PluginRefreshReason) {
+        refresh(reason: reason, reloadMetadata: true)
+    }
+
+    private func refresh(reason: PluginRefreshReason, reloadMetadata: Bool) {
         // plugin.operation ownership is serialized on the main queue
         // (see RunPluginOperation.scheduleRetry).
         dispatchPrecondition(condition: .onQueue(.main))
@@ -164,35 +167,30 @@ class ExecutablePlugin: TimerArmingPlugin {
         disableTimer()
         operation?.cancel()
 
-        refreshPluginMetadata()
+        if reloadMetadata { refreshPluginMetadata() }
         lastRefreshReason = reason
         operation = RunPluginOperation<ExecutablePlugin>(plugin: self, queue: invokeQueue)
         invokeQueue.addOperation(operation!)
     }
 
     func invoke() -> String? {
-        lastUpdated = Date()
-        do {
-            let out = try runScript(to: file, env: env,
-                                    runInBash: metadata?.shouldRunInBash ?? true)
-            error = nil
-            lastState = .Success
-            os_log("Successfully executed script \n%{public}@", log: Log.plugin, file)
-            debugInfo.addEvent(type: .ContentUpdate, value: out.out)
-            if let err = out.err, err != "" {
-                debugInfo.addEvent(type: .ContentUpdateError, value: err)
-                os_log("Error output from the script: \n%{public}@:", log: Log.plugin, err)
+        prepareInvocation(isCurrent: { true })()
+    }
+
+    func prepareInvocation(isCurrent: @escaping () -> Bool) -> () -> String? {
+        onPluginMain {
+            let environment = env
+            let runInBash = metadata?.shouldRunInBash ?? true
+            let command = file
+            return prepareInvocation(isCurrent: isCurrent) {
+                do {
+                    let output = try runScript(to: command, env: environment, runInBash: runInBash)
+                    return PluginInvocationResult(content: output.out, errorOutput: output.err)
+                } catch {
+                    return PluginInvocationResult(error: error, message: (error as? ShellOutError)?.message ?? error.localizedDescription)
+                }
             }
-            return out.out
-        } catch {
-            guard let error = error as? ShellOutError else { return nil }
-            os_log("Failed to execute script\n%{public}@\n%{public}@", log: Log.plugin, type: .error, file, error.message)
-            os_log("Error output from the script: \n%{public}@", log: Log.plugin, error.message)
-            self.error = error
-            debugInfo.addEvent(type: .ContentUpdateError, value: error.message)
-            lastState = .Failed
         }
-        return nil
     }
 
     @objc func scheduledContentUpdate() {

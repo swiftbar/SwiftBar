@@ -5,6 +5,69 @@ import Testing
 
 @testable import SwiftBar
 
+@MainActor
+func waitForPluginCondition(timeout: TimeInterval = 10, _ condition: () -> Bool) async throws {
+    let deadline = Date().addingTimeInterval(timeout)
+    while !condition(), Date() < deadline {
+        try await Task.sleep(for: .milliseconds(5))
+    }
+    try #require(condition(), "Plugin operation did not complete before the deadline")
+}
+
+@MainActor
+func waitForPluginOperation(_ operation: Operation?) async throws {
+    try await waitForPluginCondition { operation?.isFinished != false }
+}
+
+private final class NotificationActionTestManager: PluginManager {
+    override func pluginsDidChange() {}
+}
+
+@MainActor
+struct NotificationActionTests {
+    @Test func backgroundResponseCapturesEnvironmentAndCompletesOnMain() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let script = root.appendingPathComponent("notification.sh")
+        try "#!/bin/sh\nprintf '%s' \"$TOKEN\" > \"$0.output\"\n".write(to: script, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: script.path)
+        let app = AppDelegate()
+        app.pluginManager = NotificationActionTestManager()
+        let plugin = TestPlugin(id: UUID().uuidString, file: script.path)
+        plugin.refreshEnv = ["TOKEN": "notification-request"]
+        app.pluginManager.plugins = [plugin]
+        let command = try #require(MenuLineParameters(line: "Run | bash=\(script.path) terminal=false").json)
+        let payload: [AnyHashable: Any] = [SystemNotificationName.pluginID: plugin.id, SystemNotificationName.command: command]
+        let completedOnMain = await withCheckedContinuation { continuation in
+            DispatchQueue.global().async {
+                app.handleNotificationResponse(userInfo: payload) {
+                    continuation.resume(returning: Thread.isMainThread)
+                }
+            }
+        }
+        #expect(completedOnMain)
+        #expect(plugin.refreshEnv.isEmpty)
+        let output = URL(fileURLWithPath: script.path + ".output")
+        try await waitForPluginCondition { FileManager.default.fileExists(atPath: output.path) }
+        #expect(try String(contentsOf: output) == "notification-request")
+    }
+
+    @Test func responseWithMissingPluginStillCompletes() async {
+        let app = AppDelegate()
+        for payload: [AnyHashable: Any] in [[:], [SystemNotificationName.pluginID: "missing"]] {
+            let completedOnMain = await withCheckedContinuation { continuation in
+                DispatchQueue.global().async {
+                    app.handleNotificationResponse(userInfo: payload) {
+                        continuation.resume(returning: Thread.isMainThread)
+                    }
+                }
+            }
+            #expect(completedOnMain)
+        }
+    }
+}
+
 struct ColdStartURLTests {
     @MainActor @Test func refreshURLBeforeLaunchDoesNotRequirePluginManager() throws {
         let app = AppDelegate()
@@ -300,7 +363,7 @@ struct SwiftBarTests {
         })
     }
 
-    @MainActor @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() throws {
+    @MainActor @Test func executablePlugin_preservesResolvedIdentityAndLegacySupportNameForSymlink() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -314,7 +377,7 @@ struct SwiftBarTests {
 
         let plugin = ExecutablePlugin(fileURL: aliasURL, createSupportDirectories: false)
         plugin.operation?.cancel()
-        plugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(plugin.operation)
         defer { plugin.terminate() }
 
         #expect(plugin.id == targetURL.resolvingSymlinksInPath().path)
@@ -324,7 +387,7 @@ struct SwiftBarTests {
     // RunPluginOperation writes plugin.content on the invoke queue while the
     // menu reads it on the main and menu update queues. Unsynchronized, the
     // overlapping String release crashes in _swift_release_dealloc.
-    @MainActor @Test func executablePlugin_contentSurvivesConcurrentReadsAndWrites() throws {
+    @MainActor @Test func executablePlugin_contentSurvivesConcurrentReadsAndWrites() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -335,7 +398,7 @@ struct SwiftBarTests {
 
         let plugin = ExecutablePlugin(fileURL: pluginURL, createSupportDirectories: false)
         plugin.operation?.cancel()
-        plugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(plugin.operation)
         defer { plugin.terminate() }
 
         let lastWrite = String(repeating: "x", count: 64) + "-last"
@@ -354,7 +417,7 @@ struct SwiftBarTests {
         #expect(plugin.content == lastWrite)
     }
 
-    @MainActor @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() throws {
+    @MainActor @Test func executablePlugins_withDuplicateFilenamesKeepDistinctIDsAndCompatibleSupportName() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let firstDirectory = tempDirectory.appendingPathComponent("first", isDirectory: true)
         let secondDirectory = tempDirectory.appendingPathComponent("second", isDirectory: true)
@@ -373,7 +436,7 @@ struct SwiftBarTests {
         let secondPlugin = ExecutablePlugin(fileURL: secondURL, createSupportDirectories: false)
         for plugin in [firstPlugin, secondPlugin] {
             plugin.operation?.cancel()
-            plugin.operation?.waitUntilFinished()
+            try await waitForPluginOperation(plugin.operation)
         }
         defer {
             firstPlugin.terminate()
@@ -387,7 +450,7 @@ struct SwiftBarTests {
         #expect(secondPlugin.supportDirectoryName == "duplicate.1m.sh")
     }
 
-    @MainActor @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() throws {
+    @MainActor @Test func packagedPlugin_usesResolvedIdentityAndPackageBasenameForSupportDirectory() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let packageTargetURL = tempDirectory.appendingPathComponent("package-target", isDirectory: true)
         try FileManager.default.createDirectory(at: packageTargetURL, withIntermediateDirectories: true)
@@ -402,7 +465,7 @@ struct SwiftBarTests {
 
         let plugin = try #require(PackagedPlugin(packageDirectory: packageAliasURL, createSupportDirectories: false))
         plugin.operation?.cancel()
-        plugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(plugin.operation)
         defer { plugin.terminate() }
 
         let base = URL(fileURLWithPath: "/isolated/Plugins", isDirectory: true)
@@ -527,7 +590,7 @@ struct SwiftBarTests {
         plugin.beginTimerArmingCycle()
         queue.addOperations([operation], waitUntilFinished: true)
 
-        #expect(plugin.content == "updated")
+        #expect(plugin.content == nil)
         #expect(plugin.enableTimerCallCount == 0)
     }
 
@@ -1135,6 +1198,7 @@ struct SwiftBarTests {
 }
 
 @Suite(.serialized)
+@MainActor
 struct SwiftBarIntegrationTests {
     @MainActor @Test func testURLPluginLookup_acceptsLegacyFileNamesWithoutChangingPriority() throws {
         let manager = PluginManager()
@@ -1232,7 +1296,7 @@ struct SwiftBarIntegrationTests {
         #expect(appDelegate.getPluginFromURL(url: pluginURL) === plugin)
     }
 
-    @MainActor @Test func testURLPluginLookup_acceptsPackagedPluginFileName() throws {
+    @MainActor @Test func testURLPluginLookup_acceptsPackagedPluginFileName() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         let packageURL = tempDirectory.appendingPathComponent("bundle name.swiftbar", isDirectory: true)
         try FileManager.default.createDirectory(at: packageURL, withIntermediateDirectories: true)
@@ -1243,7 +1307,7 @@ struct SwiftBarIntegrationTests {
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: mainExecutableURL.path)
 
         let plugin = try #require(PackagedPlugin(packageDirectory: packageURL, createSupportDirectories: false))
-        plugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(plugin.operation)
         defer { plugin.terminate() }
 
         let manager = PluginManager()
@@ -1394,7 +1458,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @MainActor @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() throws {
+    @MainActor @Test func testSyncFilePlugins_keepsSymlinkedPackagedPluginMatchedByBundlePath() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1411,7 +1475,7 @@ struct SwiftBarIntegrationTests {
 
         let existingPlugin = try #require(PackagedPlugin(packageDirectory: symlinkedPackageURL))
         existingPlugin.operation?.cancel()
-        existingPlugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(existingPlugin.operation)
         defer { existingPlugin.terminate() }
         let packageState = try #require(pluginFileState(for: symlinkedPackageURL))
         let packageSyncPath = pluginSyncPath(for: symlinkedPackageURL)
@@ -1438,7 +1502,7 @@ struct SwiftBarIntegrationTests {
         #expect(loadCallCount == 0)
     }
 
-    @MainActor @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() throws {
+    @MainActor @Test func testPackagedPlugin_symlinkPreservesAliasEntryPointAndSyncPath() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1455,7 +1519,7 @@ struct SwiftBarIntegrationTests {
 
         let plugin = try #require(PackagedPlugin(packageDirectory: packageAliasURL))
         plugin.operation?.cancel()
-        plugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(plugin.operation)
         defer { plugin.terminate() }
 
         #expect(plugin.mainExecutable.path == packageAliasURL.appendingPathComponent("plugin.sh").path)
@@ -1651,7 +1715,7 @@ struct SwiftBarIntegrationTests {
         #expect(manager.loadPlugin(fileURL: packageURL) == nil)
     }
 
-    @MainActor @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() throws {
+    @MainActor @Test func testPackagedPlugin_keepsStreamableMetadataOnExecutableCodePath() async throws {
         let tempDirectory = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)
         try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: tempDirectory) }
@@ -1669,7 +1733,7 @@ struct SwiftBarIntegrationTests {
 
         let plugin = try #require(PackagedPlugin(packageDirectory: packageURL))
         plugin.operation?.cancel()
-        plugin.operation?.waitUntilFinished()
+        try await waitForPluginOperation(plugin.operation)
         plugin.terminate()
 
         #expect(plugin.type == .Executable)

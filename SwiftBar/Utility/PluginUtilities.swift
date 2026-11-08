@@ -1,4 +1,62 @@
 import Foundation
+import os
+
+func onPluginMain<Value>(_ action: () -> Value) -> Value {
+    if Thread.isMainThread { return action() }
+    return DispatchQueue.main.sync(execute: action)
+}
+
+struct PluginInvocationResult {
+    let content: String?
+    let error: Error?
+    let errorOutput: String?
+
+    init(content: String?, errorOutput: String? = nil) {
+        self.content = content
+        error = nil
+        self.errorOutput = errorOutput
+    }
+
+    init(error: Error, message: String) {
+        content = nil
+        self.error = error
+        errorOutput = message
+    }
+}
+
+extension TimerArmingPlugin {
+    /// Workers execute an immutable request. Only the current request may
+    /// change UI-visible state; cancellation must gate errors as well as output.
+    func prepareInvocation(isCurrent: @escaping () -> Bool,
+                           work: @escaping () -> PluginInvocationResult) -> () -> String?
+    {
+        let generation = onPluginMain { timerGeneration }
+        return { [weak self] in
+            guard let self else { return nil }
+            let canRun = onPluginMain {
+                guard self.timerGeneration == generation, isCurrent() else { return false }
+                self.lastUpdated = Date()
+                return true
+            }
+            guard canRun else { return nil }
+            let result = work()
+            return onPluginMain {
+                guard self.timerGeneration == generation, isCurrent() else { return nil }
+                self.error = result.error
+                self.lastState = result.error == nil ? .Success : .Failed
+                if result.error == nil, let content = result.content {
+                    self.debugInfo.addEvent(type: .ContentUpdate, value: content)
+                    os_log("Successfully executed plugin %{public}@", log: Log.plugin, self.name)
+                }
+                if let output = result.errorOutput, !output.isEmpty {
+                    self.debugInfo.addEvent(type: .ContentUpdateError, value: output)
+                    os_log("Plugin error output %{public}@: %{public}@", log: Log.plugin, self.name, output)
+                }
+                return result.content
+            }
+        }
+    }
+}
 
 func parseRefreshInterval(intervalStr: String, baseUpdateinterval: Double) -> Double? {
     guard let interval = Double(intervalStr.filter("0123456789.".contains)) else { return nil }
@@ -79,6 +137,7 @@ final class RunPluginOperation<T: Plugin>: Operation {
     /// Number of attempts of this refresh that already failed before this one.
     private let failedAttempts: Int
     private let retryDelay: (PluginRefreshReason, Int) -> TimeInterval?
+    private var invocation: (() -> String?)!
 
     init(plugin: T,
          queue: OperationQueue?,
@@ -97,6 +156,12 @@ final class RunPluginOperation<T: Plugin>: Operation {
         // generation and let a stale retry pass the currency check.
         scheduledTimerGeneration = timerGeneration ?? (plugin as? TimerArmingPlugin)?.timerGeneration
         super.init()
+        invocation = plugin.prepareInvocation { [weak self] in
+            guard let self else { return false }
+            return onPluginMain {
+                !self.isCancelled && self.isCurrentTimerGeneration && self.plugin?.enabled == true
+            }
+        }
     }
 
     override func cancel() {
@@ -108,41 +173,48 @@ final class RunPluginOperation<T: Plugin>: Operation {
 
     override func main() {
         defer { rearmTimerIfCurrent() }
-        guard !isCancelled, let plugin else { return }
-        if failedAttempts > 0 {
-            // A retry only runs while its failure is still current: the
-            // plugin may have been disabled or terminated during the wait,
-            // recovered through another refresh path, or entered a new
-            // refresh cycle that owns the schedule now.
-            guard plugin.enabled, plugin.lastState == .Failed, isCurrentTimerGeneration else { return }
+        guard let plugin else { return }
+        let canRun = onPluginMain {
+            guard !isCancelled, isCurrentTimerGeneration else { return false }
+            if failedAttempts > 0 {
+                // A retry only runs while its failure is still current: the
+                // plugin may have been disabled or terminated during the wait,
+                // recovered through another refresh path, or entered a new
+                // refresh cycle that owns the schedule now.
+                guard plugin.enabled, plugin.lastState == .Failed else { return false }
+            }
+            return true
         }
-        let previousContent = plugin.content
-        let result = plugin.invoke()
-        // Check again after invoke - operation may have been cancelled while script was running
-        guard !isCancelled else { return }
+        guard canRun else { return }
+        let previousContent = onPluginMain { plugin.content }
+        let result = invocation()
+        onPluginMain {
+            // The operation may have been replaced while its script was running.
+            guard !isCancelled, isCurrentTimerGeneration else { return }
 
-        if result == nil, plugin.lastState == .Failed,
-           let delay = retryDelay(refreshReason, failedAttempts + 1),
-           let queue
-        {
-            // The chain owns the timer until it ends: rearming here would
-            // let a short-interval schedule fire into the still-broken
-            // window the backoff is waiting out and publish the very error
-            // the retry budget is meant to suppress. The successor rearms
-            // when it finishes or is cancelled.
-            handOffTimerRearm()
-            scheduleRetry(after: delay, for: plugin, on: queue)
-            return
-        }
+            if result == nil, plugin.lastState == .Failed,
+               let delay = retryDelay(refreshReason, failedAttempts + 1),
+               let queue
+            {
+                // The chain owns the timer until it ends: rearming here would
+                // let a short-interval schedule fire into the still-broken
+                // window the backoff is waiting out and publish the very error
+                // the retry budget is meant to suppress. The successor rearms
+                // when it finishes or is cancelled.
+                handOffTimerRearm()
+                scheduleRetry(after: delay, for: plugin, on: queue)
+                return
+            }
 
-        guard plugin.enabled else { return }
-        plugin.content = result
-        if failedAttempts > 0, result != nil, result == previousContent {
-            // The content didSet guard drops updates with unchanged output.
-            // That matters when the menu redrew during the backoff (e.g. it
-            // was opened) and rendered the error state — publish explicitly
-            // so recovery clears it.
-            plugin.contentUpdatePublisher.send(result)
+            guard plugin.enabled else { return }
+            plugin.content = result
+            if failedAttempts > 0, result != nil, result == previousContent {
+                // The content didSet guard drops updates with unchanged output.
+                // That matters when the menu redrew during the backoff (e.g. it
+                // was opened) and rendered the error state — publish explicitly
+                // so recovery clears it.
+                plugin.contentUpdatePublisher.send(result)
+            }
         }
     }
 
@@ -200,12 +272,14 @@ final class RunPluginOperation<T: Plugin>: Operation {
         timerRearmHandled = true
         timerRearmLock.unlock()
 
-        guard let timerPlugin = plugin as? TimerArmingPlugin,
-              timerPlugin.timerArmingEnabled,
-              timerPlugin.timerGeneration == scheduledTimerGeneration
-        else {
-            return
+        onPluginMain {
+            guard let timerPlugin = plugin as? TimerArmingPlugin,
+                  timerPlugin.timerArmingEnabled,
+                  timerPlugin.timerGeneration == scheduledTimerGeneration
+            else {
+                return
+            }
+            timerPlugin.enableTimer()
         }
-        timerPlugin.enableTimer()
     }
 }

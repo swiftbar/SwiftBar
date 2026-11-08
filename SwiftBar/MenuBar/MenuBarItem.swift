@@ -1972,6 +1972,9 @@ extension MenubarItem {
         os_log("Refreshing for refreshOnOpen plugin", log: Log.plugin, type: .info)
         // Cancel any in-flight or pending run (e.g. a scheduled wake-refresh
         // retry) so a stale result cannot overwrite the content produced here.
+        let timerPlugin = plugin as? TimerArmingPlugin
+        timerPlugin?.beginTimerArmingCycle()
+        let generation = timerPlugin?.timerGeneration
         plugin?.operation?.cancel()
         plugin?.lastRefreshReason = .MenuOpen
         let content = plugin?.invoke()
@@ -1979,6 +1982,11 @@ extension MenubarItem {
         // scheduled refreshes are not suppressed by the content didSet guard.
         plugin?.content = content
         _updateMenu(content: content)
+        if let timerPlugin, timerPlugin.enabled, timerPlugin.timerArmingEnabled,
+           timerPlugin.timerGeneration == generation
+        {
+            timerPlugin.enableTimer()
+        }
         barItem.menu = statusBarMenu
         barItem.button?.performClick(nil)
     }

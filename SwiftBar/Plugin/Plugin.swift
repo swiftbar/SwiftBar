@@ -91,6 +91,8 @@ protocol Plugin: AnyObject {
     func start()
     func terminate()
     func invoke() -> String?
+    /// Capture mutable request state before an invocation enters the worker queue.
+    func prepareInvocation(isCurrent: @escaping () -> Bool) -> () -> String?
     func makeScriptExecutable(file: String)
     func refreshPluginMetadata()
     func writeStdin(_ input: String) throws
@@ -119,6 +121,13 @@ extension TimerArmingPlugin {
 }
 
 extension Plugin {
+    func prepareInvocation(isCurrent: @escaping () -> Bool) -> () -> String? {
+        { [weak self] in
+            guard isCurrent() else { return nil }
+            return self?.invoke()
+        }
+    }
+
     var urlSchemeFileName: String? {
         guard type == .Executable || type == .Streamable else { return nil }
         return (file as NSString).lastPathComponent
