@@ -42,12 +42,28 @@ func buildTerminalAppleScript(command: String, terminal: TerminalOptions) -> Str
         return """
         tell application "Terminal"
             activate
-            if (count of windows) is 0 then
+            set commandTab to missing value
+            if (count of windows) > 0 then
+                set commandWindow to front window
+                set previousTabCount to count of tabs of commandWindow
+                try
+                    tell application "System Events" to keystroke "t" using {command down}
+                    repeat 20 times
+                        if (count of tabs of commandWindow) > previousTabCount then
+                            set commandTab to selected tab of commandWindow
+                            exit repeat
+                        end if
+                        delay 0.05
+                    end repeat
+                end try
+            end if
+            if commandTab is missing value then
+                -- Terminal's native command opens a new window without requiring
+                -- Accessibility permission. Never reuse an existing shell if
+                -- tab creation was denied or did not complete.
                 do script "\(escapedCommand)"
             else
-                tell application "System Events" to keystroke "t" using {command down}
-                delay 0.1
-                do script "\(escapedCommand)" in selected tab of front window
+                do script "\(escapedCommand)" in commandTab
             end if
             activate
         end tell

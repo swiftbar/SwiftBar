@@ -5,6 +5,8 @@ import Testing
 
 @testable import SwiftBar
 
+private final class SwiftBarTestResources: NSObject {}
+
 @MainActor
 func waitForPluginCondition(timeout: TimeInterval = 10, _ condition: () -> Bool) async throws {
     let deadline = Date().addingTimeInterval(timeout)
@@ -866,13 +868,22 @@ struct SwiftBarTests {
         #expect(appleScriptSafe.contains("\\\"Hello\\\""))
     }
 
-    @Test func testBuildTerminalAppleScript_terminalUsesExplicitNewTabPath() async throws {
+    @MainActor @Test func testBuildTerminalAppleScript_terminalFallsBackToNewWindowWhenTabCreationFails() async throws {
         let appleScript = buildTerminalAppleScript(command: "echo hello", terminal: .Terminal)
 
-        #expect(appleScript.contains("if (count of windows) is 0 then"))
-        #expect(appleScript.contains("do script \"echo hello\""))
+        #expect(appleScript.contains("set commandTab to missing value"))
+        #expect(appleScript.contains("if (count of windows) > 0 then"))
         #expect(appleScript.contains("keystroke \"t\" using {command down}"))
-        #expect(appleScript.contains("do script \"echo hello\" in selected tab of front window"))
+        #expect(appleScript.contains("(count of tabs of commandWindow) > previousTabCount"))
+        #expect(appleScript.contains("if commandTab is missing value then"))
+        #expect(appleScript.contains("do script \"echo hello\"\n"))
+        #expect(appleScript.contains("do script \"echo hello\" in commandTab"))
+        // Catch malformed AppleScript before the native action needs a user
+        // permission decision. Compilation itself sends no Apple events.
+        let script = try #require(NSAppleScript(source: appleScript))
+        var error: NSDictionary?
+        #expect(script.compileAndReturnError(&error))
+        #expect(error == nil)
     }
 
     @Test func testBuildTerminalAppleScript_iTermUsesCreateTabAndWriteText() async throws {
@@ -4793,6 +4804,72 @@ struct FoldMenuItemBuildTests {
             attachment: .centeredMenuImage(with: image, and: .menuFont(ofSize: 0))
         )
         return item
+    }
+
+    @MainActor @Test func testReporterGraphKeepsIntrinsicSizeAndFinalRowAcrossHighlightAndRefresh() throws {
+        guard #available(macOS 26.0, *) else { return }
+        // The original 500x300 RGB PNG from #556, including its resolution
+        // metadata (96 DPI: 375x225 points). Do not confuse source pixels with
+        // AppKit's intrinsic point size and introduce another resize regression.
+        let url = try #require(Bundle(for: SwiftBarTestResources.self).url(forResource: "issue-556-graph", withExtension: "png"))
+        let image = try Data(contentsOf: url).base64EncodedString()
+        let item = makeMenuBarItem()
+        let content = """
+        Title
+        ---
+        Colored | color=#228833
+        Graph | image=\(image) refresh=true
+        Alternate | alternate=true
+        Final marker
+        """
+        item._updateMenu(content: content)
+        let graph = try #require(menuItem(named: "Graph", in: item.statusBarMenu))
+        let title = try #require(graph.attributedTitle)
+        let graphImage = try attachedImage(from: graph)
+        #expect(graphImage.size == NSSize(width: 375, height: 225))
+        #expect(graphImage.representations.first?.pixelsWide == 500)
+        #expect(graphImage.representations.first?.pixelsHigh == 300)
+        let size = title.size()
+        #expect(size.height >= 225)
+
+        let bitmap = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: Int(ceil(size.width)) + 4, pixelsHigh: Int(ceil(size.height)) + 4,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+            isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        ))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+        NSColor.clear.setFill()
+        NSRect(x: 0, y: 0, width: bitmap.pixelsWide, height: bitmap.pixelsHigh).fill(using: .copy)
+        NSBezierPath(rect: NSRect(origin: NSPoint(x: 2, y: 2), size: size)).addClip()
+        title.draw(at: NSPoint(x: 2, y: 2))
+        NSGraphicsContext.restoreGraphicsState()
+        let pixels = try #require(bitmap.bitmapData)
+        #expect(bitmap.samplesPerPixel == 4)
+        #expect(!bitmap.bitmapFormat.contains(.alphaFirst))
+        var opaqueImagePixels = 0
+        for y in 0..<bitmap.pixelsHigh {
+            for x in 2..<377 {
+                if pixels[y * bitmap.bytesPerRow + x * bitmap.samplesPerPixel + 3] == 255 {
+                    opaqueImagePixels += 1
+                }
+            }
+        }
+        #expect(opaqueImagePixels == 375 * 225)
+
+        let items = item.statusBarMenu.items
+        let titles = items.map { $0.attributedTitle ?? NSAttributedString(string: $0.title) }
+        for row in items {
+            item.menu(item.statusBarMenu, willHighlight: row)
+        }
+        item.menu(item.statusBarMenu, willHighlight: nil)
+        #expect(item.statusBarMenu.items == items)
+        #expect(item.statusBarMenu.items.map { $0.attributedTitle ?? NSAttributedString(string: $0.title) } == titles)
+        #expect(menuItem(named: "Final marker", in: item.statusBarMenu) != nil)
+        item._updateMenu(content: content)
+        let refreshedGraph = try #require(menuItem(named: "Graph", in: item.statusBarMenu))
+        #expect(try attachedImage(from: refreshedGraph).size == NSSize(width: 375, height: 225))
+        #expect(menuItem(named: "Final marker", in: item.statusBarMenu) != nil)
     }
 
     @MainActor @Test func testFullBuild_preservesReporterImagePointSizeOnMacOS26AndLater() throws {
