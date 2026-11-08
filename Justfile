@@ -14,13 +14,14 @@
 #   just release-asset       # build, verify, sign, notarize, staple, zip
 #   just smoke-test          # optional but recommended: live image-size check
 #   just publish v2.1.2-beta-6 notes.md
-#   just appcast
+#   just appcast beta v2.1.2-beta-6
+# Stable: just publish v2.1.2 notes.md stable; just appcast stable v2.1.2
 
-set shell := ["bash", "-cu"]
+set shell := ["bash", "-euo", "pipefail", "-c"]
 
 developer_dir := env_var_or_default("DEVELOPER_DIR", "/Applications/Xcode-27.0.0.app/Contents/Developer")
 identity := "Developer ID Application: Ameba Labs, LLC (X93LWC49WV)"
-notary_profile := "notarytool-kefir"
+notary_profile := env_var_or_default("SWIFTBAR_NOTARY_PROFILE", "notarytool-kefir")
 derived := "build-release"
 app := derived / "Build/Products/Release/SwiftBar.app"
 repo := "swiftbar/SwiftBar"
@@ -35,7 +36,7 @@ test:
 
 # Build the Release configuration (default signing; re-signed later by `sign`)
 build:
-    DEVELOPER_DIR="{{developer_dir}}" xcodebuild -project SwiftBar.xcodeproj -scheme SwiftBar -configuration Release -destination 'platform=macOS' -derivedDataPath "{{derived}}" build
+    DEVELOPER_DIR="{{developer_dir}}" xcodebuild -project SwiftBar.xcodeproj -scheme SwiftBar -configuration Release -destination 'generic/platform=macOS' -derivedDataPath "{{derived}}" ONLY_ACTIVE_ARCH=NO 'ARCHS=arm64 x86_64' build
 
 # Verify the built artifact: released toolchain, helper name stamp
 verify-artifact:
@@ -50,7 +51,11 @@ verify-artifact:
     @name=$(/usr/libexec/PlistBuddy -c "Print :CFBundleName" "{{app}}/Contents/Library/LoginItems/LaunchAtLoginHelper.app/Contents/Info.plist"); \
     echo "  helper CFBundleName=$name"; \
     if [ "$name" != "SwiftBar" ]; then echo "ERROR: helper CFBundleName is not SwiftBar - the Launch At Login build phase output is missing"; exit 1; fi
-    @echo "verify-artifact OK"
+    @archs=$(lipo -archs "{{app}}/Contents/MacOS/SwiftBar"); for required in arm64 x86_64; do case " $archs " in *" $required "*) ;; *) echo "ERROR: missing $required architecture"; exit 1;; esac; done
+    @expected=$(jq -r '.pins[] | select(.identity == "sparkle") | .state.version' SwiftBar.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved); \
+    actual=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "{{app}}/Contents/Frameworks/Sparkle.framework/Resources/Info.plist"); \
+    if [ "$actual" != "$expected" ]; then echo "ERROR: bundled Sparkle $actual differs from resolved $expected"; exit 1; fi
+    @echo "verify-artifact OK (toolchain, helper, universal binary, Sparkle)"
 
 # Deep re-sign inner->outer with the Developer ID identity
 sign: verify-artifact
@@ -65,7 +70,7 @@ sign: verify-artifact
       "{{app}}/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Downloader.xpc" \
       "{{app}}/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/Installer.xpc" \
       "{{app}}/Contents/Frameworks/Sparkle.framework"; do \
-        codesign --force --timestamp --options=runtime --sign "{{identity}}" "$t"; \
+        codesign --force --timestamp --options=runtime --preserve-metadata=identifier,entitlements --sign "{{identity}}" "$t"; \
     done
     @echo "Signing login helper..."
     codesign --force --timestamp --options=runtime --entitlements "{{derived}}/helper-entitlements.plist" --sign "{{identity}}" "{{app}}/Contents/Library/LoginItems/LaunchAtLoginHelper.app"
@@ -129,27 +134,10 @@ smoke-test:
     if [ "$result" != "magenta block: 54 x 54 px" ]; then echo "ERROR: intrinsic image size not preserved"; exit 1; fi
     echo "smoke-test OK"
 
-# Publish a prerelease with the packaged asset: just publish v2.1.2-beta-6 notes.md
-publish tag notes:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    ver=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "{{app}}/Contents/Info.plist")
-    build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "{{app}}/Contents/Info.plist")
-    gh release create "{{tag}}" --repo {{repo}} --prerelease --title "$(echo "{{tag}}" | sed -E 's/^v//; s/-beta-/ BETA /')" --notes-file "{{notes}}" "SwiftBar.v${ver}.b${build}.zip"
+# Publish a beta by default, or pass stable explicitly as the third argument.
+publish tag notes channel="beta":
+    bash Scripts/release/publish.sh "{{channel}}" "{{tag}}" "{{notes}}" "{{app}}" "{{repo}}"
 
-# Trigger the GitHub Pages rebuild and wait for the beta appcast to update
-appcast:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    build=$(/usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "{{app}}/Contents/Info.plist")
-    gh api -X POST repos/{{repo}}/pages/builds --jq .status
-    echo "waiting for appcast-beta.xml to serve b${build}..."
-    for i in $(seq 1 40); do
-        if curl -s https://swiftbar.github.io/SwiftBar/appcast-beta.xml | grep -q "b${build}.zip"; then
-            echo "appcast OK: serving b${build}"
-            exit 0
-        fi
-        sleep 15
-    done
-    echo "ERROR: appcast did not update within 10 minutes"
-    exit 1
+# Trigger Pages and verify the exact asset in the requested channel's appcast.
+appcast channel tag:
+    bash Scripts/release/appcast.sh "{{channel}}" "{{tag}}" "{{app}}" "{{repo}}"
