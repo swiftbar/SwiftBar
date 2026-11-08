@@ -75,7 +75,7 @@ class ImageAttachmentCell: NSTextAttachmentCell {
     }
 }
 
-final class MenuImageAttachmentCell: ImageAttachmentCell {
+class MenuImageAttachmentCell: ImageAttachmentCell {
     override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
         guard let image else { return }
 
@@ -89,4 +89,83 @@ final class MenuImageAttachmentCell: ImageAttachmentCell {
             drawImage()
         }
     }
+}
+
+/// Keeps an inline image from enlarging only the first line of a multiline title.
+final class MultilineMenuImageCell: MenuImageAttachmentCell {
+    let textHeight: CGFloat
+    private let firstBaseline: CGFloat
+    private let lastAscent: CGFloat
+    private let lastDescent: CGFloat
+    private let padding: CGFloat
+
+    init(image: NSImage, title: NSAttributedString) {
+        let storage = NSTextStorage(attributedString: title)
+        if title.string.hasSuffix("\n") {
+            // The bottom padding occupies the final empty paragraph. Measure
+            // that paragraph as a real line, rather than an extra line fragment.
+            storage.append(NSAttributedString(string: "\u{200B}", attributes: title.attributes(at: title.length - 1, effectiveRange: nil)))
+        }
+        let layout = NSLayoutManager()
+        let container = NSTextContainer(size: NSSize(width: max(1, ceil(title.size().width)), height: .greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        layout.addTextContainer(container)
+        storage.addLayoutManager(layout)
+        layout.ensureLayout(for: container)
+        textHeight = layout.usedRect(for: container).height
+        firstBaseline = layout.location(forGlyphAt: 0).y
+        let lastGlyph = layout.numberOfGlyphs - 1
+        let lastLine = layout.lineFragmentRect(forGlyphAt: lastGlyph, effectiveRange: nil)
+        lastAscent = layout.location(forGlyphAt: lastGlyph).y
+        lastDescent = lastLine.height - lastAscent
+        // Keep a half-point margin at either edge for the pixel-aligned draw.
+        padding = max(0, (image.size.height - textHeight + 1) / 2)
+        super.init(imageCell: image)
+    }
+
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func cellSize() -> NSSize {
+        // Reserve any extra ascent above the first line. A matching descent
+        // after the last line keeps all text baselines at their normal spacing.
+        NSSize(width: image?.size.width ?? 0, height: firstBaseline + padding)
+    }
+
+    override func cellBaselineOffset() -> NSPoint { .zero }
+
+    func bottomPaddingAttachment() -> NSTextAttachment? {
+        guard padding > 0 else { return nil }
+        let attachment = NSTextAttachment()
+        attachment.attachmentCell = MenuImageBottomPaddingCell(ascent: lastAscent, descent: lastDescent + padding)
+        return attachment
+    }
+
+    override func draw(withFrame cellFrame: NSRect, in controlView: NSView?) {
+        guard let image else { return }
+        let flipped = controlView?.isFlipped ?? NSGraphicsContext.current?.isFlipped ?? false
+        let offset = (firstBaseline - textHeight / 2) * (flipped ? -1 : 1)
+        let baseline = flipped ? cellFrame.maxY : cellFrame.minY
+        let imageRect = NSRect(x: cellFrame.minX, y: (baseline + offset - image.size.height / 2).rounded(), width: image.size.width, height: image.size.height)
+        super.draw(withFrame: imageRect, in: controlView)
+    }
+}
+
+private final class MenuImageBottomPaddingCell: NSTextAttachmentCell {
+    private let ascent: CGFloat
+    private let descent: CGFloat
+
+    init(ascent: CGFloat, descent: CGFloat) {
+        self.ascent = ascent
+        self.descent = descent
+        super.init(textCell: "")
+    }
+
+    required init(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func cellSize() -> NSSize { NSSize(width: 0, height: ascent + descent) }
+    override func cellBaselineOffset() -> NSPoint { NSPoint(x: 0, y: -descent) }
 }

@@ -35,9 +35,10 @@
          </CommandLineArgument>
       </CommandLineArguments>
       <Testables>
+         <!-- AppKit shares a menu host and main actor across application-hosted tests. -->
          <TestableReference
             skipped = "NO"
-            parallelizable = "YES">
+            parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "FABE30D62D6FB51C00297F18"

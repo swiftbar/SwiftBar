@@ -60,7 +60,10 @@ verify-artifact:
 # Deep re-sign inner->outer with the Developer ID identity
 sign: verify-artifact
     @echo "Extracting production entitlements (stripping get-task-allow)..."
-    codesign -d --entitlements - --xml "{{app}}" > "{{derived}}/app-entitlements.plist"
+    codesign -d --entitlements - --xml "{{app}}" > "{{derived}}/app-entitlements.plist" || true
+    # Builds made with CODE_SIGNING_ALLOWED=NO have no embedded entitlements.
+    if [ ! -s "{{derived}}/app-entitlements.plist" ]; then cp SwiftBar/Resources/SwiftBar.entitlements "{{derived}}/app-entitlements.plist"; fi
+    plutil -lint "{{derived}}/app-entitlements.plist"
     plutil -remove "com.apple.security.get-task-allow" "{{derived}}/app-entitlements.plist" 2>/dev/null || true
     printf '<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">\n<plist version="1.0"><dict><key>com.apple.security.app-sandbox</key><true/></dict></plist>\n' > "{{derived}}/helper-entitlements.plist"
     @echo "Signing Sparkle components..."

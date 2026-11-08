@@ -1294,27 +1294,34 @@ extension MenubarItem {
     ) {
         let resolvedPresentation: MenuImagePresentation = if let presentation {
             presentation
-        } else if title.string.contains("\n") || (
-            params.params["sfimage"] != nil && params.getSFConfig() == nil &&
-                params.params["width"] == nil && params.params["height"] == nil
-        ) {
-            // Native images span a multiline title rather than making its
-            // first text line image-height. AppKit also supplies the customary
-            // menu size for unconfigured SF Symbols, as in SwiftBar 2.0.x.
-            .native
         } else if #available(macOS 26.0, *) {
+            // Native NSMenuItem.image is omitted by the new menu renderer,
+            // including for multiline titles and unconfigured SF Symbols.
             .attributed
         } else {
             .native
         }
 
-        let image = params.image
+        var image = params.image
+        if case .attributed = resolvedPresentation,
+           params.params["sfimage"] != nil, params.getSFConfig() == nil,
+           params.params["width"] == nil, params.params["height"] == nil
+        {
+            let font = title.length > 0 ? title.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
+            image = image?.withSymbolConfiguration(NSImage.SymbolConfiguration(
+                pointSize: (font ?? .menuFont(ofSize: 0)).pointSize, weight: .regular, scale: .medium
+            ))
+        }
+        item.setAccessibilityLabel(nil)
         switch resolvedPresentation {
         case .native:
             item.attributedTitle = title
             item.image = image
         case .attributed:
             item.attributedTitle = menuTitle(title, image: image)
+            if image != nil {
+                item.setAccessibilityLabel(title.string)
+            }
             item.image = nil
         }
     }
@@ -1327,7 +1334,16 @@ extension MenubarItem {
 
         let font = title.length > 0 ? title.attribute(.font, at: 0, effectiveRange: nil) as? NSFont : nil
         let menuFont = font ?? .menuFont(ofSize: 0)
-        let result = NSMutableAttributedString(attachment: .centeredMenuImage(with: image, and: menuFont))
+        let multilineCell = title.string.contains("\n") ? MultilineMenuImageCell(image: image, title: title) : nil
+        let attachment: NSTextAttachment
+        if let multilineCell {
+            attachment = NSTextAttachment()
+            attachment.attachmentCell = multilineCell
+        } else {
+            attachment = .centeredMenuImage(with: image, and: menuFont)
+        }
+        let result = NSMutableAttributedString(attachment: attachment)
+        result.addAttribute(.font, value: menuFont, range: NSRange(location: 0, length: result.length))
         let spacing = "  "
         result.append(NSAttributedString(string: spacing, attributes: [.font: menuFont]))
         result.append(title)
@@ -1347,6 +1363,12 @@ extension MenubarItem {
                 length: result.length - NSMaxRange(firstLineBreak)
             )
             result.addAttribute(.paragraphStyle, value: continuationStyle, range: continuationRange)
+        }
+        if let padding = multilineCell?.bottomPaddingAttachment() {
+            let spacer = NSMutableAttributedString(attachment: padding)
+            let lastFont = title.attribute(.font, at: title.length - 1, effectiveRange: nil) as? NSFont ?? menuFont
+            spacer.addAttribute(.font, value: lastFont, range: NSRange(location: 0, length: spacer.length))
+            result.append(spacer)
         }
         return result
     }

@@ -4615,6 +4615,9 @@ struct FoldParameterTests {
 
 // MARK: - Fold Menu Item Tests
 
+// Status items share AppKit's menu host. Submit one native UI case at a time
+// so these tests do not flood the main actor while timed plugin tests run.
+@Suite(.serialized)
 struct FoldMenuItemBuildTests {
     @MainActor
     private final class TrackingMenu: NSMenu {
@@ -4879,34 +4882,129 @@ struct FoldMenuItemBuildTests {
         #expect(firstLine.minX > 0)
         #expect(abs(firstLine.minX - secondLine.minX) < 0.01)
         #expect(abs(firstLine.minX - thirdLine.minX) < 0.01)
+        #expect(secondLine.minY - firstLine.minY < 25)
+        #expect(thirdLine.minY - secondLine.minY < 25)
         #expect(try attachedImage(from: menuItem).size == NSSize(width: 30, height: 30))
     }
 
-    @MainActor @Test func testDefaultMultilineImageLeavesBothTextLinesBesideNativeImage() throws {
+    @MainActor @Test func testDefaultMultilineImageRendersBesideBothTextLines() throws {
         let item = makeMenuBarItem()
         let image = try makeBase64PNG(size: NSSize(width: 37, height: 37))
         let params = MenuLineParameters(line: "First line\\nSecond line | image=\(image)")
         let menuItem = try #require(item.buildMenuItem(params: params))
-        let title = try #require(menuItem.attributedTitle)
-        #expect(menuItem.image?.size == NSSize(width: 37, height: 37))
-        #expect(title.string == "First line\nSecond line")
-        #expect(title.attribute(.attachment, at: 0, effectiveRange: nil) == nil)
+        let title: NSAttributedString
+        if #available(macOS 26.0, *) {
+            let cell = try #require(attachmentCell(from: menuItem) as? MultilineMenuImageCell)
+            #expect(menuItem.image == nil)
+            #expect(cell.image?.size == NSSize(width: 37, height: 37))
+            title = try #require(menuItem.attributedTitle)
+            #expect(title.size().height <= 40)
+            #expect(menuItem.title.contains("First line\nSecond line"))
+            #expect(menuItem.accessibilityLabel() == "First line\nSecond line")
+        } else {
+            #expect(menuItem.image?.size == NSSize(width: 37, height: 37))
+            title = try #require(menuItem.attributedTitle)
+        }
+        #expect(title.string.contains("First line\nSecond line"))
         let first = textBounds("First line", in: title)
         let second = textBounds("Second line", in: title)
         #expect(second.minY - first.minY < 30)
         #expect(first.minX == second.minX)
     }
 
-    @MainActor @Test func testDefaultSFSymbolUsesNativeMenuSizingButExplicitDimensionsArePreserved() throws {
+    @MainActor @Test func testDefaultSFSymbolUsesMenuSizingButExplicitDimensionsArePreserved() throws {
         let item = makeMenuBarItem()
         let native = try #require(item.buildMenuItem(params: MenuLineParameters(line: "Symbol | sfimage=timer")))
-        #expect(native.image != nil)
-        #expect(native.attributedTitle?.string == "Symbol")
+        if #available(macOS 26.0, *) {
+            #expect(native.image == nil)
+            let image = try attachedImage(from: native)
+            let expected = try #require(NSImage(systemSymbolName: "timer", accessibilityDescription: nil)?.withSymbolConfiguration(
+                NSImage.SymbolConfiguration(pointSize: NSFont.menuBarFont(ofSize: 0).pointSize, weight: .regular, scale: .medium)
+            ))
+            #expect(image.size == expected.size)
+        } else {
+            #expect(native.image != nil)
+            #expect(native.attributedTitle?.string == "Symbol")
+        }
         let explicit = try #require(item.buildMenuItem(params: MenuLineParameters(line: "Symbol | sfimage=timer width=30 height=30")))
         if #available(macOS 26.0, *) {
             #expect(explicit.image == nil)
             #expect(try attachedImage(from: explicit).size == NSSize(width: 30, height: 30))
         }
+    }
+
+    @MainActor @Test(.serialized, arguments: [13, 37, 100], ["First line\nSecond line", "First line\nSecond line\n", "First line\n", "\nFirst line\nSecond line"])
+    func testMultilineAttachmentDrawsFullImageAndCompactTextLines(imageHeight: Int, label: String) throws {
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 37, height: imageHeight), color: .blue)
+        let menuItem = try #require(item.buildMenuItem(params: MenuLineParameters(
+            line: "\(label.replacingOccurrences(of: "\n", with: "\\n")) | image=\(image) bash=/usr/bin/true terminal=false"
+        )))
+        // Exercise the real attachment drawing, rather than only asserting
+        // that NSMenuItem.image contains an image the OS may never display.
+        guard #available(macOS 26.0, *) else { return }
+        let cell = try #require(attachmentCell(from: menuItem) as? MultilineMenuImageCell)
+        let bitmap = try #require(NSBitmapImageRep(
+            bitmapDataPlanes: nil, pixelsWide: 250, pixelsHigh: 160,
+            bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
+            isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
+        ))
+        func render() {
+            NSGraphicsContext.saveGraphicsState()
+            NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+            NSColor.white.setFill()
+            NSRect(x: 0, y: 0, width: 250, height: 160).fill()
+            let size = menuItem.attributedTitle?.size() ?? .zero
+            NSBezierPath(rect: NSRect(origin: NSPoint(x: 4, y: 4), size: size)).addClip()
+            menuItem.attributedTitle?.draw(at: NSPoint(x: 4, y: 4))
+            NSGraphicsContext.restoreGraphicsState()
+        }
+        render()
+        var blueX = Set<Int>()
+        var blueY = Set<Int>()
+        var textY = Set<Int>()
+        let pixels = try #require(bitmap.bitmapData)
+        #expect(bitmap.samplesPerPixel == 4)
+        #expect(!bitmap.bitmapFormat.contains(.alphaFirst))
+        for y in 0..<160 {
+            for x in 0..<250 {
+                let offset = y * bitmap.bytesPerRow + x * bitmap.samplesPerPixel
+                let red = pixels[offset]
+                let green = pixels[offset + 1]
+                let blue = pixels[offset + 2]
+                if blue > 204, red < 51, green < 51 {
+                    blueX.insert(x)
+                    blueY.insert(y)
+                }
+                if x > 45, red < 77, green < 77, blue < 77 {
+                    textY.insert(y)
+                }
+            }
+        }
+        #expect(blueX.count == 37)
+        #expect(blueY.count == imageHeight)
+        let rows = textY.sorted()
+        #expect(!rows.isEmpty)
+        let lineGroups = rows.enumerated().filter { $0.offset == 0 || $0.element > rows[$0.offset - 1] + 1 }.count
+        #expect(lineGroups == label.split(separator: "\n").count)
+        #expect((rows.last ?? 80) - (rows.first ?? 0) < 37)
+
+        #expect(cell.textHeight <= (menuItem.attributedTitle?.size().height ?? 0))
+        #expect((menuItem.attributedTitle?.size().height ?? 0) >= CGFloat(imageHeight))
+    }
+
+    @MainActor @Test func testIncrementalMultilineImageRetainsNativeTitleTextWhenBecomingSingleLine() throws {
+        guard #available(macOS 26.0, *) else { return }
+        let item = makeMenuBarItem()
+        let image = try makeBase64PNG(size: NSSize(width: 37, height: 37))
+        item._updateMenu(content: "Title\n---\nValue: First\\nSecond | image=\(image) refresh=true")
+        let original = try #require(menuItem(named: "Value: First\\nSecond", in: item.statusBarMenu))
+        #expect(original.title.contains("Value: First\nSecond"))
+        item._updateMenu(content: "Title\n---\nValue: Replacement | image=\(image) refresh=true")
+        let replacement = try #require(menuItem(named: "Value: Replacement", in: item.statusBarMenu))
+        #expect(replacement === original)
+        #expect(!replacement.title.contains("Second"))
+        #expect(replacement.title.hasSuffix("Value: Replacement"))
     }
 
     @MainActor @Test func testAttributedPresentation_doesNotIndentMultilineTitleWithoutImage() throws {
@@ -5279,7 +5377,7 @@ struct FoldMenuItemBuildTests {
         ))
     }
 
-    @MainActor @Test func testPlainHighlightPreservesNativeMultilineImageOnMacOS26AndLater() throws {
+    @MainActor @Test func testPlainHighlightPreservesMultilineImageOnMacOS26AndLater() throws {
         guard !MenubarItem.shouldRewriteAttributedTitlesDuringMenuTracking() else { return }
 
         let item = makeMenuBarItem()
@@ -5293,17 +5391,18 @@ struct FoldMenuItemBuildTests {
 
         let imageItem = try #require(menuItem(named: "Image\\nsubtitle", in: item.statusBarMenu))
         let originalTitle = try #require(imageItem.attributedTitle)
-        let originalImage = try #require(imageItem.image)
+        let cell = try #require(attachmentCell(from: imageItem) as? MultilineMenuImageCell)
+        let originalImage = try #require(cell.image)
         let textLocation = (originalTitle.string as NSString).range(of: "Image").location
 
         item.menu(item.statusBarMenu, willHighlight: imageItem)
-        #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
+        #expect(originalTitle.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
         item.menu(item.statusBarMenu, willHighlight: nil)
 
         #expect(imageItem.attributedTitle === originalTitle)
-        #expect(imageItem.image === originalImage)
-        #expect(imageItem.attributedTitle?.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
-        #expect(imageItem.image?.size == NSSize(width: 30, height: 30))
+        #expect(cell.image === originalImage)
+        #expect(originalTitle.attribute(.foregroundColor, at: textLocation, effectiveRange: nil) as? NSColor == NSColor.webColor(from: "#0a0a14"))
+        #expect(cell.image?.size == NSSize(width: 30, height: 30))
     }
 
     @MainActor @Test func testFullBuild_foldItemStartsCollapsed() throws {
