@@ -149,6 +149,41 @@ struct MenuContentInvalidationTests {
         #expect(item.barItem.button?.attributedTitle.string == "unchanged")
         #expect(plugin.content == "unchanged")
     }
+
+    @MainActor @Test func workspaceNotificationsStopAndRestartPluginsAndClearUnchangedWarnings() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let environment = Environment.shared
+        let oldWake = environment.lastWakeDate
+        defer { environment.updateWakeTime(date: oldWake ?? .distantPast) }
+        environment.updateWakeTime(date: .distantPast)
+        let plugin = TestPlugin(id: "notification-wake", file: root.appendingPathComponent("wake.sh").path,
+                                content: "unchanged", lastState: .Success)
+        plugin.lastUpdated = Date().addingTimeInterval(-1000)
+        let item = MenubarItem(title: "Test", plugin: plugin)
+        item._updateMenu(content: plugin.content)
+        try #require(item.barItem.button?.attributedTitle.string.hasPrefix("⚠️") == true)
+        let manager = TestDirectoryPluginManager(pluginDirectoryURL: root)
+        manager.plugins = [plugin]
+        manager.menuBarItems[plugin.id] = item
+        let appDelegate = AppDelegate()
+        appDelegate.pluginManager = manager
+        let center = NotificationCenter()
+        let observers = appDelegate.observeWorkspaceSleepAndWake(on: center)
+        defer { observers.forEach { center.removeObserver($0) } }
+        // Exercise delivery onto the main queue, just as workspace events
+        // arriving off-main do, without sleeping the shared desktop.
+        await Task.detached {
+            center.post(name: NSWorkspace.willSleepNotification, object: nil)
+            center.post(name: NSWorkspace.didWakeNotification, object: nil)
+        }.value
+        #expect(plugin.terminateCallCount == 1)
+        #expect(plugin.startCallCount == 1)
+        #expect(environment.lastWakeDate.map { Date().timeIntervalSince($0) < 5 } == true)
+        #expect(item.barItem.button?.attributedTitle.string == "unchanged")
+        #expect(plugin.content == "unchanged")
+    }
 }
 
 final class TestPlugin: Plugin {
@@ -170,6 +205,7 @@ final class TestPlugin: Plugin {
     var debugInfo = PluginDebugInfo()
     var refreshEnv: [String: String] = [:]
     var terminateCallCount = 0
+    var startCallCount = 0
     var refreshReasons: [PluginRefreshReason] = []
 
     var supportDirectoryName: String {
@@ -199,7 +235,7 @@ final class TestPlugin: Plugin {
     func refresh(reason: PluginRefreshReason) { refreshReasons.append(reason) }
     func enable() {}
     func disable() {}
-    func start() {}
+    func start() { startCallCount += 1 }
     func terminate() {
         terminateCallCount += 1
     }
@@ -5010,33 +5046,60 @@ struct FoldMenuItemBuildTests {
         }
     }
 
-    @MainActor @Test(.serialized, arguments: [13, 37, 100], ["First line\nSecond line", "First line\nSecond line\n", "First line\n", "\nFirst line\nSecond line"])
-    func testMultilineAttachmentDrawsFullImageAndCompactTextLines(imageHeight: Int, label: String) throws {
+    @MainActor @Test(.serialized, arguments: [13, 37, 100],
+                    ["First line\nSecond line", "First line\nSecond line\n", "First line\n", "\nFirst line\nSecond line"].flatMap { label in
+                        [-10, 0, 10].map { (label, $0) }
+                    })
+    func testMultilineAttachmentDrawsFullImageAndCompactTextLines(imageHeight: Int, configuration: (String, Int)) throws {
+        let (label, valign) = configuration
         let item = makeMenuBarItem()
         let image = try makeBase64PNG(size: NSSize(width: 37, height: imageHeight), color: .blue)
         let menuItem = try #require(item.buildMenuItem(params: MenuLineParameters(
-            line: "\(label.replacingOccurrences(of: "\n", with: "\\n")) | image=\(image) bash=/usr/bin/true terminal=false"
+            line: "\(label.replacingOccurrences(of: "\n", with: "\\n")) | image=\(image) valign=\(valign) bash=/usr/bin/true terminal=false"
         )))
         // Exercise the real attachment drawing, rather than only asserting
         // that NSMenuItem.image contains an image the OS may never display.
         guard #available(macOS 26.0, *) else { return }
         let cell = try #require(attachmentCell(from: menuItem) as? MultilineMenuImageCell)
+        let title = try #require(menuItem.attributedTitle)
+        let menu = NSMenu()
+        menu.addItem(menuItem)
+        // NSAttributedString.size omits continuation paragraph indentation.
+        // Use the width AppKit actually reserves for the native menu instead.
+        let drawingSize = NSSize(width: menu.size.width, height: title.size().height)
         let bitmap = try #require(NSBitmapImageRep(
             bitmapDataPlanes: nil, pixelsWide: 250, pixelsHigh: 160,
             bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true,
             isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
         ))
-        func render() {
+        func render(clipped: Bool) {
             NSGraphicsContext.saveGraphicsState()
             NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
             NSColor.white.setFill()
             NSRect(x: 0, y: 0, width: 250, height: 160).fill()
-            let size = menuItem.attributedTitle?.size() ?? .zero
-            NSBezierPath(rect: NSRect(origin: NSPoint(x: 4, y: 4), size: size)).addClip()
-            menuItem.attributedTitle?.draw(at: NSPoint(x: 4, y: 4))
+            if clipped {
+                NSBezierPath(rect: NSRect(origin: NSPoint(x: 4, y: 4), size: drawingSize)).addClip()
+            }
+            title.draw(at: NSPoint(x: 4, y: 4))
             NSGraphicsContext.restoreGraphicsState()
         }
-        render()
+        func textPixelCount() -> Int {
+            guard let pixels = bitmap.bitmapData else { return 0 }
+            var count = 0
+            for y in 0..<160 {
+                for x in 0..<250 {
+                    let offset = y * bitmap.bytesPerRow + x * bitmap.samplesPerPixel
+                    if pixels[offset] < 77, pixels[offset + 1] < 77, pixels[offset + 2] < 77 {
+                        count += 1
+                    }
+                }
+            }
+            return count
+        }
+        render(clipped: false)
+        let fullTextPixelCount = textPixelCount()
+        render(clipped: true)
+        #expect(textPixelCount() == fullTextPixelCount)
         var blueX = Set<Int>()
         var blueY = Set<Int>()
         var textY = Set<Int>()

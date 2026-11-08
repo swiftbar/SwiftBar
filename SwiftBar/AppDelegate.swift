@@ -224,7 +224,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             }
         }
 
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification,
+        observeWorkspaceSleepAndWake()
+        finishLaunchingOpenEvents()
+    }
+
+    @discardableResult
+    func observeWorkspaceSleepAndWake(on center: NotificationCenter = NSWorkspace.shared.notificationCenter) -> [NSObjectProtocol] {
+        let sleepObserver = center.addObserver(forName: NSWorkspace.willSleepNotification,
                                                           object: nil,
                                                           queue: OperationQueue.main)
         { [weak self] _ in
@@ -233,7 +239,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             self?.pluginManager.terminateAllPlugins()
         }
 
-        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification,
+        let wakeObserver = center.addObserver(forName: NSWorkspace.didWakeNotification,
                                                           object: nil,
                                                           queue: OperationQueue.main)
         { [weak self] _ in
@@ -245,7 +251,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, SPUStandardUserDriverDelegat
             // Start plugins with respect to their schedules
             self?.pluginManager.startAllPlugins()
         }
-        finishLaunchingOpenEvents()
+        return [sleepObserver, wakeObserver]
     }
 
     /// AppKit can deliver file and URL events before didFinishLaunching.

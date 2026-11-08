@@ -1,4 +1,5 @@
 import Combine
+import Darwin
 import Foundation
 import os
 
@@ -175,7 +176,17 @@ class StreamablePlugin: Plugin {
         let previous = currentInvocation
         currentInvocation = nil
         operation?.cancel()
-        if previous?.process.isRunning == true { previous?.process.terminate() }
+        guard let previous else { return }
+        try? previous.stdin.fileHandleForWriting.close()
+        guard previous.process.isRunning else { return }
+        previous.process.terminate()
+        // Give cooperative scripts time to clean up, but do not let a script
+        // that ignores SIGTERM occupy an invocation slot indefinitely. Capture
+        // the old invocation so a refresh can never kill its replacement.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            guard previous.process.isRunning else { return }
+            kill(previous.process.processIdentifier, SIGKILL)
+        }
     }
 
     func disable() {

@@ -101,6 +101,13 @@ final class MultilineMenuImageCell: MenuImageAttachmentCell {
 
     init(image: NSImage, title: NSAttributedString) {
         let storage = NSTextStorage(attributedString: title)
+        if title.string.hasPrefix("\n") {
+            // The real first paragraph contains the image and its spacing,
+            // which use the menu font without the label's baseline offset.
+            storage.insert(NSAttributedString(string: "\u{200B}", attributes: [
+                .font: title.attribute(.font, at: 0, effectiveRange: nil) ?? NSFont.menuFont(ofSize: 0),
+            ]), at: 0)
+        }
         if title.string.hasSuffix("\n") {
             // The bottom padding occupies the final empty paragraph. Measure
             // that paragraph as a real line, rather than an extra line fragment.
@@ -113,10 +120,17 @@ final class MultilineMenuImageCell: MenuImageAttachmentCell {
         storage.addLayoutManager(layout)
         layout.ensureLayout(for: container)
         textHeight = layout.usedRect(for: container).height
-        firstBaseline = layout.location(forGlyphAt: 0).y
+        // Glyph locations include the character's baseline displacement. The
+        // attachment needs the common line baseline, since it has no valign.
+        func lineBaseline(forGlyphAt glyph: Int) -> CGFloat {
+            let character = layout.characterIndexForGlyph(at: glyph)
+            let offset = (storage.attribute(.baselineOffset, at: character, effectiveRange: nil) as? NSNumber)?.doubleValue ?? 0
+            return layout.location(forGlyphAt: glyph).y + offset
+        }
+        firstBaseline = lineBaseline(forGlyphAt: 0)
         let lastGlyph = layout.numberOfGlyphs - 1
         let lastLine = layout.lineFragmentRect(forGlyphAt: lastGlyph, effectiveRange: nil)
-        lastAscent = layout.location(forGlyphAt: lastGlyph).y
+        lastAscent = lineBaseline(forGlyphAt: lastGlyph)
         lastDescent = lastLine.height - lastAscent
         // Keep a half-point margin at either edge for the pixel-aligned draw.
         padding = max(0, (image.size.height - textHeight + 1) / 2)
@@ -135,8 +149,9 @@ final class MultilineMenuImageCell: MenuImageAttachmentCell {
 
     override func cellBaselineOffset() -> NSPoint { .zero }
 
-    func bottomPaddingAttachment() -> NSTextAttachment? {
-        guard padding > 0 else { return nil }
+    func bottomPaddingAttachment() -> NSTextAttachment {
+        // Even with no extra padding, materialize the final empty paragraph so
+        // NSString measurement and drawing use the same line metrics.
         let attachment = NSTextAttachment()
         attachment.attachmentCell = MenuImageBottomPaddingCell(ascent: lastAscent, descent: lastDescent + padding)
         return attachment

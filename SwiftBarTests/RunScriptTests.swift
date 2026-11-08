@@ -329,6 +329,82 @@ struct StreamableLifecycleTests {
         #expect(throws: CocoaError.self) { try plugin.writeStdin("after stop") }
     }
 
+    @Test func stoppedStreamCannotHoldAnInvocationSlotByIgnoringTermination() async throws {
+        let url = try makeScript("""
+        trap '' TERM
+        printf 'ready\\n~~~\\n'
+        while [ ! -e "$0.release" ]; do sleep 0.02; done
+        """)
+        let queue = OperationQueue()
+        let plugin = try #require(StreamablePlugin(fileURL: url, invokeQueue: queue, createSupportDirectories: false))
+        defer {
+            // Let the pre-fix fixture exit even when the assertion fails; do
+            // not leave an uncooperative process behind after reproduction.
+            try? Data().write(to: URL(fileURLWithPath: url.path + ".release"))
+            plugin.terminate()
+            queue.addBarrierBlock {
+                try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+            }
+        }
+        try #require(try await waitUntil { plugin.content == "ready\n" })
+        plugin.terminate()
+        #expect(try await waitUntil { queue.operationCount == 0 })
+        #expect(plugin.lastState == .Disabled)
+        #expect(throws: CocoaError.self) { try plugin.writeStdin("after stop") }
+    }
+
+    @Test func refreshReclaimsAnInvocationSlotFromAnUncooperativeStream() async throws {
+        let url = try makeScript("""
+        trap '' TERM
+        printf '%s\\n~~~\\n' "$$"
+        while [ ! -e "$0.release" ]; do sleep 0.02; done
+        """)
+        let queue = OperationQueue()
+        queue.maxConcurrentOperationCount = 1
+        let plugin = try #require(StreamablePlugin(fileURL: url, invokeQueue: queue, createSupportDirectories: false))
+        defer {
+            try? Data().write(to: URL(fileURLWithPath: url.path + ".release"))
+            plugin.terminate()
+            queue.addBarrierBlock {
+                try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+            }
+        }
+        try #require(try await waitUntil { plugin.content?.isEmpty == false })
+        let original = plugin.content
+        plugin.refresh(reason: .URLScheme)
+        try #require(try await waitUntil { plugin.content != original })
+        let replacement = plugin.content
+        // Allow the old invocation's escalation deadline to pass. The new
+        // process must still be alive and accepting input afterwards.
+        try await Task.sleep(for: .milliseconds(1200))
+        try plugin.writeStdin("replacement is still running")
+        #expect(plugin.content == replacement)
+        #expect(plugin.lastState == .Streaming)
+        plugin.terminate()
+        #expect(try await waitUntil { queue.operationCount == 0 })
+    }
+
+    @Test func stoppingAStreamAllowsItsTerminationHandlerToFinish() async throws {
+        let url = try makeScript("""
+        trap 'sleep 0.1; touch "$0.cleaned"; exit 0' TERM
+        printf 'ready\\n~~~\\n'
+        while [ ! -e "$0.release" ]; do sleep 0.02; done
+        """)
+        let queue = OperationQueue()
+        let plugin = try #require(StreamablePlugin(fileURL: url, invokeQueue: queue, createSupportDirectories: false))
+        defer {
+            try? Data().write(to: URL(fileURLWithPath: url.path + ".release"))
+            plugin.terminate()
+            queue.addBarrierBlock {
+                try? FileManager.default.removeItem(at: url.deletingLastPathComponent())
+            }
+        }
+        try #require(try await waitUntil { plugin.content == "ready\n" })
+        plugin.terminate()
+        #expect(try await waitUntil { queue.operationCount == 0 })
+        #expect(FileManager.default.fileExists(atPath: url.path + ".cleaned"))
+    }
+
     @Test func stdinTargetsTheActiveProcess() async throws {
         let url = try makeScript("""
         printf 'ready\\n~~~\\n'
