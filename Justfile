@@ -124,15 +124,24 @@ smoke-test:
     set -euo pipefail
     plugdir=$(mktemp -d)/plugins
     mkdir -p "$plugdir"
+    smoke_started=false
+    cleanup() {
+        if [ "$smoke_started" = true ]; then pkill -f "{{app}}/Contents/MacOS/SwiftBar" || true; fi
+        rm -f Scripts/release/.smoke-bar.png Scripts/release/.smoke-icon.png "$plugdir/smoke.1h.sh"
+        rmdir "$plugdir" "${plugdir%/plugins}" 2>/dev/null || true
+    }
+    trap cleanup EXIT
+    # A stale capture must never make a failed screenshot look successful.
+    rm -f Scripts/release/.smoke-bar.png
     b64=$(swift Scripts/release/make-smoke-icon.swift)
     printf '#!/bin/bash\necho "| image=%s"\necho "---"\necho "Smoke row"\n' "$b64" > "$plugdir/smoke.1h.sh"
     chmod +x "$plugdir/smoke.1h.sh"
     open "{{app}}" --args -PluginDirectory "$plugdir"
+    smoke_started=true
     sleep 6
     screencapture -x -R0,0,1470,30 Scripts/release/.smoke-bar.png
+    if [ ! -s Scripts/release/.smoke-bar.png ]; then echo "ERROR: no screen capture was written; check Screen Recording access before retrying"; exit 1; fi
     result=$(swift Scripts/release/measure-smoke-icon.swift)
-    pkill -f "{{app}}/Contents/MacOS/SwiftBar" || true
-    rm -f Scripts/release/.smoke-bar.png Scripts/release/.smoke-icon.png
     echo "$result"
     if [ "$result" != "magenta block: 54 x 54 px" ]; then echo "ERROR: intrinsic image size not preserved"; exit 1; fi
     echo "smoke-test OK"
