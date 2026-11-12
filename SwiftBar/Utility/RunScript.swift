@@ -192,10 +192,12 @@ private extension Process {
         let outputQueue = DispatchQueue(label: "bash-output-queue")
         var outputDecoder = UTF8ChunkDecoder()
 
+        // A streamable plugin runs for days: keep only the tail of what it printed, for the error view.
+        // Every chunk already went to onOutputUpdate; keeping all of it grows without bound.
         outputPipe.fileHandleForReading.readabilityHandler = { handler in
             let data = handler.availableData
             outputQueue.async {
-                outputData.append(data)
+                outputData.appendKeepingTail(data, limit: streamedOutputTailLimit)
                 let decoded = data.isEmpty ? outputDecoder.finish() : outputDecoder.decode(data)
                 if !decoded.isEmpty {
                     onOutputUpdate(decoded)
@@ -206,7 +208,7 @@ private extension Process {
         errorPipe.fileHandleForReading.readabilityHandler = { handler in
             let data = handler.availableData
             outputQueue.async {
-                errorData.append(data)
+                errorData.appendKeepingTail(data, limit: streamedOutputTailLimit)
             }
         }
 
@@ -245,6 +247,22 @@ private extension FileHandle {
         self === FileHandle.standardOutput ||
             self === FileHandle.standardError ||
             self === FileHandle.standardInput
+    }
+}
+
+/// How much of a streamed stdout or stderr is kept for the error view.
+let streamedOutputTailLimit = 64 * 1024
+
+extension Data {
+    /// Appends `data`, then drops the oldest bytes beyond `limit`, never starting inside a UTF-8 sequence.
+    mutating func appendKeepingTail(_ data: Data, limit: Int) {
+        append(data)
+        guard count > limit else { return }
+        var start = endIndex - limit
+        while start < endIndex, self[start] & 0xC0 == 0x80 {
+            start += 1
+        }
+        self = subdata(in: start..<endIndex)
     }
 }
 
