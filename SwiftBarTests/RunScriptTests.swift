@@ -152,6 +152,57 @@ struct RunScriptTests {
     }
 }
 
+struct StreamedOutputTailTests {
+    @Test func keepsOnlyTheTailAndStartsOnACharacter() {
+        var data = Data()
+        for _ in 0..<100 {
+            data.appendKeepingTail(Data(String(repeating: "●", count: 10).utf8), limit: 64)
+        }
+        #expect(data.count <= 64)
+        #expect(String(data: data, encoding: .utf8) == String(repeating: "●", count: data.count / 3))
+    }
+
+    @Test func shortOutputIsKeptWhole() {
+        var data = Data()
+        data.appendKeepingTail(Data("hello\n".utf8), limit: 64)
+        data.appendKeepingTail(Data("world\n".utf8), limit: 64)
+        #expect(String(data: data, encoding: .utf8) == "hello\nworld\n")
+    }
+
+    @Test func runScript_streamOutputKeepsABoundedTail() throws {
+        let tempDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+
+        let scriptURL = tempDirectory.appendingPathComponent("long-stream.sh")
+        let script = """
+        #!/bin/sh
+        i=0
+        while [ $i -lt 4000 ]; do
+          printf '~~~\\nline %05d %0100d\\n' $i 0
+          i=$((i + 1))
+        done
+        printf 'last\\n'
+        """
+        try Data(script.utf8).write(to: scriptURL)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: scriptURL.path)
+
+        let recorder = OutputRecorder()
+        let result = try runScript(
+            to: scriptURL.path,
+            runInBash: false,
+            streamOutput: true,
+            onOutputUpdate: { _ = recorder.append($0) }
+        )
+
+        let streamed = recorder.recordedValues().compactMap { $0 }.joined()
+        #expect(streamed.utf8.count > 400_000)
+        #expect(result.out.utf8.count <= streamedOutputTailLimit)
+        #expect(result.out.hasSuffix("line 03999 \(String(repeating: "0", count: 100))\nlast\n"))
+    }
+}
+
 struct StreamContentParserTests {
     @Test func leadingSeparatorResetsTheMenuEvenWhenNextContentArrivesLater() {
         let separator = "~~~\n"
