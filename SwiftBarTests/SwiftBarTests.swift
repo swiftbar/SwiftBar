@@ -1,4 +1,5 @@
 import Cocoa
+import Carbon
 import Combine
 import Foundation
 import Testing
@@ -2511,6 +2512,29 @@ struct MenubarItemMenuAttachmentTests {
         item.statusBarMenu.delegate = item
         item._updateMenu(content: content)
         return item
+    }
+
+    @MainActor @Test(arguments: [false, true])
+    func headerShortcutSurvivesRefreshDuringCallback(changedHeader: Bool) throws {
+        let item = makeMenuBarItem(content: "Title | shortcut=cmd+ctrl+option+f18\n---\nBefore",
+                                   metadata: PluginMetadata(refreshOnOpen: true))
+        let callbackShortcut = try #require(item.hotKeys.first)
+        let combo = callbackShortcut.keyCombo
+        // HotKey retains the firing shortcut until its handler returns.
+        // Keep that same lifetime while production code rebuilds the menu.
+        withExtendedLifetime(callbackShortcut) {
+            let title = changedHeader ? "Changed" : "Title"
+            item._updateMenu(content: "\(title) | shortcut=cmd+ctrl+option+f18\n---\nAfter")
+        }
+        callbackShortcut.isPaused = true
+        let replacement = try #require(item.hotKeys.first)
+        #expect(replacement !== callbackShortcut)
+        var probe: EventHotKeyRef?
+        let result = RegisterEventHotKey(combo.carbonKeyCode, combo.carbonModifiers,
+                                        EventHotKeyID(signature: 0x54455354, id: 1),
+                                        GetEventDispatcherTarget(), 0, &probe)
+        defer { if let probe { UnregisterEventHotKey(probe) } }
+        #expect(result == eventHotKeyExistsErr)
     }
 
     @MainActor @Test func testMenuAttachment_attachedWhenTitleHasNoAction() throws {
