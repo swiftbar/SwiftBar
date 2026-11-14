@@ -651,7 +651,7 @@ extension MenubarItem {
     /// Used on first render, error states, or as a fallback.
     private func fullRebuildMenu(content: String?) {
         statusBarMenu.removeAllItems()
-        hotKeys.removeAll()
+        removeHotKeys()
         prevItems.removeAll()
         prevLevel = 0
         expandedFoldItems.removeAll()
@@ -1373,8 +1373,15 @@ extension MenubarItem {
         return result
     }
 
-    private func syncHotKeys() {
+    private func removeHotKeys() {
+        // A firing HotKey remains retained by its callback. Unregister it
+        // before replacing it so the same key combination can be registered.
+        hotKeys.forEach { $0.isPaused = true }
         hotKeys.removeAll()
+    }
+
+    private func syncHotKeys() {
+        removeHotKeys()
 
         if let title = titleLines.first, let kc = MenuLineParameters(line: title).shortcut {
             addShortcut(shortcut: HotKey(keyCombo: kc)) { [weak self] in
