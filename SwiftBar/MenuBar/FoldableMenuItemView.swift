@@ -37,6 +37,7 @@ class FoldableMenuItemView: NSView {
     private var normalAttributedTitle = NSAttributedString()
     private var highlightedAttributedTitle = NSAttributedString()
     private var currentImage: NSImage?
+    private var itemHeight = Layout.itemHeight
     var isFolded: Bool {
         didSet {
             updateChevron()
@@ -162,8 +163,36 @@ class FoldableMenuItemView: NSView {
 
     // MARK: - Layout
 
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        guard window != nil, let menu = enclosingMenuItem?.menu else { return }
+        updateHeight(in: menu)
+    }
+
+    func updateHeight(in menu: NSMenu) {
+        var referenceMenu: NSMenu? = menu
+        var nativeHeight: CGFloat?
+        while let candidate = referenceMenu, nativeHeight == nil {
+            nativeHeight = candidate.items.compactMap { item -> CGFloat? in
+                guard item.view == nil, item.image == nil, !item.isHidden, !item.isSeparatorItem,
+                      !(item.attributedTitle?.string ?? item.title).contains("\n") else { return nil }
+                if let title = item.attributedTitle, title.containsAttachments(in: NSRange(0 ..< title.length)) { return nil }
+                if #available(macOS 14, *), item.isSectionHeader { return nil }
+                if #available(macOS 14.4, *), item.subtitle?.isEmpty == false { return nil }
+                let height = item.accessibilityFrame().height
+                return height > 1 ? height : nil
+            }.min()
+            referenceMenu = candidate.supermenu
+        }
+        // shortcut: all-custom menus without native ancestors keep the legacy height until AppKit exposes menu spacing.
+        itemHeight = max(Layout.itemHeight, nativeHeight ?? Layout.itemHeight)
+        setFrameSize(NSSize(width: frame.width, height: itemHeight))
+        invalidateIntrinsicContentSize()
+        needsLayout = true
+    }
+
     override var intrinsicContentSize: NSSize {
-        NSSize(width: NSView.noIntrinsicMetric, height: Layout.itemHeight)
+        NSSize(width: NSView.noIntrinsicMetric, height: itemHeight)
     }
 
     // MARK: - Highlighting
