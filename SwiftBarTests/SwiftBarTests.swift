@@ -4667,6 +4667,23 @@ struct FoldParameterTests {
 @Suite(.serialized)
 struct FoldMenuItemBuildTests {
     @MainActor
+    private final class NativeRowMenuItem: NSMenuItem {
+        var displayedHeight: CGFloat = 24
+
+        init() {
+            super.init(title: "Native row", action: nil, keyEquivalent: "")
+        }
+
+        required init(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+
+        override func accessibilityFrame() -> NSRect {
+            NSRect(x: 0, y: 0, width: 240, height: displayedHeight)
+        }
+    }
+
+    @MainActor
     private final class TrackingMenu: NSMenu {
         var changedItems: [NSMenuItem] = []
 
@@ -5891,6 +5908,53 @@ struct FoldMenuItemBuildTests {
 
         #expect(foldView.displayedBadgeText == "99")
         #expect(foldView.displayedIconSize == NSSize(width: 16, height: 16))
+    }
+
+    @MainActor @Test func testFoldHeightFollowsDisplayedNativeRowsAndShrinksAgain() throws {
+        let item = makeMenuBarItem()
+        item._updateMenu(content: "Title\n---\nNetwork | fold=true badge=3\n--Connected")
+        let foldParent = try #require(item.statusBarMenu.items.first { $0.view is FoldableMenuItemView })
+        let view = try #require(foldParent.view as? FoldableMenuItemView)
+        let native = NativeRowMenuItem()
+        item.statusBarMenu.addItem(native)
+        view.setFrameSize(NSSize(width: 240, height: 22))
+
+        for height: CGFloat in [24, 32, 24] {
+            native.displayedHeight = height
+            view.updateHeight(in: item.statusBarMenu)
+            view.layoutSubtreeIfNeeded()
+            #expect(view.frame.size == NSSize(width: 240, height: height))
+            #expect(view.intrinsicContentSize.height == height)
+            #expect(abs(view.displayedBadgeFrame.midY - height / 2) <= 0.5)
+        }
+    }
+
+    @MainActor @Test func testFoldHeightUsesNativeAncestorForCustomOnlySubmenu() throws {
+        let item = makeMenuBarItem()
+        item._updateMenu(content: "Title\n---\nSection\n--Network | fold=true\n----Connected")
+        let section = try #require(menuItem(named: "Section", in: item.statusBarMenu))
+        let submenu = try #require(section.submenu)
+        let foldParent = try #require(submenu.items.first { $0.view is FoldableMenuItemView })
+        let view = try #require(foldParent.view as? FoldableMenuItemView)
+        let native = NativeRowMenuItem()
+        native.displayedHeight = 32
+        item.statusBarMenu.addItem(native)
+        let hidden = NativeRowMenuItem()
+        hidden.isHidden = true
+        submenu.addItem(hidden)
+        submenu.addItem(.separator())
+        let imageRow = NativeRowMenuItem()
+        imageRow.displayedHeight = 225
+        imageRow.image = NSImage(size: NSSize(width: 100, height: 225))
+        submenu.addItem(imageRow)
+        let attachmentRow = NativeRowMenuItem()
+        attachmentRow.displayedHeight = 225
+        attachmentRow.attributedTitle = NSAttributedString(attachment: NSTextAttachment())
+        submenu.addItem(attachmentRow)
+
+        view.updateHeight(in: submenu)
+        #expect(view.frame.height == 32)
+        #expect(view.intrinsicContentSize.height == 32)
     }
 
     @MainActor @Test func testFullBuild_foldItemBadgeTextIsCenteredInPill() throws {
