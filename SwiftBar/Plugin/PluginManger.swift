@@ -364,7 +364,12 @@ class PluginManager: ObservableObject {
         os_log("Plugins did change, updating menu bar...", log: Log.plugin)
         let enabledIDs = Set(enabledPlugins.map(\.id))
 
-        for plugin in enabledPlugins {
+        let pluginsInMenuBarOrder = enabledPlugins.sorted { first, second in
+            let nameOrder = first.name.localizedCaseInsensitiveCompare(second.name)
+            return nameOrder == .orderedSame ? first.id < second.id : nameOrder == .orderedDescending
+        }
+
+        for plugin in pluginsInMenuBarOrder {
             if let existingMenuBarItem = menuBarItems[plugin.id] {
                 if existingMenuBarItem.plugin !== plugin {
                     existingMenuBarItem.replacePlugin(plugin)
